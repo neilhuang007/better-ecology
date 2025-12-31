@@ -2,6 +2,8 @@ package me.javavirtualenv.behavior.fleeing;
 
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.Vec3d;
+import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.EcologyHooks;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -292,20 +294,32 @@ public class AlarmSignalBehavior {
 
     /**
      * Alerts a single entity to the presence of a threat.
+     * Sets the panic state on the entity's EcologyComponent which triggers
+     * fleeing behavior via PanicBehavior on the next tick.
      *
      * @param entity Entity to alert
      * @param threat Threat to alert about
      */
     private void alertEntity(Mob entity, LivingEntity threat) {
-        // Set target to trigger fleeing/avoidance behavior
-        // Note: This would interact with the entity's AI system
-        // In a full implementation, you'd use the entity's brain/memory system
-
-        // For now, we make the entity look at the threat
+        // Make the entity look at the threat for visual awareness
         entity.getLookControl().setLookAt(threat, 30.0F, 30.0F);
 
-        // If entity has a target system, set the threat as a target
-        // This varies by Minecraft version and entity type
+        // Trigger panic state via EcologyComponent - this is what actually causes fleeing
+        EcologyComponent component = EcologyHooks.getEcologyComponent(entity);
+        if (component != null) {
+            // Set panic state - PanicBehavior will detect this and trigger flee on next tick
+            component.state().setIsPanicking(true);
+
+            // Also set fleeing state for immediate effect
+            component.state().setIsFleeing(true);
+        }
+
+        // For entities without EcologyComponent, try to trigger vanilla panic via hurt
+        // This is a fallback that works for fish and other vanilla entities
+        if (component == null && entity.getLastHurtByMob() == null) {
+            // Set the threat as the last attacker to trigger vanilla PanicGoal
+            entity.setLastHurtByMob(threat);
+        }
     }
 
     /**

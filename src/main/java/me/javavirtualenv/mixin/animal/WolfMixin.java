@@ -16,6 +16,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.level.Level;
@@ -440,12 +441,12 @@ public abstract class WolfMixin {
 
     /**
      * Movement handle with wolf-specific values.
-     * Wolves are fast runners.
+     * Wolves are fast runners but use walk speed for casual strolling.
      */
     private static final class WolfMovementHandle extends CodeBasedHandle {
 
         private static final double WALK_SPEED = 0.3;
-        private static final double RUN_SPEED = 0.35;
+        private static final double STROLL_SPEED = 1.0; // Speed modifier for strolling (1.0 = normal walk speed)
 
         @Override
         public String id() {
@@ -465,7 +466,8 @@ public abstract class WolfMixin {
 
             me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
             accessor.betterEcology$getGoalSelector().addGoal(0, new FloatGoal(wolf));
-            accessor.betterEcology$getGoalSelector().addGoal(5, new RandomStrollGoal(wolf, RUN_SPEED));
+            // Use WaterAvoidingRandomStrollGoal to prevent wolves from walking into water
+            accessor.betterEcology$getGoalSelector().addGoal(5, new WaterAvoidingRandomStrollGoal(wolf, STROLL_SPEED));
         }
     }
 

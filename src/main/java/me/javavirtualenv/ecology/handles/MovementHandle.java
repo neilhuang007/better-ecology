@@ -68,12 +68,17 @@ public final class MovementHandle implements EcologyHandle {
 		double runSpeed = profile.getDouble("physical.movement.speeds.run", walkSpeed);
 		boolean avoidsCliffs = profile.getBool("physical.movement.capabilities.avoids_cliffs", false);
 		double cliffThreshold = profile.getDouble("physical.movement.capabilities.cliff_threshold", 0.0);
+		// Check if this is an aquatic entity - aquatic entities should not avoid water
+		boolean isAquatic = profile.getBool("physical.movement.capabilities.swims", false) ||
+		                   profile.getBool("physical.movement.capabilities.aquatic", false);
+		// Land animals should avoid water by default, unless explicitly configured not to
+		boolean avoidsWater = !isAquatic && profile.getBool("physical.movement.capabilities.avoids_water", true);
 
 		if (walkSpeed <= 0.0) {
 			return null;
 		}
 
-		return new MovementCache(walkSpeed, runSpeed, avoidsCliffs, cliffThreshold);
+		return new MovementCache(walkSpeed, runSpeed, avoidsCliffs, cliffThreshold, avoidsWater);
 	}
 
 	private void applyMovementSpeed(Mob mob, MovementCache cache) {
@@ -116,10 +121,13 @@ public final class MovementHandle implements EcologyHandle {
 		}
 		int goalPriority = 5;
 		MobAccessor accessor = (MobAccessor) mob;
-		if (cache.avoidsCliffs) {
-			accessor.betterEcology$getGoalSelector().addGoal(goalPriority, new WaterAvoidingRandomStrollGoal(pathfinderMob, cache.runSpeed));
+		// Use 1.0 as speed modifier for strolling - this is a multiplier on the base movement speed
+		double strollSpeedModifier = 1.0;
+		// Use WaterAvoidingRandomStrollGoal for land animals to prevent them from walking into water
+		if (cache.avoidsWater) {
+			accessor.betterEcology$getGoalSelector().addGoal(goalPriority, new WaterAvoidingRandomStrollGoal(pathfinderMob, strollSpeedModifier));
 		} else {
-			accessor.betterEcology$getGoalSelector().addGoal(goalPriority, new RandomStrollGoal(pathfinderMob, cache.runSpeed));
+			accessor.betterEcology$getGoalSelector().addGoal(goalPriority, new RandomStrollGoal(pathfinderMob, strollSpeedModifier));
 		}
 	}
 
@@ -134,12 +142,14 @@ public final class MovementHandle implements EcologyHandle {
 		private final double runSpeed;
 		private final boolean avoidsCliffs;
 		private final double cliffThreshold;
+		private final boolean avoidsWater;
 
-		private MovementCache(double walkSpeed, double runSpeed, boolean avoidsCliffs, double cliffThreshold) {
+		private MovementCache(double walkSpeed, double runSpeed, boolean avoidsCliffs, double cliffThreshold, boolean avoidsWater) {
 			this.walkSpeed = walkSpeed;
 			this.runSpeed = runSpeed;
 			this.avoidsCliffs = avoidsCliffs;
 			this.cliffThreshold = cliffThreshold;
+			this.avoidsWater = avoidsWater;
 		}
 	}
 }

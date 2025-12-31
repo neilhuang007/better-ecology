@@ -9,7 +9,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
-import net.minecraft.world.level.chunk.ChunkAccess;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -26,9 +25,10 @@ public class NaturalSpawnerMixin {
     /**
      * Inject at HEAD of spawnCategoryForPosition to check global density limits.
      * This is called once per spawn attempt for a category.
+     * Note: Targets the 3-parameter debug method; the 6-parameter version is called from it.
      */
     @Inject(
-        method = "spawnCategoryForPosition",
+        method = "spawnCategoryForPosition(Lnet/minecraft/world/entity/MobCategory;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;)V",
         at = @At("HEAD"),
         cancellable = true,
         require = 0
@@ -36,10 +36,7 @@ public class NaturalSpawnerMixin {
     private static void betterEcology$checkCategoryDensity(
         MobCategory mobCategory,
         ServerLevel serverLevel,
-        ChunkAccess chunkAccess,
         BlockPos blockPos,
-        net.minecraft.world.level.NaturalSpawner.SpawnPredicate spawnPredicate,
-        net.minecraft.world.level.NaturalSpawner.AfterSpawnCallback afterSpawnCallback,
         CallbackInfo ci
     ) {
         // Category-level density checks could go here

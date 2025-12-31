@@ -4,8 +4,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.Level;
@@ -19,22 +17,28 @@ import java.util.EnumSet;
 /**
  * AI goal for sheep to actively seek and graze on grass.
  * Sheep will move toward grass blocks when hungry and eat them.
+ * Triggers the vanilla eating animation when eating grass.
  */
 public class SheepGrazeGoal extends Goal {
+    private static final int EAT_ANIMATION_TICKS = 40;
     private final PathfinderMob mob;
     private final Level level;
     private final double searchRadius;
     private final double speedModifier;
     private BlockPos targetGrassPos;
     private int grazeCooldown;
+    private int eatAnimationTick;
+    private boolean isEating;
 
     public SheepGrazeGoal(PathfinderMob mob, double searchRadius, double speedModifier) {
         this.mob = mob;
         this.level = mob.level();
         this.searchRadius = searchRadius;
         this.speedModifier = speedModifier;
-        this.setFlags(EnumSet.of(Flag.MOVE));
+        this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK, Flag.JUMP));
         this.grazeCooldown = 0;
+        this.eatAnimationTick = 0;
+        this.isEating = false;
     }
 
     @Override
@@ -54,6 +58,11 @@ public class SheepGrazeGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
+        // Continue if we're in the middle of eating animation
+        if (isEating && eatAnimationTick > 0) {
+            return true;
+        }
+
         if (targetGrassPos == null) {
             return false;
         }
@@ -64,7 +73,7 @@ public class SheepGrazeGoal extends Goal {
             return false;
         }
 
-        return !mob.getNavigation().isDone() && targetGrassPos.closerToCenterThan(mob.position(), 2.0);
+        return !mob.getNavigation().isDone() || targetGrassPos.closerToCenterThan(mob.position(), 2.0);
     }
 
     @Override
@@ -77,16 +86,53 @@ public class SheepGrazeGoal extends Goal {
     @Override
     public void stop() {
         targetGrassPos = null;
+        eatAnimationTick = 0;
+        isEating = false;
         mob.getNavigation().stop();
     }
 
     @Override
     public void tick() {
-        if (targetGrassPos != null && targetGrassPos.closerToCenterThan(mob.position(), 1.5)) {
-            eatGrass();
-            targetGrassPos = null;
-            grazeCooldown = 200 + mob.getRandom().nextInt(200);
+        // If we're in the middle of eating animation, count down
+        if (isEating) {
+            eatAnimationTick = Math.max(0, eatAnimationTick - 1);
+
+            // Near the end of animation (at tick 4), actually eat the grass
+            if (eatAnimationTick == 4) {
+                finishEating();
+            }
+
+            // Animation complete
+            if (eatAnimationTick == 0) {
+                isEating = false;
+                targetGrassPos = null;
+                grazeCooldown = 200 + mob.getRandom().nextInt(200);
+            }
+            return;
         }
+
+        // Check if we've reached the target grass
+        if (targetGrassPos != null && targetGrassPos.closerToCenterThan(mob.position(), 1.5)) {
+            startEating();
+        }
+    }
+
+    /**
+     * Start the eating animation - broadcasts entity event to trigger client-side animation.
+     */
+    private void startEating() {
+        if (targetGrassPos == null || !isGrass(level.getBlockState(targetGrassPos))) {
+            return;
+        }
+
+        isEating = true;
+        eatAnimationTick = EAT_ANIMATION_TICKS;
+
+        // Broadcast entity event 10 to trigger eating animation on clients
+        level.broadcastEntityEvent(mob, (byte) 10);
+
+        // Stop movement during eating
+        mob.getNavigation().stop();
     }
 
     private BlockPos findNearbyGrass() {
@@ -121,7 +167,10 @@ public class SheepGrazeGoal extends Goal {
         return block == Blocks.SHORT_GRASS || block == Blocks.TALL_GRASS;
     }
 
-    private void eatGrass() {
+    /**
+     * Complete the eating action - destroys grass and triggers mob.ate() for wool regrowth.
+     */
+    private void finishEating() {
         if (targetGrassPos == null) {
             return;
         }
@@ -129,31 +178,29 @@ public class SheepGrazeGoal extends Goal {
         BlockState blockState = level.getBlockState(targetGrassPos);
 
         if (isGrass(blockState)) {
-            // Eat the grass
-            level.destroyBlock(targetGrassPos, false);
+            // Spawn particles before destroying block (need the blockState)
+            if (level instanceof ServerLevel serverLevel) {
+                spawnEatParticles(serverLevel, targetGrassPos, blockState);
+            }
 
-            // Play eating sound
-            level.playSound(null, mob.getX(), mob.getY(), mob.getZ(),
-                          SoundEvents.SHEEP_AMBIENT, SoundSource.NEUTRAL, 1.0F, 1.0F);
+            // Destroy the grass block
+            level.destroyBlock(targetGrassPos, false);
 
             // Trigger game event
             level.gameEvent(mob, GameEvent.EAT, targetGrassPos);
 
-            // Spawn particles
-            if (level instanceof ServerLevel serverLevel) {
-                spawnEatParticles(serverLevel, targetGrassPos);
-            }
+            // Call ate() method which triggers wool regrowth in sheep
+            mob.ate();
         }
     }
 
-    private void spawnEatParticles(ServerLevel level, BlockPos pos) {
-        BlockState blockState = this.level.getBlockState(pos);
+    private void spawnEatParticles(ServerLevel serverLevel, BlockPos pos, BlockState blockState) {
         for (int i = 0; i < 8; i++) {
-            double offsetX = level.getRandom().nextDouble() * 0.5 - 0.25;
-            double offsetY = level.getRandom().nextDouble() * 0.5;
-            double offsetZ = level.getRandom().nextDouble() * 0.5 - 0.25;
+            double offsetX = serverLevel.getRandom().nextDouble() * 0.5 - 0.25;
+            double offsetY = serverLevel.getRandom().nextDouble() * 0.5;
+            double offsetZ = serverLevel.getRandom().nextDouble() * 0.5 - 0.25;
 
-            level.sendParticles(
+            serverLevel.sendParticles(
                     new BlockParticleOption(ParticleTypes.BLOCK, blockState),
                     pos.getX() + 0.5 + offsetX,
                     pos.getY() + offsetY,

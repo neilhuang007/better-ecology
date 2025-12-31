@@ -660,7 +660,7 @@ narrative:
     Sheep spend their days wandering in loose herds of 2-4 individuals, periodically
     stopping to graze on grass blocks. When they eat, they convert lush grass blocks
     to dirt, gradually altering the landscape over time. Adult sheep are leisurely
- grazers (1/1000 chance per tick), while hungry babies eat voraciously (1/50 chance
+    grazers (1/1000 chance per tick), while hungry babies eat voraciously (1/50 chance
     per tick) to fuel their rapid growth. When danger approaches in the form of
     wolves, sheep flee briefly but don't actively avoid predation otherwise.
 
