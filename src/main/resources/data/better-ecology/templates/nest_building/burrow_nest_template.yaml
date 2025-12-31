@@ -1,0 +1,71 @@
+# ============================================================================
+# NEST BUILDING CONFIGURATION TEMPLATE - BURROW NEST
+# For animals that dig burrows (rabbits, foxes, etc.)
+# ============================================================================
+
+nest_building:
+  enabled: true
+
+  nest_type: "burrow"                  # Underground burrows
+
+  building_speed: 1.2                  # Faster digging
+  nest_size: 4                         # Larger underground spaces
+
+  search_radius: 24
+  prefer_shelter: true                 # Prefer entrances under bushes
+
+  territorial_defense: true
+  defense_radius: 10
+
+  max_materials: 32                    # Fewer materials needed
+
+  required_materials:
+    grass: 12                          # Grass for bedding
+    fur: 8                             # Fur for insulation
+    dirt: 0                            # Don't track dirt - unlimited
+    fiber: 4                           # Plant fibers for lining
+
+  # Burrow-specific preferences
+  preferred_nesting_blocks:
+    - "minecraft:dirt"                 # Dig in dirt
+    - "minecraft:grass_block"          # Grass-covered entrances
+    - "minecraft:coarse_dirt"          # Also acceptable
+
+  # Hidden entrance requirements
+  hidden_entrance: true
+  entrance_cover_blocks:
+    - "minecraft:sweet_berry_bush"     # Hide under bushes
+    - "minecraft:grass"                # Hide in tall grass
+    - "minecraft:fern"
+
+  # Warren system (connected burrows)
+  warren_system:
+    enabled: true                      # Create connected tunnel systems
+    max_connections: 4                 # Maximum connected burrows
+    connection_distance: 16            # Max distance between burrows
+
+  quality:
+    min_for_breeding: 0.4
+    min_for_egg_laying: 0.0            # Don't lay eggs
+    excellent: 0.7
+
+    high_quality_benefits:
+      offspring_survival_bonus: 1.4    # Better protection for young
+      breeding_cooldown_reduction: 0.7
+      offspring_health_bonus: 1.2
+      predator_protection_bonus: 1.5   # Better defense
+
+    low_quality_penalties:
+      offspring_survival_penalty: 0.7   # Young more vulnerable
+      abandonment_chance: 0.25
+      flooding_risk: 0.2               # Poor burrows may flood
+
+  disturbance:
+    max_disturbances: 4
+    cooldown_after_disturbance: 400
+    recovery_rate: 0.02
+
+  seasonal:
+    spring_activity: 1.2
+    winter_activity: 0.8               # Still use burrows in winter
+    winter_maintenance: true

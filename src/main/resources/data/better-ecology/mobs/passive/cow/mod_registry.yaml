@@ -1,0 +1,796 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - GENERALIZED PROFILE
+# Mob: Cow (Bos taurus)
+# ============================================================================
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:cow"
+  display_name: "Cow"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "HERD"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Domestic cattle (Bos taurus)"
+    ecological_role: "Large herbivore grazer that maintains grasslands through grazing, promotes biodiversity, and prevents overgrowth"
+
+  tags: ["herd", "grazer", "milkable", "farm_animal", "livestock"]
+
+
+# ============================================================================
+# PHYSICAL
+# ============================================================================
+physical:
+  health:
+    base: 10                      # 5 hearts (10 HP)
+    baby_multiplier: 0.5
+
+  size:
+    width: 0.9
+    height: 1.4
+    baby_scale: 0.5
+
+  biomass:
+    adult: 100
+    baby: 25
+    transfer_efficiency: 0.1
+
+  movement:
+    speeds:
+      walk: 0.25
+      run: 0.4
+      swim: 0.15
+      fly: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: true
+      jump_height: 1.0
+      avoids_water: true
+      avoids_cliffs: true
+      cliff_threshold: 4
+
+    conditional_modifiers:
+      baby: 0.7
+      elderly: null
+      injured: 0.6
+      hungry: 0.8
+      fleeing: 1.25               # 25% speed boost when fleeing
+      hunting: null
+      carrying_offspring: null
+      in_water_nonaquatic: 0.4
+
+
+# ============================================================================
+# INTERNAL STATE
+# ============================================================================
+internal_state:
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 80
+    decay_rate: 0.02
+
+    thresholds:
+      satiated: 80
+      hungry: 50
+      very_hungry: 25
+      starving: 10
+
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 200
+
+  thirst:
+    enabled: true
+    max_value: 100
+    starting_value: 100
+    decay_rate: 0.015             # Farm animals need regular water access
+    thresholds:
+      satisfied: 75
+      thirsty: 45
+      dehydrated: 15
+
+  hunger_thirst_trigger:
+    enabled: true
+    priority: 4
+    hunger_threshold: 50
+    thirst_threshold: 45
+
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+
+    gain_when_satiated: 0.01
+    loss_when_hungry: 0.02
+    loss_when_starving: 0.1
+
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.5
+
+    costs:
+      sprinting: 0.3
+      hunting: null
+      fleeing: 0.4
+      flying: null
+      swimming: 0.2
+
+  age:
+    enabled: true
+    baby_duration: 24000          # 20 minutes to adulthood
+    maturity_age: 24000
+    elderly_age: null
+    max_age: null
+
+  social:
+    enabled: true                 # Cows are herd animals
+    max_value: 100
+    decay_rate: 0.01              # When alone
+    recovery_rate: 0.1
+    loneliness_threshold: 30
+
+
+# ============================================================================
+# TEMPORAL
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 3000]           # Early morning - peak grazing
+        activity: 1.0
+        label: "morning_grazing"
+      - time: [3000, 6000]        # Late morning
+        activity: 0.9
+        label: "late_morning"
+      - time: [6000, 12000]       # Midday - resting/ruminating
+        activity: 0.5
+        label: "midday_rest"
+      - time: [12000, 15000]      # Afternoon to dusk - grazing resumes
+        activity: 0.9
+        label: "afternoon_grazing"
+      - time: [15000, 18000]      # Dusk
+        activity: 0.7
+        label: "dusk"
+      - time: [18000, 24000]      # Night - resting
+        activity: 0.2
+        label: "night_rest"
+
+    low_activity_behavior:
+      action: "REST"
+      seek_shelter: false
+      reduced_awareness: true
+      awareness_multiplier: 0.5
+
+  weather:
+    rain:
+      activity_multiplier: 0.8
+      seek_shelter: false
+      shelter_priority: 1
+    thunder:
+      activity_multiplier: 0.5
+      seek_shelter: false
+      panic_chance: 0.0
+    snow:
+      activity_multiplier: 0.6
+      seek_shelter: false
+    clear:
+      activity_multiplier: 1.0
+
+  seasons:
+    enabled: false
+
+
+# ============================================================================
+# SPATIAL
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []                 # All biomes by default
+      preferred: []               # Variant-specific in unique profile
+      forbidden: []
+    altitude:
+      min: -64
+      max: 320
+      preferred: [63, 128]
+    required_nearby: []
+
+  territory:
+    enabled: false
+
+  home_range:
+    enabled: true
+    radius: 64
+    has_home_point: false
+    home_type: null
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# DIET
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: BLOCK
+        target: "minecraft:grass_block"
+        nutrition: 20
+        saturation: 4000
+        consumption_time: 40
+        method: GRAZE
+        world_effect:
+          action: CONVERT
+          result: "minecraft:dirt"
+        condition_gain: 3
+        health_effect: 0
+
+      - type: BLOCK
+        target: "minecraft:tall_grass"
+        nutrition: 15
+        saturation: 3000
+        consumption_time: 30
+        method: GRAZE
+        world_effect:
+          action: DESTROY
+          result: null
+        condition_gain: 2
+        health_effect: 0
+
+    secondary:
+      - type: ITEM
+        target: "minecraft:wheat"
+        nutrition: 40
+        saturation: 6000
+        consumption_time: 20
+        method: GRAZE
+        world_effect:
+          action: NONE
+          result: null
+        condition_gain: 5
+        health_effect: 0
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 16
+      when_hungry: 24
+      when_starving: 48
+    search_interval: 200
+
+    memory:
+      remembers_locations: true
+      memory_duration: 24000
+      remembers_depleted: true
+      avoids_depleted_for: 12000
+      shares_with_group: true
+
+    sustainability:
+      enabled: true
+      dont_deplete_fully: true
+      minimum_remaining: 2
+      patch_return_delay: 6000
+
+
+# ============================================================================
+# PREDATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+    predators: []
+
+    default_response:
+      detection_range: 24
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.25
+        flee_distance: 48
+        flee_toward: "GROUP"
+        zigzag: false
+
+      freeze:
+        duration: null
+        break_on_approach: null
+        break_distance: null
+
+      alarm:
+        gives_alarm: false
+        alarm_radius: null
+        alarm_triggers_group_flee: null
+
+    all_clear:
+      predator_distance: 64
+      time_since_seen: 400
+
+
+# ============================================================================
+# REPRODUCTION
+# ============================================================================
+reproduction:
+  enabled: true
+  method: "SEXUAL"
+
+  requirements:
+    min_age: 24000
+    max_age: null
+    min_health: 0.8
+    min_condition: 65
+    min_hunger: 60
+
+    recent_food:
+      enabled: true
+      time_window: 12000
+      meals_required: 1
+
+    environment:
+      near_water: false
+      water_max_distance: null
+      required_biomes: []
+      required_blocks_nearby: []
+      min_light: 0
+      max_light: 15
+
+    requires_shelter: false
+    shelter_type: null
+
+    time_of_day: null
+    season: null
+    weather: null
+
+    mate_required: true
+    mate_max_distance: 16
+
+  density_effects:
+    enabled: true
+    check_radius: 64
+
+    density_curve:
+      - count: 2
+        multiplier: 1.3
+      - count: 6
+        multiplier: 1.0
+      - count: 12
+        multiplier: 0.5
+      - count: 20
+        multiplier: 0.1
+      - count: 30
+        multiplier: 0.0
+
+  mate_selection:
+    search_radius: 32
+    search_interval: 1000
+
+    preferences:
+      prefer_healthy: true
+      prefer_good_condition: true
+      avoid_relatives: true
+      relative_recognition_duration: 48000
+
+    courtship:
+      enabled: false
+      behavior: null
+      duration: null
+      can_reject: null
+      rejection_cooldown: null
+
+  breeding:
+    cooldown: 6000                 # 5 minutes vanilla
+
+    gestation:
+      type: "INSTANT"
+      duration: 0
+      behavior_during: []
+
+    birth:
+      offspring_count: [1, 1]
+      condition_affects_count: false
+      location_requirement: null
+
+  parental_care:
+    enabled: true
+    duration: 24000
+
+    behaviors:
+      protects_offspring: false
+      protection_aggression: null
+      protection_radius: null
+      feeds_offspring: false
+      teaches_offspring: false
+      carries_offspring: false
+
+    offspring_behavior:
+      follows_parent: true
+      follow_distance: 4
+      max_separation: 24
+      separation_distress: true
+
+
+# ============================================================================
+# MILK PRODUCTION
+# ============================================================================
+milk_production:
+  enabled: true
+
+  # Production capacity (cows produce 1-3 buckets per full udder)
+  max_milk_amount: 3            # Maximum buckets when full (100%)
+  regeneration_rate: 0.008      # Percentage per tick (~4 minutes per bucket)
+  milk_quality: 55              # Base quality score (0-100)
+
+  # Milking requirements
+  min_milk_level: 33            # Minimum % to be milked (1 bucket minimum)
+
+  # Modifiers
+  nursing_penalty: 0.7          # Regeneration multiplier when calf nursing
+  post_pregnancy_boost: 1.3     # 30% boost after giving birth
+  is_mooshroom: false           # Cows produce regular milk
+
+  # AI behavior for seeking food when milk is low
+  ai:
+    low_milk_threshold: 50      # Seek food when below 50%
+    hunger_threshold: 60        # Seek food when hungry
+    move_speed: 1.0
+    detection_range: 16
+    follow_range: 24
+    stop_distance: 3.0
+    food_search_radius: 20
+    cooldown_ticks: 200
+
+
+# ============================================================================
+# SOCIAL
+# ============================================================================
+social:
+  group:
+    type: "HERD"
+    size:
+      min: 2
+      optimal: 4
+      max: 12
+
+    composition:
+      mixed_sex: true
+      mixed_age: true
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  herd_movement:
+    enabled: true
+    cohesion_radius: 12
+    separation_distance: 2
+    alignment: true
+
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+      radius: null
+      chain_calling: null
+
+    contact_calls:
+      enabled: true
+      when: ["separated"]
+      radius: 24
+
+    mating_calls:
+      enabled: false
+      radius: null
+      time: null
+
+  behaviors:
+    greeting: false
+    allogrooming: false
+    play: false
+    huddling: false
+    dominance_hierarchy: false
+
+  group_benefits:
+    predator_detection_bonus: 0.05
+    foraging_efficiency_bonus: 0.0
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: true
+    actions:
+      - trigger: "grazing"
+        action: CONVERT
+        target_blocks: ["minecraft:grass_block"]
+        result_block: "minecraft:dirt"
+        frequency: 40
+        radius: 0
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+      seeds: []
+      method: null
+      dispersal_radius: 0
+
+    pollination:
+      enabled: false
+      flowers: []
+      radius: 0
+
+    nutrient_cycling:
+      enabled: false
+      fertilizes: false
+      fertilize_radius: 0
+
+    decomposition:
+      enabled: false
+      decomposes: []
+      result: null
+
+  responses:
+    drinking:
+      enabled: false
+      frequency: null
+      water_blocks: []
+      duration: null
+      congregates: null
+
+    temperature:
+      heat_seek_shade: false
+      heat_seek_water: false
+      cold_seek_shelter: false
+      cold_huddling: false
+
+
+# ============================================================================
+# POPULATION
+# ============================================================================
+population:
+  spawning:
+    weight: 8
+    group_size: [2, 4]            # Java: 4, Bedrock: 2-3
+
+    conditions:
+      blocks: ["minecraft:grass_block"]
+      biomes: []
+      light: [7, 15]              # Java: 7+, Bedrock: 9+
+      altitude: null
+      time: null
+      weather: null
+
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 8
+      regional: null
+
+    resources:
+      enabled: false
+      requirements: []
+
+    over_capacity:
+      - threshold: 1.2
+        effects: ["reduced_breeding"]
+      - threshold: 1.5
+        effects: ["starvation", "dispersal"]
+      - threshold: 2.0
+        effects: ["disease", "aggression"]
+
+  dispersal:
+    enabled: false
+    triggers: []
+    distance: null
+
+  mortality:
+    old_age:
+      enabled: false
+      max_age: null
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+      base_chance: 0.0
+      crowding_multiplier: 1.0
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "NEUTRAL"
+
+  distances:
+    detection: 32
+    caution: 16
+    flee: 8
+
+  habituation:
+    enabled: true
+    rate: 0.01
+    decay: 0.001
+    max_habituation: 0.8
+    habituated_flee_distance: 3
+
+  taming:
+    enabled: false
+    items: []
+    chance: null
+    requires_habituation: null
+
+  player_breeding:
+    enabled: true
+    items:
+      - item: "minecraft:wheat"
+        nutrition_boost: 20
+        growth_reduction: 0.1
+    bypasses_conditions: true
+
+  drops:
+    on_death:
+      - item: "minecraft:leather"
+        count: [0, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+      - item: "minecraft:beef"
+        count: [1, 3]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+      - item: "minecraft:cooked_beef"
+        count: [1, 3]
+        chance: 0.0
+        requires_player_kill: false
+        looting_bonus: 0
+        condition: "fire_death"
+
+    on_interaction: []
+
+  interactions:
+    - action: "milk"
+      item: "minecraft:bucket"
+      result: "minecraft:milk_bucket"
+      consumes_item: true
+      description: "Milk the cow to get a milk bucket"
+      requirements:
+        is_adult: true
+        cooldown: 0
+
+    - action: "follow"
+      item: "minecraft:wheat"
+      result: null
+      consumes_item: false
+      description: "Cow follows player holding wheat"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "minecraft:entity.cow.ambient"
+    hurt: "minecraft:entity.cow.hurt"
+    death: "minecraft:entity.cow.death"
+    baby: "minecraft:entity.cow.ambient"
+    alarm: null
+    mating: null
+    eating: null
+
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "look_at_player"
+        frequency: 0.02
+        trigger: "player_nearby"
+      - behavior: "moo"
+        frequency: 0.01
+        trigger: "random"
+
+  personality_traits:
+    boldness:
+      base: 0.4
+      variation: 0.2
+    activity:
+      base: 0.5
+      variation: 0.2
+    sociability:
+      base: 0.7
+      variation: 0.2
+
+
+# ============================================================================
+# AI PRIORITY FRAMEWORK
+# ============================================================================
+ai_priority_framework:
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  physiological:
+    critical_health: 3
+    drink_water: null
+    eat_food: 5
+    find_shelter: null
+
+  reproduction:
+    care_for_offspring: 7
+    breed: 8
+    find_mate: 9
+
+  social:
+    group_cohesion: 10
+    social_interaction: 11
+
+  hunting:
+    hunt_prey: null
+
+  location:
+    location_triggered: null
+    territory_patrol: null
+
+  default:
+    wander: 15
+    idle: 16
+    rest: 17
+
+# ============================================================================
+# SYSTEM 15: ANIMAL-ANIMAL INTERACTIONS
+# ============================================================================
+
+interaction:
+  predators: []
+  prey: []
+
+  symbiotic_partners: []
+  competitors: []
+
+  herd_compatible:
+    - "minecraft:sheep"
+
+  relationship_decay_rate: 0.001
+  trust_build_rate: 0.01
+  grudge_build_rate: 0.01
+
+  gives_warning_calls: true
+  warning_cooldown: 120
+
+  can_mourn: false
+  can_grieve: false
+  can_play: true
+  can_be_altruistic: false
+  can_teach: false
+

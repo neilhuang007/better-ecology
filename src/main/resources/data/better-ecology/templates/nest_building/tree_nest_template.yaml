@@ -1,0 +1,67 @@
+# ============================================================================
+# NEST BUILDING CONFIGURATION TEMPLATE - TREE NEST
+# For birds that build nests in trees (parrots, etc.)
+# ============================================================================
+
+nest_building:
+  enabled: true
+
+  nest_type: "tree"                    # Build in tree canopies
+
+  building_speed: 0.8                  # Slower construction in trees
+  nest_size: 2                         # Smaller nests in branches
+
+  search_radius: 48                    # Search wider for suitable trees
+  prefer_shelter: true                 # Prefer covered by leaves
+
+  territorial_defense: true
+  defense_radius: 12                   # Larger defense area for trees
+
+  max_materials: 48
+
+  required_materials:
+    sticks: 12                         # Branch sticks for structure
+    leaves: 16                         # Leaves for camouflage
+    feathers: 8                        # Feathers for lining
+    wool: 4                            # Wool for softness
+
+  # Tree-specific preferences
+  preferred_nesting_blocks:
+    - "minecraft:oak_leaves"
+    - "minecraft:birch_leaves"
+    - "minecraft:spruce_leaves"
+    - "minecraft:jungle_leaves"
+    - "minecraft:acacia_leaves"
+    - "minecraft:dark_oak_leaves"
+    - "minecraft:oak_log"
+    - "minecraft:birch_log"
+
+  # Height preferences
+  min_height: 10                       # Minimum height above ground
+  preferred_height: 20                 # Preferred nesting height
+
+  quality:
+    min_for_breeding: 0.6              # Higher requirement for tree nests
+    min_for_egg_laying: 0.4
+    excellent: 0.8
+
+    high_quality_benefits:
+      egg_incubation_speed: 1.6
+      breeding_cooldown_reduction: 0.75
+      offspring_health_bonus: 1.3
+      mate_attraction_bonus: 1.5       # Better nests attract mates
+
+    low_quality_penalties:
+      egg_failure_chance: 0.4
+      abandonment_chance: 0.3
+      offspring_health_penalty: 0.7
+
+  disturbance:
+    max_disturbances: 3                # More sensitive in trees
+    cooldown_after_disturbance: 800
+    recovery_rate: 0.005
+
+  seasonal:
+    spring_activity: 2.0               # Very active in spring
+    winter_activity: 0.3
+    winter_maintenance: true

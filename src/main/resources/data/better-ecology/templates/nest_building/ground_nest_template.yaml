@@ -1,0 +1,67 @@
+# ============================================================================
+# NEST BUILDING CONFIGURATION TEMPLATE - GROUND NEST
+# For animals that build scrape nests on the ground (chickens, etc.)
+# ============================================================================
+
+nest_building:
+  enabled: true
+
+  # Nest type determines location preferences and construction method
+  nest_type: "ground"                  # Options: ground, tree, burrow, sand, canopy
+
+  # Building behavior parameters
+  building_speed: 1.0                  # Speed multiplier for construction
+  nest_size: 3                         # Width of nest in blocks
+
+  # Search parameters
+  search_radius: 32                    # How far to search for nest location
+  prefer_shelter: true                 # Prefer covered/sheltered areas
+
+  # Territorial behavior
+  territorial_defense: true            # Defend nest from intruders
+  defense_radius: 8                    # Distance to defend around nest
+
+  # Material requirements
+  max_materials: 64                    # Maximum materials to collect
+
+  required_materials:
+    grass: 16                          # Pieces of grass for lining
+    hay: 8                             # Hay blocks for comfort
+    feathers: 4                        # Feathers for insulation
+    fiber: 4                           # Plant fibers for structure
+
+  # Preferred nesting blocks (for location selection)
+  preferred_nesting_blocks:
+    - "minecraft:hay_block"            # Favorite
+    - "minecraft:grass_block"          # Good
+    - "minecraft:dirt"                 # Acceptable
+    - "minecraft:podzol"               # Acceptable
+
+  # Quality thresholds
+  quality:
+    min_for_breeding: 0.5              # Minimum quality for breeding
+    min_for_egg_laying: 0.3            # Minimum quality for egg laying
+    excellent: 0.8                     # Quality considered excellent
+
+    # Effects of nest quality
+    high_quality_benefits:
+      egg_incubation_speed: 1.5        # Faster egg development
+      breeding_cooldown_reduction: 0.8 # Lower breeding cooldown
+      offspring_health_bonus: 1.2      # Babies start healthier
+
+    low_quality_penalties:
+      egg_failure_chance: 0.3          # Chance eggs fail to hatch
+      abandonment_chance: 0.2          # Chance to abandon nest
+      offspring_health_penalty: 0.8    # Babies start weaker
+
+  # Disturbance handling
+  disturbance:
+    max_disturbances: 5                # Maximum disturbances before abandonment
+    cooldown_after_disturbance: 600    # Ticks before using nest again
+    recovery_rate: 0.01                # How fast disturbance count decreases
+
+  # Seasonal adjustments
+  seasonal:
+    spring_activity: 1.5               # Increased nest building in spring
+    winter_activity: 0.5               # Reduced nest building in winter
+    winter_maintenance: true           # Perform maintenance in winter

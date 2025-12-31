@@ -1,0 +1,41 @@
+{
+	"schemaVersion": 1,
+	"id": "better-ecology",
+	"version": "${version}",
+	"name": "Better Ecology",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/better-ecology/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"me.javavirtualenv.BetterEcology"
+		],
+		"client": [
+			"me.javavirtualenv.BetterEcologyClient"
+		],
+		"fabric-datagen": [
+			"me.javavirtualenv.BetterEcologyDataGenerator"
+		]
+	},
+	"mixins": [
+		"better-ecology.mixins.json",
+		{
+			"config": "better-ecology.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.18.4",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

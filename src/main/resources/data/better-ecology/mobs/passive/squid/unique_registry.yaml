@@ -1,0 +1,485 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# Mob: Squid (minecraft:squid)
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:squid"
+  display_name: "Squid"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "SECONDARY_CONSUMER"
+    diet_type: "FILTER_FEEDER"
+    social_type: "SOLITARY"
+    activity_pattern: "CATHEMERAL"
+
+  reference:
+    real_world_analog: "Common squid (Loligo species)"
+    ecological_role: "Mid-level aquatic predator and filter feeder, provides food for larger marine predators, contributes ink compounds to ecosystem"
+
+  tags: ["aquatic", "deep_water", "cephalopod", "ink_defense", "eight_tentacles"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 5                       # 10 HP (5 hearts)
+  size:
+    width: 0.8
+    height: 0.8
+  biomass:
+    adult: 80
+  movement:
+    speeds:
+      walk: 0.0                   # Cannot survive on land
+      run: 0.0
+      swim: 0.2
+      fly: 0.0
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.015             # Slower metabolism as filter feeder
+  thirst:
+    enabled: false                # Aquatic mob
+  age:
+    baby_duration: 24000
+    max_age: null                 # No natural death from old age
+  social:
+    enabled: false                # Solitary creature
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 6000]
+        activity: 0.9
+        label: "morning"
+      - time: [6000, 12000]
+        activity: 1.0
+        label: "afternoon"
+      - time: [12000, 13500]
+        activity: 0.9
+        label: "dusk"
+      - time: [13500, 22500]
+        activity: 1.0             # Equally active during night
+        label: "night"
+      - time: [22500, 24000]
+        activity: 0.9
+        label: "pre_dawn"
+
+  weather:
+    rain: null                    # Weather doesn't affect underwater mobs
+    thunder: null
+    snow: null
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: ["ocean", "deep_ocean", "frozen_ocean", "lukewarm_ocean", "cold_ocean", "warm_ocean", "river"]
+      forbidden: []
+    required_nearby:
+      - feature: "water"
+        max_distance: 0
+        reason: "Fully aquatic, dies without water"
+
+  territory:
+    enabled: false
+    size: null
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  location_triggers:
+    enabled: false
+    triggers: []
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "ENTITY"
+        target: "#ecosystem:plankton"
+        nutrition: 15
+        method: "FILTER"
+        world_effect:
+          action: "DAMAGE"
+          result: ""
+
+    secondary:
+      - type: "ENTITY"
+        target: "minecraft:tropical_fish"
+        nutrition: 25
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: ""
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 12
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:dolphin"
+        threat_level: "MEDIUM"
+        detection_range: 20
+        response: "FLEE"
+      - entity: "minecraft:drowned"
+        threat_level: "LOW"
+        detection_range: 16
+        response: "FLEE"
+      - entity: "minecraft:guardian"
+        threat_level: "HIGH"
+        detection_range: 24
+        response: "FLEE"
+      - entity: "minecraft:elder_guardian"
+        threat_level: "HIGH"
+        detection_range: 28
+        response: "FLEE"
+      - entity: "minecraft:player"
+        threat_level: "MEDIUM"
+        detection_range: 24
+        response: "FLEE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  enabled: false                  # Squids cannot breed in vanilla Minecraft
+  requirements:
+    min_condition: null
+    recent_food:
+      enabled: false
+    environment:
+      near_water: true
+      required_biomes: []
+    requires_shelter: false
+    season: null
+
+  density_effects:
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: false
+      behavior: ""
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: 0
+    birth:
+      offspring_count: null
+      location_requirement: ""
+
+  parental_care:
+    duration: 0
+    behaviors:
+      protects_offspring: false
+      feeds_offspring: false
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+    leadership:
+      has_leader: false
+      leader_selection: ""
+
+  herd_movement:
+    enabled: false
+
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: false
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false
+      congregates: false
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 8
+    group_size: [1, 3]
+    conditions:
+      biomes: ["ocean", "deep_ocean", "frozen_ocean", "lukewarm_ocean", "cold_ocean", "warm_ocean", "river"]
+      blocks: ["water"]
+
+  carrying_capacity:
+    caps:
+      per_chunk: 4
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  taming:
+    enabled: false
+    items: []
+
+  player_breeding:
+    enabled: false
+    items: []
+
+  drops:
+    on_death:
+      - item: "minecraft:ink_sac"
+        count: [1, 3]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+  interactions: []
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "minecraft:entity.squid.ambient"
+    hurt: "minecraft:entity.squid.hurt"
+    death: "minecraft:entity.squid.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "tentacle_wave"
+        frequency: 200
+        trigger: "random"
+      - behavior: "slow_spin"
+        frequency: 400
+        trigger: "random"
+      - behavior: "vertical_drift"
+        frequency: 300
+        trigger: "random"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+
+unique_behaviors:
+  - name: "ink_cloud_defense"
+    description: |
+      When the squid takes damage from any source, it releases a cloud of black ink
+      into the water around itself as a defense mechanism.
+
+      WHEN: Triggered immediately upon taking damage (any amount)
+      WHERE: In water at squid's current location
+      WHAT:
+        - Spawn ink particle cloud effect (dark particles) in 2-3 block radius
+        - Particles persist for 40-60 ticks (2-3 seconds)
+        - During ink cloud, squid gains brief speed boost (1.5x swim speed for 60 ticks)
+        - Squid swims away rapidly in random direction
+        - Ink cloud provides brief visual obscurement effect
+      WHY:
+        - Ecological: Classic cephalopod defense mechanism
+        - Gameplay: Gives squid chance to escape, creates visual feedback for damage
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 1                 # High priority, immediate response to damage
+      duration: 60
+      affects_others: true
+      world_modification: true
+
+  - name: "passive_swimming"
+    description: |
+      Squid exhibits characteristic swimming behavior with 8 tentacles propelling
+      through water in smooth, undulating movements.
+
+      WHEN: Default movement behavior when not fleeing or hunting
+      WHERE: In any water body at Y 46-62
+      WHAT:
+        - Smooth horizontal swimming with occasional vertical movement
+        - Periodic pauses (60-120 ticks) where squid slowly drifts
+        - Tentacles animate in wave pattern during swimming
+        - Prefers deeper water, tends to swim downward if in shallow areas
+        - Random direction changes every 200-400 ticks
+      WHY:
+        - Ecological: Realistic squid movement pattern
+        - Gameplay: Creates interesting ambient behavior
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 15
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "depth_preference"
+    description: |
+      Squids prefer to stay in deeper water zones and will actively swim downward
+      if they find themselves in shallow water.
+
+      WHEN: Continuously evaluates current depth
+      WHERE: Any water body
+      WHAT:
+        - If Y-level > 56, increase downward swimming tendency by 70%
+        - If Y-level < 50, slightly reduce downward tendency
+        - Optimal depth range: Y 46-52
+        - Will avoid surface (Y > 60) by swimming down when detected
+      WHY:
+        - Ecological: Squid are deep-water creatures, avoid bright surface
+        - Gameplay: Creates more interesting distribution in ocean depths
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: 12
+      duration: null
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+
+relationships:
+  predators:
+    - entity: "minecraft:dolphin"
+      notes: "Dolphins hunt squid opportunistically"
+    - entity: "minecraft:guardian"
+      notes: "Guardians prey on squid in ocean monuments"
+    - entity: "minecraft:elder_guardian"
+      notes: "Elder guardians prey on squid"
+    - entity: "minecraft:drowned"
+      notes: "Drowned may attack squid occasionally"
+
+  prey: []
+
+  competitors: []
+
+  mutualists: []
+
+  commensals: []
+
+  special:
+    - entity: "minecraft:glow_squid"
+      relationship: "related_species"
+      description: "Similar creature but bioluminescent variant, shares similar behaviors but different habitat depth preferences"
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+
+narrative:
+  summary: |
+    The squid is a passive aquatic cephalopod with eight tentacles that lives in
+    the deeper zones of ocean and river biomes. It uses ink clouds as a defense
+    mechanism when threatened and serves as prey for larger marine predators.
+
+  behavior_overview: |
+    Squid spend their lives drifting and swimming through water columns at depths
+    between Y 46-62. They exhibit smooth, undulating swimming powered by their eight
+    tentacles, occasionally pausing to drift with currents. When damaged, they instantly
+    release a cloud of black ink and flee rapidly in a random direction. They are
+    solitary creatures that do not form groups or defend territory, instead moving
+    freely through their aquatic environment. Squid are filter feeders that consume
+    microscopic organisms from the water, though they occasionally hunt small fish.
+    They are timid around players and other threats, fleeing when approached.
+
+  ecological_importance: |
+    Squid serve as an important mid-level link in the aquatic food chain, consuming
+    plankton and small fish while providing biomass for larger predators like dolphins
+    and guardians. Their ink sacs are valuable to players for crafting. If removed,
+    the ocean ecosystem would lose a key prey species for marine predators, and players
+    would lose access to black dye sources. Their presence adds life and movement to
+    deeper ocean zones that would otherwise feel static.
+
+  design_notes: |
+    The squid cannot breed in vanilla Minecraft, which should be preserved for
+    authenticity. Spawning rates should maintain moderate populations without
+    overcrowding. The ink cloud defense is the signature behavior and should be
+    visually prominent and functional. Swimming animation should emphasize the
+    eight tentacles and create smooth, realistic movement. Squids should prefer
+    depth and avoid bright surface areas, concentrating in the Y 46-62 range
+    where lighting is reduced but not complete darkness.
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 0.0   # Cannot breed
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: 45         # Low energy needs as passive swimmer
+    provides_to_predator: 80      # Moderate biomass when eaten
+
+  population_target: "Common, 3-5 per ocean chunk in suitable depth range"
+
+  removal_impact: "Loss of key marine prey species, players lose ink sac source, reduced ocean ecosystem diversity"

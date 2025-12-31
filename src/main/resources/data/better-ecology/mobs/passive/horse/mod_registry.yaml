@@ -1,0 +1,719 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - HORSE BEHAVIOR CONFIGURATION
+# Version: 2.0
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:horse"
+  display_name: "Horse"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "HERD"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Domesticated horse (Equus caballus)"
+    ecological_role: "Large grazing herbivore, domesticated companion animal, seed disperser"
+
+  tags: ["domesticated", "rideable", "grazing", "plains_animal", "savanna_animal"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  health:
+    base: 11.25                   # 15-30 HP average = 22.5 HP = 11.25 hearts (variable per individual)
+    baby_multiplier: 0.5
+
+  size:
+    width: 1.4
+    height: 1.6
+    baby_scale: 0.5
+
+  biomass:
+    adult: 450                    # Large herbivore
+    baby: 100
+    transfer_efficiency: 0.1
+
+  movement:
+    speeds:
+      walk: 0.225                 # Variable base speed (0.1125 to 0.3375)
+      run: 0.45                   # Sprint speed
+      swim: 0.15
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: true
+      jump_height: 2.5            # Variable (1.0 to 5.5 blocks)
+      avoids_water: false
+      avoids_cliffs: true
+      cliff_threshold: 5
+
+    conditional_modifiers:
+      baby: 0.7
+      injured: 0.6
+      hungry: 0.8
+      fleeing: 1.5
+      in_water_nonaquatic: 0.4
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 80
+    decay_rate: 0.015             # Slower for large herbivore
+
+    thresholds:
+      satiated: 80
+      hungry: 50
+      very_hungry: 25
+      starving: 10
+
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 200
+
+  thirst:
+    enabled: true
+    max_value: 100
+    starting_value: 100
+    decay_rate: 0.018             # Horses need frequent water access
+    thresholds:
+      satisfied: 75
+      thirsty: 45
+      dehydrated: 15
+
+
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+    gain_when_satiated: 0.01
+    loss_when_hungry: 0.02
+    loss_when_starving: 0.1
+
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.6            # Good stamina recovery
+
+    costs:
+      sprinting: 0.25             # Efficient runner
+      fleeing: 0.3
+      swimming: 0.2
+
+  age:
+    enabled: true
+    baby_duration: 24000
+    maturity_age: 24000
+    elderly_age: null
+    max_age: null
+
+  social:
+    enabled: true
+    max_value: 100
+    decay_rate: 0.005             # Mild social needs
+    recovery_rate: 0.1
+    loneliness_threshold: 35
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 6000]
+        activity: 1.0
+        label: "morning"
+      - time: [6000, 12000]
+        activity: 0.9
+        label: "afternoon"
+      - time: [12000, 13500]
+        activity: 0.7
+        label: "dusk"
+      - time: [13500, 22500]
+        activity: 0.3             # Reduced activity at night
+        label: "night"
+      - time: [22500, 24000]
+        activity: 0.6
+        label: "pre_dawn"
+
+    low_activity_behavior:
+      action: "rest"
+      seek_shelter: false
+      reduced_awareness: true
+      awareness_multiplier: 0.6
+
+  weather:
+    rain:
+      activity_multiplier: 0.8
+      seek_shelter: false
+      shelter_priority: 1
+    thunder:
+      activity_multiplier: 0.5
+      seek_shelter: false
+      panic_chance: 0.1
+    snow:
+      activity_multiplier: 0.7
+      seek_shelter: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  habitat:
+    biomes:
+      allowed: []                 # Can exist anywhere
+      preferred: ["plains", "savanna", "savanna_plateau", "sunflower_plains"]
+      forbidden: ["ocean", "deep_ocean", "frozen_ocean"]
+
+    altitude:
+      min: 50
+      max: 200
+      preferred: [62, 120]
+
+    required_nearby:
+      - feature: "grass"
+        max_distance: 16
+        reason: "Food source"
+
+  territory:
+    enabled: false
+
+  home_range:
+    enabled: true
+    radius: 96                    # Large roaming range
+    has_home_point: false
+    home_type: null
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  food_sources:
+    primary:
+      - type: "BLOCK"
+        target: "minecraft:grass_block"
+        nutrition: 20
+        saturation: 3600
+        consumption_time: 40
+        method: "GRAZE"
+        world_effect:
+          action: "CONVERT"
+          result: "minecraft:dirt"
+        condition_gain: 3
+
+      - type: "ITEM"
+        target: "minecraft:wheat"
+        nutrition: 25
+        saturation: 4000
+        consumption_time: 20
+        method: "PICKUP"
+        condition_gain: 4
+        health_effect: 1
+
+      - type: "ITEM"
+        target: "minecraft:hay_block"
+        nutrition: 60
+        saturation: 7200
+        consumption_time: 60
+        method: "PICKUP"
+        condition_gain: 10
+        health_effect: 5
+
+    secondary:
+      - type: "ITEM"
+        target: "minecraft:apple"
+        nutrition: 15
+        saturation: 2400
+        consumption_time: 20
+        method: "PICKUP"
+        condition_gain: 2
+
+      - type: "ITEM"
+        target: "minecraft:sugar"
+        nutrition: 10
+        saturation: 1200
+        consumption_time: 10
+        method: "PICKUP"
+        condition_gain: 1
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 16
+      when_hungry: 24
+      when_starving: 40
+    search_interval: 200
+
+    memory:
+      remembers_locations: true
+      memory_duration: 24000
+      remembers_depleted: true
+      avoids_depleted_for: 12000
+      shares_with_group: true
+
+    sustainability:
+      enabled: true
+      dont_deplete_fully: true
+      minimum_remaining: 2
+      patch_return_delay: 6000
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:wolf"
+        threat_level: "MEDIUM"
+        detection_range: 20
+        response: "FLEE"
+
+    default_response:
+      detection_range: 24
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.5
+        flee_distance: 48
+        flee_toward: "GROUP"
+        zigzag: false
+
+      alarm:
+        gives_alarm: true
+        alarm_radius: 32
+        alarm_triggers_group_flee: true
+
+    all_clear:
+      predator_distance: 64
+      time_since_seen: 600
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: true
+  method: "SEXUAL"
+
+  requirements:
+    min_age: 24000
+    max_age: null
+    min_health: 0.7
+    min_condition: 60
+    min_hunger: 60
+
+    recent_food:
+      enabled: true
+      time_window: 12000
+      meals_required: 2
+
+    environment:
+      near_water: false
+      required_biomes: []
+      required_blocks_nearby: []
+
+    requires_shelter: false
+    mate_required: true
+    mate_max_distance: 16
+
+  density_effects:
+    enabled: true
+    check_radius: 64
+
+    density_curve:
+      - count: 2
+        multiplier: 1.5
+      - count: 4
+        multiplier: 1.2
+      - count: 8
+        multiplier: 1.0
+      - count: 15
+        multiplier: 0.5
+      - count: 25
+        multiplier: 0.1
+
+  mate_selection:
+    search_radius: 32
+    search_interval: 1000
+
+    preferences:
+      prefer_healthy: true
+      prefer_good_condition: true
+      avoid_relatives: true
+      relative_recognition_duration: 48000
+
+    courtship:
+      enabled: false
+
+  breeding:
+    cooldown: 24000
+
+    gestation:
+      type: "INSTANT"
+      duration: 0
+
+    birth:
+      offspring_count: [1, 1]
+      condition_affects_count: false
+
+  parental_care:
+    enabled: true
+    duration: 24000
+
+    behaviors:
+      protects_offspring: true
+      protection_aggression: 1.5
+      protection_radius: 8
+      feeds_offspring: false
+      teaches_offspring: false
+      carries_offspring: false
+
+    offspring_behavior:
+      follows_parent: true
+      follow_distance: 3
+      max_separation: 12
+      separation_distress: true
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  group:
+    type: "HERD"
+    size:
+      min: 2
+      optimal: 4
+      max: 8
+
+    composition:
+      mixed_sex: true
+      mixed_age: true
+      family_based: true
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  herd_movement:
+    enabled: true
+    cohesion_radius: 16
+    separation_distance: 3
+    alignment: true
+
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "predator_detected"
+          call: "whinny"
+          group_response: "alert_and_flee"
+      radius: 32
+      chain_calling: false
+
+    contact_calls:
+      enabled: true
+      when: ["separated"]
+      radius: 24
+
+  behaviors:
+    greeting: true
+    allogrooming: false
+    play: true                    # Especially young horses
+    huddling: false
+    dominance_hierarchy: false
+
+  group_benefits:
+    predator_detection_bonus: 0.15
+    foraging_efficiency_bonus: 0.05
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  terrain:
+    enabled: true
+    actions:
+      - trigger: "foraging"
+        action: "CONVERT"
+        target_blocks: ["minecraft:grass_block"]
+        result_block: "minecraft:dirt"
+        frequency: 0.05
+        radius: 1
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: true
+      seeds: ["minecraft:wheat_seeds", "minecraft:grass"]
+      method: "GUT_PASSAGE"
+      dispersal_radius: 32
+
+    pollination:
+      enabled: false
+
+    nutrient_cycling:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false              # Not explicitly required
+      frequency: 12000
+      water_blocks: ["water"]
+      duration: 60
+      congregates: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  spawning:
+    weight: 5
+    group_size: [2, 6]
+
+    conditions:
+      blocks: ["minecraft:grass_block"]
+      biomes: ["plains", "savanna", "savanna_plateau", "sunflower_plains"]
+      light: [9, 15]
+      altitude: [50, 200]
+      time: null
+      weather: null
+
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 6
+      regional: 30                # Per 512x512 area
+
+    over_capacity:
+      - threshold: 1.2
+        effects: ["reduced_breeding"]
+      - threshold: 1.5
+        effects: ["dispersal"]
+
+  dispersal:
+    enabled: true
+    triggers: ["adulthood", "overcrowding"]
+    distance: [64, 192]
+
+  mortality:
+    old_age:
+      enabled: false
+    starvation:
+      enabled: true
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  distances:
+    detection: 32
+    caution: 16
+    flee: 6
+
+  habituation:
+    enabled: true
+    rate: 0.02
+    decay: 0.001
+    max_habituation: 0.9
+    habituated_flee_distance: 2
+
+  taming:
+    enabled: true
+    items: []                     # Taming by repeated mounting
+    chance: 0.0                   # Special taming mechanic
+    requires_habituation: false
+
+  player_breeding:
+    enabled: true
+    items: ["minecraft:golden_apple", "minecraft:golden_carrot"]
+    bypasses_conditions: true
+
+  drops:
+    on_death:
+      - item: "minecraft:leather"
+        count: [0, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+  interactions:
+    - action: "RIDE"
+      item: "minecraft:saddle"
+      result: "mountable"
+      description: "Can be ridden when tamed and equipped with saddle"
+    - action: "EQUIP"
+      item: "minecraft:iron_horse_armor"
+      result: "protected"
+      description: "Equip armor for protection"
+    - action: "EQUIP"
+      item: "minecraft:golden_horse_armor"
+      result: "protected"
+      description: "Equip armor for protection"
+    - action: "EQUIP"
+      item: "minecraft:diamond_horse_armor"
+      result: "protected"
+      description: "Equip armor for protection"
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  sounds:
+    ambient: "entity.horse.ambient"
+    hurt: "entity.horse.hurt"
+    death: "entity.horse.death"
+    baby: "entity.horse.ambient"
+    alarm: "entity.horse.angry"
+    eating: "entity.horse.eat"
+
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "head_shake"
+        frequency: 0.01
+        trigger: "random"
+      - behavior: "tail_swish"
+        frequency: 0.05
+        trigger: "random"
+      - behavior: "ear_twitch"
+        frequency: 0.08
+        trigger: "random"
+      - behavior: "graze_animation"
+        frequency: 0.02
+        trigger: "near_grass"
+
+  personality_traits:
+    boldness:
+      base: 0.4
+      variation: 0.3
+    activity:
+      base: 0.6
+      variation: 0.2
+    sociability:
+      base: 0.7
+      variation: 0.2
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+
+ai_priority_framework:
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  physiological:
+    critical_health: 3
+    drink_water: 4
+    eat_food: 5
+    find_shelter: 6
+
+  reproduction:
+    care_for_offspring: 7
+    breed: 8
+    find_mate: 9
+
+  social:
+    group_cohesion: 10
+    social_interaction: 11
+
+  hunting:
+    hunt_prey: 12
+
+  location:
+    location_triggered: 13
+    territory_patrol: 14
+
+  default:
+    wander: 15
+    idle: 16
+    rest: 17
+
+# ============================================================================
+# SYSTEM 15: ANIMAL-ANIMAL INTERACTIONS
+# ============================================================================
+
+interaction:
+  predators: []
+  prey: []
+
+  symbiotic_partners: []
+  competitors: []
+
+  herd_compatible:
+    - "minecraft:donkey"
+    - "minecraft:mule"
+
+  relationship_decay_rate: 0.001
+  trust_build_rate: 0.01
+  grudge_build_rate: 0.02
+
+  gives_warning_calls: false
+  can_mourn: false
+  can_grieve: false
+  can_play: true
+  can_be_altruistic: false
+  can_teach: false
+

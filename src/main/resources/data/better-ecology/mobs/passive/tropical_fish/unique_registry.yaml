@@ -1,0 +1,621 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# Mob: Tropical Fish
+# ============================================================================
+#
+# This file defines the unique characteristics of tropical fish that distinguish
+# them from other aquatic mobs. Focus areas include:
+# - 3000+ color/pattern variant system
+# - Schooling behavior and group dynamics
+# - Bucket capture mechanics with variant preservation
+# - Axolotl breeding integration
+# - Warm ocean biome specialization
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:tropical_fish"
+  display_name: "Tropical Fish"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "FILTER_FEEDER"
+    social_type: "SCHOOLING"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Coral reef fish community (clownfish, tangs, butterflyfish, angelfish, parrotfish, and others)"
+    ecological_role: "Small, colorful reef fish that form schools in warm ocean waters. Primary prey species for axolotls and other aquatic predators. Essential component of coral reef biodiversity, representing over 3000 natural variants."
+
+  tags:
+    - "aquatic"
+    - "schooling"
+    - "bucket_capturable"
+    - "axolotl_food"
+    - "colorful_variant"
+    - "reef_associated"
+    - "warm_water"
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 1.5
+
+  size:
+    width: 0.5
+    height: 0.4
+
+  biomass:
+    adult: 5
+
+  movement:
+    speeds:
+      walk: 0.0
+      swim: 0.4
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.015
+
+  thirst:
+    enabled: false
+
+  age:
+    baby_duration: 24000
+
+  social:
+    enabled: true
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule: null
+
+  weather:
+    rain: null
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed:
+        - "minecraft:warm_ocean"
+        - "minecraft:lukewarm_ocean"
+        - "minecraft:deep_lukewarm_ocean"
+        - "minecraft:lush_caves"
+        - "minecraft:mangrove_swamp"
+      preferred:
+        - "minecraft:warm_ocean"
+        - "minecraft:lukewarm_ocean"
+      forbidden:
+        - "minecraft:frozen_ocean"
+        - "minecraft:deep_frozen_ocean"
+        - "minecraft:cold_ocean"
+        - "minecraft:deep_cold_ocean"
+
+    required_nearby:
+      - feature: "water"
+        max_distance: 0
+
+  territory:
+    enabled: false
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "BLOCK"
+        target: "minecraft:seagrass"
+        nutrition: 5
+        method: "FILTER"
+        world_effect:
+          action: "NONE"
+          result: null
+
+      - type: "BLOCK"
+        target: "minecraft:kelp"
+        nutrition: 5
+        method: "FILTER"
+        world_effect:
+          action: "NONE"
+          result: null
+
+    secondary:
+      - type: "ENTITY"
+        target: "#ecosystem:plankton"
+        nutrition: 3
+        method: "FILTER"
+        world_effect:
+          action: "DESTROY"
+          result: null
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 12
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:axolotl"
+        threat_level: "HIGH"
+        detection_range: 16
+        response: "FLEE"
+
+      - entity: "minecraft:dolphin"
+        threat_level: "MEDIUM"
+        detection_range: 20
+        response: "FLEE"
+
+      - entity: "minecraft:drowned"
+        threat_level: "LOW"
+        detection_range: 12
+        response: "FLEE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: 50
+    recent_food:
+      enabled: false
+    environment:
+      near_water: true
+      required_biomes:
+        - "minecraft:warm_ocean"
+        - "minecraft:lukewarm_ocean"
+        - "minecraft:deep_lukewarm_ocean"
+        - "minecraft:lush_caves"
+        - "minecraft:mangrove_swamp"
+    requires_shelter: false
+
+  density_effects:
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: false
+      behavior: ""
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: 0
+    birth:
+      offspring_count: [3, 8]
+      location_requirement: "in_water"
+
+  parental_care:
+    duration: 0
+    behaviors:
+      protects_offspring: false
+      feeds_offspring: false
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "FISSION_FUSION"
+    size:
+      min: 3
+      optimal: 7
+      max: 9
+    leadership:
+      has_leader: false
+
+  herd_movement:
+    enabled: true
+
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "predator_detected"
+          call: "rapid_movement"
+          group_response: "scatter_and_flee"
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: false
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false
+      congregates: false
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 15
+    group_size: [3, 8]
+    conditions:
+      biomes:
+        - "minecraft:warm_ocean"
+        - "minecraft:lukewarm_ocean"
+        - "minecraft:deep_lukewarm_ocean"
+        - "minecraft:lush_caves"
+        - "minecraft:mangrove_swamp"
+      blocks:
+        - "minecraft:water"
+
+  carrying_capacity:
+    caps:
+      per_chunk: 24
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "PASSIVE"
+
+  taming:
+    enabled: false
+
+  player_breeding:
+    enabled: false
+
+  drops:
+    on_death:
+      - item: "minecraft:tropical_fish"
+        count: [1, 1]
+        chance: 1.0
+
+      - item: "minecraft:bone_meal"
+        count: [1, 1]
+        chance: 0.05
+
+  interactions:
+    - action: "bucket_capture"
+      item: "minecraft:water_bucket"
+      result: "minecraft:tropical_fish_bucket"
+      description: "Capture fish with bucket, preserving variant data"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "minecraft:entity.tropical_fish.ambient"
+    hurt: "minecraft:entity.tropical_fish.hurt"
+    death: "minecraft:entity.tropical_fish.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "swim_in_circle"
+        frequency: 0.02
+        trigger: "calm"
+
+      - behavior: "quick_dart"
+        frequency: 0.01
+        trigger: "random"
+
+      - behavior: "school_synchronization"
+        frequency: 0.05
+        trigger: "in_group"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+unique_behaviors:
+  - name: "variant_diversity_system"
+    description: |
+      Tropical fish possess an extraordinary variant system with 2,700-3,072 possible
+      combinations of shape, pattern, base color, and pattern color. This creates
+      unparalleled biodiversity among Minecraft mobs.
+
+      WHEN: On spawn (90% preset variants, 10% random in Java Edition)
+      WHERE: Warm/lukewarm oceans, lush caves, mangrove swamps
+      WHAT: Generate fish from 22 common named variants or random combinations
+           of 2 shapes, 6 patterns, 15-16 base colors, and 15-16 pattern colors
+      WHY: Represents coral reef biodiversity; provides visual variety and
+           collection incentive for players
+
+    implementation_hints:
+      trigger_type: "SPAWN"
+      priority: 1
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "school_cohesion_behavior"
+    description: |
+      Tropical fish naturally form schools of 3-9 individuals that swim together
+      in coordinated patterns. Schools preferentially consist of the same variant
+      type, creating visually uniform groups.
+
+      WHEN: Continuously when spawned
+      WHERE: In water bodies within habitat biomes
+      WHAT: Maintain proximity to nearby fish of same variant, coordinate
+           movement patterns, scatter as group when predator detected
+      WHY: Mimics real-world schooling behavior for predator confusion
+           and hydrodynamic efficiency
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 5
+      duration: null
+      affects_others: true
+      world_modification: false
+
+  - name: "bucket_variant_preservation"
+    description: |
+      When captured in a water bucket, tropical fish retain their exact variant
+      (shape, pattern, colors) in the bucket's NBT data. The bucket is named
+      "Bucket of [Variant Name]" and the fish becomes permanent when placed.
+
+      WHEN: Player right-clicks fish with water bucket
+      WHERE: Anywhere fish is accessible
+      WHAT: Store variant data in bucket item, convert to bucket entity,
+           prevent despawning when released
+      WHY: Allows collection and transport of specific variants; essential
+           for axolotl breeding (requires specific bucket variants)
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 2
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "axolotl_breeding_integration"
+    description: |
+      Bucket of Tropical Fish is the exclusive food item for axolotl breeding
+      and healing. Raw tropical fish items do NOT work - only the bucketed
+      version triggers breeding.
+
+      WHEN: Axolotl fed by player
+      WHERE: Anywhere axolotl and player interact
+      WHAT: Trigger love mode in axolotl, heal axolotl for 2 hearts
+           Consumes the bucket, returns empty water bucket
+      WHY: Creates unique food chain dependency; makes tropical fish
+           valuable beyond decorative purposes
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 3
+      duration: null
+      affects_others: true
+      world_modification: false
+
+  - name: "swim_against_flow"
+    description: |
+      Tropical fish have the unique ability to swim against water current flow,
+      unlike most other aquatic mobs that are carried by currents.
+
+      WHEN: Moving in water with non-zero flow
+      WHERE: In any water block with current
+      WHAT: Override water flow forces, maintain intended movement direction
+      WHY: Allows navigation in flowing water (rivers, waterfalls)
+           and escapes from being washed away
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 4
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "variant_school_homing"
+    description: |
+      When spawning, 90% of schools consist of a single preset variant type
+      rather than mixed variants. This creates uniform schools that match
+      real-world fish species behavior.
+
+      WHEN: During group spawn
+      WHERE: In warm ocean biomes primarily
+      WHAT: Select one preset variant, spawn all fish in group with that variant
+           (10% chance for mixed/variant group)
+      WHY: Creates natural-looking schools; enhances visual appeal;
+           reflects real species-specific schooling
+
+    implementation_hints:
+      trigger_type: "SPAWN"
+      priority: 2
+      duration: null
+      affects_others: true
+      world_modification: false
+
+  - name: "despawn_permanence_on_bucket"
+    description: |
+      Naturally spawned tropical fish despawn when player moves 128+ blocks away,
+      but fish placed from buckets become permanent and never despawn.
+
+      WHEN: Fish placed from bucket vs natural spawn
+      WHERE: Anywhere fish exists
+      WHAT: Set persistence flag to true for bucketed fish, false for natural
+      WHY: Allows players to create permanent aquarium displays and
+           sustainable axolotl food sources
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 2
+      duration: null
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+relationships:
+  predators:
+    - entity: "minecraft:axolotl"
+      notes: "Primary predator. Only bucketed tropical fish triggers axolotl breeding and healing. Fish flee from axolotls at high speed."
+
+    - entity: "minecraft:dolphin"
+      notes: "Secondary predator. Dolphins hunt tropical fish. Players can feed tropical fish to dolphins for trust, but this doesn't breed them."
+
+    - entity: "minecraft:drowned"
+      notes: "Minor predator. Drowned may attack tropical fish if encountered."
+
+  prey: []
+
+  competitors:
+    - entity: "minecraft:cod"
+      resource: "Plankton and aquatic plant matter"
+      interaction: "Peaceful coexistence. Both are small schooling fish in similar waters."
+
+    - entity: "minecraft:salmon"
+      resource: "Food sources in shared biomes"
+      interaction: "Minimal competition. Salmon prefer colder waters, tropical fish prefer warm."
+
+    - entity: "minecraft:pufferfish"
+      resource: "Space in coral reef areas"
+      interaction: "Peaceful. Pufferfish inflate when threatened, tropical fish avoid them."
+
+  mutualists: []
+
+  commensals:
+    - entity: "minecraft:cod"
+      notes: "School together in some cases. Tropical fish benefit from safety in mixed schools, cod unaffected."
+
+    - entity: "minecraft:salmon"
+      notes: "Occasional mixed schooling in lukewarm ocean overlap zones."
+
+  special:
+    - entity: "minecraft:axolotl"
+      relationship: "specialized_predator_prey"
+      description: "Exclusive food dependency. Axolotls only breed and heal when fed Bucket of Tropical Fish, not raw fish item. Creates unique gameplay loop."
+
+    - entity: "minecraft:dolphin"
+      relationship: "predator_and_reward"
+      description: "Dolphins hunt tropical fish, but players can also feed tropical fish to dolphins to gain trust for treasure leading assistance."
+
+    - entity: "minecraft:player"
+      relationship: "collector_and_breeder"
+      description: "Players collect variants for aquariums and breed axolotls. Tropical fish are both aesthetic collectibles and functional breeding resources."
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+narrative:
+  summary: |
+    Tropical fish are small, colorful aquatic mobs that represent the incredible
+    biodiversity of coral reef ecosystems. With over 3,000 possible color and
+    pattern combinations, they are the most visually diverse mob in Minecraft.
+    They form schools in warm ocean waters and serve as the primary food source
+    for axolotls.
+
+  behavior_overview: |
+    Tropical fish spend their days swimming in coordinated schools of 3-9
+    individuals, moving through warm ocean waters, lush caves, and mangrove
+    swamps. Schools typically consist of fish with the same color pattern,
+    creating uniform groups that mirror real-world species behavior. They
+    continuously patrol their home range, feeding on plankton and plant matter,
+    while remaining vigilant for predators. When danger approaches, the entire
+    school scatters in synchronized fleeing maneuvers. At night, their activity
+    reduces but they remain awake, drifting lazily through the water column.
+    Unlike most aquatic mobs, they can swim against currents, allowing them to
+    navigate freely even in flowing water.
+
+  ecological_importance: |
+    Tropical fish are a cornerstone of the warm ocean ecosystem. As primary
+    consumers, they feed on plankton and plant material, transferring energy
+    from lower trophic levels to predators like axolotls and dolphins. Their
+    presence indicates healthy coral reef environments, and their incredible
+    variant diversity represents real-world reef biodiversity. They are
+    essential for axolotl populations - without bucketed tropical fish,
+    axolotls cannot breed or heal effectively. If removed, warm oceans would
+    lose their visual vibrancy, axolotl populations would crash, and the reef
+    food web would lose a critical link.
+
+  design_notes: |
+    The variant system is the most complex feature. With 2 shapes (small/large),
+    6 patterns (kob, sunstreak, snooper, dasher, brinely, spotty), 15 base
+    colors, and 15 pattern colors, there are 3,072 possible combinations in
+    Java Edition. The 22 common preset variants (Anemone, Black Tang, Blue Tang,
+    etc.) appear 90% of the time, with the remaining 10% being completely random
+    variants. This system should be preserved exactly as vanilla implements it.
+
+    Bucket capture mechanics are critical - the bucket MUST store the exact
+    variant data, and "Bucket of Tropical Fish" (not raw fish) MUST be the only
+    item that works for axolotl breeding. This is a core vanilla gameplay loop.
+
+    Schooling AI should prefer grouping with same-variant fish. When spawning,
+    select one preset variant and apply it to all fish in the school (90% chance)
+    or use random variants (10% chance). This creates natural uniform schools.
+
+    Despawn behavior: natural spawned fish despawn at 128+ blocks, but bucketed
+    fish are permanent. This allows player-created aquariums and sustainable
+    axolotl farms.
+
+    Current health (3 HP) is very low. Consider balancing around this - they
+    die quickly but breed rapidly to compensate.
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 1.2
+  mortality_rate_multiplier: 1.5
+
+  energy_flow:
+    daily_requirement: 15
+    provides_to_predator: 8
+
+  population_target: "Common, 20-30 per warm ocean chunk in schools of 7-9"
+
+  removal_impact: "Axolotl breeding becomes impossible; warm oceans lose visual diversity; coral reef ecosystems feel incomplete"

@@ -1,0 +1,30 @@
+{
+  "minecraft:cod": {
+    "behaviors": {
+      "enabled": true,
+      "priority": 2,
+      "max_force": 0.15,
+      "max_speed": 0.3,
+      "separation": 2.0,
+      "alignment": 1.2,
+      "cohesion": 1.5,
+      "schooling": 1.8,
+      "current_riding": 0.8,
+      "evasion": 1.5
+    },
+    "schooling": {
+      "enabled": true,
+      "school_size": 6,
+      "perception_radius": 10.0,
+      "separation_distance": 1.2,
+      "cohesion_strength": 1.5,
+      "alignment_strength": 1.2
+    },
+    "aquatic": {
+      "enabled": true,
+      "depth_preference": "mid",
+      "surface_seeking": 0.3,
+      "current_resistance": 0.6
+    }
+  }
+}

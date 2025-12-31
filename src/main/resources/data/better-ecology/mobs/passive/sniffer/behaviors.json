@@ -1,0 +1,136 @@
+{
+  "behaviors": {
+    "enabled": true,
+    "priority": 2,
+    "max_force": 0.12,
+    "max_speed": 0.2,
+
+    "separation": 1.0,
+    "alignment": 0.5,
+    "cohesion": 0.8,
+    "herd_cohesion": 1.0,
+    "leader_following": 0.6,
+
+    "pursuit": 0.0,
+    "evasion": 0.5,
+    "avoidance": 0.0,
+    "attraction": 0.0,
+    "escape": 0.5,
+    "panic": 1.5,
+    "flight_initiation": 0.0,
+    "alarm_signal": 0.0,
+
+    "follow_mother": 1.8,
+    "mother_protection": 0.8,
+    "hiding": 0.0,
+    "separation_distress": 0.0,
+
+    "sniffing": 1.5,
+    "digging": 2.0,
+    "sniffer_social": 1.2
+  },
+  "hunger": {
+    "enabled": true,
+    "max_value": 100,
+    "starting_value": 80,
+    "decay_rate": 0.8,
+    "damage_threshold": 10,
+    "damage_amount": 1.0,
+    "damage_interval": 200
+  },
+  "thirst": {
+    "enabled": false
+  },
+  "condition": {
+    "enabled": true,
+    "max_value": 100,
+    "starting_value": 75,
+    "gain_when_satiated": 0.015,
+    "loss_when_hungry": 0.02,
+    "loss_when_starving": 0.1
+  },
+  "energy": {
+    "enabled": true,
+    "max_value": 100,
+    "recovery_rate": 0.1,
+    "digging_cost": 2.0,
+    "sniffing_cost": 0.3
+  },
+  "age": {
+    "enabled": true,
+    "baby_duration": 48000,
+    "maturity_age": 48000
+  },
+  "social": {
+    "enabled": true,
+    "max_value": 100,
+    "starting_value": 100,
+    "decay_rate": 0.008,
+    "recovery_rate": 0.15,
+    "loneliness_threshold": 25
+  },
+  "movement": {
+    "walk_speed": 0.15,
+    "run_speed": 0.25,
+    "avoids_cliffs": true,
+    "cliff_threshold": 3.0
+  },
+  "health": {
+    "base_health": 14,
+    "baby_multiplier": 0.5
+  },
+  "size": {
+    "width": 1.9,
+    "height": 1.7,
+    "baby_scale": 0.45
+  },
+  "diet": {
+    "is_herbivore": true,
+    "preferred_plants": [
+      "minecraft:torchflower_seeds",
+      "minecraft:pitcher_pod"
+    ]
+  },
+  "predation": {
+    "as_prey": {
+      "detection_range": 20,
+      "flee_speed_multiplier": 0.8,
+      "flee_distance": 24
+    }
+  },
+  "temporal": {
+    "activity_pattern": "diurnal",
+    "rest_start": 13000,
+    "rest_end": 0
+  },
+  "breeding": {
+    "cooldown": 60000,
+    "min_age": 48000,
+    "min_condition": 60,
+    "min_hunger": 55
+  },
+  "production": {
+    "enabled": true,
+    "resource_type": "ancient_seeds",
+    "max_amount": 100,
+    "base_regen_rate": 0.05,
+    "quality_multiplier": 1.2,
+    "condition_bonus": true,
+    "hunger_penalty": true,
+    "production_cycle": 2400
+  },
+  "sniffer_behaviors": {
+    "smell_radius": 24.0,
+    "scent_persistence_ticks": 1200,
+    "seed_memory_size": 10,
+    "digging_speed": 0.2,
+    "digging_duration": 80,
+    "daily_dig_limit": 6,
+    "teaching_range": 16.0,
+    "communication_range": 32.0,
+    "teaching_duration": 200,
+    "rare_seed_chance": 0.05,
+    "ancient_moss_chance": 0.15,
+    "biome_specific_seeds": true
+  }
+}

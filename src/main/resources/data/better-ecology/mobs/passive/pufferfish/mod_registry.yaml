@@ -1,0 +1,837 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - GENERALIZED BEHAVIOR TEMPLATE
+# Version: 2.0
+# ============================================================================
+#
+# PURPOSE:
+# This template defines ALL possible behaviors, systems, and parameters for
+# ecosystem mobs. Individual mob profiles reference this template and only
+# specify values that differ from defaults or require unique implementation.
+#
+# HOW TO USE:
+# 1. AI reads this template ONCE to understand all available systems
+# 2. For each mob, AI reads the mob's Unique Profile
+# 3. Profile values override template defaults
+# 4. Profile descriptions guide implementation of unique behaviors
+#
+# CONVENTIONS:
+# - All time values are in ticks (20 ticks = 1 second)
+# - All distances are in blocks
+# - Percentages are 0.0-1.0 unless noted
+# - null = disabled/not applicable
+# - [] = empty list (none)
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+# Every mob must have basic identity. These have no defaults - must be specified.
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:pufferfish"
+  display_name: "Pufferfish"
+
+  # Ecological classification
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "OMNIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "DIURNAL"
+
+  # Reference information
+  reference:
+    real_world_analog: "Porcupinefish/Pufferfish"
+    ecological_role: "Small defensive fish, toxic prey species that helps control small marine organisms"
+
+  # Tags for system filtering
+  tags: ["aquatic", "toxic", "defensive"]
+
+
+# ============================================================================
+# BEHAVIORS - PUFFERFISH SPECIFIC
+# ============================================================================
+
+behaviors:
+  enabled: true
+  priority: 3
+
+  max_force: 0.08
+  max_speed: 0.15
+
+  # Inflate behavior
+  inflate: 1.2
+
+  # Evasion (slower when inflated)
+  evasion: 1.0
+  avoidance: 0.8
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+# Base physical properties. Most have sensible defaults for a medium animal.
+# ============================================================================
+
+physical:
+  # Health
+  health:
+    base: 1.5                   # 3 HP total
+    baby_multiplier: 0.5
+
+  # Size (affects hitbox and various calculations)
+  size:
+    width: 0.35
+    height: 0.35
+    baby_scale: 0.5
+
+  # Biomass - abstract unit for food chain calculations
+  biomass:
+    adult: 15
+    baby: 5
+    transfer_efficiency: 0.1
+
+  # Movement capabilities
+  movement:
+    speeds:
+      walk: 0.0                 # Cannot walk on land
+      run: 0.0
+      swim: 0.13                # Slow swimmer
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: false
+      jump_height: 0.0
+      avoids_water: false       # Requires water
+      avoids_cliffs: false
+      cliff_threshold: 0
+
+    # Speed modifiers applied conditionally
+    conditional_modifiers:
+      baby: 0.8
+      elderly: 0.8
+      injured: 0.5
+      hungry: 0.9
+      fleeing: 1.2
+      hunting: 1.0
+      carrying_offspring: 1.0
+      in_water_nonaquatic: 0.0
+      puffed_state_1: 0.7       # Slightly inflated
+      puffed_state_2: 0.4       # More inflated
+      puffed_state_3: 0.1       # Fully inflated
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+# Mobs track internal states that drive behavior priorities.
+# All values decay/recover over time based on actions.
+# ============================================================================
+
+internal_state:
+  # Hunger system
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 80
+    decay_rate: 0.015           # Slower for small fish
+
+    # Thresholds that trigger behaviors
+    thresholds:
+      satiated: 80
+      hungry: 50
+      very_hungry: 25
+      starving: 10
+
+    # Starvation damage
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 400
+
+  # Thirst system (not needed for aquatic)
+  thirst:
+    enabled: false
+
+  # Body condition
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+
+    gain_when_satiated: 0.01
+    loss_when_hungry: 0.02
+    loss_when_starving: 0.1
+
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  # Energy/Stamina
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.4
+
+    costs:
+      sprinting: 0.2
+      hunting: 0.3
+      fleeing: 0.3
+      flying: 0.0
+      swimming: 0.1
+      puffing: 0.5              # Puffing costs energy
+
+  # Age tracking
+  age:
+    enabled: true
+    baby_duration: 24000
+    maturity_age: 24000
+    elderly_age: null
+    max_age: null
+
+  # Social needs
+  social:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+# Defines WHEN behaviors are allowed/modified based on time.
+# ============================================================================
+
+temporal:
+  # Daily cycle
+  daily_cycle:
+    schedule:
+      - time: [0, 6000]
+        activity: 1.0
+        label: "morning"
+      - time: [6000, 12000]
+        activity: 1.0
+        label: "afternoon"
+      - time: [12000, 13500]
+        activity: 0.8
+        label: "dusk"
+      - time: [13500, 22500]
+        activity: 0.6
+        label: "night"
+      - time: [22500, 24000]
+        activity: 0.7
+        label: "pre_dawn"
+
+    low_activity_behavior:
+      action: "reduced_wander"
+      seek_shelter: false
+      reduced_awareness: true
+      awareness_multiplier: 0.7
+
+  # Weather responses
+  weather:
+    rain:
+      activity_multiplier: 1.0
+      seek_shelter: false
+    thunder:
+      activity_multiplier: 0.8
+      seek_shelter: false
+      panic_chance: 0.1
+    snow:
+      activity_multiplier: 1.0
+      seek_shelter: false
+    clear:
+      activity_multiplier: 1.0
+
+  # Seasonal behaviors
+  seasons:
+    enabled: false
+
+  # Moon phases
+  lunar:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+# Defines WHERE mob can exist and location-triggered behaviors.
+# ============================================================================
+
+spatial:
+  # Habitat requirements
+  habitat:
+    biomes:
+      allowed: []
+      preferred: ["warm_ocean", "lukewarm_ocean"]
+      forbidden: ["frozen_ocean", "cold_ocean"]
+
+    altitude:
+      min: 0
+      max: 63
+      preferred: [40, 55]
+
+    required_nearby:
+      - feature: "water"
+        max_distance: 0
+        reason: "Aquatic species - must be in water"
+
+  # Territory system
+  territory:
+    enabled: false
+
+  # Home range
+  home_range:
+    enabled: true
+    radius: 32
+    has_home_point: false
+    home_type: null
+
+  # Shelter requirements
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  # Location-triggered behaviors
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+# What mob eats, how it finds food, and consumption effects.
+# ============================================================================
+
+diet:
+  # Food sources categorized by preference
+  food_sources:
+    primary:
+      - type: "ENTITY"
+        target: "#ecosystem:small_fish_food"
+        nutrition: 20
+        saturation: 3000
+        consumption_time: 20
+        method: "HUNT"
+        world_effect:
+          action: "NONE"
+        condition_gain: 3
+        health_effect: 0
+
+    secondary:
+      - type: "ITEM"
+        target: "minecraft:kelp"
+        nutrition: 10
+        saturation: 2000
+        consumption_time: 30
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 1
+        health_effect: 0
+
+    emergency: []
+
+  # Foraging behavior
+  foraging:
+    search_radius:
+      base: 12
+      when_hungry: 20
+      when_starving: 32
+    search_interval: 300
+
+    # Memory system
+    memory:
+      remembers_locations: true
+      memory_duration: 12000
+      remembers_depleted: true
+      avoids_depleted_for: 6000
+      shares_with_group: false
+
+    # Sustainable foraging
+    sustainability:
+      enabled: true
+      dont_deplete_fully: true
+      minimum_remaining: 1
+      patch_return_delay: 4000
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+# Hunting behavior (as predator) and escape behavior (as prey).
+# ============================================================================
+
+predation:
+  # === AS PREDATOR ===
+  as_predator:
+    enabled: false
+
+  # === AS PREY ===
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:dolphin"
+        threat_level: "MEDIUM"
+      - entity: "minecraft:drowned"
+        threat_level: "LOW"
+      - entity: "minecraft:guardian"
+        threat_level: "HIGH"
+
+    # Default predator response
+    default_response:
+      detection_range: 16
+      response_type: "PUFF"        # Custom defensive behavior
+
+      flee:
+        speed_multiplier: 1.3
+        flee_distance: 24
+        flee_toward: "RANDOM"
+        zigzag: true
+
+      freeze:
+        duration: [40, 100]
+        break_on_approach: true
+        break_distance: 4
+
+      alarm:
+        gives_alarm: false
+        alarm_radius: 0
+        alarm_triggers_group_flee: false
+
+    # All-clear conditions
+    all_clear:
+      predator_distance: 32
+      time_since_seen: 200
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+# Breeding requirements, process, and parental care.
+# ============================================================================
+
+reproduction:
+  enabled: true
+  method: "SEXUAL"
+
+  # === BREEDING REQUIREMENTS ===
+  requirements:
+    min_age: 24000
+    max_age: null
+    min_health: 0.7
+    min_condition: 60
+    min_hunger: 50
+
+    # Recent feeding
+    recent_food:
+      enabled: true
+      time_window: 12000
+      meals_required: 2
+
+    # Environmental requirements
+    environment:
+      near_water: false
+      required_biomes: ["warm_ocean", "lukewarm_ocean"]
+      required_blocks_nearby: []
+      min_light: 0
+      max_light: 15
+
+    requires_shelter: false
+    time_of_day: null
+    season: null
+    weather: null
+
+    # Social requirements
+    mate_required: true
+    mate_max_distance: 12
+
+  # === POPULATION DENSITY EFFECTS ===
+  density_effects:
+    enabled: true
+    check_radius: 48
+
+    density_curve:
+      - count: 2
+        multiplier: 1.2
+      - count: 5
+        multiplier: 1.0
+      - count: 10
+        multiplier: 0.6
+      - count: 15
+        multiplier: 0.2
+      - count: 20
+        multiplier: 0.0
+
+  # === MATE SELECTION ===
+  mate_selection:
+    search_radius: 24
+    search_interval: 1000
+
+    preferences:
+      prefer_healthy: true
+      prefer_good_condition: true
+      avoid_relatives: true
+      relative_recognition_duration: 48000
+
+    courtship:
+      enabled: false
+
+  # === BREEDING PROCESS ===
+  breeding:
+    cooldown: 30000
+
+    gestation:
+      type: "INSTANT"
+      duration: 0
+      behavior_during: []
+
+    birth:
+      offspring_count: [1, 3]
+      condition_affects_count: true
+      location_requirement: null
+
+  # === PARENTAL CARE ===
+  parental_care:
+    enabled: false
+    duration: 0
+
+    behaviors:
+      protects_offspring: false
+      protection_aggression: 1.0
+      protection_radius: 0
+      feeds_offspring: false
+      teaches_offspring: false
+      carries_offspring: false
+
+    offspring_behavior:
+      follows_parent: false
+      follow_distance: 0
+      max_separation: 0
+      separation_distress: false
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+# Group dynamics, communication, and social interactions.
+# ============================================================================
+
+social:
+  # Group structure
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+
+    composition:
+      mixed_sex: true
+      mixed_age: true
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  # Herd/flock movement
+  herd_movement:
+    enabled: false
+
+  # Communication
+  communication:
+    alarm_calls:
+      enabled: false
+    contact_calls:
+      enabled: false
+    mating_calls:
+      enabled: false
+
+  # Social behaviors list
+  behaviors:
+    greeting: false
+    allogrooming: false
+    play: false
+    huddling: false
+    dominance_hierarchy: false
+
+  # Group benefits
+  group_benefits:
+    predator_detection_bonus: 0.0
+    foraging_efficiency_bonus: 0.0
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+# How mob affects the world around it.
+# ============================================================================
+
+environmental_impact:
+  # Terrain modifications
+  terrain:
+    enabled: false
+    actions: []
+
+  # Ecosystem services
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+    nutrient_cycling:
+      enabled: false
+    decomposition:
+      enabled: false
+
+  # Environmental responses
+  responses:
+    drinking:
+      enabled: false
+    temperature:
+      heat_seek_shade: false
+      heat_seek_water: false
+      cold_seek_shelter: false
+      cold_huddling: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+# Spawning, carrying capacity, and natural mortality.
+# ============================================================================
+
+population:
+  # Spawning rules
+  spawning:
+    weight: 15
+    group_size: [3, 5]
+
+    conditions:
+      blocks: ["water"]
+      biomes: ["warm_ocean", "lukewarm_ocean"]
+      light: [0, 15]
+      altitude: [40, 55]
+      time: null
+      weather: null
+
+  # Carrying capacity
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 5
+      regional: null
+
+    resources:
+      enabled: false
+
+    over_capacity:
+      - threshold: 1.2
+        effects: ["reduced_breeding"]
+      - threshold: 1.5
+        effects: ["starvation", "dispersal"]
+
+  # Dispersal
+  dispersal:
+    enabled: false
+
+  # Natural mortality
+  mortality:
+    old_age:
+      enabled: false
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+# How mob interacts with players.
+# ============================================================================
+
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  # Fear/approach distances
+  distances:
+    detection: 16
+    caution: 8
+    flee: 4
+
+  # Habituation
+  habituation:
+    enabled: false
+
+  # Taming
+  taming:
+    enabled: false
+
+  # Player breeding
+  player_breeding:
+    enabled: false
+
+  # Drops
+  drops:
+    on_death:
+      - item: "minecraft:pufferfish"
+        count: [1, 1]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 0
+      - item: "minecraft:bone_meal"
+        count: [1, 2]
+        chance: 0.05
+        requires_player_kill: false
+        looting_bonus: 0.01
+
+    on_interaction:
+      - action: "bucket_capture"
+        item: "minecraft:water_bucket"
+        result: "minecraft:pufferfish_bucket"
+        description: "Capture pufferfish in bucket"
+
+
+  # Special interactions
+  interactions:
+    - action: "bucket_capture"
+      item: "minecraft:water_bucket"
+      result: "minecraft:pufferfish_bucket"
+      description: "Player can capture pufferfish in water bucket"
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+# Visual and audio personality traits.
+# ============================================================================
+
+aesthetics:
+  # Sounds
+  sounds:
+    ambient: "minecraft:entity.puffer_fish.ambient"
+    hurt: "minecraft:entity.puffer_fish.hurt"
+    death: "minecraft:entity.puffer_fish.death"
+    baby: "minecraft:entity.puffer_fish.ambient"
+    alarm: null
+    mating: null
+    eating: null
+    puffing: "minecraft:entity.puffer_fish.blow_up"
+    deflating: "minecraft:entity.puffer_fish.blow_out"
+
+  # Idle behaviors
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "slow_drift"
+        frequency: 0.8
+        trigger: "idle"
+      - behavior: "small_turns"
+        frequency: 0.5
+        trigger: "idle"
+
+  # Individual variation
+  personality_traits:
+    boldness:
+      base: 0.3               # Generally timid
+      variation: 0.15
+    activity:
+      base: 0.5
+      variation: 0.2
+    sociability:
+      base: 0.2               # Low sociability
+      variation: 0.1
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+# Standard priority ordering for AI goals.
+# Lower number = higher priority (evaluated first).
+# ============================================================================
+
+ai_priority_framework:
+  # Survival (highest priority)
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+    defensive_puffing: 3       # Custom priority
+
+  # Physiological needs
+  physiological:
+    critical_health: 4
+    drink_water: 5
+    eat_food: 6
+    find_shelter: 7
+
+  # Reproduction
+  reproduction:
+    care_for_offspring: 8
+    breed: 9
+    find_mate: 10
+
+  # Social
+  social:
+    group_cohesion: 11
+    social_interaction: 12
+
+  # Hunting
+  hunting:
+    hunt_prey: 13
+
+  # Location behaviors
+  location:
+    location_triggered: 14
+    territory_patrol: 15
+
+  # Default behaviors
+  default:
+    wander: 16
+    idle: 17
+    rest: 18
+
+
+# ============================================================================
+# SYSTEM 15: UNIQUE BEHAVIOR FRAMEWORK
+# ============================================================================
+# Template for defining behaviors not covered by standard systems.
+# Actual behaviors defined in unique profile.
+# ============================================================================
+
+unique_behavior_template:
+  structure:
+    name: ""
+    description: ""
+
+    triggers:
+      - type: ""
+        conditions: {}
+
+    requirements:
+      all_of: []
+      any_of: []
+      none_of: []
+
+    actions: []
+
+    effects:
+      on_self: []
+      on_others: []
+      on_world: []
+
+    priority: 10
+    duration: null
+    cooldown: null
+    interruptible: true

@@ -1,0 +1,872 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - GENERALIZED BEHAVIOR TEMPLATE
+# Version: 2.0
+# Mob: Armadillo
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:armadillo"
+  display_name: "Armadillo"
+
+  # Ecological classification
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "INSECTIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "DIURNAL"
+
+  # Reference information
+  reference:
+    real_world_analog: "Nine-banded Armadillo"
+    ecological_role: "Insect population control, prey for larger predators, scute provider for wolf armor crafting"
+
+  # Tags for system filtering
+  tags: ["arid_adapted", "defensive", "spider_repellent", "scute_producer"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  # Health
+  health:
+    base: 6                        # 12 HP = 6 hearts
+    baby_multiplier: 0.5
+
+  # Size (affects hitbox and various calculations)
+  size:
+    width: 0.7
+    height: 0.65
+    baby_scale: 0.5
+
+  # Biomass - abstract unit for food chain calculations
+  biomass:
+    adult: 60
+    baby: 15
+    transfer_efficiency: 0.1
+
+  # Movement capabilities
+  movement:
+    speeds:
+      walk: 0.2
+      run: 0.3
+      swim: 0.1
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: true
+      jump_height: 0.5
+      avoids_water: false
+      avoids_cliffs: true
+      cliff_threshold: 3
+
+    conditional_modifiers:
+      baby: 0.7
+      elderly: 0.8
+      injured: 0.6
+      hungry: 0.8
+      fleeing: 1.4
+      hunting: 1.0
+      carrying_offspring: 0.7
+      in_water_nonaquatic: 0.5
+      rolled_up: 0.0              # Cannot move when in defensive roll
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  # Hunger system
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 80
+    decay_rate: 0.015
+
+    thresholds:
+      satiated: 80
+      hungry: 50
+      very_hungry: 25
+      starving: 10
+
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 200
+
+  # Thirst system (optional - set enabled: false to disable)
+  thirst:
+    enabled: false
+    max_value: 100
+    starting_value: 100
+    decay_rate: 0.01
+    thresholds:
+      satisfied: 70
+      thirsty: 40
+      dehydrated: 15
+
+  # Body condition
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+
+    gain_when_satiated: 0.01
+    loss_when_hungry: 0.02
+    loss_when_starving: 0.1
+
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  # Energy/Stamina
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.5
+
+    costs:
+      sprinting: 0.25
+      hunting: 0.0
+      fleeing: 0.35
+      flying: 0.0
+      swimming: 0.3
+
+  # Age tracking
+  age:
+    enabled: true
+    baby_duration: 24000
+    maturity_age: 24000
+    elderly_age: null
+    max_age: null
+
+  # Social needs
+  social:
+    enabled: false
+    max_value: 100
+    decay_rate: 0.01
+    recovery_rate: 0.1
+    loneliness_threshold: 30
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  # Daily cycle
+  daily_cycle:
+    schedule:
+      - time: [0, 6000]
+        activity: 1.0
+        label: "morning"
+      - time: [6000, 12000]
+        activity: 1.0
+        label: "afternoon"
+      - time: [12000, 13500]
+        activity: 0.7
+        label: "dusk"
+      - time: [13500, 22500]
+        activity: 0.3
+        label: "night"
+      - time: [22500, 24000]
+        activity: 0.6
+        label: "pre_dawn"
+
+    low_activity_behavior:
+      action: "rest"
+      seek_shelter: true
+      reduced_awareness: true
+      awareness_multiplier: 0.5
+
+  # Weather responses
+  weather:
+    rain:
+      activity_multiplier: 0.7
+      seek_shelter: true
+      shelter_priority: 2
+    thunder:
+      activity_multiplier: 0.4
+      seek_shelter: true
+      panic_chance: 0.15
+    snow:
+      activity_multiplier: 0.6
+      seek_shelter: true
+    clear:
+      activity_multiplier: 1.0
+
+  # Seasonal behaviors
+  seasons:
+    enabled: false
+    spring:
+      breeding_multiplier: 1.5
+      activity_multiplier: 1.1
+    summer:
+      breeding_multiplier: 1.0
+      activity_multiplier: 1.0
+    autumn:
+      breeding_multiplier: 0.5
+      activity_multiplier: 1.2
+      foraging_multiplier: 1.5
+    winter:
+      breeding_multiplier: 0.0
+      activity_multiplier: 0.6
+
+  # Moon phases
+  lunar:
+    enabled: false
+    full_moon:
+      activity_multiplier: 1.0
+      special_behaviors: []
+    new_moon:
+      activity_multiplier: 1.0
+      special_behaviors: []
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  # Habitat requirements
+  habitat:
+    biomes:
+      allowed: []
+      preferred: ["savanna", "savanna_plateau", "windswept_savanna", "badlands", "eroded_badlands", "wooded_badlands"]
+      forbidden: ["ocean", "deep_ocean", "frozen_ocean", "river", "frozen_river"]
+
+    altitude:
+      min: 50
+      max: 250
+      preferred: [63, 120]
+
+    required_nearby: []
+
+  # Territory system
+  territory:
+    enabled: false
+    size: 32
+    defends: false
+    marks: false
+    overlap_tolerance: 0.0
+    defense_against: ["same_species"]
+
+  # Home range
+  home_range:
+    enabled: true
+    radius: 48
+    has_home_point: false
+    home_type: null
+
+  # Shelter requirements
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+
+    valid_shelters:
+      - type: "cave"
+        description: "Natural cave or overhang"
+        min_enclosure: 0.6
+      - type: "vegetation"
+        description: "Dense leaves or tall grass"
+        blocks: ["leaves", "tall_grass"]
+        min_enclosure: 0.3
+
+  # Location-triggered behaviors
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  # Food sources categorized by preference
+  food_sources:
+    primary:
+      - type: "ENTITY"
+        target: "minecraft:spider"
+        nutrition: 25
+        saturation: 4000
+        consumption_time: 60
+        method: "HUNT"
+        world_effect:
+          action: "NONE"
+        condition_gain: 3
+        health_effect: 0
+
+    secondary: []
+    emergency: []
+
+  # Foraging behavior
+  foraging:
+    search_radius:
+      base: 12
+      when_hungry: 20
+      when_starving: 32
+    search_interval: 300
+
+    memory:
+      remembers_locations: true
+      memory_duration: 12000
+      remembers_depleted: false
+      avoids_depleted_for: 0
+      shares_with_group: false
+
+    sustainability:
+      enabled: false
+      dont_deplete_fully: false
+      minimum_remaining: 0
+      patch_return_delay: 0
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  # === AS PREDATOR ===
+  as_predator:
+    enabled: false
+
+    prey:
+      targets: []
+
+      selection_rules:
+        avoid_babies: true
+        avoid_babies_exception: "starving"
+        avoid_mothers_with_young: true
+        avoid_mothers_exception: "starving"
+        prefer_weak: true
+        weak_preference: 2.0
+        prefer_isolated: true
+        isolated_preference: 1.5
+
+        sustainable_hunting:
+          enabled: false
+          monitors_population: false
+          monitor_radius: 128
+          min_prey_count: 4
+          reduced_hunting_threshold: 8
+          reduced_hunting_multiplier: 0.5
+
+    hunting:
+      method: "OPPORTUNISTIC"
+
+      chase:
+        max_duration: 300
+        give_up_distance: 48
+        stamina_cost_per_tick: 0.3
+
+      ambush:
+        patience_duration: 1000
+        requires_cover: true
+
+      pack:
+        min_hunters: 2
+        coordination_radius: 32
+
+      success_rate:
+        base: 0.3
+        modifiers:
+          prey_is_baby: 1.5
+          prey_is_elderly: 1.3
+          prey_is_injured: 2.0
+          prey_is_isolated: 1.4
+          hunter_is_hungry: 1.2
+          pack_hunt_per_member: 0.15
+
+    post_kill:
+      eating_duration: 400
+      guards_kill: true
+      guard_duration: 600
+      shares_with: []
+      caches_excess: false
+
+    triggers:
+      hunger_threshold: 60
+      opportunistic: false
+      opportunistic_hunger_min: 90
+      cooldown_after_kill: 3000
+
+  # === AS PREY ===
+  as_prey:
+    enabled: true
+
+    predators: []
+
+    default_response:
+      detection_range: 16
+      response_type: "FREEZE"
+
+      flee:
+        speed_multiplier: 1.4
+        flee_distance: 32
+        flee_toward: "SAFETY"
+        zigzag: false
+
+      freeze:
+        duration: [100, 400]
+        break_on_approach: true
+        break_distance: 4
+
+      alarm:
+        gives_alarm: false
+        alarm_radius: 32
+        alarm_triggers_group_flee: false
+
+    all_clear:
+      predator_distance: 48
+      time_since_seen: 600
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: true
+  method: "SEXUAL"
+
+  # === BREEDING REQUIREMENTS ===
+  requirements:
+    min_age: 24000
+    max_age: null
+    min_health: 0.7
+    min_condition: 60
+    min_hunger: 65
+
+    recent_food:
+      enabled: true
+      time_window: 12000
+      meals_required: 2
+
+    environment:
+      near_water: false
+      water_max_distance: 32
+      required_biomes: []
+      required_blocks_nearby: []
+      min_light: 0
+      max_light: 15
+
+    requires_shelter: false
+    shelter_type: null
+
+    time_of_day: null
+    season: null
+    weather: null
+
+    mate_required: true
+    mate_max_distance: 16
+
+  # === POPULATION DENSITY EFFECTS ===
+  density_effects:
+    enabled: true
+    check_radius: 64
+
+    density_curve:
+      - count: 2
+        multiplier: 1.3
+      - count: 6
+        multiplier: 1.0
+      - count: 12
+        multiplier: 0.5
+      - count: 20
+        multiplier: 0.1
+      - count: 30
+        multiplier: 0.0
+
+  # === MATE SELECTION ===
+  mate_selection:
+    search_radius: 32
+    search_interval: 1000
+
+    preferences:
+      prefer_healthy: true
+      prefer_good_condition: true
+      avoid_relatives: true
+      relative_recognition_duration: 48000
+
+    courtship:
+      enabled: false
+      behavior: null
+      duration: 200
+      can_reject: true
+      rejection_cooldown: 2000
+
+  # === BREEDING PROCESS ===
+  breeding:
+    cooldown: 24000
+
+    gestation:
+      type: "INSTANT"
+      duration: 0
+      behavior_during: []
+
+    birth:
+      offspring_count: [1, 1]
+      condition_affects_count: false
+      location_requirement: null
+
+  # === PARENTAL CARE ===
+  parental_care:
+    enabled: true
+    duration: 24000
+
+    behaviors:
+      protects_offspring: true
+      protection_aggression: 1.5
+      protection_radius: 6
+
+      feeds_offspring: false
+      teaches_offspring: false
+      carries_offspring: false
+
+    offspring_behavior:
+      follows_parent: true
+      follow_distance: 3
+      max_separation: 12
+      separation_distress: true
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  # Group structure
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+
+    composition:
+      mixed_sex: true
+      mixed_age: true
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  # Herd/flock movement
+  herd_movement:
+    enabled: false
+    cohesion_radius: 12
+    separation_distance: 2
+    alignment: true
+
+  # Communication
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+      radius: 32
+      chain_calling: true
+
+    contact_calls:
+      enabled: false
+      when: []
+      radius: 24
+
+    mating_calls:
+      enabled: false
+      radius: 48
+      time: null
+
+  # Social behaviors list
+  behaviors:
+    greeting: false
+    allogrooming: false
+    play: false
+    huddling: false
+    dominance_hierarchy: false
+
+  # Group benefits
+  group_benefits:
+    predator_detection_bonus: 0.0
+    foraging_efficiency_bonus: 0.0
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  # Terrain modifications
+  terrain:
+    enabled: false
+    actions: []
+
+  # Ecosystem services
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+      seeds: []
+      method: null
+      dispersal_radius: 0
+
+    pollination:
+      enabled: false
+      flowers: []
+      radius: 0
+
+    nutrient_cycling:
+      enabled: false
+      fertilizes: false
+      fertilize_radius: 0
+
+    decomposition:
+      enabled: false
+      decomposes: []
+      result: null
+
+  # Environmental responses
+  responses:
+    drinking:
+      enabled: false
+      frequency: 6000
+      water_blocks: ["water"]
+      duration: 60
+      congregates: false
+
+    temperature:
+      heat_seek_shade: true
+      heat_seek_water: false
+      cold_seek_shelter: true
+      cold_huddling: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  # Spawning rules
+  spawning:
+    weight: 8
+    group_size: [1, 3]
+
+    conditions:
+      blocks: ["grass_block", "sand", "red_sand", "terracotta"]
+      biomes: ["savanna", "savanna_plateau", "windswept_savanna", "badlands", "eroded_badlands", "wooded_badlands"]
+      light: [7, 15]
+      altitude: null
+      time: null
+      weather: null
+
+  # Carrying capacity
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 6
+      regional: null
+
+    resources:
+      enabled: false
+      requirements: []
+
+    over_capacity:
+      - threshold: 1.2
+        effects: ["reduced_breeding"]
+      - threshold: 1.5
+        effects: ["starvation", "dispersal"]
+      - threshold: 2.0
+        effects: ["disease", "aggression"]
+
+  # Dispersal
+  dispersal:
+    enabled: false
+    triggers: []
+    distance: [64, 256]
+
+  # Natural mortality
+  mortality:
+    old_age:
+      enabled: false
+      max_age: null
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+      base_chance: 0.0
+      crowding_multiplier: 1.0
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  # Fear/approach distances
+  distances:
+    detection: 24
+    caution: 12
+    flee: 6
+
+  # Habituation
+  habituation:
+    enabled: true
+    rate: 0.015
+    decay: 0.001
+    max_habituation: 0.7
+    habituated_flee_distance: 2
+
+  # Taming
+  taming:
+    enabled: false
+    items: []
+    chance: 0.33
+    requires_habituation: false
+
+  # Player breeding
+  player_breeding:
+    enabled: true
+    items: ["minecraft:spider_eye"]
+    bypasses_conditions: false
+
+  # Drops
+  drops:
+    on_death: []
+    on_interaction: []
+
+  # Special interactions
+  interactions: []
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  # Sounds
+  sounds:
+    ambient: "entity.armadillo.ambient"
+    hurt: "entity.armadillo.hurt"
+    death: "entity.armadillo.death"
+    baby: "entity.armadillo.ambient"
+    alarm: null
+    mating: null
+    eating: "entity.armadillo.eat"
+
+  # Idle animations
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "sniff_ground"
+        frequency: 0.05
+        trigger: "random"
+      - behavior: "look_around"
+        frequency: 0.1
+        trigger: "random"
+      - behavior: "scratch"
+        frequency: 0.03
+        trigger: "random"
+
+  # Individual variation
+  personality_traits:
+    boldness:
+      base: 0.3
+      variation: 0.2
+    activity:
+      base: 0.5
+      variation: 0.2
+    sociability:
+      base: 0.2
+      variation: 0.1
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+
+ai_priority_framework:
+  # Survival (highest priority)
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  # Physiological needs
+  physiological:
+    critical_health: 3
+    drink_water: 4
+    eat_food: 5
+    find_shelter: 6
+
+  # Reproduction
+  reproduction:
+    care_for_offspring: 7
+    breed: 8
+    find_mate: 9
+
+  # Social
+  social:
+    group_cohesion: 10
+    social_interaction: 11
+
+  # Hunting (for predators)
+  hunting:
+    hunt_prey: 12
+
+  # Location behaviors
+  location:
+    location_triggered: 13
+    territory_patrol: 14
+
+  # Default behaviors
+  default:
+    wander: 15
+    idle: 16
+    rest: 17
+
+
+# ============================================================================
+# SYSTEM 15: UNIQUE BEHAVIOR FRAMEWORK
+# ============================================================================
+
+unique_behavior_template:
+  structure:
+    name: ""
+    description: ""
+
+    triggers:
+      - type: ""
+        conditions: {}
+
+    requirements:
+      all_of: []
+      any_of: []
+      none_of: []
+
+    actions: []
+
+    effects:
+      on_self: []
+      on_others: []
+      on_world: []
+
+    priority: 10
+    duration: null
+    cooldown: null
+    interruptible: true

@@ -1,0 +1,791 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - GENERALIZED BEHAVIOR TEMPLATE
+# Version: 2.0
+# Mob: Sniffer
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:sniffer"
+  display_name: "Sniffer"
+
+  # Ecological classification
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "DIURNAL"
+
+  # Reference information
+  reference:
+    real_world_analog: "Giant tortoise or prehistoric megafauna"
+    ecological_role: "Ancient seed disperser and ecosystem archaeologist - discovers and spreads extinct plant species"
+
+  # Tags for system filtering
+  tags: ["ancient", "non_spawning", "archaeological", "seed_finder", "largest_passive"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  # Health
+  health:
+    base: 7                         # 14 HP (7 hearts)
+    baby_multiplier: 0.5
+
+  # Size (largest passive mob)
+  size:
+    width: 1.9
+    height: 1.75
+    baby_scale: 0.5
+
+  # Biomass - large ancient creature
+  biomass:
+    adult: 250
+    baby: 65
+    transfer_efficiency: 0.1
+
+  # Movement capabilities
+  movement:
+    speeds:
+      walk: 0.18                    # Slow, methodical movement
+      run: 0.22                     # Minimal sprint capability
+      swim: 0.12
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: true
+      jump_height: 0.5              # Limited jumping
+      avoids_water: true            # Consciously avoids water
+      avoids_cliffs: true
+      cliff_threshold: 3
+
+    # Speed modifiers applied conditionally
+    conditional_modifiers:
+      baby: 0.8
+      elderly: 0.9
+      injured: 0.7
+      hungry: 0.9
+      fleeing: 1.1                  # Minimal flee response
+      hunting: 1.0
+      carrying_offspring: 1.0
+      in_water_nonaquatic: 0.5
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  # Hunger system
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 90              # Well-fed ancient creature
+    decay_rate: 0.008               # Slow metabolism
+
+    # Thresholds that trigger behaviors
+    thresholds:
+      satiated: 85
+      hungry: 40
+      very_hungry: 20
+      starving: 10
+
+    # Starvation damage
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 300
+
+  # Thirst system
+  thirst:
+    enabled: false
+
+  # Body condition
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 80
+
+    gain_when_satiated: 0.015
+    loss_when_hungry: 0.01
+    loss_when_starving: 0.05
+
+    thresholds:
+      excellent: 85
+      good: 70
+      fair: 50
+      poor: 30
+      critical: 15
+
+  # Energy/Stamina
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.3              # Slow recovery
+
+    costs:
+      sprinting: 0.2
+      hunting: 0.0
+      fleeing: 0.3
+      flying: 0.0
+      swimming: 0.25
+
+  # Age tracking
+  age:
+    enabled: true
+    baby_duration: 48000            # 40 minutes (snifflets take twice as long)
+    maturity_age: 48000
+    elderly_age: null
+    max_age: null                   # Ancient species, very long-lived
+
+  # Social needs
+  social:
+    enabled: false                  # Solitary creature
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  # Daily cycle
+  daily_cycle:
+    schedule:
+      - time: [0, 6000]             # Dawn to noon
+        activity: 1.0
+        label: "morning"
+      - time: [6000, 12000]         # Noon to dusk
+        activity: 1.0
+        label: "afternoon"
+      - time: [12000, 13500]        # Dusk
+        activity: 0.7
+        label: "dusk"
+      - time: [13500, 22500]        # Night
+        activity: 0.3               # Reduced but some activity
+        label: "night"
+      - time: [22500, 24000]        # Pre-dawn
+        activity: 0.5
+        label: "pre_dawn"
+
+    low_activity_behavior:
+      action: "rest"
+      seek_shelter: false           # Doesn't need shelter
+      reduced_awareness: true
+      awareness_multiplier: 0.6
+
+  # Weather responses
+  weather:
+    rain:
+      activity_multiplier: 0.9      # Mostly unbothered
+      seek_shelter: false
+      shelter_priority: 0
+    thunder:
+      activity_multiplier: 0.7
+      seek_shelter: false
+      panic_chance: 0.05            # Ancient creature, not easily scared
+    snow:
+      activity_multiplier: 0.8
+      seek_shelter: false
+    clear:
+      activity_multiplier: 1.0
+
+  # Seasonal behaviors
+  seasons:
+    enabled: false
+
+  # Moon phases
+  lunar:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  # Habitat requirements
+  habitat:
+    biomes:
+      allowed: []                   # Can exist in all biomes
+      preferred: []
+      forbidden: []
+
+    altitude:
+      min: -64
+      max: 320
+      preferred: [60, 90]
+
+    required_nearby: []
+
+  # Territory system
+  territory:
+    enabled: false
+
+  # Home range
+  home_range:
+    enabled: true
+    radius: 48                      # Limited wandering range
+    has_home_point: false
+    home_type: null
+
+  # Shelter requirements
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  # Location-triggered behaviors
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  # Food sources - eats torchflower seeds
+  food_sources:
+    primary:
+      - type: "ITEM"
+        target: "minecraft:torchflower_seeds"
+        nutrition: 25
+        saturation: 4800
+        consumption_time: 30
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 8
+        health_effect: 0
+
+    secondary: []
+    emergency: []
+
+  # Foraging behavior
+  foraging:
+    search_radius:
+      base: 12
+      when_hungry: 20
+      when_starving: 32
+    search_interval: 400
+
+    # Memory system
+    memory:
+      remembers_locations: true
+      memory_duration: 48000        # Long memory
+      remembers_depleted: true
+      avoids_depleted_for: 24000
+      shares_with_group: false
+
+    # Sustainable foraging
+    sustainability:
+      enabled: true
+      dont_deplete_fully: true
+      minimum_remaining: 1
+      patch_return_delay: 12000
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  # === AS PREDATOR ===
+  as_predator:
+    enabled: false
+
+  # === AS PREY ===
+  as_prey:
+    enabled: true
+
+    predators: []                   # No natural predators (large, ancient)
+
+    # Default predator response
+    default_response:
+      detection_range: 16           # Not very alert
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.1       # Minimal flee response
+        flee_distance: 24           # Short flee distance
+        flee_toward: "RANDOM"
+        zigzag: false
+
+      freeze:
+        duration: [40, 80]
+        break_on_approach: true
+        break_distance: 4
+
+      alarm:
+        gives_alarm: false
+        alarm_radius: 0
+        alarm_triggers_group_flee: false
+
+    # All-clear conditions
+    all_clear:
+      predator_distance: 32
+      time_since_seen: 200
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: true
+  method: "SEXUAL"
+
+  # === BREEDING REQUIREMENTS ===
+  requirements:
+    min_age: 48000
+    max_age: null
+    min_health: 0.7
+    min_condition: 70
+    min_hunger: 70
+
+    # Recent feeding
+    recent_food:
+      enabled: true
+      time_window: 24000
+      meals_required: 2
+
+    # Environmental requirements
+    environment:
+      near_water: false
+      water_max_distance: 0
+      required_biomes: []
+      required_blocks_nearby: []
+      min_light: 0
+      max_light: 15
+
+    requires_shelter: false
+    shelter_type: null
+
+    # Temporal requirements
+    time_of_day: null
+    season: null
+    weather: null
+
+    # Social requirements
+    mate_required: true
+    mate_max_distance: 16
+
+  # === POPULATION DENSITY EFFECTS ===
+  density_effects:
+    enabled: true
+    check_radius: 64
+
+    density_curve:
+      - count: 2
+        multiplier: 1.5
+      - count: 4
+        multiplier: 1.0
+      - count: 8
+        multiplier: 0.3
+      - count: 12
+        multiplier: 0.0           # Very low breeding rate
+
+  # === MATE SELECTION ===
+  mate_selection:
+    search_radius: 32
+    search_interval: 2000
+
+    preferences:
+      prefer_healthy: true
+      prefer_good_condition: true
+      avoid_relatives: false        # Ancient species
+      relative_recognition_duration: 0
+
+    courtship:
+      enabled: false
+      behavior: null
+      duration: 0
+      can_reject: false
+      rejection_cooldown: 0
+
+  # === BREEDING PROCESS ===
+  breeding:
+    cooldown: 6000                  # 5-10 minute cooldown (using 5 minutes)
+
+    gestation:
+      type: "EGG"
+      duration: 0                   # Instant egg laying
+      behavior_during: []
+
+    birth:
+      offspring_count: [1, 1]       # Always 1 egg
+      condition_affects_count: false
+      location_requirement: null
+
+  # === PARENTAL CARE ===
+  parental_care:
+    enabled: false                  # Snifflets don't follow parents
+    duration: 0
+
+    behaviors:
+      protects_offspring: false
+      protection_aggression: 1.0
+      protection_radius: 0
+      feeds_offspring: false
+      teaches_offspring: false
+      carries_offspring: false
+
+    offspring_behavior:
+      follows_parent: false         # Unique: snifflets are independent
+      follow_distance: 0
+      max_separation: 0
+      separation_distress: false
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  # Group structure
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+
+    composition:
+      mixed_sex: false
+      mixed_age: false
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  # Herd/flock movement
+  herd_movement:
+    enabled: false
+
+  # Communication
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+      radius: 0
+      chain_calling: false
+
+    contact_calls:
+      enabled: false
+      when: []
+      radius: 0
+
+    mating_calls:
+      enabled: false
+      radius: 0
+      time: null
+
+  # Social behaviors list
+  behaviors:
+    greeting: false
+    allogrooming: false
+    play: false
+    huddling: false
+    dominance_hierarchy: false
+
+  # Group benefits
+  group_benefits:
+    predator_detection_bonus: 0.0
+    foraging_efficiency_bonus: 0.0
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  # Terrain modifications
+  terrain:
+    enabled: false
+    actions: []
+
+  # Ecosystem services
+  ecosystem_services:
+    seed_dispersal:
+      enabled: true
+      seeds: ["minecraft:torchflower_seeds", "minecraft:pitcher_pod"]
+      method: "DIGGING"             # Digs up ancient seeds
+      dispersal_radius: 0           # Seeds appear at dig location
+
+    pollination:
+      enabled: false
+      flowers: []
+      radius: 0
+
+    nutrient_cycling:
+      enabled: false
+      fertilizes: false
+      fertilize_radius: 0
+
+    decomposition:
+      enabled: false
+      decomposes: []
+      result: null
+
+  # Environmental responses
+  responses:
+    drinking:
+      enabled: false
+      frequency: 0
+      water_blocks: []
+      duration: 0
+      congregates: false
+
+    temperature:
+      heat_seek_shade: false
+      heat_seek_water: false
+      cold_seek_shelter: false
+      cold_huddling: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  # Spawning rules
+  spawning:
+    weight: 0                       # DOES NOT SPAWN NATURALLY
+    group_size: [0, 0]
+
+    conditions:
+      blocks: []
+      biomes: []
+      light: [0, 0]
+      altitude: null
+      time: null
+      weather: null
+
+  # Carrying capacity
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 2                  # Very rare, player-controlled population
+      regional: null
+
+    # Resource-based
+    resources:
+      enabled: false
+      requirements: []
+
+    # Over-capacity effects
+    over_capacity:
+      - threshold: 1.5
+        effects: ["reduced_breeding"]
+      - threshold: 2.0
+        effects: ["reduced_breeding"]
+
+  # Dispersal
+  dispersal:
+    enabled: false
+    triggers: []
+    distance: [0, 0]
+
+  # Natural mortality
+  mortality:
+    old_age:
+      enabled: false
+      max_age: null
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+      base_chance: 0.0
+      crowding_multiplier: 0.0
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "PASSIVE"          # Completely passive, won't retaliate
+
+  # Fear/approach distances
+  distances:
+    detection: 24
+    caution: 8
+    flee: 4
+
+  # Habituation
+  habituation:
+    enabled: true
+    rate: 0.02
+    decay: 0.0005
+    max_habituation: 1.0            # Can become fully comfortable with players
+    habituated_flee_distance: 0
+
+  # Taming
+  taming:
+    enabled: false
+    items: []
+    chance: 0.0
+    requires_habituation: false
+
+  # Player breeding
+  player_breeding:
+    enabled: true
+    items: ["minecraft:torchflower_seeds"]
+    bypasses_conditions: false      # Still need natural requirements
+
+  # Drops
+  drops:
+    on_death: []                    # No drops on death
+
+  # Special interactions
+  interactions: []
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  # Sounds
+  sounds:
+    ambient: "entity.sniffer.idle"
+    hurt: "entity.sniffer.hurt"
+    death: "entity.sniffer.death"
+    baby: "entity.sniffer.idle"
+    alarm: null
+    mating: "entity.sniffer.happy"
+    eating: "entity.sniffer.eating"
+
+  # Idle animations
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "sniffing"
+        frequency: 200
+        trigger: "random"
+      - behavior: "nose_wiggle"
+        frequency: 300
+        trigger: "random"
+      - behavior: "sit_and_rest"
+        frequency: 800
+        trigger: "low_activity"
+
+  # Individual variation
+  personality_traits:
+    boldness:
+      base: 0.6
+      variation: 0.15
+    activity:
+      base: 0.4                     # Generally calm and slow
+      variation: 0.1
+    sociability:
+      base: 0.3
+      variation: 0.1
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+
+ai_priority_framework:
+  # Survival (highest priority)
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  # Physiological needs
+  physiological:
+    critical_health: 3
+    drink_water: 4
+    eat_food: 5
+    find_shelter: 6
+
+  # Reproduction
+  reproduction:
+    care_for_offspring: 7
+    breed: 8
+    find_mate: 9
+
+  # Social
+  social:
+    group_cohesion: 10
+    social_interaction: 11
+
+  # Hunting (for predators)
+  hunting:
+    hunt_prey: 12
+
+  # Location behaviors
+  location:
+    location_triggered: 13
+    territory_patrol: 14
+
+  # Default behaviors
+  default:
+    wander: 15
+    idle: 16
+    rest: 17
+
+
+# ============================================================================
+# SYSTEM 15: UNIQUE BEHAVIOR FRAMEWORK
+# ============================================================================
+
+unique_behavior_template:
+  structure:
+    name: ""
+    description: ""
+
+    triggers:
+      - type: ""
+        conditions: {}
+
+    requirements:
+      all_of: []
+      any_of: []
+      none_of: []
+
+    actions: []
+
+    effects:
+      on_self: []
+      on_others: []
+      on_world: []
+
+    priority: 10
+    duration: null
+    cooldown: null
+    interruptible: true
+# ============================================================================
+# RESOURCE PRODUCTION CONFIGURATION
+# ============================================================================
+resource_production:
+  enabled: true
+  resource_type: "ancient_seed"   # Sniffers produce ancient seeds and moss
+
+  # Production settings
+  production_rate: 3.0           # Base production per cycle
+  production_interval: 4000      # Ticks between production checks
+  max_capacity: 100.0            # Maximum accumulated resource
+
+  # Quality factors
+  base_quality: 1.2              # Ancient items have higher base quality
+  environment_bonus: 0.1         # Quality bonus in good conditions
+
+  # Daily limits
+  daily_limit: 4                 # Maximum digs per day
+  reset_time: 24000              # Ticks until daily reset

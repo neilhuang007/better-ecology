@@ -1,0 +1,51 @@
+{
+  "minecraft:sheep": {
+    "wool": {
+      "enabled": true,
+      "max_wool_stage": 4,
+      "min_wool_stage_for_shear": 3,
+      "base_growth_chance": 0.15,
+      "hunger_threshold": 30,
+      "base_graze_chance": 0.35,
+      "grazing_cooldown": 200,
+      "hunger_restoration": 25,
+      "base_wool_drops": 1
+    },
+    "behaviors": {
+      "enabled": true,
+      "priority": 3,
+      "max_force": 0.2,
+      "max_speed": 1.0,
+      "separation": 1.8,
+      "alignment": 0.8,
+      "cohesion": 1.5,
+      "leader_following": 1.2,
+      "herd_cohesion": 1.6,
+      "escape": 1.5,
+      "evasion": 1.8,
+      "follow_mother": 1.5,
+      "mother_protection": 1.4,
+      "separation_distress": 1.7
+    },
+    "grazing": {
+      "enabled": true,
+      "search_radius": 16.0,
+      "speed_modifier": 0.8,
+      "priority": 4
+    },
+    "lamb_care": {
+      "enabled": true,
+      "follow_range": 24.0,
+      "protection_range": 12.0,
+      "speed_modifier": 1.0,
+      "priority": 2
+    },
+    "flock_dynamics": {
+      "enabled": true,
+      "cohesion_radius": 16.0,
+      "distress_radius": 20.0,
+      "min_flock_size": 3,
+      "leader_influence": 1.2
+    }
+  }
+}

@@ -1,0 +1,583 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# Mob: Sniffer
+# ============================================================================
+#
+# This file defines a specific mob by:
+# 1. Overriding defaults from the Generalized Template
+# 2. Providing natural language descriptions for unique behaviors
+# 3. Specifying relationships with other mobs
+#
+# INSTRUCTIONS FOR AI:
+# - Read the Generalized Template first to understand all systems
+# - Values here OVERRIDE template defaults
+# - Empty/null values mean "use template default"
+# - Natural language descriptions should be interpreted and implemented
+# - [UNIQUE] sections require custom implementation logic
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:sniffer"
+  display_name: "Sniffer"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Giant ground sloth or prehistoric megafauna with truffle-hunting pig behavior"
+    ecological_role: "Ancient seed disperser - only mob capable of finding and excavating extinct plant seeds"
+
+  tags: ["ancient", "extinct", "archaeological", "seed_finder", "largest_passive", "non_spawning"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 14                      # 14 HP (7 hearts)
+  size:
+    width: 1.9                    # Largest passive mob
+    height: 1.75
+  biomass:
+    adult: 250                    # Large ancient creature
+  movement:
+    speeds:
+      walk: 0.18                  # Very slow, deliberate movement
+      run: 0.22                   # Minimal speed increase
+      swim: 0.12
+      fly: null
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.008             # Slow metabolism for large ancient creature
+  thirst:
+    enabled: false                # Does not drink water
+  age:
+    baby_duration: 48000          # 40 minutes - twice as long as other mobs
+    max_age: null                 # Ancient species, very long-lived
+  social:
+    enabled: false                # Solitary creature
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule: null                # Use template default
+
+  weather:
+    rain: null                    # Use template default
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []                 # Can exist in any biome
+      preferred: []
+      forbidden: []
+    required_nearby: []
+
+  territory:
+    enabled: false                # No territorial behavior
+
+  shelter:
+    needs_shelter: false          # Does not seek shelter
+    shelter_uses: []
+    valid_shelters: []
+
+  # === LOCATION-TRIGGERED BEHAVIORS ===
+  # [UNIQUE] Sniffers have special digging behavior in specific locations
+  location_triggers:
+    enabled: false                # Handled by unique behaviors instead
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "ITEM"
+        target: "minecraft:torchflower_seeds"
+        nutrition: 25
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+
+    secondary: []
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 12                    # Search range for food items
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false                # Never hunts
+
+  as_prey:
+    enabled: true
+
+    predators: []                 # No natural predators due to size
+    # Default flee behavior from template applies
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: 70             # Good health required
+    recent_food:
+      enabled: true               # Must have eaten recently
+    environment:
+      near_water: false
+      required_biomes: []
+    requires_shelter: false
+    season: null
+
+  density_effects:
+    density_curve: null           # Use template default
+
+  mate_selection:
+    courtship:
+      enabled: false              # No courtship behavior
+
+  breeding:
+    gestation:
+      type: "EGG"                 # Lays sniffer egg
+      duration: 0                 # Instant
+    birth:
+      offspring_count: [1, 1]     # Always one egg
+      location_requirement: null  # Egg drops on ground
+
+  parental_care:
+    duration: 0                   # No parental care
+    behaviors:
+      protects_offspring: false
+      feeds_offspring: false
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+    leadership:
+      has_leader: null
+
+  herd_movement:
+    enabled: false
+
+  communication:
+    alarm_calls:
+      enabled: false
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: true
+    actions:
+      - trigger: "digging"
+        description: "Digs up ancient seeds from dirt, grass, or moss blocks"
+        target: ["dirt", "grass_block", "moss_block", "podzol", "rooted_dirt", "muddy_mangrove_roots"]
+        result: "same_block"       # Block unchanged, item dropped
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: true                # Only source of ancient seeds
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false               # Does not drink
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 0                      # DOES NOT SPAWN NATURALLY
+    group_size: [0, 0]
+    conditions:
+      biomes: []
+      blocks: []
+
+  carrying_capacity:
+    caps:
+      per_chunk: 2                # Very low cap - player-controlled population
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "PASSIVE"         # Never attacks
+
+  taming:
+    enabled: false                 # Cannot be tamed
+
+  player_breeding:
+    enabled: true
+    items:
+      - "minecraft:torchflower_seeds"
+
+  drops:
+    on_death: []                   # No drops on death
+
+  interactions:
+    - action: "feed"
+      item: "minecraft:torchflower_seeds"
+      result: "breeding_or_healing"
+      description: "Feeding torchflower seeds initiates breeding or heals (Bedrock)"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.sniffer.idle"
+    hurt: "entity.sniffer.hurt"
+    death: "entity.sniffer.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "sniffing_ground"
+        frequency: 200
+        trigger: "random"
+      - behavior: "nose_wiggle"
+        frequency: 300
+        trigger: "random"
+      - behavior: "sploot"
+        frequency: 50
+        trigger: "after_digging"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+# Describe behaviors unique to this mob that aren't covered by standard systems.
+# Use natural language - AI should interpret and implement appropriate logic.
+# ============================================================================
+
+unique_behaviors:
+  - name: "ancient_seed_sniffing"
+    description: |
+      The sniffer's signature behavior - detecting and excavating ancient plant seeds
+      buried underground. This represents the sniffer's primary ecological purpose.
+
+      WHEN: Every 8 minutes (9600 ticks) after previous successful dig, when
+      wandering on suitable terrain
+
+      WHERE: Must be standing on or within 2.25 blocks of diggable blocks
+      (dirt, grass, moss, podzol, rooted dirt, muddy mangrove roots)
+
+      WHAT:
+      1. Sniffer pauses and lowers head to ground
+      2. Begins sniffing animation (pressing nose to ground)
+      3. After ~8 seconds of sniffing, starts digging animation
+      4. Performs "sploot" pose (legs spread, belly to ground)
+      5. Excavates either torchflower seeds (50%) or pitcher pod (50%)
+      6. Item drops as entity on ground
+
+      WHY: Primary method for players to obtain ancient plant seeds that cannot
+      be found any other way. Represents sniffer's ecological role as an
+      "archaeologist" creature that preserves ancient plant species.
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 15                 # Higher than idle/wander
+      duration: 480                # ~8 seconds total
+      affects_others: false
+      world_modification: true     # Drops item in world
+
+  - name: "digging_memory_system"
+    description: |
+      The sniffer remembers previous digging locations to avoid repetitive excavation
+      at the same spot, ensuring varied seed discovery patterns.
+
+      WHEN: Every time a digging action completes successfully
+
+      WHERE: N/A - internal memory system
+
+      WHAT:
+      1. Stores coordinates (x, y, z) of each successful dig location
+      2. Maintains list of last 20 dig locations
+      3. Before digging, checks if current location is in memory
+      4. If location remembered, skips digging and moves to new spot
+      5. When 21st location added, oldest location is forgotten
+
+      WHY: Prevents players from afk-farming seeds in one spot. Encourages
+      natural exploration and movement. Makes sniffer behavior feel more
+      intelligent and realistic.
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 16                 # Check before digging
+      duration: null               # Passive check
+      affects_others: false
+      world_modification: false
+
+  - name: "digging_restrictions"
+    description: |
+      Conditions that prevent the sniffer from digging, ensuring the behavior
+      only occurs in appropriate circumstances.
+
+      WHEN: Any time digging would be triggered
+
+      WHERE: N/A - conditional check
+
+      WHAT: Cannot dig when:
+      1. Leashed by player
+      2. In water (any depth)
+      3. Being tempted/tempted with torchflower seeds (following player)
+      4. In panic state (taking damage or threatened)
+      5. Riding in boat or minecart
+      6. In confined space (less than 6x6 area)
+
+      WHY: Prevents exploits (afk farming, water farms) and ensures digging
+      only occurs in natural, peaceful circumstances. Makes behavior feel
+      more grounded and realistic.
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 17                 # Check before digging attempt
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "egg_hatching_acceleration"
+    description: |
+      Sniffer eggs hatch faster when placed on moss blocks, simulating ideal
+      incubation conditions.
+
+      WHEN: When a sniffer egg is placed in the world
+
+      WHERE: Block beneath egg
+
+      WHAT:
+      1. If egg on moss block: hatch time ~10 minutes (12000 ticks)
+      2. If egg on any other block: hatch time ~20 minutes (24000 ticks)
+      3. Egg cracks twice before hatching (at 50% and 100% progress)
+      4. Requires player within 128 blocks for progress
+      5. Hatches into snifflet (baby sniffer)
+
+      WHY: Rewards players for researching and understanding sniffer ecology.
+      Creates interesting decision about where to place eggs for optimal
+      breeding operations. Moss blocks represent the sniffer's ancient habitat.
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: 5
+      duration: 12000 or 24000     # Based on block beneath
+      affects_others: false
+      world_modification: true     # Spawns new entity
+
+  - name: "snifflet_independence"
+    description: |
+      Unlike most baby animals, snifflets (baby sniffers) do not follow their
+      parents and are completely independent from birth.
+
+      WHEN: When sniffer egg hatches
+
+      WHERE: N/A - behavioral trait
+
+      WHAT:
+      1. Snifflet spawns and immediately begins independent behavior
+      2. Does not follow adult sniffer(s)
+      3. Can wander freely from hatching location
+      4. Growth takes 40 minutes (twice as long as other mobs)
+      5. Each torchflower seed fed reduces growth time by 10%
+
+      WHY: Reflects sniffer's solitary nature and ancient status. Unlike
+      modern animals that protect offspring, sniffers are independent from
+      birth, suggesting their original ecosystem had different pressures.
+      Also prevents parenting AI complications.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 8
+      duration: null               # Persistent behavior
+      affects_others: false
+      world_modification: false
+
+  - name: "torchflower_follow"
+    description: |
+      Sniffers can be tempted to follow players holding torchflower seeds,
+      but this behavior prevents digging.
+
+      WHEN: When player holds torchflower seeds within detection range
+
+      WHERE: Within 8-10 blocks of player
+
+      WHAT:
+      1. Sniffer detects torchflower seeds in player's hand
+      2. Begins following player at walking speed
+      3. Will pathfind around obstacles to reach player
+      4. Following state prevents digging behavior
+      5. Stops following if player moves too far (>16 blocks) or switches items
+
+      WHY: Allows players to move sniffers for breeding operations or
+      transportation. Trade-off: following prevents seed gathering, so
+      players must choose between moving or farming seeds.
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 12                # Override idle/wander
+      duration: null               # As long as player holds seeds
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+# Describe relationships with other specific mobs beyond predator/prey.
+# ============================================================================
+
+relationships:
+  # Predators (who hunts this mob)
+  predators: []
+
+  # Prey (what this mob hunts)
+  prey: []
+
+  # Competitors (compete for same resources)
+  competitors: []
+
+  # Mutualists (mutually beneficial)
+  mutualists:
+    - entity: "minecraft:player"
+      benefit_given: "Ancient seeds for farming and decoration"
+      benefit_received: "Protection, breeding assistance, habitat creation"
+
+  # Commensals (one benefits, other unaffected)
+  commensals: []
+
+  # Special relationships
+  special:
+    - entity: "minecraft:allay"
+      relationship: "neutral_curiosity"
+      description: "Allays may be attracted to torchflower seeds dropped by sniffers, but there is no direct interaction"
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+# Free-form description for AI to understand this mob's "character"
+# ============================================================================
+
+narrative:
+  summary: |
+    The Sniffer is an ancient, previously extinct mob that represents Minecraft's
+    lost prehistoric ecosystem. As the largest passive mob, it wanders slowly
+    through the world using its enhanced sense of smell to detect and excavate
+    ancient plant seeds that cannot be obtained any other way.
+
+  behavior_overview: |
+    Sniffers are gentle, solitary giants with a somber, melancholic demeanor that
+    reflects their near-extinct status. They move slowly and deliberately through
+    the world, periodically stopping to press their large nose to the ground and
+    sniff for buried ancient seeds. When they detect a seed, they perform a
+    distinctive "sploot" pose (belly to ground, legs spread out) and dig with
+    their nose to unearth either torchflower seeds or pitcher pods.
+
+    Unlike modern animals, sniffers are completely independent from birth - baby
+    sniffers (called "snifflets") do not follow their parents and require twice
+    as long to mature. They never naturally spawn in the world and can only be
+    obtained by hatching eggs found through archaeology in warm ocean ruins or
+    by breeding existing sniffers with torchflower seeds.
+
+    Sniffers remember their last 20 digging locations and won't dig in the same
+    spot twice until they've forgotten the oldest location, preventing repetitive
+    farming and encouraging exploration. They can be tempted to follow players
+    holding torchflower seeds, but this prevents digging - creating an interesting
+    gameplay trade-off between transportation and resource gathering.
+
+  ecological_importance: |
+    The sniffer is ecologically irreplaceable as the only source of torchflower
+    seeds and pitcher pods - two ancient plant species that represent Minecraft's
+    extinct flora. Without sniffers, these plants and their uses (breeding,
+    decoration, dye crafting) would be completely unavailable. The sniffer
+    represents a unique conservation gameplay loop where players act as
+    preservationists, reviving extinct species through archaeology and careful
+    breeding management.
+
+    Their role as "ecosystem archaeologists" connects the archaeology system
+    (ocean ruins, suspicious sand) to the living mob ecosystem, creating a
+    bridge between Minecraft's past and present. The slow breeding cycle,
+    long maturation time, and careful digging mechanics make maintaining a
+    sniffer population a meaningful long-term investment for players.
+
+  design_notes: |
+    The sniffer's design intentionally evokes loneliness and ancient wisdom -
+    they are the last of their kind, wandering a world that has moved on without
+    them. Their slow movement, solitary nature, and the fact that they only
+    uncover plants from their own ancient era create a subtle narrative about
+    extinction and loss.
+
+    For implementation, the key challenge is balancing the digging cooldown
+    (8 minutes) to make seed gathering rewarding but not tedious. The memory
+    system prevents afk farming while encouraging natural exploration. The
+    moss block hatching bonus rewards players who understand sniffer ecology
+    without being mandatory.
+
+    Baby sniffers should feel proportionally larger-headed and awkward compared
+    to adults, emphasizing their unusual life cycle. The sploot animation is
+    iconic and should be given enough duration to be appreciated by players.
+    Consider adding particle effects or subtle screen shake when digging to
+    emphasize the sniffer's size and power.
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+# Quick-reference values for ecosystem balancing
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 0.0       # Does not spawn naturally - player-controlled
+  breeding_rate_multiplier: 0.5    # Very slow breeding (long cooldown, eggs)
+  mortality_rate_multiplier: 0.3   # Low mortality - no natural predators
+
+  energy_flow:
+    daily_requirement: 30          # Low energy needs (slow metabolism)
+    provides_to_predator: 50       # Large biomass meal if hunted (rare)
+
+  population_target: "Extinct in wild - player maintained, 1-4 per server typical"
+
+  removal_impact: "Ancient plant seeds (torchflower, pitcher) become unobtainable - breaking breeding cycles and decoration options"

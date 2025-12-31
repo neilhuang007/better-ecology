@@ -1,0 +1,715 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# Mob: Parrot (minecraft:parrot)
+# ============================================================================
+#
+# This file defines a specific mob by:
+# 1. Overriding defaults from the Generalized Template
+# 2. Providing natural language descriptions for unique behaviors
+# 3. Specifying relationships with other mobs
+#
+# INSTRUCTIONS FOR AI:
+# - Read the Generalized Template first to understand all systems
+# - Values here OVERRIDE template defaults
+# - Empty/null values mean "use template default"
+# - Natural language descriptions should be interpreted and implemented
+# - [UNIQUE] sections require custom implementation logic
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:parrot"
+  display_name: "Parrot"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "OMNIVORE"
+    social_type: "FISSION_FUSION"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Tropical parrots and macaws (Psittacidae family) - Scarlet Macaw, Hyacinth Macaw, Blue-and-yellow Macaw"
+    ecological_role: "Seed disperser, vocal mimic, and canopy dweller that propagates jungle vegetation through mobility and alerts players to nearby hostile mobs"
+
+  tags: ["flying", "tameable", "shoulder_mount", "mimic", "tropical", "vocal", "music_responsive", "color_variants"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 3                         # 6 HP (3 hearts) - very fragile
+  size:
+    width: 0.5
+    height: 0.9
+  biomass:
+    adult: 15                       # Very small bird
+  movement:
+    speeds:
+      walk: null
+      run: null
+      swim: null
+      fly: null
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: null
+  thirst:
+    enabled: null
+  age:
+    baby_duration: null
+    max_age: null
+  social:
+    enabled: null
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    # Use template schedule - diurnal bird active during day
+    schedule: null
+
+  weather:
+    # Use template defaults
+    rain: null
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: []
+      forbidden: []
+    required_nearby: []
+
+  territory:
+    enabled: null
+    size: null
+
+  shelter:
+    needs_shelter: null
+    shelter_uses: []
+    valid_shelters: []
+
+  # === LOCATION-TRIGGERED BEHAVIORS ===
+  # [UNIQUE] Describe in natural language what should happen where
+  location_triggers:
+    enabled: false
+    triggers: []
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      # All seed types - parrot's primary food source
+      - type: "ITEM"
+        target: "minecraft:wheat_seeds"
+        nutrition: 15
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: ""
+
+      - type: "ITEM"
+        target: "minecraft:melon_seeds"
+        nutrition: 15
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: ""
+
+      - type: "ITEM"
+        target: "minecraft:pumpkin_seeds"
+        nutrition: 15
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: ""
+
+      - type: "ITEM"
+        target: "minecraft:beetroot_seeds"
+        nutrition: 15
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: ""
+
+      - type: "ITEM"
+        target: "minecraft:torchflower_seeds"
+        nutrition: 15
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: ""
+
+      - type: "ITEM"
+        target: "minecraft:pitcher_pod"
+        nutrition: 15
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: ""
+
+    secondary: []
+    emergency: []
+
+  foraging:
+    # Use template defaults
+    search_radius:
+      base: null
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+    prey: []
+    hunting: ""
+
+  as_prey:
+    enabled: true
+
+    # Natural predators - cats and ocelots hunt birds
+    predators:
+      - entity: "minecraft:ocelot"
+        threat_level: "HIGH"
+        detection_range: 20
+        response: "FLEE"
+        # Parrots flee upward to trees when threatened
+
+      - entity: "minecraft:cat"
+        threat_level: "MEDIUM"
+        detection_range: 16
+        response: "FLEE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    # Use template defaults
+    min_condition: null
+    recent_food:
+      enabled: null
+    environment:
+      near_water: null
+      required_biomes: []
+    requires_shelter: null
+    season: null
+
+  density_effects:
+    # Use template defaults
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: null
+      behavior: "Aerial display with wing flapping and vocal calls"
+
+  breeding:
+    gestation:
+      type: ""
+      duration: null
+    birth:
+      offspring_count: null
+      location_requirement: ""
+
+  parental_care:
+    duration: null
+    behaviors:
+      protects_offspring: null
+      feeds_offspring: null
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "FISSION_FUSION"
+    size:
+      min: 1
+      optimal: 2
+      max: 4
+    leadership:
+      has_leader: null
+      leader_selection: ""
+
+  herd_movement:
+    enabled: null
+
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "predator_detected"
+          call: "sharp_squawk"
+          group_response: "flee_to_trees"
+
+        - trigger: "hostile_mob_nearby"
+          call: "mimic_hostile_mob"
+          group_response: "remain_alert"
+
+        - trigger: "player_approach"
+          call: "ambient_chatter"
+          group_response: "observe"
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: null
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: true
+    pollination:
+      enabled: null
+
+  responses:
+    drinking:
+      enabled: null
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 10
+    group_size: [1, 2]
+    conditions:
+      biomes: []
+      blocks: []
+
+  carrying_capacity:
+    caps:
+      per_chunk: null
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "NEUTRAL"
+
+  taming:
+    enabled: true
+    items: ["wheat_seeds", "melon_seeds", "pumpkin_seeds", "beetroot_seeds", "torchflower_seeds", "pitcher_pod"]
+
+  player_breeding:
+    # Vanilla parrots CANNOT be bred - this is mod override
+    enabled: false
+    items: []
+
+  drops:
+    on_death:
+      - item: "minecraft:feather"
+        count: [1, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+        # Looting I: 1-3 feathers
+        # Looting II: 1-4 feathers
+        # Looting III: 1-5 feathers
+
+  interactions:
+    # CRITICAL: Cookies are fatal to parrots
+    - action: "feed"
+      item: "minecraft:cookie"
+      result: "instant_death"
+      description: "Feeding a cookie to a parrot causes instant fatal poisoning (2128 damage) - chocolate is toxic to real birds"
+
+    # Taming with seeds (10% success rate)
+    - action: "feed"
+      item: "#minecraft:seeds"
+      result: "taming_attempt"
+      description: "Any seed can tame a parrot with 10% success rate per feeding"
+
+    # Shoulder mounting when tamed
+    - action: "walk_through"
+      item: "none"
+      result: "shoulder_mount"
+      description: "Tamed parrots automatically perch on player's shoulder (left first, then right)"
+
+    # Sit command
+    - action: "right_click"
+      item: "none"
+      result: "toggle_sit"
+      description: "Tamed parrots can be commanded to sit, preventing shoulder perching"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.parrot.ambient"
+    hurt: "entity.parrot.hurt"
+    death: "entity.parrot.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "head_tilt"
+        frequency: 0.3
+        trigger: "random"
+
+      - behavior: "wing_flutter"
+        frequency: 0.2
+        trigger: "random_idle"
+
+      - behavior: "preen_feathers"
+        frequency: 0.15
+        trigger: "idle_long"
+
+      - behavior: "look_around"
+        frequency: 0.25
+        trigger: "random"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+# Parrots have several unique behaviors not found in other mobs:
+# 1. Shoulder perching (can sit on player's shoulder)
+# 2. Dancing to music discs in jukeboxes
+# 3. Mimicking hostile mob sounds (proximity alarm system)
+# 4. Cookie poisoning (educational mechanic)
+# 5. Five color variants based on real-world species
+# 6. Fall damage immunity (continuous wing flapping)
+# ============================================================================
+
+unique_behaviors:
+  # === UNIQUE BEHAVIOR 1: SHOULDER PERCHING ===
+  - name: "shoulder_perching"
+    description: |
+      Tamed parrots can automatically fly to and perch on the player's shoulders,
+      providing companionship and mobility. This is unique to parrots in Minecraft.
+
+      WHEN: Player is within 1 block of a tamed, non-sitting parrot on the ground
+      WHERE: Any location where parrot can reach player
+      WHAT: Parrot flies to player's shoulder (left shoulder first, then right shoulder)
+            and becomes part of player NBT data (ShoulderEntityLeft/ShoulderEntityRight).
+            Maximum of 2 parrots (one per shoulder). Parrot remains mounted when
+            player enters boats or swims, but dismounts when player jumps.
+      WHY: Provides unique companion mechanic, allows parrot to travel with player,
+           mirrors real-world parrot behavior of perching on handlers
+
+    implementation_hints:
+      trigger_type: "PROXIMITY"
+      priority: 5
+      duration: null
+      affects_others: true
+      world_modification: false
+
+  # === UNIQUE BEHAVIOR 2: DANCING TO MUSIC ===
+  - name: "music_dancing"
+    description: |
+      Parrots perform a unique dance animation when music plays from a nearby jukebox,
+      inspired by the "Party Parrot" meme (derived from kākāpō parrot).
+
+      WHEN: A jukebox within 3 blocks (X, Y, Z) is playing a music disc
+      WHERE: Any location within 3-block radius of active jukebox
+      WHAT: Parrot performs dance animation (head bobbing, wing flapping in rhythm).
+            Continues dancing while music plays. Stops dancing when music stops,
+            disc is ejected, or parrot moves out of range. In Bedrock Edition,
+            can dance while perched on player's shoulder.
+      WHY: Adds personality and charm, creates emotional connection with players,
+           provides entertainment value, references popular internet meme
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: 3
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  # === UNIQUE BEHAVIOR 3: MOB SOUND MIMICRY ===
+  - name: "mob_sound_mimicry"
+    description: |
+      Parrots mimic the idle sounds of nearby hostile and neutral mobs at higher pitch,
+      serving as an auditory early warning system for players.
+
+      WHEN: Hostile or neutral mobs are within 20-block cubic detection range
+      WHERE: Any location where parrot can detect nearby mobs
+      WHAT: Parrot plays idle sounds of nearby mobs (zombie, skeleton, spider, creeper,
+            enderman, phantom, drowned, piglin, hoglin, etc.) at baby-variant pitch.
+            Java Edition: Mimics zombies, skeletons, creepers, spiders, endermen,
+            phantom, drowned, piglins, hoglins, piglin brutes. Does NOT mimic guardians.
+            Bedrock Edition: All Java mobs plus wolves, polar bears, zombified piglins.
+            Also performs occasional random mimicry of mobs not in detection range.
+      WHY: Provides gameplay utility as proximity alarm for hostile mobs, mirrors
+           real-world parrot vocal mimicry abilities, enhances exploration safety
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 2
+      duration: 2           # Sound duration in seconds
+      affects_others: false
+      world_modification: false
+
+  # === UNIQUE BEHAVIOR 4: COOKIE POISONING ===
+  - name: "fatal_cookie_toxicity"
+    description: |
+      Feeding cookies to parrots causes instant fatal poisoning, an educational mechanic
+      teaching players that chocolate is toxic to real birds.
+
+      WHEN: Player right-clicks parrot while holding a cookie
+      WHERE: Any location
+      WHAT: Parrot instantly dies from 2128 damage (far exceeding 6 HP maximum).
+            Poison particles (Java) or Fatal Poison particles (Bedrock) display.
+            Parrot emits death sound and plays death animation. This is NOT reversible.
+      WHY: Educational mechanic to prevent children from feeding chocolate to real pet
+           birds, community-driven design change after Reddit outcry (originally
+           parrots were tamed with cookies referencing Nirvana song "Polly"),
+           preserves real-world animal safety awareness in game
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 100
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  # === UNIQUE BEHAVIOR 5: FIVE COLOR VARIANTS ===
+  - name: "color_variants"
+    description: |
+      Parrots spawn in one of five color variants based on real-world macaw and parrot species,
+      selected randomly with equal probability regardless of biome.
+
+      WHEN: Parrot spawns naturally in jungle biome
+      WHERE: Jungle biomes (jungle, bamboo_jungle, sparse_jungle)
+      WHAT: Variant selected randomly from: Red (Scarlet Macaw), Blue (Hyacinth Macaw),
+            Green (Military Macaw/Antipodes Parakeet), Cyan (Blue-and-yellow Macaw),
+            Gray (Cockatiel). Each variant has equal 20% spawn chance. Variant is
+            permanent and stored in entity NBT data. All variants have identical
+            behavior and stats.
+      WHY: Adds visual variety and biodiversity, reflects real-world parrot species
+           diversity, provides collection incentive for players
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 0
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  # === UNIQUE BEHAVIOR 6: FALL DAMAGE IMMUNITY ===
+  - name: "fall_damage_immunity"
+    description: |
+      Parrots never take fall damage by continuously flapping their wings while falling.
+
+      WHEN: Parrot is falling (not flying, just descending)
+      WHERE: Any location
+      WHAT: Parrot continuously flaps wings during descent, reducing fall speed.
+            Takes zero fall damage regardless of height. Always flies upward when
+            struck by attacks, using flight to escape.
+      WHY: Reflects real bird flight mechanics, appropriate for small flying bird,
+           prevents accidental deaths from natural behavior
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 1
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  # === UNIQUE BEHAVIOR 7: AUTONOMOUS SHOULDER FLIGHT ===
+  - name: "autonomous_shoulder_mounting"
+    description: |
+      Tamed parrots automatically fly to player's shoulder when nearby without
+      manual interaction, as long as they're not commanded to sit.
+
+      WHEN: Tamed parrot is on ground, not sitting, and player is within 1-2 blocks
+      WHERE: Any location where parrot can reach player
+      WHAT: Parrot autonomously flies to player's shoulder (left优先, then right).
+            Happens automatically without player input. Parrot can be told to sit
+            to prevent this behavior.
+      WHY: Reduces micromanagement, creates sense of companionship, makes parrots
+           feel more intelligent and autonomous, distinguishes from other pets
+
+    implementation_hints:
+      trigger_type: "PROXIMITY"
+      priority: 4
+      duration: null
+      affects_others: true
+      world_modification: false
+
+  # === UNIQUE BEHAVIOR 8: MOB ATTRACTION ===
+  - name: "mob_attraction"
+    description: |
+      Wild parrots are attracted to nearby mobs of all types, including hostile mobs,
+      and will crowd around and settle near them.
+
+      WHEN: Any mob (passive, neutral, or hostile) is within 8 blocks
+      WHERE: Any location
+      WHAT: Parrot slowly moves toward nearby mobs and settles near them.
+            Does not distinguish between mob types. Will approach and perch near
+            zombies, skeletons, creepers, etc. Creates comedic and dangerous situations.
+            This behavior applies only to wild parrots, not tamed ones.
+      WHY: References parrot curiosity and social nature, creates funny moments
+           (parrots perching on creepers), adds to parrot character as naive
+           and overly social bird
+
+    implementation_hints:
+      trigger_type: "PROXIMITY"
+      priority: 6
+      duration: null
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+# Parrots have unique relationships with other mobs beyond predation
+# ============================================================================
+
+relationships:
+  # Predators (who hunts this mob)
+  predators:
+    - entity: "minecraft:ocelot"
+      notes: "Natural predator of birds in jungle biome"
+
+    - entity: "minecraft:cat"
+      notes: "Domesticated cats hunt parrots"
+
+  # Prey (what this mob hunts)
+  prey: []
+
+  # Competitors (compete for same resources)
+  competitors:
+    - entity: "minecraft:chicken"
+      resource: "seeds"
+      interaction: "passive"
+
+    - entity: "minecraft:tropical_fish"
+      resource: "none"
+      interaction: "none - different niches"
+
+  # Mutualists (mutually beneficial)
+  mutualists:
+    - entity: "minecraft:player"
+      benefit_given: "mob proximity warnings via mimicry, companionship"
+      benefit_received: "protection, shelter, food (seeds)"
+
+  # Commensals (one benefits, other unaffected)
+  commensals:
+    - entity: "minecraft:allay"
+      benefit: "both can dance to music, shared aesthetic behavior"
+      interaction: "none"
+
+  # Special relationships
+  special:
+    - entity: "minecraft:jukebox"
+      relationship: "music_response"
+      description: "Parrots dance to music from jukeboxes - unique music appreciation behavior shared only with Allays"
+
+    - entity: "hostile_mobs (zombie, skeleton, creeper, etc.)"
+      relationship: "mimicry_target"
+      description: "Parrots mimic sounds of hostile mobs, serving as proximity warning for players. Parrots also naively approach these mobs."
+
+    - entity: "minecraft:cookie"
+      relationship: "fatal_interaction"
+      description: "Cookies are instantly fatal to parrots - educational mechanic about chocolate toxicity to birds"
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+# Free-form description for AI to understand this mob's "character"
+# ============================================================================
+
+narrative:
+  summary: |
+    The Parrot is a vibrant, intelligent tropical bird that inhabits jungle biomes,
+    serving as both a seed disperser and an entertaining companion for players.
+    With five colorful variants based on real-world macaw species, parrots bring
+    life and personality to jungle ecosystems while providing gameplay utility
+    through their unique ability to mimic hostile mob sounds.
+
+  behavior_overview: |
+    Parrots are naturally curious and highly social birds that spend their days
+    flying through jungle canopies, perching on trees, and foraging for seeds.
+    Wild parrots are naively friendly, approaching any nearby mob including
+    dangerous hostile mobs, which players must protect them from. Their most
+    distinctive trait is vocal mimicry - they copy the sounds of nearby hostile
+    mobs at higher pitch, inadvertently serving as an early warning system for
+    players exploring caves or jungles. When tamed with seeds, parrots become
+    loyal companions that autonomously perch on player shoulders, allowing for
+    hands-free travel. They express joy by dancing to jukebox music with
+    infectious enthusiasm. Despite their curiosity and intelligence, parrots
+    are physically fragile with only 6 health, making them vulnerable to predators
+    and environmental hazards.
+
+  ecological_importance: |
+    In the real world, parrots are critical seed dispersers that transport seeds
+    across long distances, facilitating forest regeneration and plant diversity.
+    In Minecraft, parrots fulfill a similar narrative role as jungle ecosystem
+    indicators - their presence signifies a healthy jungle environment. Their
+    rarity (0.2% spawn rate) reflects the fragility of tropical ecosystems.
+    While they cannot breed in vanilla Minecraft (limiting population growth),
+    they serve as ambassadors for jungle biomes, drawing players to explore
+    and appreciate these diverse environments. Their sound mimicry provides
+    gameplay utility by alerting players to nearby dangers, making them valuable
+    companions for cave exploration and night travel.
+
+  design_notes: |
+    Parrots were designed to be charming companion mobs with personality-driven
+    behaviors rather than practical utility. The cookie poisoning mechanic is
+    intentionally educational - it teaches children that chocolate is toxic to
+    real birds after the community successfully campaigned to change parrots
+    from being tamed with cookies to being killed by them. The shoulder perching
+    and dancing behaviors create emotional attachment, while the mob mimicry
+    provides subtle gameplay value. Parrots cannot breed in vanilla, making
+    each tamed parrot special and rare. Consider implementing breeding for the
+    mod to offset their extreme rarity, but preserve all unique behaviors as
+    they define the parrot's character. Their low health (6 HP) makes them
+    fragile - this is intentional and should be maintained. Parrots should
+    remain non-combat pets focused on companionship and aesthetic value.
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+# Quick-reference values for ecosystem balancing
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 0.0      # Vanilla: no breeding
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: 20            # Small bird, high metabolism
+    provides_to_predator: 15         # Very low biomass
+
+  population_target: "Rare, 2-4 parrots per jungle biome"
+
+  removal_impact: "Minimal gameplay impact but loss of charming companion mob and proximity warning system"

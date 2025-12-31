@@ -1,0 +1,579 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - MULE UNIQUE PROFILE
+# Template Version: 2.0
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:mule"
+  display_name: "Mule"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "HERD"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Mule (sterile hybrid of horse and donkey)"
+    ecological_role: "Domesticated pack animal that cannot reproduce; serves as working animal but contributes no offspring to population"
+
+  tags: ["domesticated", "pack_animal", "sterile_hybrid", "equine", "chest_carrier"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 11.25                 # 15-30 HP average = 22.5 HP = 11.25 hearts
+
+  size:
+    width: 1.3964844            # Minecraft mule dimensions
+    height: 1.6
+
+  biomass:
+    adult: 450                  # Large herbivore, similar to horse/donkey
+
+  movement:
+    speeds:
+      walk: 0.2
+      run: 0.35                 # Sturdy and reliable speed
+      swim: 0.15
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.018           # Slightly more efficient than default
+
+  thirst:
+    enabled: false              # Simplified for game balance
+
+  age:
+    baby_duration: 24000
+    max_age: null               # No natural death from old age
+
+  social:
+    enabled: true               # Moderately social, can work alone or in groups
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 6000]
+        activity: 1.0
+        label: "morning"
+      - time: [6000, 12000]
+        activity: 0.9
+        label: "afternoon"
+      - time: [12000, 13500]
+        activity: 0.7
+        label: "dusk"
+      - time: [13500, 22500]
+        activity: 0.3           # Rests at night but not fully inactive
+        label: "night"
+      - time: [22500, 24000]
+        activity: 0.5
+        label: "pre_dawn"
+
+  weather:
+    rain:
+      activity_multiplier: 0.8
+      seek_shelter: false       # Hardy animal
+    thunder:
+      activity_multiplier: 0.5
+      seek_shelter: false
+      panic_chance: 0.15
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []               # Can survive in all biomes (domesticated)
+      preferred: ["plains", "savanna", "forest", "meadow"]
+      forbidden: []
+    required_nearby: []
+
+  territory:
+    enabled: false              # Domesticated, no territory
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "BLOCK"
+        target: "minecraft:grass_block"
+        nutrition: 25
+        method: "GRAZE"
+        world_effect:
+          action: "CONVERT"
+          result: "minecraft:dirt"
+
+      - type: "ITEM"
+        target: "minecraft:wheat"
+        nutrition: 30
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+
+      - type: "ITEM"
+        target: "minecraft:hay_block"
+        nutrition: 50
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+
+    secondary:
+      - type: "ITEM"
+        target: "minecraft:apple"
+        nutrition: 20
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+
+      - type: "ITEM"
+        target: "minecraft:carrot"
+        nutrition: 25
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+
+      - type: "ITEM"
+        target: "minecraft:sugar"
+        nutrition: 15
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 12
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:wolf"
+        threat_level: "MEDIUM"
+        detection_range: 20
+        response: "FLEE"
+
+      - entity: "minecraft:zombie"
+        threat_level: "LOW"
+        detection_range: 16
+        response: "FLEE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  enabled: false                # CRITICAL: MULES ARE STERILE
+  method: "NONE"
+
+  # Mules cannot breed, cannot be bred by players
+  # They only come into existence as offspring of horse + donkey
+  requirements:
+    mate_required: false
+
+  breeding:
+    gestation:
+      type: "NONE"
+      duration: 0
+    birth:
+      offspring_count: [0, 0]
+
+  parental_care:
+    enabled: false
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "HERD"
+    size:
+      min: 1
+      optimal: 4
+      max: 8
+    leadership:
+      has_leader: false
+
+  herd_movement:
+    enabled: true
+
+  communication:
+    alarm_calls:
+      enabled: false
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: true
+    actions:
+      - trigger: "foraging"
+        description: "Converts grass to dirt when grazing"
+        target: "grass_block"
+        result: "dirt"
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false            # Simplified
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 0                   # DOES NOT SPAWN NATURALLY
+    group_size: [0, 0]
+    conditions:
+      biomes: []                # Never spawns in world
+      blocks: []
+
+  carrying_capacity:
+    caps:
+      per_chunk: 6
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  taming:
+    enabled: true
+    items: []                   # Tamed through riding mechanics, not items
+    requires_habituation: false
+
+  player_breeding:
+    enabled: false              # CANNOT BE BRED - STERILE
+    items: []
+    bypasses_conditions: false
+
+  drops:
+    on_death:
+      - item: "minecraft:leather"
+        count: [0, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+  interactions:
+    - action: "ride"
+      item: "minecraft:saddle"
+      result: "RIDEABLE"
+      description: "Can be ridden when tamed and saddled"
+
+    - action: "equip_chest"
+      item: "minecraft:chest"
+      result: "STORAGE"
+      description: "Can carry a chest for item storage, like donkey parent"
+
+    - action: "feed_golden_apple"
+      item: "minecraft:golden_apple"
+      result: "TEMPORARY_BOOST"
+      description: "Feeding golden items improves health/speed temporarily"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.mule.ambient"
+    hurt: "entity.mule.hurt"
+    death: "entity.mule.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "head_shake"
+        frequency: 600
+        trigger: "random"
+
+      - behavior: "tail_swish"
+        frequency: 400
+        trigger: "random"
+
+      - behavior: "ear_movement"
+        frequency: 300
+        trigger: "alert"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+
+unique_behaviors:
+  - name: "sterile_hybrid"
+    description: |
+      Mules are sterile hybrids resulting from breeding a horse and donkey.
+
+      WHEN: At all times
+      WHERE: Everywhere
+      WHAT: The mule cannot breed with any other entity. It will never enter
+            breeding mode, will not respond to breeding items (wheat, golden
+            carrots, etc.), and cannot produce offspring. Player attempts to
+            breed mules should fail with appropriate feedback.
+      WHY: Biological reality - mules are sterile hybrids due to chromosome
+           mismatch between horse (64 chromosomes) and donkey (62 chromosomes),
+           resulting in 63 chromosomes that cannot pair properly for reproduction.
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 1
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "chest_storage_capability"
+    description: |
+      Mules inherit the chest-carrying capability from their donkey parent.
+
+      WHEN: After being tamed
+      WHERE: Anywhere
+      WHAT: Players can right-click with a chest to attach it to the mule,
+            providing 15 inventory slots (3 rows of 5). Once attached, the
+            chest cannot be removed except by killing the mule. The chest
+            can be accessed by shift-right-clicking the mule.
+      WHY: Gameplay feature inherited from donkey genetics, making mules
+           valuable as pack animals for transportation and exploration.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 5
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "no_armor_capability"
+    description: |
+      Unlike horses, mules cannot wear horse armor.
+
+      WHEN: At all times
+      WHERE: Everywhere
+      WHAT: Attempts to equip horse armor (leather, iron, gold, diamond) on
+            a mule should fail. Only saddles and chests can be equipped.
+      WHY: Game balance and donkey heritage - mules take after donkeys in
+           not supporting armor, but compensate with chest storage.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 5
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "hybrid_vigor"
+    description: |
+      Mules often exhibit hybrid vigor, being stronger and more enduring
+      than either parent.
+
+      WHEN: Throughout life
+      WHERE: Everywhere
+      WHAT: Mules should have slightly higher average health and jump height
+            than the average of their horse and donkey parents. They are more
+            sure-footed on difficult terrain.
+      WHY: Represents real-world hybrid vigor where crossbred animals often
+           show superior traits compared to purebred parents.
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 10
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "stubborn_temperament"
+    description: |
+      Mules are known for being more stubborn than horses but smarter.
+
+      WHEN: During taming and riding
+      WHERE: Anywhere
+      WHAT: Mules should have a slightly higher taming difficulty than horses
+            (more mounting attempts required). However, once tamed, they should
+            be more reliable and less likely to throw the rider in dangerous
+            situations.
+      WHY: Reflects real-world mule behavior - harder to train initially but
+           more dependable and cautious once trained.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 8
+      duration: null
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+
+relationships:
+  predators:
+    - entity: "minecraft:wolf"
+      notes: "Natural predator, mules will flee when threatened"
+
+    - entity: "minecraft:zombie"
+      notes: "Hostile mob, mules will flee from zombies"
+
+  prey: []                      # Herbivore, no prey
+
+  competitors:
+    - entity: "minecraft:horse"
+      resource: "grass_blocks"
+      interaction: "Shares grazing areas peacefully with parent species"
+
+    - entity: "minecraft:donkey"
+      resource: "grass_blocks"
+      interaction: "Shares grazing areas peacefully with parent species"
+
+    - entity: "minecraft:cow"
+      resource: "grass_blocks"
+      interaction: "Competes for grazing but generally peaceful"
+
+    - entity: "minecraft:sheep"
+      resource: "grass_blocks"
+      interaction: "Competes for grazing but generally peaceful"
+
+  mutualists: []
+
+  commensals: []
+
+  special:
+    - entity: "minecraft:horse"
+      relationship: "PARENT_SPECIES"
+      description: "Horse is one parent species; mules socialize with horses but cannot breed with them"
+
+    - entity: "minecraft:donkey"
+      relationship: "PARENT_SPECIES"
+      description: "Donkey is one parent species; mules socialize with donkeys but cannot breed with them"
+
+    - entity: "minecraft:player"
+      relationship: "DOMESTICATION"
+      description: "Can be tamed and used as riding/pack animal by players"
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+
+narrative:
+  summary: |
+    The mule is a sterile hybrid offspring of a horse and donkey, combining
+    the strength and size of a horse with the sure-footedness and endurance
+    of a donkey. It serves as a reliable pack animal but cannot reproduce.
+
+  behavior_overview: |
+    Mules are intelligent and cautious animals with a reputation for being
+    stubborn. In the wild or when untamed, they graze on grass and form small
+    herds with other equines. They are active during the day and rest at night,
+    preferring open areas like plains and savannas. Mules are more difficult
+    to tame than horses, requiring more patience and mounting attempts, but
+    once tamed they become exceptionally reliable. Unlike horses, mules cannot
+    wear armor but can carry chests like their donkey parent, making them
+    valuable for transportation and exploration. They exhibit hybrid vigor,
+    often showing superior health and endurance compared to their parents.
+
+  ecological_importance: |
+    As sterile hybrids, mules do not contribute to population dynamics through
+    reproduction. They exist only when players or the game mechanics breed
+    horses with donkeys. This makes them ecological dead-ends - they consume
+    resources (grass, crops) but produce no offspring. In a player-managed
+    ecosystem, mules serve as working animals that help transport resources
+    but require continuous breeding of horses and donkeys to maintain their
+    population. If all mules were removed, the ecosystem would lose pack
+    animals with storage capability but would otherwise remain stable, as
+    horses and donkeys would continue to reproduce normally.
+
+  design_notes: |
+    CRITICAL IMPLEMENTATION NOTES:
+
+    1. STERILITY: The most important unique feature is that mules CANNOT breed.
+       This must be enforced at all levels:
+       - No breeding AI goal
+       - No response to breeding items
+       - No breeding particles/hearts
+       - Clear feedback to players attempting to breed them
+
+    2. SPAWNING: Mules NEVER spawn naturally in the world. They only exist as
+       the result of horse + donkey breeding. Spawn weight must be 0.
+
+    3. DUAL INHERITANCE: Mules inherit traits from both parents:
+       - From horse: size, riding capability, jump height
+       - From donkey: chest storage, ear shape
+       - Cannot have: horse armor (horse trait), breeding (both parents)
+
+    4. PLAYER VALUE: Despite sterility, mules are valuable because:
+       - Can be ridden (like horses)
+       - Can carry chests (like donkeys)
+       - Often have good stats (hybrid vigor)
+       - More dependable than horses in dangerous situations
+
+    5. BALANCE: Because mules cannot reproduce, they are a "resource investment"
+       for players - requiring a horse AND donkey to create, but providing
+       unique utility in return.
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 0.0    # NEVER spawns naturally
+  breeding_rate_multiplier: 0.0 # CANNOT breed
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: 3000     # Food energy needed per day
+    provides_to_predator: 4500  # Energy given to predator when eaten
+
+  population_target: "Player-dependent only; no natural population"
+
+  removal_impact: "Minimal ecosystem impact - mules are domesticated sterile hybrids that exist outside natural population dynamics. Removal only affects player utility and transportation options."

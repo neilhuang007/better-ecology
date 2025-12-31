@@ -1,0 +1,533 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - HORSE UNIQUE PROFILE
+# Template Version: 2.0
+# ============================================================================
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:horse"
+  display_name: "Horse"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "HERD"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Domesticated horse (Equus caballus)"
+    ecological_role: "Large grazing herbivore, domesticated companion animal, seed disperser through manure"
+
+  tags: ["domesticated", "rideable", "grazing", "plains_animal", "savanna_animal", "variable_stats"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 11.25                   # Average 22.5 HP, but variable per individual (15-30 HP)
+
+  size:
+    width: 1.4
+    height: 1.6
+
+  biomass:
+    adult: 450                    # Large herbivore
+
+  movement:
+    speeds:
+      walk: 0.225                 # Variable: 0.1125 to 0.3375
+      run: 0.45
+      swim: 0.15
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.015             # Slower decay for large herbivore
+
+  social:
+    enabled: true                 # Herd animal with social needs
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      preferred: ["plains", "savanna", "savanna_plateau", "sunflower_plains"]
+      forbidden: ["ocean", "deep_ocean", "frozen_ocean"]
+
+    required_nearby:
+      - feature: "grass"
+        max_distance: 16
+        reason: "Primary food source"
+
+  territory:
+    enabled: false
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "BLOCK"
+        target: "minecraft:grass_block"
+        nutrition: 20
+        method: "GRAZE"
+        world_effect:
+          action: "CONVERT"
+          result: "minecraft:dirt"
+
+      - type: "ITEM"
+        target: "minecraft:wheat"
+        nutrition: 25
+        method: "PICKUP"
+
+      - type: "ITEM"
+        target: "minecraft:hay_block"
+        nutrition: 60
+        method: "PICKUP"
+
+    secondary:
+      - type: "ITEM"
+        target: "minecraft:apple"
+        nutrition: 15
+        method: "PICKUP"
+
+      - type: "ITEM"
+        target: "minecraft:sugar"
+        nutrition: 10
+        method: "PICKUP"
+
+    emergency: []
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:wolf"
+        threat_level: "MEDIUM"
+        detection_range: 20
+        response: "FLEE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: 60
+    recent_food:
+      enabled: true
+    environment:
+      near_water: false
+      required_biomes: []
+    requires_shelter: false
+
+  mate_selection:
+    courtship:
+      enabled: false
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+    birth:
+      offspring_count: [1, 1]
+
+  parental_care:
+    duration: 24000
+    behaviors:
+      protects_offspring: true
+      feeds_offspring: false
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "HERD"
+    size:
+      min: 2
+      optimal: 4
+      max: 8
+
+    leadership:
+      has_leader: false
+
+  herd_movement:
+    enabled: true
+
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "predator_detected"
+          call: "whinny"
+          group_response: "alert_and_flee"
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: true
+    actions:
+      - trigger: "foraging"
+        description: "Converts grass_block to dirt when grazing"
+        target: "grass_block"
+        result: "dirt"
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: true
+      seeds: ["minecraft:wheat_seeds", "minecraft:grass"]
+      method: "GUT_PASSAGE"
+      dispersal_radius: 32
+
+  responses:
+    drinking:
+      enabled: false
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 5
+    group_size: [2, 6]
+    conditions:
+      biomes: ["plains", "savanna", "savanna_plateau", "sunflower_plains"]
+      blocks: ["minecraft:grass_block"]
+
+  carrying_capacity:
+    caps:
+      per_chunk: 6
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  taming:
+    enabled: true
+    items: []                     # Special taming: repeated mounting until trust builds
+
+  player_breeding:
+    enabled: true
+    items: ["minecraft:golden_apple", "minecraft:golden_carrot"]
+
+  drops:
+    on_death:
+      - item: "minecraft:leather"
+        count: [0, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+  interactions:
+    - action: "MOUNT"
+      item: null
+      result: "taming_progress"
+      description: "Repeated mounting attempts gradually tame the horse"
+
+    - action: "RIDE"
+      item: "minecraft:saddle"
+      result: "mountable"
+      description: "Can be ridden when tamed and equipped with saddle"
+
+    - action: "EQUIP_ARMOR"
+      item: "minecraft:iron_horse_armor"
+      result: "protected"
+      description: "Equip armor for protection (iron, golden, or diamond)"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.horse.ambient"
+    hurt: "entity.horse.hurt"
+    death: "entity.horse.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "head_shake"
+        frequency: 0.01
+        trigger: "random"
+
+      - behavior: "tail_swish"
+        frequency: 0.05
+        trigger: "random"
+
+      - behavior: "graze_animation"
+        frequency: 0.02
+        trigger: "near_grass"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+
+unique_behaviors:
+  - name: "variable_stats"
+    description: |
+      Each horse spawns with unique individual stats for health, speed, and jump height.
+      These stats are randomly generated within defined ranges and persist for that individual.
+
+      WHEN: On spawn or birth
+      WHERE: Anywhere
+      WHAT:
+        - Health: 15-30 HP (7.5-15 hearts)
+        - Speed: 0.1125 to 0.3375 blocks/tick
+        - Jump height: 1.25 to 5.5 blocks
+      WHY: Creates variety and gameplay interest - players search for high-stat horses
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 1
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "variant_diversity"
+    description: |
+      Horses spawn with 35 different visual variants based on color and markings.
+      There are 7 base colors (white, creamy, chestnut, brown, black, gray, dark brown)
+      and 5 marking patterns (none, white stockings/blaze, white field, white dots, black dots).
+
+      WHEN: On spawn or birth
+      WHERE: Anywhere
+      WHAT: Randomly select color and marking pattern
+      WHY: Visual diversity makes each horse feel unique and collectible
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 1
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "taming_by_mounting"
+    description: |
+      Horses are tamed through repeated mounting attempts rather than feeding.
+      Each mount attempt has a chance to succeed based on the horse's temperament.
+      Failed attempts result in the horse bucking the player off.
+
+      WHEN: Player right-clicks to mount an untamed horse
+      WHERE: Anywhere
+      WHAT:
+        - Horse bucks player off initially
+        - Each attempt slightly increases taming progress
+        - Success chance increases with each attempt
+        - Eventually horse accepts rider (becomes tamed)
+        - Tamed horse can then be equipped with saddle
+      WHY: Unique taming mechanic that feels more realistic than instant taming
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 5
+      duration: 40
+      affects_others: false
+      world_modification: false
+
+  - name: "breeding_with_golden_foods"
+    description: |
+      Horses require golden apples or golden carrots to enter breeding mode.
+      Both parents must be fed and must be tamed by players.
+
+      WHEN: Player feeds tamed horse golden apple/carrot
+      WHERE: Anywhere
+      WHAT:
+        - Horse enters "love mode"
+        - Seeks nearby horse also in love mode
+        - Produces single foal
+        - Offspring inherits averaged stats from parents with slight variation
+      WHY: Premium breeding items reflect value of good horses
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 8
+      duration: null
+      affects_others: true
+      world_modification: false
+
+  - name: "equipment_slots"
+    description: |
+      Tamed horses can be equipped with saddle (required for riding) and
+      horse armor (iron, golden, or diamond) for protection.
+
+      WHEN: Player right-clicks tamed horse with equipment
+      WHERE: Anywhere
+      WHAT:
+        - Saddle enables player control when riding
+        - Armor provides damage reduction
+        - Equipment visible on horse model
+        - Can open inventory to manage equipment
+      WHY: Adds progression and customization to horse ownership
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 10
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "rideable_mount"
+    description: |
+      When tamed and saddled, horses can be ridden by players.
+      Horse's speed and jump height determine riding performance.
+
+      WHEN: Player mounts tamed, saddled horse
+      WHERE: Anywhere
+      WHAT:
+        - Player controls horse movement
+        - Horse uses its individual speed stat
+        - Can jump based on horse's jump stat (charge jump by holding space)
+        - Can be steered in any direction
+      WHY: Core gameplay loop - horses are valuable transportation
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 15
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "herd_spawning"
+    description: |
+      Horses spawn in small herds rather than individually.
+      Herds consist of 2-6 horses of mixed colors and stats.
+
+      WHEN: Natural spawning
+      WHERE: Plains and savanna biomes
+      WHAT:
+        - Spawn 2-6 horses together
+        - Random mix of variants
+        - Independent stats per individual
+        - Group stays loosely together initially
+      WHY: Realistic behavior and gives players choices when finding horses
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 1
+      duration: null
+      affects_others: true
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+
+relationships:
+  predators:
+    - entity: "minecraft:wolf"
+      notes: "Wolves may attack horses, especially foals"
+
+  prey: []
+
+  competitors:
+    - entity: "minecraft:cow"
+      resource: "grass"
+      interaction: "Compete for grazing areas"
+
+    - entity: "minecraft:sheep"
+      resource: "grass"
+      interaction: "Compete for grazing areas"
+
+  mutualists: []
+
+  commensals: []
+
+  special:
+    - entity: "minecraft:donkey"
+      relationship: "interbreed"
+      description: "Can breed with donkeys to produce mules"
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+
+narrative:
+  summary: |
+    The horse is a large, domesticated herbivore found grazing in plains and savannas.
+    With 35 color variants and highly variable individual stats, each horse is unique.
+    They are prized by players for their speed and jumping ability as rideable mounts.
+
+  behavior_overview: |
+    Horses are diurnal herd animals that spend their days grazing on grass blocks.
+    They travel in loose groups of 2-6 individuals, maintaining social bonds through
+    contact calls and coordinated movement. Wild horses are initially wary of players
+    but can be tamed through patient mounting attempts. Once tamed, they become loyal
+    companions that can be equipped with saddles and armor for riding. Horses require
+    golden foods to breed, and offspring inherit traits from both parents. They are
+    skittish around predators like wolves and will flee as a group when threatened.
+
+  ecological_importance: |
+    Horses serve as large grazers that convert grass blocks to dirt, creating pathways
+    and maintaining grassland ecosystems. They disperse seeds through their manure,
+    helping spread vegetation. As prey animals, they provide food for wolf packs,
+    though their size makes them challenging targets. Their removal would reduce
+    grazing pressure but also eliminate an important transportation option for players
+    exploring the world.
+
+  design_notes: |
+    The variable stats system is core to horse gameplay - players actively search for
+    high-speed, high-jump horses. Stats should be generated on spawn and persist
+    throughout the horse's life. The taming-by-mounting mechanic requires special
+    handling - track mount attempts and temperament per individual. Breeding must
+    average parent stats with some random variation. The 35 variants (7 colors x 5
+    markings) should be evenly distributed in spawning. Equipment handling requires
+    inventory system integration for saddles and armor. Balance note: Don't make
+    horses too common or they lose value; maintain moderate spawn rates.
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 0.8      # Moderately uncommon to maintain value
+  breeding_rate_multiplier: 0.7   # Requires golden foods, slower breeding
+  mortality_rate_multiplier: 0.8  # Large animals, lower mortality
+
+  energy_flow:
+    daily_requirement: 120        # Large herbivore needs significant food
+    provides_to_predator: 450     # High biomass when killed
+
+  population_target: "Uncommon, 8-15 per plains/savanna biome region"
+
+  removal_impact: |
+    Removing horses would eliminate player transportation options and reduce
+    grazing pressure on grasslands. Seed dispersal would decrease. Wolves would
+    lose a potential prey source. Players would lose access to fast, rideable mounts.

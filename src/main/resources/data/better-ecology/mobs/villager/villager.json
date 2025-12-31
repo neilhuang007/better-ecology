@@ -1,0 +1,59 @@
+{
+  "entity_type": "minecraft:villager",
+  "handles": [
+    "villager_behavior"
+  ],
+  "behaviors": {
+    "trading": {
+      "enabled": true,
+      "reputation_gain_rate": 1.0,
+      "max_reputation": 500,
+      "price_discount_per_reputation": 0.002,
+      "max_discount": 0.5,
+      "special_deal_chance": 0.01,
+      "rare_deal_chance": 0.005
+    },
+    "gossip": {
+      "enabled": true,
+      "spread_chance": 0.3,
+      "decay_time_days": 5,
+      "max_gossip_per_type": 20,
+      "positive_gossip_strength": 10,
+      "negative_gossip_strength": 20
+    },
+    "work_station": {
+      "enabled": true,
+      "work_duration_ticks": 600,
+      "break_duration_ticks": 200,
+      "productivity_per_tick": 1,
+      "max_productivity": 1000,
+      "productivity_discount_bonus": 0.2,
+      "working_range": 3.0
+    },
+    "daily_routine": {
+      "enabled": true,
+      "work_start": 2000,
+      "work_end": 8000,
+      "socialize_start": 8000,
+      "socialize_end": 11000,
+      "sleep_start": 12500,
+      "sleep_end": 1000,
+      "meeting_point_search_radius": 32
+    },
+    "farming": {
+      "enabled": true,
+      "max_farms": 10,
+      "search_radius": 32,
+      "max_crops_per_session": 20,
+      "harvest_particle_count": 5,
+      "gossip_sharing_range": 16.0
+    }
+  },
+  "weights": {
+    "separation": 1.5,
+    "alignment": 1.0,
+    "cohesion": 1.0,
+    "wander": 0.5,
+    "obstacle_avoidance": 2.5
+  }
+}

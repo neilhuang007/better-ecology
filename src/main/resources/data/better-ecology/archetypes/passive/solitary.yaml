@@ -1,0 +1,68 @@
+# ============================================================================
+# ARCHETYPE: SOLITARY ANIMAL
+# ============================================================================
+# For animals that prefer to live alone
+# ============================================================================
+
+identity:
+  classification:
+    social_type: "SOLITARY"
+
+social:
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+
+  herd_movement:
+    enabled: false
+
+spatial:
+  territory:
+    enabled: true
+    size: 48
+    defends: true
+    marks: false
+    overlap_tolerance: 0.0
+    defense_against: ["same_species", "similar_species"]
+
+  home_range:
+    enabled: true
+    radius: 96
+    has_home_point: true
+    home_type: "TERRITORY_CENTER"
+
+reproduction:
+  requirements:
+    mate_required: true
+    mate_max_distance: 48
+
+  mate_selection:
+    search_radius: 64
+    search_interval: 2000
+
+    courtship:
+      enabled: true
+      behavior: "temporary_pairing"
+      duration: 600
+      can_reject: true
+      rejection_cooldown: 4000
+
+player_interaction:
+  distances:
+    detection: 24
+    caution: 12
+    flee: 6
+
+  habituation:
+    enabled: true
+    rate: 0.005
+    decay: 0.002
+    max_habituation: 0.5
+    habituated_flee_distance: 4
+
+internal_state:
+  social:
+    enabled: false

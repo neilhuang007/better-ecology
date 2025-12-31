@@ -1,0 +1,140 @@
+{
+  "behaviors": {
+    "enabled": true,
+    "priority": 2,
+    "max_force": 0.2,
+    "max_speed": 0.4,
+
+    "separation": 1.0,
+    "alignment": 0.5,
+    "cohesion": 0.8,
+    "herd_cohesion": 0.5,
+    "leader_following": 0.3,
+
+    "pursuit": 0.0,
+    "evasion": 1.5,
+    "avoidance": 0.8,
+    "attraction": 1.2,
+    "escape": 1.0,
+    "panic": 1.8,
+    "flight_initiation": 12.0,
+    "alarm_signal": 0.0,
+
+    "item_collecting": 2.0,
+    "sound_following": 1.8,
+    "note_block_affinity": 1.5,
+    "jukebox_preference": 2.5,
+
+    "follow_mother": 0.0,
+    "mother_protection": 0.0,
+    "hiding": 0.0,
+    "separation_distress": 0.0
+  },
+  "hunger": {
+    "enabled": true,
+    "max_value": 100,
+    "starting_value": 85,
+    "decay_rate": 0.5,
+    "damage_threshold": 10,
+    "damage_amount": 1.0,
+    "damage_interval": 400
+  },
+  "thirst": {
+    "enabled": false
+  },
+  "condition": {
+    "enabled": true,
+    "max_value": 100,
+    "starting_value": 90,
+    "gain_when_satiated": 0.02,
+    "loss_when_hungry": 0.01,
+    "loss_when_starving": 0.05
+  },
+  "energy": {
+    "enabled": true,
+    "max_value": 150,
+    "recovery_rate": 0.3,
+    "flying_cost": 0.2,
+    "dancing_cost": 0.1
+  },
+  "age": {
+    "enabled": true,
+    "baby_duration": 0,
+    "maturity_age": 0
+  },
+  "social": {
+    "enabled": true,
+    "max_value": 100,
+    "starting_value": 100,
+    "decay_rate": 0.02,
+    "recovery_rate": 0.2,
+    "loneliness_threshold": 40
+  },
+  "movement": {
+    "walk_speed": 0.15,
+    "run_speed": 0.3,
+    "fly_speed": 0.4,
+    "avoids_cliffs": false,
+    "cliff_threshold": 0.0
+  },
+  "health": {
+    "base_health": 20,
+    "baby_multiplier": 1.0
+  },
+  "size": {
+    "width": 0.6,
+    "height": 0.8,
+    "baby_scale": 1.0
+  },
+  "diet": {
+    "is_herbivore": false,
+    "is_carnivore": false,
+    "preferred_items": []
+  },
+  "predation": {
+    "as_prey": {
+      "detection_range": 32,
+      "flee_speed_multiplier": 1.5,
+      "flee_distance": 48
+    }
+  },
+  "temporal": {
+    "activity_pattern": "diurnal",
+    "rest_start": 13000,
+    "rest_end": 23000
+  },
+  "breeding": {
+    "cooldown": 6000,
+    "min_age": 0,
+    "min_condition": 70,
+    "min_hunger": 60
+  },
+  "item_collection": {
+    "enabled": true,
+    "search_radius": 32.0,
+    "collection_range": 1.5,
+    "max_item_memory": 15,
+    "memory_duration_ticks": 1200,
+    "delivery_range": 2.5,
+    "dance_trigger_ticks": 10,
+    "duplication_chance_base": 0.1,
+    "duplication_chance_max": 0.25,
+    "preferred_items": [
+      "minecraft:apple",
+      "minecraft:diamond",
+      "minecraft:iron_ingot",
+      "minecraft:gold_ingot",
+      "minecraft:emerald"
+    ]
+  },
+  "sound_following": {
+    "enabled": true,
+    "note_block_search_radius": 48.0,
+    "jukebox_search_radius": 64.0,
+    "dance_distance": 8.0,
+    "sound_cooldown_ticks": 40,
+    "jukebox_affinity_multiplier": 1.5,
+    "max_affinity_level": 2.0,
+    "affinity_decay_rate": 0.0001
+  }
+}

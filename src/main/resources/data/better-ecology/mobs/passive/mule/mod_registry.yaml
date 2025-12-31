@@ -1,0 +1,709 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - MULE BEHAVIOR CONFIGURATION
+# Version: 2.0
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:mule"
+  display_name: "Mule"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "HERD"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Mule (sterile hybrid of horse and donkey)"
+    ecological_role: "Domesticated pack animal, herbivore, sterile hybrid unable to reproduce"
+
+  tags: ["domesticated", "pack_animal", "sterile_hybrid", "equine"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  health:
+    base: 11.25                 # Average of 15-30 HP = 22.5 HP = 11.25 hearts
+    baby_multiplier: 0.5
+
+  size:
+    width: 1.3964844
+    height: 1.6
+    baby_scale: 0.5
+
+  biomass:
+    adult: 450                  # Large herbivore
+    baby: 112
+    transfer_efficiency: 0.1
+
+  movement:
+    speeds:
+      walk: 0.2
+      run: 0.35               # Slightly faster than base, mules are sturdy
+      swim: 0.15
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: true
+      jump_height: 1.5        # Variable jump, can be bred for higher jumps
+      avoids_water: false
+      avoids_cliffs: true
+      cliff_threshold: 4
+
+    conditional_modifiers:
+      baby: 0.7
+      injured: 0.6
+      hungry: 0.8
+      fleeing: 1.4
+      carrying_offspring: 0.7
+      in_water_nonaquatic: 0.4
+      loaded_with_chest: 0.85  # Slower when carrying chest
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 80
+    decay_rate: 0.018           # Slightly slower than default (large, efficient)
+
+    thresholds:
+      satiated: 80
+      hungry: 50
+      very_hungry: 25
+      starving: 10
+
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 200
+
+  thirst:
+    enabled: true
+    max_value: 100
+    starting_value: 100
+    decay_rate: 0.016             # Mules need regular water access
+    thresholds:
+      satisfied: 75
+      thirsty: 45
+      dehydrated: 15
+
+
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+
+    gain_when_satiated: 0.01
+    loss_when_hungry: 0.02
+    loss_when_starving: 0.1
+
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.5
+
+    costs:
+      sprinting: 0.25
+      fleeing: 0.35
+      swimming: 0.2
+
+  age:
+    enabled: true
+    baby_duration: 24000
+    maturity_age: 24000
+    elderly_age: null
+    max_age: null
+
+  social:
+    enabled: true
+    max_value: 100
+    decay_rate: 0.008          # Slower decay, mules tolerate being alone
+    recovery_rate: 0.08
+    loneliness_threshold: 25
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 6000]
+        activity: 1.0
+        label: "morning"
+      - time: [6000, 12000]
+        activity: 0.9
+        label: "afternoon"
+      - time: [12000, 13500]
+        activity: 0.7
+        label: "dusk"
+      - time: [13500, 22500]
+        activity: 0.3           # Rest at night but not fully inactive
+        label: "night"
+      - time: [22500, 24000]
+        activity: 0.5
+        label: "pre_dawn"
+
+    low_activity_behavior:
+      action: "rest"
+      seek_shelter: false       # Mules are hardy, don't need shelter
+      reduced_awareness: true
+      awareness_multiplier: 0.6
+
+  weather:
+    rain:
+      activity_multiplier: 0.8  # Mules are hardy
+      seek_shelter: false
+    thunder:
+      activity_multiplier: 0.5
+      seek_shelter: false
+      panic_chance: 0.15
+    snow:
+      activity_multiplier: 0.7
+      seek_shelter: false
+
+  seasons:
+    enabled: false
+
+  lunar:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  habitat:
+    biomes:
+      allowed: []               # Can exist in all biomes (domesticated)
+      preferred: ["plains", "savanna", "forest"]
+      forbidden: []
+
+    altitude:
+      min: -64
+      max: 320
+      preferred: [60, 120]
+
+    required_nearby: []
+
+  territory:
+    enabled: false
+
+  home_range:
+    enabled: true
+    radius: 48                  # Smaller range when domesticated
+    has_home_point: false
+    home_type: null
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  food_sources:
+    primary:
+      - type: "BLOCK"
+        target: "minecraft:grass_block"
+        nutrition: 25
+        saturation: 4000
+        consumption_time: 60
+        method: "GRAZE"
+        world_effect:
+          action: "CONVERT"
+          result: "minecraft:dirt"
+        condition_gain: 3
+        health_effect: 0
+
+      - type: "ITEM"
+        target: "minecraft:wheat"
+        nutrition: 30
+        saturation: 5000
+        consumption_time: 40
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 4
+        health_effect: 0
+
+      - type: "ITEM"
+        target: "minecraft:hay_block"
+        nutrition: 50
+        saturation: 8000
+        consumption_time: 80
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 6
+        health_effect: 0
+
+    secondary:
+      - type: "BLOCK"
+        target: "minecraft:tall_grass"
+        nutrition: 15
+        saturation: 2500
+        consumption_time: 40
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+        condition_gain: 2
+        health_effect: 0
+
+      - type: "ITEM"
+        target: "minecraft:apple"
+        nutrition: 20
+        saturation: 3000
+        consumption_time: 30
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 3
+        health_effect: 1
+
+      - type: "ITEM"
+        target: "minecraft:carrot"
+        nutrition: 25
+        saturation: 3500
+        consumption_time: 30
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 3
+        health_effect: 0
+
+      - type: "ITEM"
+        target: "minecraft:sugar"
+        nutrition: 15
+        saturation: 2000
+        consumption_time: 20
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 1
+        health_effect: 0
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 12
+      when_hungry: 20
+      when_starving: 32
+    search_interval: 240
+
+    memory:
+      remembers_locations: true
+      memory_duration: 24000
+      remembers_depleted: true
+      avoids_depleted_for: 12000
+      shares_with_group: false
+
+    sustainability:
+      enabled: true
+      dont_deplete_fully: true
+      minimum_remaining: 3
+      patch_return_delay: 6000
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:wolf"
+        threat_level: "MEDIUM"
+        detection_range: 20
+        response: "FLEE"
+        flee_distance: 32
+        flee_toward: "GROUP"
+        speed_multiplier: 1.4
+
+      - entity: "minecraft:zombie"
+        threat_level: "LOW"
+        detection_range: 16
+        response: "FLEE"
+        flee_distance: 24
+        flee_toward: "RANDOM"
+        speed_multiplier: 1.3
+
+    default_response:
+      detection_range: 20
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.4
+        flee_distance: 32
+        flee_toward: "GROUP"
+        zigzag: false
+
+      alarm:
+        gives_alarm: false
+        alarm_radius: 24
+        alarm_triggers_group_flee: true
+
+    all_clear:
+      predator_distance: 48
+      time_since_seen: 400
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: false                # CRITICAL: Mules are STERILE
+  method: "NONE"                # Cannot reproduce
+
+  # All other reproduction settings are irrelevant but kept for structure
+  requirements:
+    min_age: 24000
+    max_age: null
+    min_health: 0.8
+    min_condition: 65
+    min_hunger: 60
+    recent_food:
+      enabled: false
+    environment:
+      near_water: false
+      required_biomes: []
+    requires_shelter: false
+    mate_required: false        # Cannot breed
+
+  density_effects:
+    enabled: false
+
+  mate_selection:
+    search_radius: 0
+    courtship:
+      enabled: false
+
+  breeding:
+    cooldown: 0
+    gestation:
+      type: "INSTANT"
+      duration: 0
+    birth:
+      offspring_count: [0, 0]   # STERILE: No offspring
+
+  parental_care:
+    enabled: false
+    duration: 0
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  group:
+    type: "HERD"
+    size:
+      min: 1
+      optimal: 4
+      max: 8
+
+    composition:
+      mixed_sex: true
+      mixed_age: true
+      family_based: false       # Domesticated groupings
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  herd_movement:
+    enabled: true
+    cohesion_radius: 16
+    separation_distance: 2.5
+    alignment: true
+
+  communication:
+    alarm_calls:
+      enabled: false
+
+    contact_calls:
+      enabled: false
+
+    mating_calls:
+      enabled: false            # Sterile, no mating
+
+  behaviors:
+    greeting: false
+    allogrooming: true          # Mules do groom each other
+    play: false
+    huddling: false
+    dominance_hierarchy: false
+
+  group_benefits:
+    predator_detection_bonus: 0.1
+    foraging_efficiency_bonus: 0.0
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  terrain:
+    enabled: true
+    actions:
+      - trigger: "foraging"
+        action: "CONVERT"
+        target_blocks: ["minecraft:grass_block"]
+        result_block: "minecraft:dirt"
+        frequency: 0.15
+        radius: 1
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+
+    pollination:
+      enabled: false
+
+    nutrient_cycling:
+      enabled: true
+      fertilizes: false
+      fertilize_radius: 0
+
+  responses:
+    drinking:
+      enabled: false            # Simplified for domesticated animal
+      frequency: 12000
+      water_blocks: ["water"]
+      duration: 60
+      congregates: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  spawning:
+    weight: 0                   # CRITICAL: Does NOT spawn naturally
+    group_size: [0, 0]          # Only created through breeding horse+donkey
+
+    conditions:
+      blocks: []
+      biomes: []
+      light: [0, 15]
+      altitude: null
+      time: null
+      weather: null
+
+  carrying_capacity:
+    method: "SOFT_CAP"
+    caps:
+      per_chunk: 6              # Moderate density for large animals
+      regional: null
+
+  dispersal:
+    enabled: false
+
+  mortality:
+    old_age:
+      enabled: false
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "FEARFUL"      # Can be tamed
+
+  distances:
+    detection: 32
+    caution: 16
+    flee: 8
+
+  habituation:
+    enabled: true
+    rate: 0.02
+    decay: 0.001
+    max_habituation: 1.0        # Can be fully tamed
+    habituated_flee_distance: 0
+
+  taming:
+    enabled: true
+    items: []                   # Tamed through riding attempts
+    chance: 0.0                 # Special taming mechanics
+    requires_habituation: false
+
+  player_breeding:
+    enabled: false              # STERILE: Cannot be bred by player
+    items: []
+    bypasses_conditions: false
+
+  drops:
+    on_death:
+      - item: "minecraft:leather"
+        count: [0, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+  interactions:
+    - action: "ride"
+      item: null
+      result: "RIDEABLE"
+      description: "Can be ridden when tamed and saddled"
+
+    - action: "chest"
+      item: "minecraft:chest"
+      result: "CHEST_CARRIER"
+      description: "Can be equipped with chest for storage like donkey"
+
+    - action: "feed"
+      item: "minecraft:golden_apple"
+      result: "HEALTH_BOOST"
+      description: "Feeding golden apple/carrot improves stats temporarily"
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  sounds:
+    ambient: "entity.mule.ambient"
+    hurt: "entity.mule.hurt"
+    death: "entity.mule.death"
+    baby: "entity.mule.ambient"
+    alarm: null
+    mating: null                # Sterile
+    eating: "entity.mule.eat"
+
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "head_shake"
+        frequency: 600
+        trigger: "random"
+
+      - behavior: "tail_swish"
+        frequency: 400
+        trigger: "random"
+
+      - behavior: "ear_twitch"
+        frequency: 200
+        trigger: "nearby_sound"
+
+  personality_traits:
+    boldness:
+      base: 0.4               # Slightly cautious
+      variation: 0.25
+    activity:
+      base: 0.6               # Moderately active
+      variation: 0.2
+    sociability:
+      base: 0.6               # Moderately social
+      variation: 0.2
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+
+ai_priority_framework:
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  physiological:
+    critical_health: 3
+    drink_water: 4
+    eat_food: 5
+    find_shelter: 6
+
+  reproduction:
+    care_for_offspring: 99      # N/A - sterile
+    breed: 99                   # N/A - sterile
+    find_mate: 99               # N/A - sterile
+
+  social:
+    group_cohesion: 7
+    social_interaction: 10
+
+  location:
+    location_triggered: 11
+    territory_patrol: 99        # N/A
+
+  default:
+    wander: 12
+    idle: 13
+    rest: 14
+
+# ============================================================================
+# SYSTEM 15: ANIMAL-ANIMAL INTERACTIONS
+# ============================================================================
+
+interaction:
+  predators: []
+  prey: []
+
+  symbiotic_partners: []
+  competitors: []
+
+  herd_compatible:
+    - "minecraft:horse"
+    - "minecraft:donkey"
+
+  relationship_decay_rate: 0.001
+  trust_build_rate: 0.01
+  grudge_build_rate: 0.02
+
+  gives_warning_calls: false
+  can_mourn: false
+  can_grieve: false
+  can_play: true
+  can_be_altruistic: false
+  can_teach: false
+

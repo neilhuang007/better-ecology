@@ -1,0 +1,658 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# ============================================================================
+#
+# This file defines a specific mob by:
+# 1. Overriding defaults from the Generalized Template
+# 2. Providing natural language descriptions for unique behaviors
+# 3. Specifying relationships with other mobs
+#
+# INSTRUCTIONS FOR AI:
+# - Read the Generalized Template first to understand all systems
+# - Values here OVERRIDE template defaults
+# - Empty/null values mean "use template default"
+# - Natural language descriptions should be interpreted and implemented
+# - [UNIQUE] sections require custom implementation logic
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:chicken"
+  display_name: "Chicken"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "FLOCK"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Domestic chicken (Gallus gallus domesticus)"
+    ecological_role: "Small ground-dwelling bird that consumes seeds and serves as prey for carnivores"
+
+  tags: ["avian", "ground_dwelling", "egg_layer", "prey_species"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 2
+  size:
+    width: 0.4
+    height: 0.7
+  biomass:
+    adult: 25
+  movement:
+    speeds:
+      walk: 0.2
+      run: 0.3
+      swim: 0.1
+      fly: 0.0
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.015
+  thirst:
+    enabled: false
+  age:
+    baby_duration: 24000
+    max_age: null
+  social:
+    enabled: true
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule: null
+
+  weather:
+    rain: null
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: ["plains", "forest", "birch_forest", "flower_forest", "savanna"]
+      forbidden: ["desert", "snowy_plains", "ice_spikes"]
+    required_nearby: []
+
+  territory:
+    enabled: false
+    size: null
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  location_triggers:
+    enabled: false
+    triggers: []
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "ITEM"
+        target: "minecraft:wheat_seeds"
+        nutrition: 20
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: null
+
+      - type: "ITEM"
+        target: "minecraft:beetroot_seeds"
+        nutrition: 20
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: null
+
+      - type: "ITEM"
+        target: "minecraft:melon_seeds"
+        nutrition: 20
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: null
+
+      - type: "ITEM"
+        target: "minecraft:pumpkin_seeds"
+        nutrition: 20
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: null
+
+      - type: "ITEM"
+        target: "minecraft:torchflower_seeds"
+        nutrition: 20
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: null
+
+      - type: "ITEM"
+        target: "minecraft:pitcher_pod"
+        nutrition: 20
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: null
+
+    secondary:
+      - type: "BLOCK"
+        target: "minecraft:grass"
+        nutrition: 8
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: "minecraft:air"
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 12
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:fox"
+        threat_level: "HIGH"
+        detection_range: 20
+        response: "FLEE"
+
+      - entity: "minecraft:ocelot"
+        threat_level: "HIGH"
+        detection_range: 18
+        response: "FLEE"
+
+      - entity: "minecraft:cat"
+        threat_level: "HIGH"
+        detection_range: 16
+        response: "FLEE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: null
+    recent_food:
+      enabled: true
+    environment:
+      near_water: null
+      required_biomes: []
+    requires_shelter: false
+    season: null
+
+  density_effects:
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: false
+      behavior: "No courtship behavior"
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: 0
+    birth:
+      offspring_count: 1
+      location_requirement: null
+
+  parental_care:
+    duration: 4800
+    behaviors:
+      protects_offspring: false
+      feeds_offspring: false
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "FLOCK"
+    size:
+      min: 2
+      optimal: 6
+      max: 12
+    leadership:
+      has_leader: false
+      leader_selection: "No leader"
+
+  herd_movement:
+    enabled: true
+
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "predator_nearby"
+          call: "clucking_alarm"
+          group_response: "flee_scatter"
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: true
+    actions:
+      - trigger: "foraging"
+        description: "Converts grass and tall grass to air when pecking"
+        target: "minecraft:grass"
+        result: "minecraft:air"
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 10
+    group_size: [4, 4]
+    conditions:
+      biomes: []
+      blocks: ["minecraft:grass_block"]
+
+  carrying_capacity:
+    caps:
+      per_chunk: 12
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  taming:
+    enabled: false
+    items: []
+
+  player_breeding:
+    enabled: true
+    items: ["minecraft:wheat_seeds", "minecraft:beetroot_seeds", "minecraft:melon_seeds", "minecraft:pumpkin_seeds", "minecraft:torchflower_seeds", "minecraft:pitcher_pod"]
+
+  drops:
+    on_death:
+      - item: "minecraft:feather"
+        count: [0, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 0
+
+      - item: "minecraft:chicken"
+        count: [1, 1]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+  interactions:
+    - action: "feed"
+      item: "minecraft:wheat_seeds"
+      result: "breeding_mode"
+      description: "Feeding seeds puts chicken in breeding mode"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "minecraft:entity.chicken.ambient"
+    hurt: "minecraft:entity.chicken.hurt"
+    death: "minecraft:entity.chicken.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "head_peck"
+        frequency: 100
+        trigger: "idle"
+
+      - behavior: "wing_flap"
+        frequency: 200
+        trigger: "idle"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+# Describe behaviors unique to this mob that aren't covered by standard systems.
+# Use natural language - AI should interpret and implement appropriate logic.
+# ============================================================================
+
+unique_behaviors:
+  - name: "egg_laying"
+    description: |
+      Adult chickens lay eggs at regular intervals regardless of breeding.
+
+      WHEN: Every 5-10 minutes (6,000-12,000 ticks) after reaching adulthood
+      WHERE: Any location where chicken is loaded (chunks must be loaded)
+      WHAT: Chicken produces one egg item that drops on the ground nearby
+      WHY: Provides renewable food resource and reproduction mechanic for players
+
+      IMPLEMENTATION DETAILS:
+      - Track EggLayTime NBT value for each chicken
+      - Count down ticks until next egg is due
+      - When timer reaches 0, spawn egg entity at chicken position
+      - Reset timer to random value between 6,000-12,000 ticks
+      - Only adult chickens can lay eggs (age >= 24,000)
+      - Baby chickens and chicken jockeys cannot lay eggs
+      - Timer resets when chunks unload and reload
+      - Egg laying is unaffected by hunger, time of day, or environment
+
+    implementation_hints:
+      trigger_type: "TIME"
+      priority: 8
+      duration: 0
+      affects_others: false
+      world_modification: true
+
+  - name: "slow_falling"
+    description: |
+      Chickens are immune to fall damage and glide slowly when descending.
+
+      WHEN: Whenever chicken is in mid-air (falling or knocked off)
+      WHERE: Any vertical drop, regardless of height
+      WHAT: Chicken flaps wings and descends at reduced speed, taking no fall damage
+      WHY: Signature chicken behavior that allows safe navigation of terrain
+
+      IMPLEMENTATION DETAILS:
+      - Detect when chicken is airborne and moving downward
+      - Apply slow falling effect automatically (no potion needed)
+      - Reduce fall speed to approximately 20% of normal
+      - Play wing flapping animation continuously while airborne
+      - Completely negate fall damage regardless of drop distance
+      - Even when killed in mid-air, corpse falls slowly with flapping wings
+      - This is a passive ability that requires no player input or AI decision
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 2
+      duration: 0
+      affects_others: false
+      world_modification: false
+
+  - name: "water_floating"
+    description: |
+      Chickens float on water surface and can swim, but do not sink.
+
+      WHEN: When chicken enters water (any water block)
+      WHERE: Any water body (rivers, lakes, oceans)
+      WHAT: Chicken remains on water surface, swims around, and does not sink underwater
+      WHY: Allows chickens to traverse water bodies and escape land predators
+
+      IMPLEMENTATION DETAILS:
+      - Detect when chicken is in water material
+      - Apply buoyancy to keep chicken at water surface (y position stays at top water block)
+      - Enable swimming movement with reduced speed (0.1 instead of 0.2 walk speed)
+      - Play wing flapping animation while in water
+      - Chicken can pathfind through water to reach targets
+      - After 15 seconds underwater (if forced under), chicken begins taking drowning damage
+      - Water does not prevent chicken from laying eggs or other behaviors
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: 3
+      duration: 0
+      affects_others: false
+      world_modification: false
+
+  - name: "baby_follows_adult"
+    description: |
+      Baby chickens actively follow nearby adult chickens.
+
+      WHEN: Baby chicken exists and adult chickens are nearby
+      WHERE: Any location within detection range
+      WHAT: Baby chicken moves toward and stays near nearest adult chicken
+      WHY: Mimics natural behavior where chicks follow mother for protection
+
+      IMPLEMENTATION DETAILS:
+      - Baby chickens search for adult chickens within 6-8 block radius
+      - Select nearest adult chicken as follow target
+      - Pathfind toward adult chicken
+      - Maintain follow distance of approximately 3 blocks
+      - If separated more than 12 blocks, baby chicken speeds up to rejoin
+      - Adult chickens do not acknowledge or actively protect babies
+      - Following behavior overrides wandering but not fleeing from predators
+      - Priority: baby_following > wandering but < flee_predator
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 11
+      duration: 0
+      affects_others: false
+      world_modification: false
+
+  - name: "seed_attraction"
+    description: |
+      Chickens are attracted to players holding seeds and will follow them.
+
+      WHEN: Player holds any seed type in hand
+      WHERE: Within 6×4×6 block cubic area centered on player
+      WHAT: All chickens in range move toward player and follow while seeds are held
+      WHY: Creates gameplay loop for leading chickens to pens or breeding areas
+
+      IMPLEMENTATION DETAILS:
+      - Check all players within 6 blocks horizontally, 4 blocks vertically
+      - Detect if player is holding any seed item (wheat, beetroot, melon, pumpkin, torchflower, pitcher pod)
+      - For each chicken in range, set movement target to player position
+      - Continuously pathfind toward player while seeds remain held
+      - Stop following if player moves 10+ blocks away (Java) or 16+ blocks (Bedrock)
+      - Multiple chickens can follow same player simultaneously
+      - Follow behavior overrides normal wandering
+      - Priority: seed_following > wandering but < flee_predator, < baby_follow
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 10
+      duration: 0
+      affects_others: true
+      world_modification: false
+
+  - name: "stair_jumping"
+    description: |
+      Chickens uniquely jump up stairs instead of climbing them normally.
+
+      WHEN: Chicken encounters stairs while pathfinding
+      WHERE: Any stair block type
+      WHAT: Chicken performs jumping motion to ascend each stair step
+      WHY: Signature chicken movement pattern that distinguishes them from other mobs
+
+      IMPLEMENTATION DETAILS:
+      - Detect when pathfinding onto stair blocks
+      - Instead of walking up stairs like other mobs, trigger jump action
+      - Apply vertical velocity to move up one stair step at a time
+      - Play jump animation and wing flap during ascent
+      - This creates the distinctive "bouncy" stair climbing behavior
+      - Only affects ascent; descent is normal walking or slow falling
+      - This behavior is hardcoded and not used by other passive mobs
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: 16
+      duration: 0
+      affects_others: false
+      world_modification: false
+
+  - name: "flee_response"
+    description: |
+      When harmed, chickens flee in random direction for short duration.
+
+      WHEN: Chicken takes damage from any source
+      WHERE: Any location
+      WHAT: Chicken runs at increased speed in random direction for ~2 seconds
+      WHY: Basic defensive behavior to escape attackers
+
+      IMPLEMENTATION DETAILS:
+      - Detect damage event to chicken
+      - Set fleeing state with duration of ~40 ticks (2 seconds)
+      - Apply speed multiplier of 1.4 during flee
+      - Choose random direction away from damage source
+      - Move continuously during flee duration (override wandering, foraging)
+      - Use zigzag movement pattern if being pursued
+      - After duration expires, return to normal behavior
+      - Does not actively avoid predators preemptively (only responds to damage)
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 2
+      duration: 40
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+# Describe relationships with other specific mobs beyond predator/prey.
+# ============================================================================
+
+relationships:
+  # Predators (who hunts this mob)
+  predators:
+    - entity: "minecraft:fox"
+      notes: "Primary predator. Hunts chickens actively. Chickens do NOT avoid foxes preemptively, only flee when attacked."
+
+    - entity: "minecraft:ocelot"
+      notes: "Predator. Chickens flee from ocelots (Java Edition). Ocelots actively hunt chickens."
+
+    - entity: "minecraft:cat"
+      notes: "Predator (untamed). Untamed cats hunt chickens. Chickens flee from cats (Java Edition)."
+
+  # Prey (what this mob hunts)
+  prey: []
+
+  # Competitors (compete for same resources)
+  competitors:
+    - entity: "minecraft:parrot"
+      resource: "seeds"
+      interaction: "Both mobs eat seeds. May compete for thrown seed items but no direct aggression."
+
+    - entity: "other_chickens"
+      resource: "seeds"
+      interaction: "Loose competition for food items, but generally tolerate each other in flocks."
+
+  # Mutualists (mutually beneficial)
+  mutualists: []
+
+  # Commensals (one benefits, other unaffected)
+  commensals: []
+
+  # Special relationships
+  special:
+    - entity: "minecraft:baby_zombie"
+      relationship: "mount_host"
+      description: "Baby zombies can spawn riding chickens (Chicken Jockey). 5% chance for baby zombie to check for nearby chicken, then 5% chance to spawn on new chicken. Chicken jockeys cannot lay eggs and drop 10 XP on death."
+
+    - entity: "minecraft:player"
+      relationship: "food_source_and_breeder"
+      description: "Players breed chickens using seeds, collect eggs for food/crafting, and hunt chickens for meat/feathers. Habituation system allows chickens to become less fearful over time."
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+# Free-form description for AI to understand this mob's "character"
+# ============================================================================
+
+narrative:
+  summary: |
+    The Chicken is a small, passive avian mob that serves as a foundational food source in Minecraft's ecosystem. As a primary consumer, chickens convert seeds into protein (eggs and meat) while being prey for foxes, ocelots, and cats. Their signature slow-falling ability and egg-laying behavior make them unique among passive mobs.
+
+  behavior_overview: |
+    Chickens are diurnal, ground-dwelling birds that spend their days wandering aimlessly, pecking at grass for seeds, and laying eggs every 5-10 minutes. They form loose flocks but don't have complex social hierarchies. When harmed, chickens flee erratically for about 2 seconds but don't actively avoid predators until attacked. Baby chickens follow nearby adults, mimicking natural mother-chick behavior, while adults are attracted to players holding seeds within a 6-block radius.
+
+    Chickens have several unique movement behaviors: they flap their wings to slow-fall from any height (never taking fall damage), float on water surfaces instead of sinking, and bounce up stairs instead of walking. At night, chickens continue low-activity wandering but don't actively seek shelter. They're relatively fearless unless directly attacked, making them easy prey for predators.
+
+  ecological_importance: |
+    Chickens occupy a critical niche as primary consumers and renewable food sources. They convert plant seeds into high-value protein (eggs and meat) that players and predators can harvest. As prey, they sustain fox, ocelot, and cat populations. Their egg-laying mechanic provides a sustainable food loop that doesn't require killing the mob. If removed, players would lose a key renewable food source, and predator populations would decline without this abundant prey item. Feathers from chickens are also essential for arrow crafting.
+
+  design_notes: |
+    KEY IMPLEMENTATION PRIORITIES:
+    1. Slow-falling mechanic is the signature chicken behavior - must be completely immune to fall damage
+    2. Egg-laying timer (6,000-12,000 ticks) must be precise - this balances reproduction
+    3. Seed attraction creates the core player interaction loop for farming chickens
+    4. Baby-following behavior adds charm and mimics real chicken behavior
+
+    EDGE CASES TO HANDLE:
+    - Baby chickens and chicken jockeys cannot lay eggs (must track NBT state)
+    - Egg timer resets when chunks unload/reload
+    - Chickens don't avoid foxes preemptively (unlike ocelots which they do avoid)
+    - Follow range differs between Java (10 blocks) and Bedrock (16 blocks) - may need to choose one
+    - Chicken jockeys drop 10 XP instead of 1-3
+
+    BALANCE CONSIDERATIONS:
+    - Egg-laying rate is already balanced in vanilla (1 egg per 7.5 minutes average)
+    - Low health (4 HP) balances their fall damage immunity
+    - Breeding cooldown (5 minutes) prevents population explosions
+    - Chicken jockey spawning is intentionally rare (~4.75% per baby zombie)
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+# Quick-reference values for ecosystem balancing
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 1.0
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: 40
+    provides_to_predator: 25
+
+  population_target: "Common, 15-25 per plains/forest biome"
+
+  removal_impact: "Moderate impact. Players lose reliable egg/meat source. Predator populations (foxes, ocelots) would decline without abundant prey. Arrow crafting becomes more difficult without feather source."

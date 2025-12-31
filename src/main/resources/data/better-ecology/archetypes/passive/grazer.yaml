@@ -1,0 +1,55 @@
+# ============================================================================
+# ARCHETYPE: GRAZER
+# ============================================================================
+# For grazing animals that eat grass and other low vegetation (cows, sheep, etc.)
+# ============================================================================
+
+identity:
+  classification:
+    diet_type: "HERBIVORE"
+    social_type: "HERD"
+    activity_pattern: "DIURNAL"
+
+diet:
+  food_sources:
+    primary:
+      - type: "BLOCK"
+        target: "minecraft:grass_block"
+        nutrition: 20
+        saturation: 4000
+        consumption_time: 40
+        method: "GRAZE"
+        world_effect:
+          action: "CONVERT"
+          result: "minecraft:dirt"
+        condition_gain: 3
+        health_effect: 0
+
+      - type: "BLOCK"
+        target: "minecraft:tall_grass"
+        nutrition: 15
+        saturation: 3000
+        consumption_time: 30
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 2
+        health_effect: 0
+
+environmental_impact:
+  terrain:
+    enabled: true
+    actions:
+      - trigger: "foraging"
+        action: "CONVERT"
+        target_blocks: ["minecraft:grass_block"]
+        result_block: "minecraft:dirt"
+        frequency: 0.1
+        radius: 1
+
+  ecosystem_services:
+    nutrient_cycling:
+      enabled: true
+      fertilizes: true
+      fertilize_radius: 5

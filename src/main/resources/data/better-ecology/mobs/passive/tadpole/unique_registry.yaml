@@ -1,0 +1,606 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# Mob: TADPOLE
+# ============================================================================
+#
+# This file defines a specific mob by:
+# 1. Overriding defaults from the Generalized Template
+# 2. Providing natural language descriptions for unique behaviors
+# 3. Specifying relationships with other mobs
+#
+# INSTRUCTIONS FOR AI:
+# - Read the Generalized Template first to understand all systems
+# - Values here OVERRIDE template defaults
+# - Empty/null values mean "use template default"
+# - Natural language descriptions should be interpreted and implemented
+# - [UNIQUE] sections require custom implementation logic
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:tadpole"
+  display_name: "Tadpole"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "FILTER_FEEDER"
+    social_type: "COLONY"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Frog tadpole (amphibian larvae)"
+    ecological_role: "Aquatic juvenile stage of frogs, intermediate food source for aquatic predators, filters algae and detritus"
+
+  tags: ["aquatic", "juvenile", "metamorphic", "bucketable", "water_dependent"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 3                    # 6 HP = 3 hearts (vanilla value)
+  size:
+    width: 0.4                 # Tiny hitbox
+    height: 0.3
+  biomass:
+    adult: 5                   # Very small biomass
+  movement:
+    speeds:
+      walk: 0.0                # Cannot walk on land
+      run: 0.0
+      swim: 0.15               # Slow aquatic movement
+      fly: 0.0
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.015          # Very slow decay for filter feeder
+  thirst:
+    enabled: false             # Lives in water
+  age:
+    baby_duration: 24000       # 1 Minecraft day (20 minutes)
+    max_age: 24000             # Transforms into frog at maturity
+  social:
+    enabled: true              # Species stays grouped
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule: null             # Use template default
+
+  weather:
+    rain: null                 # No effect, already in water
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []              # Any biome with water
+      preferred: ["swamp", "mangrove_swamp"]
+      forbidden: []
+    required_nearby:
+      - feature: "water"
+        max_distance: 0        # Must be IN water
+        reason: "Aquatic organism - dies on land within 20 seconds"
+
+  territory:
+    enabled: false
+    size: null
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  # === LOCATION-TRIGGERED BEHAVIORS ===
+  location_triggers:
+    enabled: true
+    triggers:
+      - name: "land_death_timer"
+        description: |
+          When a tadpole is out of water (not in a water block), start a 20-second
+          countdown timer (400 ticks). The tadpole will take damage and die rapidly
+          if not returned to water. This simulates their inability to survive on land.
+        location:
+          blocks: ["!water"]     # Any non-water block
+          biomes: []              # Any biome
+          near_water: {min: 0, max: 0}
+          time: null
+        behavior:
+          damage_per_tick: 1     # Die within 20 seconds (400 ticks / 1 damage per tick with 6 HP)
+          activity: "flop_to_water"
+          priority: "CRITICAL"
+
+      - name: "swamp_grouping"
+        description: |
+          When in swamp or mangrove swamp biomes, tadpoles tend to congregate
+          in looser groups near lily pads and mangrove roots. They show slight
+          preference for areas with vegetation cover.
+        location:
+          blocks: ["water"]
+          biomes: ["swamp", "mangrove_swamp"]
+          near_water: {min: 0, max: 0}
+          time: null
+        behavior:
+          group_size: [3, 12]
+          spacing: [1, 3]
+          activity: "casual_swimming"
+          seek_vegetation: true
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "ITEM"
+        target: "minecraft:slime_ball"
+        nutrition: 40
+        saturation: 6000
+        method: "FILTER"
+        world_effect:
+          action: "GROWTH_ACCELERATION"
+          result: "Reduces remaining metamorphosis time by 10%"
+
+    secondary:
+      - type: "BLOCK"
+        target: "minecraft:seagrass"
+        nutrition: 15
+        saturation: 3000
+        method: "GRAZE"
+        world_effect:
+          action: "DAMAGE"
+          result: "Converts seagrass to dying seagrass"
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 8                   # Search for food in 8-block radius
+      when_hungry: 12
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false              # Tadpoles do not hunt
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:axolotl"
+        threat_level: "HIGH"
+        detection_range: 10
+        response: "FLEE"
+        notes: "Axolotls actively hunt and attack tadpoles"
+
+      - entity: "minecraft:cod"
+        threat_level: "MEDIUM"
+        detection_range: 8
+        response: "FLEE"
+
+      - entity: "minecraft:salmon"
+        threat_level: "MEDIUM"
+        detection_range: 8
+        response: "FLEE"
+
+      - entity: "minecraft:pufferfish"
+        threat_level: "LOW"
+        detection_range: 4
+        response: "FLEE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: null
+    recent_food:
+      enabled: false            # Not applicable - tadpoles don't breed
+    environment:
+      near_water: null
+      required_biomes: []
+    requires_shelter: null
+    season: null
+
+  density_effects:
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: false            # Not applicable - tadpoles don't breed
+
+  breeding:
+    gestation:
+      type: "NONE"
+      duration: null
+    birth:
+      offspring_count: null
+      location_requirement: "NOT_APPLICABLE"
+
+  parental_care:
+    duration: null
+    behaviors:
+      protects_offspring: null
+      feeds_offspring: null
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "COLONY"
+    size:
+      min: 2                    # Minimum spawn group from frogspawn
+      optimal: 8
+      max: 20
+    leadership:
+      has_leader: false
+      leader_selection: ""
+
+  herd_movement:
+    enabled: true               # Tadpoles group together
+
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: false
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false            # Lives in water
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: null                # Spawned from frogspawn, not natural spawning
+    group_size: [2, 5]          # Hatch count per frogspawn block
+    conditions:
+      biomes: []
+      blocks: ["water"]
+
+  carrying_capacity:
+    caps:
+      per_chunk: 32             # Can be numerous in water bodies
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "NEUTRAL"      # Flees from player but follows with slimeball
+
+  taming:
+    enabled: false
+    items: []
+
+  player_breeding:
+    enabled: false              # Not applicable
+    items: []
+
+  drops:
+    on_death: []                # No drops in vanilla
+    # Empty list - tadpoles drop nothing
+
+  interactions:
+    - action: "bucket_capture"
+      item: "minecraft:water_bucket"
+      result: "minecraft:tadpole_bucket"
+      description: |
+        Right-click with water bucket to capture tadpole.
+        Preserves health, age, and custom name. One tadpole per bucket.
+        Use on water block to release.
+
+    - action: "feed_growth_acceleration"
+      item: "minecraft:slime_ball"
+      result: "growth_boost"
+      description: |
+        Right-click with slimeball to feed tadpole.
+        Reduces remaining growth time by 10% per feeding.
+        Tadpoles follow players holding slimeballs within 8 blocks.
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.tadpole.flop"
+    hurt: "entity.tadpole.hurt"
+    death: "entity.tadpole.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "swim_wiggle"
+        frequency: 0.8
+        trigger: "always"
+        description: "Constant tail wiggle while swimming"
+
+      - behavior: "vertical_drift"
+        frequency: 0.2
+        trigger: "idle"
+        description: "Slowly drifts up and down in water column"
+
+      - behavior: "flop_on_land"
+        frequency: 1.0
+        trigger: "on_land"
+        description: "Flops around seeking water when out of water"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+# Describe behaviors unique to this mob that aren't covered by standard systems.
+# Use natural language - AI should interpret and implement appropriate logic.
+# ============================================================================
+
+unique_behaviors:
+  - name: "metamorphosis_to_frog"
+    description: |
+      Tadpoles transform into adult frogs after reaching maturity age (24000 ticks = 1 Minecraft day).
+      The variant of frog that emerges is determined solely by the biome temperature where
+      the tadpole completes its growth, NOT by parent genetics or hatching location.
+
+      WHEN: Age reaches 24000 ticks (20 minutes real-time)
+      WHERE: Must be in water block at time of metamorphosis
+      WHAT: Tadpole entity is removed and replaced with frog entity of appropriate variant
+      WHY: Completes the amphibian lifecycle, enables player-controlled variant breeding
+
+      Frog variants by biome temperature:
+      - COLD (frozen): Green frog (cold biomes like frozen ocean, ice spikes, snowy taiga)
+      - TEMPERATE (mild): Orange frog (swamps, plains, forests, most normal biomes)
+      - WARM (hot): White/cream frog (mangrove swamps, jungles, deserts, nether)
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 1
+      duration: 100             # Transformation animation duration
+      affects_others: false
+      world_modification: false
+
+  - name: "slimeball_following"
+    description: |
+      Tadpoles follow players holding slimeballs within a 8-block radius.
+      This is used to herd tadpoles and position them for feeding or biome transport.
+
+      WHEN: Player within 8 blocks holding slimeball
+      WHERE: Any water biome
+      WHAT: Tadpole moves toward player, slows down when within 2 blocks
+      WHY: Enables player control for breeding programs and variant selection
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 5
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "growth_acceleration_feeding"
+    description: |
+      Feeding a slimeball to a tadpole reduces its remaining growth time by 10%.
+      This is multiplicative, so feeding multiple slimeballs provides diminishing returns.
+      Each slimeball also restores hunger and condition.
+
+      WHEN: Player right-clicks with slimeball on tadpole
+      WHERE: Any location
+      WHAT: remainingTime = remainingTime * 0.9
+      WHY: Allows players to invest resources to accelerate breeding cycles
+
+      Example calculation:
+      - Base time: 24000 ticks (20 minutes)
+      - After 1 slimeball: 21600 ticks (18 minutes)
+      - After 2 slimeballs: 19440 ticks (16.2 minutes)
+      - After 10 slimeballs: ~8300 ticks (7 minutes) - near minimum
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 3
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "land_flop_death_sequence"
+    description: |
+      Tadpoles cannot survive on land. When out of water, they begin flopping toward
+      the nearest water block. If not returned to water within 20 seconds (400 ticks),
+      they take 1 damage per tick until death.
+
+      WHEN: Not in water block (on land or in air)
+      WHERE: Any non-water block
+      WHAT: Flop movement toward water + damage ticks
+      WHY: Enforces aquatic habitat constraint, adds vulnerability
+
+      Pathfinding priority:
+      1. Seek nearest water block within 16 blocks
+      2. If found, move toward it with flopping animation
+      3. If not found or too far, die within 20 seconds
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: 1
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "bucket_transport_with_data_persistence"
+    description: |
+      Tadpoles can be captured in water buckets, preserving all entity data.
+      When released, the tadpole retains its exact state from capture time.
+
+      WHEN: Player right-clicks water bucket on tadpole
+      WHERE: Any location
+      WHAT: Tadpole removed from world, bucket item becomes "Bucket of Tadpole"
+      DATA PRESERVED: Health (current/max), Age (growth progress), Custom name
+      RELEASE: Right-click bucket on water block to release tadpole
+
+      Uses:
+      - Transport tadpoles between biomes for variant control
+      - Move tadpoles to safer water bodies
+      - Protect from predators during transport
+      - Relocate for breeding operations
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 2
+      duration: null
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+# Describe relationships with other specific mobs beyond predator/prey.
+# ============================================================================
+
+relationships:
+  # Predators (who hunts this mob)
+  predators:
+    - entity: "minecraft:axolotl"
+      notes: "Primary predator - axolotls actively hunt and kill tadpoles"
+    - entity: "minecraft:cod"
+      notes: "Opportunistic predator in some implementations"
+    - entity: "minecraft:salmon"
+      notes: "Opportunistic predator in some implementations"
+
+  # Prey (what this mob hunts)
+  prey: []
+
+  # Competitors (compete for same resources)
+  competitors:
+    - entity: "minecraft:tropical_fish"
+      resource: "Algae and aquatic plant matter"
+      interaction: "Minimal - different feeding zones"
+    - entity: "minecraft:cod"
+      resource: "Water space in small pools"
+      interaction: "Cod compete for habitat but don't prey on tadpoles in vanilla"
+
+  # Mutualists (mutually beneficial)
+  mutualists:
+    - entity: "minecraft:frog"
+      benefit_given: "Continuation of species lifecycle"
+      benefit_received: "Birth - tadpoles hatch from frogspawn laid by frogs"
+
+  # Commensals (one benefits, other unaffected)
+  commensals: []
+
+  # Special relationships
+  special:
+    - entity: "minecraft:frog"
+      relationship: "PARENT_OFFSPRING"
+      description: |
+        Tadpoles are the juvenile form of frogs. Frogs lay frogspawn which hatches
+        into tadpoles. However, adult frogs do NOT protect or care for tadpoles.
+        Once frogspawn is laid, there is no parental care. Tadpoles are completely
+        independent and vulnerable to predation.
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+# Free-form description for AI to understand this mob's "character"
+# ============================================================================
+
+narrative:
+  summary: |
+    Tadpoles are the aquatic juvenile stage of frogs, representing the larval phase
+    of amphibian lifecycle. They spawn in groups from frogspawn in water bodies,
+    particularly swamps and mangrove swamps. After approximately one Minecraft day,
+    they metamorphose into adult frogs, with the variant determined by biome temperature.
+
+  behavior_overview: |
+    Tadpoles spend their entire juvenile stage swimming aimlessly in water bodies,
+    showing slight preference for areas with vegetation. They congregate in loose
+    groups from the same spawn but do not exhibit complex social behaviors.
+    When out of water, they flop desperately toward the nearest water source but
+    die within 20 seconds if unable to return. They follow players holding
+    slimeballs, which can be used to accelerate their growth by 10% per feeding.
+    Tadpoles are completely vulnerable to aquatic predators like axolotls and
+    receive no protection from adult frogs.
+
+  ecological_importance: |
+    Tadpoles fill the critical role of aquatic primary consumers in freshwater
+    ecosystems. They serve as an intermediate food source between primary producers
+    (algae, detritus) and higher-level predators (axolotls, larger fish). Their
+    metamorphosis transfers energy from aquatic to terrestrial food webs as they
+    become frogs. Without tadpoles, the amphibian lifecycle would be broken and
+    aquatic predators would lose a food source. They also enable players to
+    selectively breed frog variants by controlling maturation biome, adding
+    gameplay depth to ecosystem management.
+
+  design_notes: |
+    Key balance considerations:
+    - 20-minute base growth time (1 Minecraft day) provides meaningful progression
+    - 10% reduction per slimeball creates reasonable resource investment without being too fast
+    - Bucket capture enables creative breeding strategies without being overpowered
+    - Water dependency (20-second land death) enforces habitat constraints
+    - Axolotl predation adds risk/challenge to tadpole farming
+    - Biome temperature variant determination is THE core unique mechanic - must be preserved
+    - No drops on death prevents exploitation while still allowing predation
+    - Parent frog genetics do NOT affect offspring - only maturation biome matters
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+# Quick-reference values for ecosystem balancing
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 0.0    # Spawned from frogspawn, not natural spawning
+  breeding_rate_multiplier: 0.0 # Don't breed - transform into frogs
+  mortality_rate_multiplier: 1.5 # High mortality due to predation vulnerability
+
+  energy_flow:
+    daily_requirement: 20       # Low energy requirement for filter feeder
+    provides_to_predator: 5     # Small biomass, low energy transfer
+
+  population_target: "Transient - determined by frog breeding rates, typically 5-15 per water body in swamps"
+
+  removal_impact: |
+    If tadpoles were removed:
+    - Frogs could not spawn naturally (no frogspawn hatching)
+    - Aquatic predators like axolotls would lose a food source
+    - Players could not breed frogs for specific variants
+    - Energy transfer from aquatic to terrestrial ecosystem would be reduced
+    - Frog populations would crash over time without new juveniles maturing

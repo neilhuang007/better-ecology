@@ -1,0 +1,761 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - GENERALIZED BEHAVIOR TEMPLATE
+# Version: 2.0
+# Mob: Turtle (minecraft:turtle)
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:turtle"
+  display_name: "Sea Turtle"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Green Sea Turtle"
+    ecological_role: "Marine herbivore that maintains seagrass beds and provides nutrients to beach ecosystems through egg laying"
+
+  tags: ["aquatic", "egg_laying", "beach_nesting", "slow_land", "fast_water"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  health:
+    base: 15                        # 30 HP
+    baby_multiplier: 0.5
+
+  size:
+    width: 1.2
+    height: 0.4
+    baby_scale: 0.16                # Very small babies
+
+  biomass:
+    adult: 120
+    baby: 15
+    transfer_efficiency: 0.1
+
+  movement:
+    speeds:
+      walk: 0.1                     # Very slow on land
+      run: 0.15                     # Still slow when "running"
+      swim: 0.35                    # Fast in water
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: false               # Cannot jump
+      jump_height: 0.0
+      avoids_water: false
+      avoids_cliffs: true
+      cliff_threshold: 2
+
+    conditional_modifiers:
+      baby: 0.8
+      elderly: 0.8
+      injured: 0.6
+      hungry: 0.9
+      fleeing: 1.2
+      hunting: 1.0
+      carrying_offspring: 1.0
+      in_water_nonaquatic: 0.3      # Inverted - fast in water
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 80
+    decay_rate: 0.015               # Slow metabolism
+
+    thresholds:
+      satiated: 80
+      hungry: 50
+      very_hungry: 25
+      starving: 10
+
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 200
+
+  thirst:
+    enabled: false                  # Aquatic - no thirst
+
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+
+    gain_when_satiated: 0.01
+    loss_when_hungry: 0.02
+    loss_when_starving: 0.1
+
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.4
+
+    costs:
+      sprinting: 0.2
+      hunting: 0.0
+      fleeing: 0.3
+      flying: 0.0
+      swimming: 0.1                 # Low cost in water
+
+  age:
+    enabled: true
+    baby_duration: 24000            # 20 minutes
+    maturity_age: 24000
+    elderly_age: null
+    max_age: null
+
+  social:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 6000]
+        activity: 1.0
+        label: "morning"
+      - time: [6000, 12000]
+        activity: 1.0
+        label: "afternoon"
+      - time: [12000, 13500]
+        activity: 0.8
+        label: "dusk"
+      - time: [13500, 22500]
+        activity: 0.9               # Active at night in water
+        label: "night"
+      - time: [22500, 24000]
+        activity: 1.0
+        label: "pre_dawn"
+
+    low_activity_behavior:
+      action: "rest"
+      seek_shelter: false
+      reduced_awareness: false
+      awareness_multiplier: 1.0
+
+  weather:
+    rain:
+      activity_multiplier: 1.0      # Unaffected
+      seek_shelter: false
+      shelter_priority: 0
+    thunder:
+      activity_multiplier: 0.9
+      seek_shelter: false
+      panic_chance: 0.1
+    snow:
+      activity_multiplier: 0.7      # Prefer warm waters
+      seek_shelter: false
+    clear:
+      activity_multiplier: 1.0
+
+  seasons:
+    enabled: false
+
+  lunar:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  habitat:
+    biomes:
+      allowed: []                   # All biomes (focuses on water/beach)
+      preferred: ["ocean", "warm_ocean", "lukewarm_ocean", "beach"]
+      forbidden: ["frozen_ocean", "deep_frozen_ocean"]
+
+    altitude:
+      min: 50                       # Sea level range
+      max: 90
+      preferred: [62, 70]
+
+    required_nearby:
+      - feature: "water"
+        max_distance: 32
+        reason: "Must be near ocean for survival"
+      - feature: "sand"
+        max_distance: 64
+        reason: "Needs beach for egg laying"
+
+  territory:
+    enabled: false
+    size: 0
+    defends: false
+    marks: false
+    overlap_tolerance: 1.0
+    defense_against: []
+
+  home_range:
+    enabled: true
+    radius: 128
+    has_home_point: true            # Birth beach
+    home_type: "SPAWN_POINT"        # Returns to birth beach
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  food_sources:
+    primary:
+      - type: "BLOCK"
+        target: "minecraft:seagrass"
+        nutrition: 20
+        saturation: 4000
+        consumption_time: 60
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 4
+        health_effect: 0
+
+      - type: "BLOCK"
+        target: "minecraft:tall_seagrass"
+        nutrition: 30
+        saturation: 6000
+        consumption_time: 80
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 6
+        health_effect: 0
+
+    secondary:
+      - type: "BLOCK"
+        target: "minecraft:kelp"
+        nutrition: 15
+        saturation: 3000
+        consumption_time: 50
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 3
+        health_effect: 0
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 16
+      when_hungry: 24
+      when_starving: 32
+    search_interval: 180
+
+    memory:
+      remembers_locations: true
+      memory_duration: 24000
+      remembers_depleted: true
+      avoids_depleted_for: 12000
+      shares_with_group: false
+
+    sustainability:
+      enabled: true
+      dont_deplete_fully: true
+      minimum_remaining: 2
+      patch_return_delay: 6000
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+    predators: []                   # Will be defined in unique profile
+
+    default_response:
+      detection_range: 16
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.2
+        flee_distance: 32
+        flee_toward: "WATER"        # Always flee to water
+        zigzag: false
+
+      freeze:
+        duration: [60, 200]
+        break_on_approach: true
+        break_distance: 6
+
+      alarm:
+        gives_alarm: false
+        alarm_radius: 0
+        alarm_triggers_group_flee: false
+
+    all_clear:
+      predator_distance: 48
+      time_since_seen: 600
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: true
+  method: "SEXUAL"
+
+  requirements:
+    min_age: 24000
+    max_age: null
+    min_health: 0.7
+    min_condition: 60
+    min_hunger: 50
+
+    recent_food:
+      enabled: true
+      time_window: 12000
+      meals_required: 2
+
+    environment:
+      near_water: false
+      water_max_distance: 0
+      required_biomes: []
+      required_blocks_nearby:
+        - block: "sand"
+          max_distance: 8
+          reason: "Must lay eggs on sand"
+      min_light: 0
+      max_light: 15
+
+    requires_shelter: false
+    shelter_type: null
+
+    time_of_day: null
+    season: null
+    weather: null
+
+    mate_required: true
+    mate_max_distance: 16
+
+  density_effects:
+    enabled: true
+    check_radius: 64
+
+    density_curve:
+      - count: 2
+        multiplier: 1.3
+      - count: 4
+        multiplier: 1.0
+      - count: 8
+        multiplier: 0.7
+      - count: 12
+        multiplier: 0.3
+      - count: 16
+        multiplier: 0.1
+
+  mate_selection:
+    search_radius: 32
+    search_interval: 1000
+
+    preferences:
+      prefer_healthy: true
+      prefer_good_condition: true
+      avoid_relatives: true
+      relative_recognition_duration: 48000
+
+    courtship:
+      enabled: false
+      behavior: null
+      duration: 0
+      can_reject: false
+      rejection_cooldown: 0
+
+  breeding:
+    cooldown: 48000                 # Long cooldown (40 minutes)
+
+    gestation:
+      type: "EGG"
+      duration: 0                   # Instant egg laying
+      behavior_during: []
+
+    birth:
+      offspring_count: [1, 4]       # 1-4 eggs
+      condition_affects_count: true
+      location_requirement: "on_beach"  # Must be on sand beach
+
+  parental_care:
+    enabled: false                  # No parental care
+    duration: 0
+
+    behaviors:
+      protects_offspring: false
+      protection_aggression: 0.0
+      protection_radius: 0
+      feeds_offspring: false
+      teaches_offspring: false
+      carries_offspring: false
+
+    offspring_behavior:
+      follows_parent: false
+      follow_distance: 0
+      max_separation: 0
+      separation_distress: false
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+
+    composition:
+      mixed_sex: true
+      mixed_age: true
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  herd_movement:
+    enabled: false
+    cohesion_radius: 0
+    separation_distance: 0
+    alignment: false
+
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+      radius: 0
+      chain_calling: false
+
+    contact_calls:
+      enabled: false
+      when: []
+      radius: 0
+
+    mating_calls:
+      enabled: false
+      radius: 0
+      time: null
+
+  behaviors:
+    greeting: false
+    allogrooming: false
+    play: false
+    huddling: false
+    dominance_hierarchy: false
+
+  group_benefits:
+    predator_detection_bonus: 0.0
+    foraging_efficiency_bonus: 0.0
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  terrain:
+    enabled: true
+    actions:
+      - trigger: "foraging"
+        action: "DESTROY"
+        target_blocks: ["seagrass", "tall_seagrass"]
+        result_block: null
+        frequency: 1.0
+        radius: 0
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+      seeds: []
+      method: null
+      dispersal_radius: 0
+
+    pollination:
+      enabled: false
+      flowers: []
+      radius: 0
+
+    nutrient_cycling:
+      enabled: true               # Eggs provide nutrients to beach
+      fertilizes: true
+      fertilize_radius: 2
+
+    decomposition:
+      enabled: false
+      decomposes: []
+      result: null
+
+  responses:
+    drinking:
+      enabled: false
+      frequency: 0
+      water_blocks: []
+      duration: 0
+      congregates: false
+
+    temperature:
+      heat_seek_shade: false
+      heat_seek_water: true
+      cold_seek_shelter: false
+      cold_huddling: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  spawning:
+    weight: 8
+    group_size: [1, 2]
+
+    conditions:
+      blocks: ["sand"]
+      biomes: ["beach", "warm_ocean", "lukewarm_ocean"]
+      light: [9, 15]
+      altitude: [60, 70]
+      time: null
+      weather: null
+
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 4
+      regional: null
+
+    resources:
+      enabled: false
+      requirements: []
+
+    over_capacity:
+      - threshold: 1.2
+        effects: ["reduced_breeding"]
+      - threshold: 1.5
+        effects: ["dispersal"]
+      - threshold: 2.0
+        effects: ["starvation"]
+
+  dispersal:
+    enabled: true
+    triggers: ["adulthood", "overcrowding"]
+    distance: [128, 512]
+
+  mortality:
+    old_age:
+      enabled: false
+      max_age: null
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+      base_chance: 0.0
+      crowding_multiplier: 0.0
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  distances:
+    detection: 32
+    caution: 16
+    flee: 8
+
+  habituation:
+    enabled: true
+    rate: 0.02
+    decay: 0.001
+    max_habituation: 0.7
+    habituated_flee_distance: 4
+
+  taming:
+    enabled: false
+    items: []
+    chance: 0.0
+    requires_habituation: false
+
+  player_breeding:
+    enabled: true
+    items: ["minecraft:seagrass"]
+    bypasses_conditions: false    # Still needs to find sand
+
+  drops:
+    on_death:
+      - item: "minecraft:seagrass"
+        count: [0, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+      - item: "minecraft:bowl"      # Shell bowl
+        count: [1, 1]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 0
+
+    on_interaction: []
+
+  interactions: []
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  sounds:
+    ambient: "entity.turtle.ambient_land"
+    hurt: "entity.turtle.hurt"
+    death: "entity.turtle.death"
+    baby: "entity.turtle.hurt_baby"
+    alarm: null
+    mating: null
+    eating: "entity.generic.eat"
+
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "head_bob"
+        frequency: 0.02
+        trigger: "on_land"
+      - behavior: "flipper_wave"
+        frequency: 0.01
+        trigger: "in_water"
+      - behavior: "sun_basking"
+        frequency: 0.05
+        trigger: "on_beach_daytime"
+
+  personality_traits:
+    boldness:
+      base: 0.3                   # Shy creature
+      variation: 0.2
+    activity:
+      base: 0.5
+      variation: 0.2
+    sociability:
+      base: 0.2                   # Solitary
+      variation: 0.1
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+
+ai_priority_framework:
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  physiological:
+    critical_health: 3
+    drink_water: 4
+    eat_food: 5
+    find_shelter: 6
+
+  reproduction:
+    care_for_offspring: 7
+    breed: 8
+    find_mate: 9
+
+  social:
+    group_cohesion: 10
+    social_interaction: 11
+
+  hunting:
+    hunt_prey: 12
+
+  location:
+    location_triggered: 13
+    territory_patrol: 14
+    return_to_birth_beach: 6.5    # High priority for egg laying
+
+  default:
+    wander: 15
+    idle: 16
+    rest: 17
+
+
+# ============================================================================
+# SYSTEM 15: UNIQUE BEHAVIOR FRAMEWORK
+# ============================================================================
+
+unique_behavior_template:
+  structure:
+    name: ""
+    description: ""
+
+    triggers:
+      - type: ""
+        conditions: {}
+
+    requirements:
+      all_of: []
+      any_of: []
+      none_of: []
+
+    actions: []
+
+    effects:
+      on_self: []
+      on_others: []
+      on_world: []
+
+    priority: 10
+    duration: null
+    cooldown: null
+    interruptible: true

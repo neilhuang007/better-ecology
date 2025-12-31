@@ -1,0 +1,643 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# Mob: Armadillo
+# ============================================================================
+#
+# This file defines a specific mob by:
+# 1. Overriding defaults from the Generalized Template
+# 2. Providing natural language descriptions for unique behaviors
+# 3. Specifying relationships with other mobs
+#
+# INSTRUCTIONS FOR AI:
+# - Read the Generalized Template first to understand all systems
+# - Values here OVERRIDE template defaults
+# - Empty/null values mean "use template default"
+# - Natural language descriptions should be interpreted and implemented
+# - [UNIQUE] sections require custom implementation logic
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:armadillo"
+  display_name: "Armadillo"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "INSECTIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Three-banded Armadillo (Tolypeutes matacus)"
+    ecological_role: "Insect population control through spider repelling, prey for larger predators, renewable scute source for wolf armor crafting"
+
+  tags: ["arid_adapted", "defensive", "spider_repellent", "scute_producer", "ball_rolling"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 6                        # 12 HP = 6 hearts
+  size:
+    width: 0.7
+    height: 0.65
+  biomass:
+    adult: null
+  movement:
+    speeds:
+      walk: null
+      run: null
+      swim: null
+      fly: null
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: null
+  thirst:
+    enabled: null
+  age:
+    baby_duration: null
+    max_age: null
+  social:
+    enabled: null
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    # Override schedule if different from template
+    # Only include times that differ
+    schedule: null
+
+  weather:
+    # Only specify if different from template
+    rain: null
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: []
+      forbidden: []
+    required_nearby: []
+
+  territory:
+    enabled: null
+    size: null
+
+  shelter:
+    needs_shelter: null
+    shelter_uses: []
+    valid_shelters: []
+
+  # === LOCATION-TRIGGERED BEHAVIORS ===
+  # [UNIQUE] Describe in natural language what should happen where
+  location_triggers:
+    enabled: false
+    triggers: []
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "ITEM"
+        target: "minecraft:spider_eye"
+        nutrition: 25
+        method: "SCAVNGE"
+        world_effect:
+          action: "NONE"
+          result: "NONE"
+
+    secondary: []
+    emergency: []
+
+  foraging:
+    # Only override if different from template
+    search_radius:
+      base: null
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+    # If enabled, specify:
+    prey:
+      targets: []
+      selection_rules:
+        # Override specific rules
+        avoid_babies: null
+        sustainable_hunting:
+          enabled: null
+          min_prey_count: null
+
+    hunting:
+      method: ""
+
+  as_prey:
+    enabled: true
+
+    # List predators with responses
+    predators:
+      - entity: "minecraft:wolf"
+        threat_level: "EXTREME"
+        detection_range: 16
+        response: "ROLL_UP"
+      - entity: "minecraft:cat"
+        threat_level: "HIGH"
+        detection_range: 12
+        response: "ROLL_UP"
+      - entity: "minecraft:ocelot"
+        threat_level: "MEDIUM"
+        detection_range: 10
+        response: "ROLL_UP"
+      - entity: "minecraft:fox"
+        threat_level: "MEDIUM"
+        detection_range: 10
+        response: "ROLL_UP"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    # Only override requirements different from template
+    min_condition: null
+    recent_food:
+      enabled: null
+    environment:
+      near_water: null
+      required_biomes: []
+    requires_shelter: null
+    season: null
+
+  density_effects:
+    # Override density curve if different
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: null
+      behavior: ""
+
+  breeding:
+    gestation:
+      type: ""
+      duration: null
+    birth:
+      offspring_count: null
+      location_requirement: ""
+
+  parental_care:
+    duration: null
+    behaviors:
+      protects_offspring: null
+      feeds_offspring: null
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: ""
+    size:
+      min: null
+      optimal: null
+      max: null
+    leadership:
+      has_leader: null
+      leader_selection: ""
+
+  herd_movement:
+    enabled: null
+
+  communication:
+    alarm_calls:
+      enabled: null
+      types: []
+      # Special alarm for spider detection
+      - trigger: "spider_nearby"
+        call: "peep_alert"
+        group_response: "none"
+        description: "When a spider is detected within 6 blocks, the armadillo emits a subtle warning sound. Unlike typical alarm calls, this doesn't trigger group response because armadillos are solitary, but it provides feedback to players that spider repelling is active."
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: null
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: null
+    pollination:
+      enabled: null
+
+  responses:
+    drinking:
+      enabled: null
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: null
+    group_size: null
+    conditions:
+      biomes: []
+      blocks: []
+
+  carrying_capacity:
+    caps:
+      per_chunk: null
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  taming:
+    enabled: false
+    items: []
+
+  player_breeding:
+    enabled: true
+    items:
+      - item: "minecraft:spider_eye"
+        nutrition: 25
+        breeding_cooldown_reduce: 0
+        growth_boost: 0.1
+
+  drops:
+    on_death: []
+    # No drops on death - anti-killing design philosophy
+    on_interaction: []
+
+  interactions:
+    - action: "BRUSH"
+      item: "minecraft:brush"
+      result: "DROP_SCUTE"
+      durability_cost: 13
+      description: "Using a brush on the armadillo causes it to instantly drop 1 armadillo scute. Can be used repeatedly with no cooldown, limited only by brush durability (13 durability = 4 scutes per brush in Java Edition)."
+      cooldown: 0
+      condition: "NOT_ROLLED_UP"
+
+    - action: "LEAD"
+      item: "minecraft:lead"
+      result: "ATTACH_LEAD"
+      description: "Armadillos can be attached to leads and will follow. Cannot roll up while attached to a lead."
+      prevents_rolling: true
+
+    - action: "FEED"
+      item: "minecraft:spider_eye"
+      result: "BREEDING_MODE"
+      description: "Feeding spider eyes puts armadillo in love mode for breeding. If it rolls up after being fed but before reaching mate, breeding willingness is lost and must be re-fed."
+      special_condition: "LOSES_WILLNESS_IF_ROLLED"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.armadillo.ambient"
+    hurt: "entity.armadillo.hurt"
+    death: "entity.armadillo.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "peek_while_rolled"
+        frequency: 0.3
+        trigger: "periodic_while_scared"
+        description: "When rolled up, periodically extend head to check for threats. If threats persist, return to rolled state. If safe for 3-4 seconds, fully unroll."
+      - behavior: "sniff_ground"
+        frequency: 0.05
+        trigger: "random"
+      - behavior: "scratch_dirt"
+        frequency: 0.03
+        trigger: "random"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+# Describe behaviors unique to this mob that aren't covered by standard systems.
+# Use natural language - AI should interpret and implement appropriate logic.
+# ============================================================================
+
+unique_behaviors:
+  # === ROLLING DEFENSE MECHANISM ===
+  - name: "defensive_roll"
+    description: |
+      Armadillo's signature defense mechanism - curling into an armored ball.
+
+      WHEN: Triggered by taking damage, players sprinting nearby, mounted mobs, or undead enemies within detection range.
+
+      WHERE: Can only roll on solid ground. Cannot roll while in water, in the air, attached to a lead, or already fleeing.
+
+      WHAT: Armadillo curls into a ball, becoming immobile but receiving massive damage reduction. Damage taken is calculated as (Original Damage - 1) ÷ 2. The armadillo periodically peeks out to assess if threats have passed. If safe for 3-4 seconds, fully unrolls and returns to normal behavior.
+
+      WHY: Three-banded armadillos' real-world defense strategy. Creates strategic gameplay where players must wait or brush to harvest scutes, not kill. Encourages non-violent interaction.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 1
+      duration: "until_safe"
+      affects_others: false
+      world_modification: false
+
+    states:
+      - state: "IDLE"
+        description: "Normal wandering, can repel spiders"
+      - state: "ROLLED_UP"
+        description: "Immobile, damage reduction active, no spider repelling"
+      - state: "UNROLLING"
+        description: "Transition state, peeking periodically to check safety"
+
+    triggers:
+      - type: "DAMAGE_TAKEN"
+        any_damage: true
+      - type: "ENTITY_NEARBY"
+        entities: ["minecraft:player"]
+        condition: "sprinting"
+        range: 6
+      - type: "ENTITY_NEARBY"
+        entities: ["minecraft:horse", "minecraft:donkey", "minecraft:mule", "minecraft:camel", "minecraft:llama"]
+        condition: "ridden_by_player"
+        range: 8
+      - type: "ENTITY_NEARBY"
+        entities: ["minecraft:zombie", "minecraft:drowned", "minecraft:skeleton", "minecraft:stray", "minecraft:wither_skeleton"]
+        range: 10
+
+    cannot_roll_conditions:
+      - condition: "IN_WATER"
+        message: "Cannot roll while in water"
+      - condition: "IN_AIR"
+        message: "Cannot roll while in the air"
+      - condition: "ATTACHED_TO_LEAD"
+        message: "Cannot roll while on a lead"
+      - condition: "ALREADY_FLEEING"
+        message: "Cannot roll while already fleeing"
+
+    damage_reduction:
+      formula: "(damage - 1) / 2"
+      minimum_damage: 1
+
+  # === SPIDER REPELLING ===
+  - name: "spider_repelling_aura"
+    description: |
+      Natural pest control - spiders instinctively avoid armadillos.
+
+      WHEN: Continuously active while armadillo is NOT rolled up.
+
+      WHERE: Affects spiders and cave spiders within 6-block radius.
+
+      WHAT: Spiders and cave spiders within 6 blocks will actively flee from the armadillo. This is a passive aura effect - the armadillo does nothing active. The repelling effect stops when the armadillo rolls up into defensive ball.
+
+      WHY: Represents real-world armadillo diet of insects and arthropods. Creates symbiotic gameplay - armadillos protect players/buildings from spiders while producing scutes for wolf armor. Thematic connection: armadillos eat spider eyes and repel living spiders.
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 5
+      duration: "continuous_while_idle"
+      affects_others: true
+      world_modification: false
+
+    affected_entities:
+      - "minecraft:spider"
+      - "minecraft:cave_spider"
+
+    radius: 6
+
+    active_condition: "NOT_ROLLED_UP"
+
+    spider_behavior:
+      action: "FLEE_FROM_ARMADILLO"
+      flee_speed: 1.3
+      flee_distance: 16
+
+  # === SCUTE SHEDDING ===
+  - name: "passive_scute_dropping"
+    description: |
+      Renewable resource generation without killing.
+
+      WHEN: Automatically every 5-10 minutes of game time.
+
+      WHERE: Drops naturally wherever the armadillo is, no player interaction required.
+
+      WHAT: Armadillo drops 1 armadillo scute on the ground near it. Similar to chicken egg laying. Completely passive and renewable.
+
+      WHY: Mojang's design philosophy against killing real-life animals. Encourages farming and preservation over hunting. Scutes used for wolf armor, creating gameplay loop: protect armadillos → get scutes → armor wolves → wolves protect armadillos.
+
+    implementation_hints:
+      trigger_type: "TIME"
+      priority: 10
+      duration: null
+      affects_others: false
+      world_modification: true
+
+    drop_interval: [6000, 12000]
+    drop_amount: 1
+    dropped_item: "minecraft:armadillo_scute"
+
+    condition: "ALIVE"
+
+  # === BRUSHING MECHANIC ===
+  - name: "brush_for_scutes"
+    description: |
+      Active scute harvesting alternative to passive waiting.
+
+      WHEN: Player uses brush item on armadillo.
+
+      WHERE: Must be within reach of player interaction.
+
+      WHAT: Instantly drops 1 armadillo scute. Costs 13 brush durability. No cooldown - can brush repeatedly until brush breaks. Each brush yields ~4-5 scutes (Java Edition) or 5-6 scutes (Bedrock Edition) without Unbreaking enchantment.
+
+      WHY: Provides active harvesting method for players who don't want to wait. Creates resource sink for brushes (feather + copper + stick). Balances time vs resources trade-off.
+
+    implementation_hints:
+      trigger_type: "PLAYER_INTERACTION"
+      priority: 3
+      duration: null
+      affects_others: false
+      world_modification: true
+
+    required_item: "minecraft:brush"
+    durability_cost: 13
+    result: "DROP_SCUTE"
+    drop_amount: 1
+    dropped_item: "minecraft:armadillo_scute"
+
+    cooldown: 0
+    condition: "NOT_ROLLED_UP"
+
+    max_scutes_per_brush: 4  # Without Unbreaking (Java Edition)
+
+  # === BREEDING INTERRUPTION ===
+  - name: "breeding_willingness_loss"
+    description: |
+      Unique mechanic where breeding readiness can be lost.
+
+      WHEN: Armadillo is fed spider eye for breeding but rolls up before reaching mate.
+
+      WHERE: Any time between being fed and successful mating.
+
+      WHAT: The armadillo loses its breeding willingness (love mode) if it enters rolled state. Player must feed another spider eye to restore willingness. This can repeat if threats persist.
+
+      WHY: Creates tactical consideration for breeding - must be done in safe areas. Adds realism as scared animals aren't interested in mating. Encourages players to create safe breeding pens.
+
+    implementation_hints:
+      trigger_type: "STATE_CHANGE"
+      priority: 2
+      duration: null
+      affects_others: false
+      world_modification: false
+
+    trigger_state: "ROLLED_UP"
+    required_prior_state: "IN_LOVE_MODE"
+    effect: "CLEAR_LOVE_MODE"
+
+    can_reapply: true
+    reapply_item: "minecraft:spider_eye"
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+# Describe relationships with other specific mobs beyond predator/prey.
+# ============================================================================
+
+relationships:
+  # Predators (who hunts this mob)
+  predators:
+    - entity: "minecraft:wolf"
+      notes: "Primary predator. Armadillo rolls up immediately on detection. Irony: wolf armor made from armadillo scutes protects the predator."
+    - entity: "minecraft:cat"
+      notes: "Cats hunt small armored creatures. Armadillo rolls up as defense."
+    - entity: "minecraft:ocelot"
+      notes: "Similar to cats, poses threat to armadillos."
+    - entity: "minecraft:fox"
+      notes: "Foxes may prey on young or unwary armadillos."
+
+  # Prey (what this mob hunts)
+  prey:
+    - entity: "minecraft:spider"
+      notes: "Does not hunt spiders, but eats spider eyes. Repels living spiders through natural aura. Thematic predator-prey relationship."
+    - entity: "minecraft:cave_spider"
+      notes: "Same as spiders - repelled and eaten (eyes only)."
+
+  # Competitors (compete for same resources)
+  competitors:
+    - entity: "minecraft:rabbit"
+      resource: "insect_food_sources"
+      interaction: "Both eat insects/spider eyes, but armadillos prefer arid biomes while rabbits prefer grasslands. Minimal direct competition."
+
+  # Mutualists (mutually beneficial)
+  mutualists:
+    - entity: "minecraft:wolf"
+      benefit_given: "Provides scutes for wolf armor crafting"
+      benefit_received: "Theoretical protection from tamed wolves if player commands, but in wild wolves are predators. Complex relationship."
+    - entity: "minecraft:player"
+      benefit_given: "Spider repelling creates safe zones, renewable scutes for armor"
+      benefit_received: "Protection from predators, breeding assistance, safe housing"
+
+  # Commensals (one benefits, other unaffected)
+  commensals:
+    - entity: "minecraft:villager"
+      notes: "Armadillos keep spiders away from village outskirts. Villagers unaffected but benefit from safer environment."
+
+  # Special relationships
+  special:
+    - entity: "minecraft:spider"
+      relationship: "REPULSED"
+      description: "Spiders instinctively flee from armadillos within 6 blocks. Natural pest control. Armadillo does not attack, only repels passively."
+    - entity: "minecraft:cave_spider"
+      relationship: "REPULSED"
+      description: "Same spider repelling mechanic applies to cave spiders. Useful in mineshaft areas."
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+# Free-form description for AI to understand this mob's "character"
+# ============================================================================
+
+narrative:
+  summary: |
+    The armadillo is a timid, solitary creature of arid biomes that relies on its unique ball-rolling defense for survival. It provides essential ecosystem services by repelling spiders and producing renewable scutes for wolf armor crafting, creating a non-violent resource loop that emphasizes preservation over hunting.
+
+  behavior_overview: |
+    By day, armadillos wander slowly through savannas and badlands, sniffing at the ground and occasionally scratching. They prefer solitude, living alone except when breeding. Their signature behavior is the defensive curl: when threatened by damage, sprinting players, mounted mobs, or the undead, they instantly roll into an impenetrable ball that reduces incoming damage by half. While rolled, they periodically peek out to check if danger has passed, remaining vigilant for 3-4 seconds before fully unrolling.
+
+    Their most magical trait is the invisible aura that repels spiders - within a six-block radius, spiders and cave spiders instinctively flee. This passive protection works only when the armadillo is unrolled. While curled in defense, the spider-repelling field deactivates, creating a strategic vulnerability.
+
+    Armadillos sustain themselves on spider eyes, creating a thematic connection: they eat the remains of the creatures they repel in life. Every 5-10 minutes, they naturally shed a scute, and players can brush them to harvest more instantly. This renewable resource system means there is never reason to kill an armadillo - they drop nothing on death, Mojang's quiet statement against violence toward real-life animals.
+
+  ecological_importance: |
+    Without armadillos, savanna and badland biomes lose their natural spider defense. The mob fills a unique niche as both insect population controller (via spider repelling) and resource generator (via scute production). The scute-to-wolf-armor loop creates an inter-species dependency: players protect armadillos to get scutes, use scutes to armor wolves, and armored wolves can better protect their territory.
+
+    Their solitary nature means they don't strain food resources through herd behavior. As insectivores, they occupy a trophic level between primary producers and larger predators. Their slow reproduction and passive spawning prevent overpopulation. Most importantly, they demonstrate a sustainable harvesting model - renewable resources without death.
+
+  design_notes: |
+    The three-state behavior system (idle/rolled/unrolling) must be carefully implemented. State transitions should be smooth: idle → rolled is instant on threat detection, rolled → unrolling takes 3-4 seconds of peeking and checking. The damage reduction formula (damage - 1) / 2 means a 10-damage hit becomes only 4.5, rounded to 4. This is significant but not invincible.
+
+    Spider repelling radius is exactly 6 blocks - close enough to protect a small area but not entire bases. The repelling effect MUST stop while rolled, or players would never be able to harvest scutes (brushing only works when unrolled). This creates tactical timing: wait for them to unroll naturally, breed them in safe enclosed spaces, or use leads to prevent rolling.
+
+    Scute dropping every 5-10 minutes means AFK farms can produce ~6-12 scutes per hour per armadillo. Active brushing yields ~4-5 scutes per brush (13 durability × 4 = 52, brush has 64 durability, 4 uses). This time-vs-resource balance seems intentional - waiting is free but slow, brushing costs resources but is fast.
+
+    Breeding interruption is a subtle but important detail. If an armadillo rolls after being fed but before mating, it loses willingness. This encourages players to build proper breeding pens, not just feed them in open terrain. It adds depth to what could otherwise be a generic breeding mechanic.
+
+    Remember: NO DROPS ON DEATH. This is intentional design to discourage killing. If players want scutes, they must wait, brush, or breed - all peaceful methods.
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+# Quick-reference values for ecosystem balancing
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 1.0
+  mortality_rate_multiplier: 0.8  # Lower due to defense mechanism
+
+  energy_flow:
+    daily_requirement: 15          # Spider eyes needed
+    provides_to_predator: 60       # Biomass when eaten (though drops nothing)
+
+  population_target: "Uncommon, 4-8 per savanna biome, 2-4 per badlands biome"
+
+  removal_impact: "Increased spider presence in savanna/badlands biomes, loss of renewable scute source for wolf armor, disrupted non-violent resource loop"

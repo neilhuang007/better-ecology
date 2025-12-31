@@ -1,0 +1,653 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# Mob: Turtle (minecraft:turtle)
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:turtle"
+  display_name: "Sea Turtle"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Green Sea Turtle"
+    ecological_role: "Marine herbivore that grazes seagrass beds and provides beach nutrients through egg laying. Critical link between ocean and land ecosystems."
+
+  tags: ["aquatic", "egg_laying", "beach_nesting", "migratory", "slow_land"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 15                      # 30 HP
+  size:
+    width: 1.2
+    height: 0.4
+  biomass:
+    adult: 120
+  movement:
+    speeds:
+      walk: 0.1                   # Very slow on land
+      run: 0.15
+      swim: 0.35                  # Fast in water
+      fly: 0.0
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.015             # Slow metabolism
+  thirst:
+    enabled: false                # Aquatic
+  age:
+    baby_duration: 24000
+    max_age: null
+  social:
+    enabled: false
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 12000]          # Day - active
+        activity: 1.0
+        label: "active_day"
+      - time: [12000, 24000]      # Night - active (eggs hatch faster)
+        activity: 0.9
+        label: "active_night"
+
+  weather:
+    rain:
+      activity_multiplier: 1.0    # Unaffected by rain
+      seek_shelter: false
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: ["ocean", "warm_ocean", "lukewarm_ocean", "beach"]
+      forbidden: ["frozen_ocean", "deep_frozen_ocean", "cold_ocean"]
+    required_nearby:
+      - feature: "water"
+        max_distance: 32
+        reason: "Must be near ocean"
+      - feature: "sand"
+        max_distance: 64
+        reason: "Needs sand beach for egg laying"
+
+  territory:
+    enabled: false
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  # === LOCATION-TRIGGERED BEHAVIORS ===
+  location_triggers:
+    enabled: true
+    triggers:
+      - name: "birth_beach_memory"
+        description: |
+          Turtles remember the exact beach (chunk coordinates) where they were born.
+          When pregnant/ready to lay eggs, they will navigate back to this birth beach
+          from up to 512 blocks away. This is their "home point" and has highest priority
+          when breeding conditions are met.
+
+          WHEN: When turtle has mate and all breeding conditions met
+          WHERE: Navigate to birth beach (spawn point chunk)
+          WHAT: Travel across ocean biomes, preferring water routes, until reaching
+                the sand blocks within 32 blocks of original spawn point
+          WHY: Realistic sea turtle behavior - natal homing instinct
+        location:
+          blocks: ["sand"]
+          biomes: ["beach"]
+          near_water: {min: 1, max: 16}
+          is_birth_location: true
+        behavior:
+          priority: 6.5               # Higher than normal breeding
+          max_travel_distance: 512
+          path_preference: "water"
+          arrival_behavior: "lay_eggs"
+          memory_duration: "permanent"
+
+      - name: "egg_laying_site_selection"
+        description: |
+          When turtle reaches birth beach and is ready to lay eggs, it searches for
+          optimal sand blocks. Prefers sand that is:
+          - 2-8 blocks from water
+          - Not already occupied by turtle eggs
+          - On relatively flat terrain
+          - Above sea level (Y > 62)
+
+          WHEN: At birth beach with breeding conditions met
+          WHERE: Sand blocks 2-8 blocks from water edge
+          WHAT: Scan 16 block radius, select best site, dig animation, lay 1-4 eggs
+          WHY: Eggs need to be near water but not flooded
+        location:
+          blocks: ["sand"]
+          near_water: {min: 2, max: 8}
+          altitude: {min: 62, max: 80}
+        behavior:
+          search_radius: 16
+          scan_duration: 100
+          dig_duration: 40
+          lay_duration: 60
+          eggs_per_clutch: [1, 4]
+
+      - name: "beach_basking"
+        description: |
+          Turtles occasionally come onto beach to bask in sunlight during daytime.
+          This helps thermoregulation and is a rest behavior. They stay alert and
+          will flee to water if threatened.
+
+          WHEN: Daytime (0-12000), clear weather, not hungry, energy > 60
+          WHERE: Sand blocks 1-4 blocks from water
+          WHAT: Rest on sand for 400-1200 ticks, reduced awareness
+          WHY: Natural turtle behavior, creates interesting land encounters
+        location:
+          blocks: ["sand"]
+          biomes: ["beach"]
+          near_water: {min: 1, max: 4}
+          time: [0, 12000]
+          weather: ["clear"]
+        behavior:
+          frequency: 0.05
+          duration: [400, 1200]
+          stance: "resting"
+          awareness_multiplier: 0.7
+          flee_to_water_on_threat: true
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "BLOCK"
+        target: "minecraft:seagrass"
+        nutrition: 20
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+
+      - type: "BLOCK"
+        target: "minecraft:tall_seagrass"
+        nutrition: 30
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+
+    secondary:
+      - type: "BLOCK"
+        target: "minecraft:kelp"
+        nutrition: 15
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 16
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:zombie"
+        threat_level: "HIGH"
+        detection_range: 16
+        response: "FLEE"
+        flee_toward: "WATER"
+        notes: "Zombies trample turtle eggs"
+
+      - entity: "minecraft:drowned"
+        threat_level: "MEDIUM"
+        detection_range: 20
+        response: "FLEE"
+        flee_distance: 32
+        notes: "Underwater threat"
+
+      - entity: "minecraft:ocelot"
+        threat_level: "EXTREME"
+        detection_range: 24
+        response: "FLEE"
+        flee_toward: "WATER"
+        notes: "Hunts baby turtles specifically"
+
+      - entity: "minecraft:fox"
+        threat_level: "EXTREME"
+        detection_range: 24
+        response: "FLEE"
+        flee_toward: "WATER"
+        notes: "Hunts baby turtles and eats eggs"
+
+      - entity: "minecraft:wolf"
+        threat_level: "HIGH"
+        detection_range: 20
+        response: "FLEE"
+        flee_toward: "WATER"
+
+      - entity: "minecraft:player"
+        threat_level: "LOW"
+        detection_range: 32
+        response: "CAUTION"
+        notes: "Can be habituated"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: 60
+    recent_food:
+      enabled: true
+    environment:
+      near_water: false
+      required_biomes: []
+    requires_shelter: false
+    season: null
+
+  density_effects:
+    density_curve: null           # Use template default
+
+  mate_selection:
+    courtship:
+      enabled: false
+      behavior: ""
+
+  breeding:
+    gestation:
+      type: "EGG"
+      duration: 0                 # Instant egg placement
+    birth:
+      offspring_count: [1, 4]
+      location_requirement: "on_beach_sand"
+
+  parental_care:
+    duration: 0                   # No parental care
+    behaviors:
+      protects_offspring: false
+      feeds_offspring: false
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+    leadership:
+      has_leader: false
+      leader_selection: ""
+
+  herd_movement:
+    enabled: false
+
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: true
+    actions:
+      - trigger: "foraging"
+        description: "Grazes seagrass, maintaining healthy seagrass beds"
+        target: "seagrass"
+        result: null
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false
+      congregates: false
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 8
+    group_size: [1, 2]
+    conditions:
+      biomes: ["beach", "warm_ocean"]
+      blocks: ["sand"]
+
+  carrying_capacity:
+    caps:
+      per_chunk: 4
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  taming:
+    enabled: false
+    items: []
+
+  player_breeding:
+    enabled: true
+    items: ["minecraft:seagrass"]
+
+  drops:
+    on_death:
+      - item: "minecraft:seagrass"
+        count: [0, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+      - item: "minecraft:bowl"
+        count: [1, 1]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 0
+
+  interactions:
+    - action: "right_click"
+      item: "minecraft:seagrass"
+      result: "breeding_mode"
+      description: "Feed seagrass to enter breeding mode"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.turtle.ambient_land"
+    hurt: "entity.turtle.hurt"
+    death: "entity.turtle.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "head_bob"
+        frequency: 0.02
+        trigger: "on_land"
+      - behavior: "flipper_paddle"
+        frequency: 0.1
+        trigger: "in_water_idle"
+      - behavior: "sun_basking"
+        frequency: 0.05
+        trigger: "on_beach_clear_day"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+
+unique_behaviors:
+  - name: "natal_homing"
+    description: |
+      WHEN: Turtle reaches breeding maturity and has successfully mated
+      WHERE: Can be anywhere in ocean biomes within 512 blocks of birth beach
+      WHAT: Turtle stores its birth location (chunk coordinates) in persistent data.
+            When ready to lay eggs, it pathfinds back to this beach, preferring
+            water routes and avoiding land when possible. Upon reaching the beach
+            (within 32 blocks of birth point), searches for suitable sand blocks
+            (2-8 blocks from water, above Y=62) and lays 1-4 eggs.
+      WHY: This is the defining behavior of sea turtles - natal homing/philopatry.
+           Creates interesting long-distance migration behavior and makes breeding
+           more challenging and realistic. Players can track turtle movements and
+           predict nesting sites.
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 6.5                   # Higher than normal activities
+      duration: null                  # Until reaches destination
+      affects_others: false
+      world_modification: true        # Places eggs
+
+  - name: "scute_dropping"
+    description: |
+      WHEN: Baby turtle grows into adult turtle (age transition at 24000 ticks)
+      WHERE: Any location where growth occurs
+      WHAT: Upon transitioning from baby to adult, turtle drops 1 scute item.
+            This is a one-time event per turtle per lifetime.
+      WHY: Scutes are valuable items used to craft turtle master potions and
+           turtle shells (helmets). This creates an incentive to breed and raise
+           turtles without killing them, promoting conservation gameplay.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 1
+      duration: 1
+      affects_others: false
+      world_modification: true        # Drops item
+
+  - name: "egg_hatching_mechanics"
+    description: |
+      WHEN: Turtle eggs are placed on sand blocks
+      WHERE: Sand blocks, preferably on beaches
+      WHAT: Eggs have a multi-stage hatching process:
+            - Stage 0-2: Visible cracks appear over time
+            - Hatching is faster at night (12000-24000 ticks)
+            - Hatching is faster on sand vs other blocks
+            - Base hatch time: ~28800 ticks (24 minutes)
+            - Night bonus: 1.5x speed
+            - Sand requirement: Only hatches on sand
+            - When hatched, spawns baby turtle
+      WHY: Creates interesting waiting/protection gameplay. Players must protect
+           eggs from zombies, foxes, and other threats during vulnerable period.
+           Night hatching creates dramatic moments.
+
+    implementation_hints:
+      trigger_type: "TIME"
+      priority: 5
+      duration: 28800                 # Base duration
+      affects_others: true            # Spawns baby
+      world_modification: true        # Changes egg stages, spawns entity
+
+  - name: "egg_trampling_vulnerability"
+    description: |
+      WHEN: Entity walks over turtle egg blocks
+      WHERE: Anywhere turtle eggs are placed
+      WHAT: Most mobs (zombies, zombie variants, skeletons, etc.) have a chance
+            to break turtle eggs when walking over them. Players in normal walking
+            do not break them, but jumping/sprint-jumping can. Undead mobs
+            actively seek out and trample eggs (detection range: 24 blocks).
+      WHY: Creates tension and challenge in protecting nests. Zombies become
+           natural predators of eggs, requiring players to light areas or fence
+           nesting sites. Realistic predator-egg dynamic.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 2
+      duration: 1
+      affects_others: false
+      world_modification: true        # Destroys eggs
+
+  - name: "baby_turtle_ocean_seeking"
+    description: |
+      WHEN: Baby turtle hatches from egg
+      WHERE: On beach (sand blocks)
+      WHAT: Immediately upon hatching, baby turtle pathfinds to nearest water
+            (ocean). It has heightened awareness of predators during this journey.
+            Movement speed is slow (0.08 blocks/tick). Once reaching water,
+            switches to normal juvenile behavior (grazing, hiding).
+      WHY: Mimics real sea turtle hatchling behavior - the dangerous journey to
+           sea. Creates dramatic moments and vulnerability window. Players can
+           help protect hatchlings or create safe corridors.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 8
+      duration: null                  # Until reaches water
+      affects_others: false
+      world_modification: false
+
+  - name: "water_speed_differential"
+    description: |
+      WHEN: Always active - movement mode detection
+      WHERE: In water vs on land
+      WHAT: Turtle has dramatically different speeds:
+            - On land: 0.1 blocks/tick (very slow, clumsy)
+            - In water: 0.35 blocks/tick (fast, graceful)
+            This affects all behaviors - fleeing, foraging, migrating.
+            Turtles prefer water routes for all long-distance travel.
+      WHY: Creates interesting behavioral dynamics. Turtles are vulnerable on land
+           but excel in water. Players encounter them in different contexts based
+           on environment.
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 1
+      duration: null                  # Permanent state
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+
+relationships:
+  # Predators (who hunts this mob)
+  predators:
+    - entity: "minecraft:zombie"
+      notes: "Tramples eggs, attacks baby turtles"
+    - entity: "minecraft:drowned"
+      notes: "Underwater threat to adults and juveniles"
+    - entity: "minecraft:ocelot"
+      notes: "Specifically hunts baby turtles"
+    - entity: "minecraft:fox"
+      notes: "Eats eggs and hunts baby turtles"
+    - entity: "minecraft:wolf"
+      notes: "Opportunistic predator of babies"
+
+  # Prey (what this mob hunts)
+  prey: []
+
+  # Competitors (compete for same resources)
+  competitors:
+    - entity: "ecosystem:fish"
+      resource: "seagrass"
+      interaction: "Low competition - different feeding heights"
+
+  # Mutualists (mutually beneficial)
+  mutualists: []
+
+  # Commensals (one benefits, other unaffected)
+  commensals: []
+
+  # Special relationships
+  special:
+    - entity: "minecraft:player"
+      relationship: "conservation_partner"
+      description: "Players can protect nests, breed turtles for scutes, and create turtle sanctuaries"
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+
+narrative:
+  summary: |
+    The Sea Turtle is a gentle marine herbivore that bridges ocean and beach ecosystems.
+    Known for its remarkable natal homing behavior, it returns to its birth beach to lay
+    eggs, creating multi-generational nesting sites.
+
+  behavior_overview: |
+    Turtles spend most of their lives in warm ocean waters, grazing on seagrass beds.
+    They are slow and vulnerable on land but graceful swimmers in the water. When mature,
+    they undergo dramatic migrations back to their birth beaches to reproduce. After mating,
+    females carefully select nesting sites on sand, laying 1-4 eggs before returning to the sea.
+
+    Baby turtles face a perilous journey from nest to ocean, threatened by zombies, foxes,
+    and ocelots. Those who survive drop valuable scutes as they mature. Adult turtles are
+    generally shy, fleeing to water when threatened, but can become habituated to careful
+    human presence.
+
+  ecological_importance: |
+    Turtles maintain healthy seagrass meadows through grazing, preventing overgrowth and
+    promoting biodiversity. Their eggs provide nutrients to beach ecosystems. As a keystone
+    species connecting marine and terrestrial biomes, their removal would cause seagrass
+    overgrowth, reduce beach nutrient cycling, and eliminate a key prey species for coastal
+    predators. They also create engaging gameplay through breeding mechanics and scute farming.
+
+  design_notes: |
+    Balance considerations:
+    - Scute drop rate (1 per baby growth) should feel rewarding but not exploitable
+    - Natal homing must work reliably across chunk loading/unloading
+    - Egg hatching time (24 min base) should encourage protection without excessive waiting
+    - Night hatching bonus (1.5x) creates interesting timing decisions
+    - Predator egg-seeking should be challenging but not impossible to defend against
+
+    Technical requirements:
+    - Persistent storage of birth coordinates per turtle
+    - Pathfinding that prefers water routes for long distances
+    - Egg block with 3 stages, time-based progression with environmental multipliers
+    - Baby AI override for immediate ocean-seeking on spawn
+    - Speed modifiers based on fluid state (in water vs on land)
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 0.8      # Relatively uncommon
+  breeding_rate_multiplier: 0.7   # Slow breeders due to beach requirement
+  mortality_rate_multiplier: 1.5  # High mortality for babies, low for adults
+
+  energy_flow:
+    daily_requirement: 40         # Requires ~2 seagrass per day
+    provides_to_predator: 120     # Good food source when killed
+
+  population_target: "Uncommon, 4-8 per beach/ocean region"
+
+  removal_impact: "Seagrass overgrowth in oceans, loss of beach nutrient cycling, reduced predator food source. Scute availability becomes zero, affecting late-game potion brewing."

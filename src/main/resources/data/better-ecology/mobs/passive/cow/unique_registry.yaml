@@ -1,0 +1,542 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Mob: Cow (Bos taurus)
+# ============================================================================
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:cow"
+  display_name: "Cow"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "HERD"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Domestic cattle (Bos taurus)"
+    ecological_role: "Large herbivore grazer that maintains grasslands through grazing, promotes biodiversity by preventing overgrowth, and enables nutrient cycling through dung deposition"
+
+  tags: ["herd", "grazer", "milkable", "farm_animal", "livestock", "ruminant"]
+
+
+# ============================================================================
+# PHYSICAL - Overrides
+# ============================================================================
+physical:
+  health:
+    base: 10
+  size:
+    width: 0.9
+    height: 1.4
+  biomass:
+    adult: 100
+
+
+# ============================================================================
+# INTERNAL STATE - Overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.02
+  age:
+    baby_duration: 24000
+  social:
+    enabled: true
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 3000]
+        activity: 1.0
+        label: "morning_grazing"
+      - time: [3000, 6000]
+        activity: 0.9
+        label: "late_morning"
+      - time: [6000, 12000]
+        activity: 0.5
+        label: "midday_rest"
+      - time: [12000, 15000]
+        activity: 0.9
+        label: "afternoon_grazing"
+      - time: [15000, 18000]
+        activity: 0.7
+        label: "dusk"
+      - time: [18000, 24000]
+        activity: 0.2
+        label: "night_rest"
+
+  weather:
+    rain: null
+    thunder: null
+    snow: null
+    clear: null
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: []
+      forbidden: []
+    required_nearby: []
+
+  territory:
+    enabled: false
+    size: null
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  location_triggers:
+    enabled: false
+    triggers: []
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: BLOCK
+        target: "minecraft:grass_block"
+        nutrition: 20
+        method: GRAZE
+        world_effect:
+          action: CONVERT
+          result: "minecraft:dirt"
+
+      - type: BLOCK
+        target: "minecraft:tall_grass"
+        nutrition: 15
+        method: GRAZE
+        world_effect:
+          action: DESTROY
+          result: null
+
+    secondary:
+      - type: ITEM
+        target: "minecraft:wheat"
+        nutrition: 40
+        method: GRAZE
+        world_effect:
+          action: NONE
+          result: null
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 16
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+    predators: []
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: 65
+    recent_food:
+      enabled: true
+    environment:
+      near_water: false
+      required_biomes: []
+    requires_shelter: false
+    season: null
+
+  density_effects:
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: false
+      behavior: null
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: null
+    birth:
+      offspring_count: [1, 1]
+      location_requirement: null
+
+  parental_care:
+    duration: 24000
+    behaviors:
+      protects_offspring: false
+      feeds_offspring: null
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "HERD"
+    size:
+      min: 2
+      optimal: 4
+      max: 12
+    leadership:
+      has_leader: false
+      leader_selection: null
+
+  herd_movement:
+    enabled: true
+
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: true
+    actions:
+      - trigger: "grazing"
+        description: "Converts grass blocks to dirt while grazing"
+        target: "minecraft:grass_block"
+        result: "minecraft:dirt"
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: null
+    pollination:
+      enabled: null
+
+  responses:
+    drinking:
+      enabled: null
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 8
+    group_size: [2, 4]
+    conditions:
+      biomes: []
+      blocks: ["minecraft:grass_block"]
+
+  carrying_capacity:
+    caps:
+      per_chunk: 8
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "NEUTRAL"
+
+  taming:
+    enabled: null
+    items: []
+
+  player_breeding:
+    enabled: true
+    items:
+      - item: "minecraft:wheat"
+
+  drops:
+    on_death:
+      - item: "minecraft:leather"
+        count: [0, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+      - item: "minecraft:beef"
+        count: [1, 3]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+      - item: "minecraft:cooked_beef"
+        count: [1, 3]
+        chance: 0.0
+        requires_player_kill: false
+        looting_bonus: 0
+        condition: "fire_death"
+
+  interactions:
+    - action: "milk"
+      item: "minecraft:bucket"
+      result: "minecraft:milk_bucket"
+      description: "Milk the cow with a bucket to obtain milk. Can be done infinitely without cooldown. Only adult cows can be milked."
+
+    - action: "follow"
+      item: "minecraft:wheat"
+      result: null
+      description: "Cows follow players holding wheat within detection range. Baby cows prefer following adult cows over wheat-holding players."
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "minecraft:entity.cow.ambient"
+    hurt: "minecraft:entity.cow.hurt"
+    death: "minecraft:entity.cow.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "look_at_player"
+        frequency: 0.02
+        trigger: "player_within_6_blocks"
+      - behavior: "moo"
+        frequency: 0.01
+        trigger: "random"
+
+
+# ============================================================================
+# UNIQUE BEHAVIORS
+# ============================================================================
+unique_behaviors:
+  - name: "milk_production"
+    description: |
+      Cows can be milked indefinitely by players using a bucket. This provides
+      an unlimited renewable resource of milk, which removes status effects
+      when consumed and is used in cake recipes.
+
+      WHEN: Player right-clicks with empty bucket
+      WHERE: Anywhere
+      WHAT: Cow produces one milk bucket, bucket is consumed from player inventory
+      WHY: Core farming mechanic, provides renewable resource for players
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 5
+      duration: null
+      affects_others: false
+      world_modification: true
+
+  - name: "wheat_breeding"
+    description: |
+      Cows enter love mode when fed wheat by players, leading to breeding
+      and producing a baby calf. Each feeding reduces remaining growth time
+      for babies by 10%.
+
+      WHEN: Player right-clicks with wheat
+      WHERE: Within 6 blocks of player
+      WHAT: Adult cows enter love mode, babies grow faster
+      WHY: Standard animal breeding mechanic for farm animals
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 8
+      duration: 600
+      affects_others: true
+      world_modification: false
+
+  - name: "wheat_following"
+    description: |
+      Cows follow players holding wheat, moving toward them even if it means
+      leaving their current location. This allows players to lead cows to
+      farms or pens. Baby cows prefer following adult cows over wheat.
+
+      WHEN: Player within detection range holding wheat
+      WHERE: Anywhere
+      WHAT: Cow pathfinds toward player, ignores other AI goals
+      WHY: Allows player to herd and move cows for farming
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 6
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "baby_follows_adult"
+    description: |
+      Baby calves prefer to follow adult cows over wheat-holding players.
+      They will pathfind to the nearest adult cow if separated by more
+      than 24 blocks. This keeps calves with the herd.
+
+      WHEN: Baby calf is separated from adults by >24 blocks
+      WHERE: Anywhere
+      WHAT: Baby searches for adult cows in 8x4x8 box and pathfinds to nearest
+      WHY: Keeps herd together, protects vulnerable offspring
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 7
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "lightning_transformation"
+    description: |
+      When struck by lightning, a red cow (mooshroom variant) transforms into
+      a brown mooshroom. This is a rare Easter egg mechanic.
+
+      WHEN: Lightning strikes the cow
+      WHERE: Anywhere during thunderstorm
+      WHAT: Red mooshroom becomes brown mooshroom
+      WHY: Rare special interaction, Easter egg for players
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 1
+      duration: null
+      affects_others: false
+      world_modification: true
+
+  - name: "slope_preference"
+    description: |
+      Due to Minecraft's pathfinding bias, cows have a tendency to walk
+      up slopes more often than flat ground. Blocks higher than the cow
+      are several times more likely to be chosen as wander targets.
+
+      WHEN: Random wandering
+      WHERE: Anywhere with elevation changes
+      WHAT: Cow preferentially chooses higher blocks as wander targets
+      WHY: Technical quirk of vanilla pathfinding, creates natural herding on hills
+
+    implementation_hints:
+      trigger_type: "RANDOM"
+      priority: 15
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "water_avoidance"
+    description: |
+      Cows avoid going into water unless following a player holding wheat.
+      They will not enter water voluntarily under normal circumstances.
+
+      WHEN: Normal wandering behavior
+      WHERE: Near water blocks
+      WHAT: Cow treats water as undesirable pathfinding target
+      WHY: Prevents cows from drowning or wandering into oceans
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 15
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "flee_speed_boost"
+    description: |
+      When damaged, cows flee and move 25% faster than normal for several
+      seconds. This allows them to escape predators or player attacks.
+
+      WHEN: Cow takes damage
+      WHERE: Anywhere
+      WHAT: Movement speed multiplier of 1.25 applied for ~3 seconds
+      WHY: Self-preservation mechanic for passive mob
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 2
+      duration: 60
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# INTER-MOB RELATIONSHIPS
+# ============================================================================
+relationships:
+  predators: []
+  prey: []
+  competitors: []
+  mutualists: []
+  commensals: []
+  special: []
+
+
+# ============================================================================
+# NARRATIVE DESCRIPTION
+# ============================================================================
+narrative:
+  summary: |
+    Cows are passive herd animals that serve as the quintessential farm mob
+    in Minecraft. They provide renewable resources through milk production
+    and valuable drops (leather and beef) when killed. Their grazing behavior
+    converts grass to dirt, making them important for grassland management.
+
+  behavior_overview: |
+    Cows are peaceful grazers that spend their days wandering and eating grass.
+    They live in loose herds of 2-12 individuals and prefer to stay together,
+    with babies following adults. They're most active during morning and
+    afternoon hours, resting during the heat of midday and throughout the night.
+
+    When a player approaches holding wheat, cows will follow, allowing players
+    to lead them into pens or farms. They can be bred with wheat to produce
+    calves, which take 20 minutes to mature. Adult cows can be milked
+    indefinitely with a bucket.
+
+    Though normally passive, cows will flee at 125% speed when attacked. They
+    avoid water, cliffs, and environmental hazards. Their wandering AI has a
+    quirk that makes them prefer walking up slopes, leading to natural
+    congregation on hills.
+
+  ecological_importance: |
+    As large herbivores, cows play a crucial role in grassland ecosystems.
+    Their grazing prevents grass overgrowth, maintains plant biodiversity,
+    and creates habitat heterogeneity. By converting grass blocks to dirt,
+    they enable natural grass regeneration cycles. If removed, grasslands
+    would become overgrown and less diverse, and players would lose a key
+    source of renewable food and leather.
+
+  design_notes: |
+    Cows are a foundational passive mob that should feel reliable and
+    rewarding for players to farm. Key balance considerations:
+
+    - Milk is infinite but requires bucket management - this is intentional
+    - Breeding cooldown (5 minutes) prevents exponential cow explosion
+    - 20-minute growth time means players must invest in breeding programs
+    - Leather and beef drops make cows valuable for both early and late game
+    - Water avoidance should not make pathfinding broken, just discourage swimming
+    - Slope bias is a vanilla quirk that creates interesting emergent behavior
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 1.0
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: 80
+    provides_to_predator: 100
+
+  population_target: "Common, 8-12 per suitable biome chunk"
+
+  removal_impact: "Grass overgrowth, loss of renewable leather/beef/milk source, reduced food security for players"

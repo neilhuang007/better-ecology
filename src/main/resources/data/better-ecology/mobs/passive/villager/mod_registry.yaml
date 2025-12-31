@@ -1,0 +1,818 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - GENERALIZED BEHAVIOR TEMPLATE
+# Version: 2.0 - Villager Implementation
+# ============================================================================
+#
+# Villagers represent sedentary human communities that form permanent
+# settlements, practice agriculture, develop specialized professions, and
+# engage in trade economies. They are the game's representation of
+# civilization and organized society.
+#
+# NOTE: Villagers override many standard ecological behaviors due to their
+# unique nature as civilized, social beings. Their AI prioritizes village
+# structure, professions, trading, and scheduled activities over typical
+# animal behaviors.
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:villager"
+  display_name: "Villager"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "SECONDARY_CONSUMER"
+    diet_type: "OMNIVORE"
+    social_type: "COLONY"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Human villagers in settled agricultural communities"
+    ecological_role: "Agricultural producers, trade economy participants, civilization builders"
+
+  tags: ["civilized", "sedentary", "agricultural", "trading", "village_dwelling"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  health:
+    base: 10                    # 20 HP = 10 hearts
+    baby_multiplier: 0.5
+
+  size:
+    width: 0.6
+    height: 1.95               # Java Edition: 1.95 blocks
+    baby_scale: 0.5
+
+  biomass:
+    adult: 150                 # Higher biomass due to tool use and civilization
+    baby: 40
+    transfer_efficiency: 0.15  # Higher value as they're protein-rich prey
+
+  movement:
+    speeds:
+      walk: 0.25
+      run: 0.35
+      swim: 0.15
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: true
+      jump_height: 1.0
+      avoids_water: false
+      avoids_cliffs: true
+      cliff_threshold: 4
+
+    conditional_modifiers:
+      baby: 0.7
+      elderly: 0.75
+      injured: 0.6
+      hungry: 0.9
+      fleeing: 1.6
+      carrying_offspring: 0.8
+      in_water_nonaquatic: 0.4
+      during_work: 0.5          # Slower when working at job sites
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  hunger:
+    enabled: false              # Villagers do NOT have a hunger system
+    max_value: 100
+    starting_value: 100
+    decay_rate: 0.0
+
+  thirst:
+    enabled: true
+    max_value: 100
+    starting_value: 100
+    decay_rate: 0.018             # Humans need regular water access
+    thresholds:
+      satisfied: 75
+      thirsty: 45
+      dehydrated: 15
+
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+    gain_when_satiated: 0.0
+    loss_when_hungry: 0.0
+    loss_when_starving: 0.0
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.3
+    costs:
+      sprinting: 0.3
+      fleeing: 0.4
+      working: 0.1              # Working costs minimal energy
+      farming: 0.2
+
+  age:
+    enabled: true
+    baby_duration: 24000        # 20 minutes to adulthood
+    maturity_age: 24000
+    elderly_age: null
+    max_age: null
+
+  social:
+    enabled: true
+    max_value: 100
+    decay_rate: 0.005           # Slower decay for civilized beings
+    recovery_rate: 0.15
+    loneliness_threshold: 20    # Strong need for community
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 2000]         # Early morning - wake up
+        activity: 0.6
+        label: "waking"
+      - time: [2000, 8000]      # Morning - work time
+        activity: 1.0
+        label: "work"
+      - time: [8000, 11000]     # Late morning - gather
+        activity: 0.8
+        label: "gathering"
+      - time: [11000, 12000]    # Noon - socialize
+        activity: 0.7
+        label: "socializing"
+      - time: [12000, 14000]    # Afternoon - work/freetime
+        activity: 0.9
+        label: "afternoon_work"
+      - time: [14000, 18000]    # Evening - head home
+        activity: 0.5
+        label: "returning_home"
+      - time: [18000, 24000]    # Night - sleep
+        activity: 0.1
+        label: "sleeping"
+
+    low_activity_behavior:
+      action: "SLEEP"
+      seek_shelter: true
+      reduced_awareness: true
+      awareness_multiplier: 0.3
+
+  weather:
+    rain:
+      activity_multiplier: 0.5
+      seek_shelter: true
+      shelter_priority: 4
+    thunder:
+      activity_multiplier: 0.3
+      seek_shelter: true
+      panic_chance: 0.1
+    snow:
+      activity_multiplier: 0.6
+      seek_shelter: true
+    clear:
+      activity_multiplier: 1.0
+
+  seasons:
+    enabled: false              # Seasons don't affect villagers significantly
+
+  lunar:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  habitat:
+    biomes:
+      allowed: []               # Villagers can exist in any biome with player-built structures
+      preferred: ["plains", "savanna", "taiga", "desert", "snowy_plains", "meadow"]
+      forbidden: []
+    altitude:
+      min: -64
+      max: 320
+      preferred: [63, 128]
+    required_nearby: []
+
+  territory:
+    enabled: true
+    size: 64                    # Village radius
+    defends: false              # Villagers don't defend territory directly
+    marks: false
+    overlap_tolerance: 0.5
+    defense_against: []
+
+  home_range:
+    enabled: true
+    radius: 48                  # Willing to travel this far for bed/job
+    has_home_point: true
+    home_type: "VILLAGE"
+
+  shelter:
+    needs_shelter: true
+    shelter_uses: ["sleeping", "breeding", "baby_rearing", "working", "hiding", "socializing"]
+    valid_shelters:
+      - type: "village_building"
+        description: "Any enclosed structure with a bed"
+        blocks: ["planks", "cobblestone", "stone", "wood"]
+        min_enclosure: 0.7
+
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  food_sources:
+    primary:
+      - type: "ITEM"
+        target: "minecraft:bread"
+        nutrition: 4
+        saturation: 6000
+        consumption_time: 40
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: ""
+        condition_gain: 5
+        health_effect: 0
+
+    secondary:
+      - type: "ITEM"
+        target: "minecraft:carrot"
+        nutrition: 1
+        saturation: 1200
+        consumption_time: 20
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: ""
+        condition_gain: 2
+        health_effect: 0
+
+      - type: "ITEM"
+        target: "minecraft:potato"
+        nutrition: 1
+        saturation: 1200
+        consumption_time: 20
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: ""
+        condition_gain: 2
+        health_effect: 0
+
+      - type: "ITEM"
+        target: "minecraft:beetroot"
+        nutrition: 1
+        saturation: 1200
+        consumption_time: 20
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: ""
+        condition_gain: 2
+        health_effect: 0
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 8
+      when_hungry: 16
+      when_starving: 32
+    search_interval: 400
+
+    memory:
+      remembers_locations: false
+      memory_duration: 0
+      remembers_depleted: false
+      avoids_depleted_for: 0
+      shares_with_group: true
+
+    sustainability:
+      enabled: true
+      dont_deplete_fully: true
+      minimum_remaining: 2
+      patch_return_delay: 6000
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:zombie"
+        threat_level: "EXTREME"
+        detection_range: 32
+        response: "FLEE"
+        flee_to_shelter: true
+        panic_duration: 400
+
+      - entity: "minecraft:zombie_villager"
+        threat_level: "EXTREME"
+        detection_range: 32
+        response: "FLEE"
+        flee_to_shelter: true
+        panic_duration: 400
+
+      - entity: "minecraft:husk"
+        threat_level: "EXTREME"
+        detection_range: 32
+        response: "FLEE"
+        flee_to_shelter: true
+        panic_duration: 400
+
+      - entity: "minecraft:drowned"
+        threat_level: "EXTREME"
+        detection_range: 24
+        response: "FLEE"
+        flee_to_shelter: true
+        panic_duration: 400
+
+      - entity: "minecraft:zombified_piglin"
+        threat_level: "HIGH"
+        detection_range: 24
+        response: "FLEE"
+        flee_to_shelter: true
+        panic_duration: 400
+
+      - entity: "minecraft:pillager"
+        threat_level: "HIGH"
+        detection_range: 32
+        response: "FLEE"
+        flee_to_shelter: true
+        panic_duration: 400
+
+      - entity: "minecraft:vindicator"
+        threat_level: "HIGH"
+        detection_range: 32
+        response: "FLEE"
+        flee_to_shelter: true
+        panic_duration: 400
+
+      - entity: "minecraft:evoker"
+        threat_level: "HIGH"
+        detection_range: 32
+        response: "FLEE"
+        flee_to_shelter: true
+        panic_duration: 400
+
+    default_response:
+      detection_range: 24
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.6
+        flee_distance: 48
+        flee_toward: "SAFETY"
+        zigzag: false
+
+      alarm:
+        gives_alarm: true
+        alarm_radius: 32
+        alarm_triggers_group_flee: true
+
+    all_clear:
+      predator_distance: 64
+      time_since_seen: 600
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: true
+  method: "SEXUAL"
+
+  requirements:
+    min_age: 24000
+    max_age: null
+    min_health: 0.5
+    min_condition: 50
+    min_hunger: 0
+
+    recent_food:
+      enabled: true
+      time_window: 12000
+      food_points_required: 12    # 12 food points needed
+
+    environment:
+      near_water: false
+      required_biomes: []
+      required_blocks_nearby: []
+      min_light: 0
+      max_light: 15
+
+    requires_shelter: true
+    shelter_type: "village_building"
+
+    time_of_day: null
+    season: null
+    weather: null
+
+    mate_required: true
+    mate_max_distance: 16
+
+  density_effects:
+    enabled: true
+    check_radius: 48
+
+    density_curve:
+      - count: 2
+        multiplier: 1.5
+      - count: 6
+        multiplier: 1.2
+      - count: 10
+        multiplier: 1.0
+      - count: 15
+        multiplier: 0.5
+      - count: 20
+        multiplier: 0.0
+
+  mate_selection:
+    search_radius: 32
+    search_interval: 1000
+    preferences:
+      prefer_healthy: false
+      prefer_good_condition: false
+      avoid_relatives: true
+      relative_recognition_duration: 48000
+
+    courtship:
+      enabled: false
+      behavior: null
+      duration: 0
+      can_reject: false
+      rejection_cooldown: 0
+
+  breeding:
+    cooldown: 6000               # 5 minutes
+
+    gestation:
+      type: "INSTANT"
+      duration: 0
+      behavior_during: []
+
+    birth:
+      offspring_count: [1, 1]
+      condition_affects_count: false
+      location_requirement: "near_bed"
+
+  parental_care:
+    enabled: true
+    duration: 24000
+
+    behaviors:
+      protects_offspring: false
+      protection_aggression: 1.0
+      protection_radius: 8
+      feeds_offspring: false
+      teaches_offspring: false
+      carries_offspring: false
+
+    offspring_behavior:
+      follows_parent: false
+      follow_distance: 0
+      max_separation: 0
+      separation_distress: false
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  group:
+    type: "COLONY"
+    size:
+      min: 2
+      optimal: 10
+      max: null                # No hard cap
+    composition:
+      mixed_sex: true
+      mixed_age: true
+      family_based: false
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  herd_movement:
+    enabled: false
+
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "zombie_attack"
+          call: "panic_scream"
+          group_response: "flee_to_shelter"
+        - trigger: "raid_alert"
+          call: "bell_ring"
+          group_response: "flee_to_gathering_point"
+      radius: 48
+      chain_calling: true
+
+    contact_calls:
+      enabled: true
+      when: ["separated", "found_food", "gossip_exchange"]
+      radius: 32
+
+    mating_calls:
+      enabled: false
+
+  behaviors:
+    greeting: true
+    allogrooming: false
+    play: true
+    huddling: false
+    dominance_hierarchy: false
+
+  group_benefits:
+    predator_detection_bonus: 0.15
+    foraging_efficiency_bonus: 0.0
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  terrain:
+    enabled: true
+    actions:
+      - trigger: "farming"
+        action: "DESTROY"
+        target_blocks: ["wheat", "carrots", "potatoes", "beetroots"]
+        result_block: "air"
+        frequency: 200
+        radius: 9
+
+      - trigger: "replanting"
+        action: "PLACE"
+        target_blocks: ["air"]
+        result_block: "wheat"
+        frequency: 200
+        radius: 9
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+
+    pollination:
+      enabled: false
+
+    nutrient_cycling:
+      enabled: true
+      fertilizes: true
+      fertilize_radius: 9
+
+    decomposition:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false
+
+    temperature:
+      heat_seek_shade: false
+      heat_seek_water: false
+      cold_seek_shelter: true
+      cold_huddling: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  spawning:
+    weight: 0                   # Villagers don't spawn naturally - only in villages
+    group_size: [1, 1]
+    conditions:
+      blocks: []
+      biomes: []
+      light: [0, 15]
+      altitude: null
+      time: null
+      weather: null
+
+  carrying_capacity:
+    method: "RESOURCE_BASED"
+    caps:
+      per_chunk: null
+      regional: null
+    resources:
+      enabled: true
+      requirements:
+        - resource: "beds"
+          amount_per_mob: 1
+          scan_radius: 48
+
+    over_capacity:
+      - threshold: 1.0
+        effects: ["stop_breeding"]
+      - threshold: 1.2
+        effects: ["reduced_socializing"]
+
+  dispersal:
+    enabled: false
+    triggers: []
+    distance: [0, 0]
+
+  mortality:
+    old_age:
+      enabled: false
+      max_age: null
+    starvation:
+      enabled: false
+    disease:
+      enabled: false
+      base_chance: 0.0
+      crowding_multiplier: 0.0
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "NEUTRAL"
+
+  distances:
+    detection: 16
+    caution: 8
+    flee: 4
+
+  habituation:
+    enabled: true
+    rate: 0.02
+    decay: 0.0
+    max_habituation: 1.0
+    habituated_flee_distance: 0
+
+  taming:
+    enabled: false              # Cannot be tamed
+
+  player_breeding:
+    enabled: true
+    items:
+      - item: "minecraft:bread"
+        food_points: 4
+      - item: "minecraft:carrot"
+        food_points: 1
+      - item: "minecraft:potato"
+        food_points: 1
+      - item: "minecraft:beetroot"
+        food_points: 1
+    bypasses_conditions: false
+
+  drops:
+    on_death: []                # No drops naturally
+
+  interactions:
+    - action: "trade"
+      item: null
+      result: "opens_trading_gui"
+      description: "Right-click to open trading interface"
+
+    - action: "employ"
+      item: null
+      result: "claims_job_site"
+      description: "Unemployed villagers claim nearby job site blocks"
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  sounds:
+    ambient: "entity.villager.ambient"
+    hurt: "entity.villager.hurt"
+    death: "entity.villager.death"
+    baby: "entity.villager.ambient"
+    alarm: "entity.villager.ambient"
+    mating: null
+    eating: null
+    working: "entity.villager.work_mason"
+
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "socialize"
+        frequency: 0.02
+        trigger: "idle"
+
+      - behavior: "gaze_at_player"
+        frequency: 0.01
+        trigger: "player_nearby"
+
+      - behavior: "wander_village"
+        frequency: 0.05
+        trigger: "freetime"
+
+  personality_traits:
+    boldness:
+      base: 0.4
+      variation: 0.15
+    activity:
+      base: 0.5
+      variation: 0.2
+    sociability:
+      base: 0.8
+      variation: 0.1
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+
+ai_priority_framework:
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  physiological:
+    critical_health: 3
+    drink_water: 4
+    eat_food: 5
+    find_shelter: 6
+
+  reproduction:
+    care_for_offspring: 7
+    breed: 8
+    find_mate: 9
+
+  village_life:
+    work_at_job_site: 10
+    attend_gathering: 11
+    socialize: 12
+
+  location:
+    return_to_bed: 13
+    location_triggered: 14
+
+  default:
+    wander: 15
+    idle: 16
+    rest: 17
+
+
+# ============================================================================
+# SYSTEM 15: UNIQUE BEHAVIOR FRAMEWORK
+# ============================================================================
+
+unique_behavior_template:
+  structure:
+    name: ""
+    description: ""
+    triggers: []
+    requirements:
+      all_of: []
+      any_of: []
+      none_of: []
+    actions: []
+    effects:
+      on_self: []
+      on_others: []
+      on_world: []
+    priority: 10
+    duration: null
+    cooldown: null
+    interruptible: true

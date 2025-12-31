@@ -1,0 +1,638 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# Mob: Frog
+# ============================================================================
+#
+# This file defines a specific mob by:
+# 1. Overriding defaults from the Generalized Template
+# 2. Providing natural language descriptions for unique behaviors
+# 3. Specifying relationships with other mobs
+#
+# INSTRUCTIONS FOR AI:
+# - Read the Generalized Template first to understand all systems
+# - Values here OVERRIDE template defaults
+# - Empty/null values mean "use template default"
+# - Natural language descriptions should be interpreted and implemented
+# - [UNIQUE] sections require custom implementation logic
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:frog"
+  display_name: "Frog"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "SECONDARY_CONSUMER"
+    diet_type: "INSECTIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "CREPUSCULAR"
+
+  reference:
+    real_world_analog: "Tree frog / Bullfrog"
+    ecological_role: "Amphibious predator of small slimes and magma cubes, produces decorative froglights as byproduct of digestion"
+
+  tags: ["aquatic", "amphibious", "variant_based", "light_producer"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 5
+  size:
+    width: 0.5
+    height: 0.5
+  biomass:
+    adult: 20
+  movement:
+    speeds:
+      walk: 0.2
+      run: 0.3
+      swim: 0.25
+      fly: 0.0
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.015
+  thirst:
+    enabled: false
+  age:
+    baby_duration: 24000
+    max_age: null
+  social:
+    enabled: false
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 6000]
+        activity: 1.0
+        label: "morning"
+      - time: [6000, 12000]
+        activity: 0.6
+        label: "afternoon"
+      - time: [12000, 13500]
+        activity: 1.0
+        label: "dusk"
+      - time: [13500, 22500]
+        activity: 0.8
+        label: "night"
+      - time: [22500, 24000]
+        activity: 0.9
+        label: "pre_dawn"
+
+  weather:
+    rain:
+      activity_multiplier: 1.2
+      seek_shelter: false
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: ["swamp", "mangrove_swamp"]
+      forbidden: ["desert", "badlands", "nether_wastes", "end"]
+    required_nearby:
+      - feature: "water"
+        max_distance: 16
+        reason: "Amphibious lifestyle requires water access for breeding and tadpole development"
+
+  territory:
+    enabled: false
+    size: null
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  # === LOCATION-TRIGGERED BEHAVIORS ===
+  # [UNIQUE] Describe in natural language what should happen where
+  location_triggers:
+    enabled: true
+    triggers:
+      - name: "lily_pad_resting"
+        description: |
+          When on lily pads or near water surface, frogs will rest and wait
+          for prey to come close. This is an idle behavior that increases
+          hunting efficiency. Frogs should stay on lily pads for 200-600 ticks
+          before hopping to another nearby location.
+        location:
+          blocks: ["lily_pad", "water"]
+          biomes: []
+          near_water: {min: 0, max: 2}
+          time: null
+        behavior:
+          group_size: [1, 1]
+          spacing: [2, 4]
+          duration: [200, 600]
+          activity: "ambush_waiting"
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "ENTITY"
+        target: "minecraft:slime"
+        size_requirement: "small"
+        nutrition: 40
+        saturation: 8000
+        consumption_time: 20
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 8
+        health_effect: 0
+        notes: "Produces froglight based on frog variant"
+
+      - type: "ENTITY"
+        target: "minecraft:magma_cube"
+        size_requirement: "small"
+        nutrition: 45
+        saturation: 8000
+        consumption_time: 20
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 10
+        health_effect: 0
+        notes: "Produces pearlescent, verdant, or ochre froglight based on variant"
+
+    secondary: []
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 12
+      when_hungry: 20
+      when_starving: 32
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: true
+
+    # If enabled, specify:
+    prey:
+      targets: ["minecraft:slime", "minecraft:magma_cube"]
+      selection_rules:
+        avoid_babies: false
+        sustainable_hunting:
+          enabled: false
+          min_prey_count: 0
+
+    hunting:
+      method: "OPPORTUNISTIC"
+
+  as_prey:
+    enabled: true
+
+    # List predators with responses
+    predators:
+      - entity: "minecraft:player"
+        threat_level: "LOW"
+        detection_range: 24
+        response: "FLEE"
+        flee_toward: "WATER"
+
+      - entity: "#ecosystem:large_predators"
+        threat_level: "HIGH"
+        detection_range: 16
+        response: "FLEE"
+        flee_toward: "WATER"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: 60
+    recent_food:
+      enabled: true
+    environment:
+      near_water: true
+      required_biomes: []
+    requires_shelter: false
+    season: null
+
+  density_effects:
+    density_curve:
+      - count: 2
+        multiplier: 1.5
+      - count: 6
+        multiplier: 1.0
+      - count: 12
+        multiplier: 0.6
+      - count: 20
+        multiplier: 0.2
+      - count: 30
+        multiplier: 0.0
+
+  mate_selection:
+    courtship:
+      enabled: false
+      behavior: ""
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: 0
+    birth:
+      offspring_count: [1, 1]
+      location_requirement: "in_water"
+
+  parental_care:
+    duration: 0
+    behaviors:
+      protects_offspring: false
+      feeds_offspring: false
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+    leadership:
+      has_leader: false
+      leader_selection: ""
+
+  herd_movement:
+    enabled: false
+
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: false
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: true
+      congregates: false
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 8
+    group_size: [2, 5]
+    conditions:
+      biomes: ["swamp", "mangrove_swamp"]
+      blocks: ["grass_block", "mud"]
+
+  carrying_capacity:
+    caps:
+      per_chunk: 6
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  taming:
+    enabled: false
+    items: []
+
+  player_breeding:
+    enabled: true
+    items: ["slime_ball"]
+
+  drops:
+    on_death: []
+
+  interactions:
+    - action: "feed"
+      item: "slime_ball"
+      result: "breeding_mode"
+      description: "Feeding slimeball triggers breeding mode if conditions met"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.frog.ambient"
+    hurt: "entity.frog.hurt"
+    death: "entity.frog.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "tongue_flick"
+        frequency: 0.05
+        trigger: "idle"
+      - behavior: "croak"
+        frequency: 0.02
+        trigger: "idle"
+      - behavior: "sit"
+        frequency: 0.3
+        trigger: "stationary"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+# Describe behaviors unique to this mob that aren't covered by standard systems.
+# Use natural language - AI should interpret and implement appropriate logic.
+# ============================================================================
+
+unique_behaviors:
+  - name: "tongue_attack"
+    description: |
+      Frogs hunt small slimes and magma cubes using a unique tongue attack mechanic.
+
+      WHEN: When a small slime or small magma cube is within 10 blocks and the frog is hungry
+      WHERE: Any location where prey is visible
+      WHAT: The frog extends its tongue rapidly (within 0.5 seconds) to pull the prey into its mouth.
+            The tongue should have a projectile-like visual that extends from the frog to the target.
+            Upon successful hit, the prey is instantly consumed and a froglight is dropped.
+      WHY: This unique hunting method makes frogs distinct and provides the froglight production mechanic
+
+      IMPLEMENTATION NOTES:
+      - Attack range: 10 blocks
+      - Attack cooldown: 40 ticks (2 seconds)
+      - 100% success rate on small slimes/magma cubes
+      - Produces froglight based on frog variant:
+        * Temperate (orange) frog + magma cube = ochre froglight
+        * Warm (white) frog + magma cube = pearlescent froglight
+        * Cold (green) frog + magma cube = verdant froglight
+        * Any frog + slime = ochre froglight
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 12
+      duration: 10
+      affects_others: true
+      world_modification: true
+
+  - name: "froglight_production"
+    description: |
+      When a frog consumes a small slime or magma cube with its tongue, it produces a froglight.
+
+      WHEN: Immediately after successful tongue attack consumption
+      WHERE: At the frog's location
+      WHAT: Drop a froglight block as an item. The color depends on:
+            - Frog variant (temperate/warm/cold)
+            - Prey type (slime vs magma cube)
+      WHY: This is the primary gameplay mechanic for frogs - renewable decorative light sources
+
+      FROGLIGHT COLOR RULES:
+      - Temperate (orange) frog + magma cube = ochre froglight
+      - Warm (white) frog + magma cube = pearlescent froglight
+      - Cold (green) frog + magma cube = verdant froglight
+      - Any frog + slime = ochre froglight (default)
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 5
+      duration: 1
+      affects_others: false
+      world_modification: true
+
+  - name: "tadpole_lifecycle"
+    description: |
+      Frogs have a unique lifecycle involving tadpoles.
+
+      WHEN: When breeding occurs (fed slimeball near water)
+      WHERE: In water blocks
+      WHAT: Instead of spawning baby frogs, frogs spawn tadpoles (separate entity).
+            Tadpoles swim in water and after 24000 ticks (20 minutes) transform into
+            adult frogs. The frog variant (temperate/warm/cold) is determined by the
+            biome where the tadpole grows up, NOT the parent's variant.
+      WHY: Unique lifecycle adds biological realism and allows variant diversity
+
+      TADPOLE TRANSFORMATION RULES:
+      - Warm biomes (desert, jungle, badlands, savanna) = warm (white) frog
+      - Cold biomes (snowy plains, ice spikes, frozen river) = cold (green) frog
+      - Temperate biomes (swamp, plains, forest, etc.) = temperate (orange) frog
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 8
+      duration: 24000
+      affects_others: true
+      world_modification: false
+
+  - name: "variant_based_appearance"
+    description: |
+      Frogs have three distinct visual variants based on biome origin.
+
+      WHEN: Constant (inherent trait)
+      WHERE: N/A
+      WHAT: Frogs display different colors based on variant:
+            - Temperate: Orange/brown coloration
+            - Warm: White/cream coloration
+            - Cold: Green coloration
+            Each variant has the same stats and behaviors, only appearance differs.
+      WHY: Visual diversity and biome adaptation representation
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: null
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "jumping_locomotion"
+    description: |
+      Frogs move primarily by jumping rather than walking.
+
+      WHEN: During normal movement
+      WHERE: On land (not in water)
+      WHAT: Instead of smooth walking animation, frogs should hop/jump to move.
+            Jump height up to 3 blocks. Movement should appear as a series of
+            short or long jumps depending on distance to target.
+      WHY: Realistic amphibian movement pattern
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: null
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "water_affinity"
+    description: |
+      Frogs prefer to stay near water and will return to it when threatened.
+
+      WHEN: When not engaged in other priority behaviors
+      WHERE: Within home range
+      WHAT: Frogs should pathfind to stay within 16 blocks of water sources.
+            When fleeing from threats, they prioritize escaping to water.
+            In water, they can swim efficiently and are harder to catch.
+      WHY: Amphibious nature requires water access for safety and breeding
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 14
+      duration: null
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+# Describe relationships with other specific mobs beyond predator/prey.
+# ============================================================================
+
+relationships:
+  # Predators (who hunts this mob)
+  predators:
+    - entity: "minecraft:player"
+      notes: "Generally fearful but can be habituated"
+    - entity: "minecraft:axolotl"
+      notes: "Natural aquatic predator competition"
+    - entity: "minecraft:cat"
+      notes: "Cats may hunt frogs opportunistically"
+    - entity: "minecraft:ocelot"
+      notes: "Ocelots may hunt frogs opportunistically"
+
+  # Prey (what this mob hunts)
+  prey:
+    - entity: "minecraft:slime"
+      notes: "Only small slimes (size 1). Produces ochre froglight."
+    - entity: "minecraft:magma_cube"
+      notes: "Only small magma cubes (size 1). Produces variant-specific froglight."
+
+  # Competitors (compete for same resources)
+  competitors:
+    - entity: "minecraft:axolotl"
+      resource: "small_slimes"
+      interaction: "Both hunt small aquatic prey in similar environments"
+
+  # Mutualists (mutually beneficial)
+  mutualists: []
+
+  # Commensals (one benefits, other unaffected)
+  commensals: []
+
+  # Special relationships
+  special:
+    - entity: "minecraft:tadpole"
+      relationship: "lifecycle_stage"
+      description: "Tadpoles are the juvenile form that transforms into frogs"
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+# Free-form description for AI to understand this mob's "character"
+# ============================================================================
+
+narrative:
+  summary: |
+    Frogs are small amphibious creatures that hunt tiny slimes and magma cubes using their
+    sticky tongues, producing decorative froglights as a unique byproduct. They come in three
+    color variants determined by the biome where they mature from tadpoles.
+
+  behavior_overview: |
+    Frogs are most active during dawn, dusk, and nighttime hours, spending their days resting
+    on lily pads or near water edges. They are opportunistic hunters, using their long sticky
+    tongues to snatch small slimes and magma cubes from up to 10 blocks away. When threatened,
+    they flee toward water where they can swim to safety. Frogs are solitary creatures that only
+    seek mates when well-fed and near water. Their unique lifecycle involves spawning tadpoles
+    that swim freely before transforming into adult frogs based on their environment.
+
+    The three variants (temperate orange, warm white, cold green) are purely cosmetic but
+    determine the color of froglight produced from magma cubes. This makes frogs valuable for
+    players seeking specific decorative lighting blocks.
+
+  ecological_importance: |
+    Frogs serve as natural population control for small slimes and magma cubes in swamp biomes.
+    They occupy a unique niche as amphibious insectivores that bridge aquatic and terrestrial
+    ecosystems. Their tadpole lifecycle adds a temporal dimension to the ecosystem, requiring
+    stable water sources for population maintenance. Removal of frogs would allow small slime
+    populations to grow unchecked in swamp environments and would eliminate the renewable source
+    of froglights for players.
+
+  design_notes: |
+    VARIANT MECHANICS: The tadpole-to-frog transformation based on biome temperature is a key
+    mechanic that should be preserved. This allows all three variants to appear in appropriate
+    biomes even if frogs migrate.
+
+    FROGLIGHT PRODUCTION: The tongue attack must check both frog variant and prey type to
+    determine correct froglight color. This is the primary player interaction incentive.
+
+    BALANCE CONSIDERATIONS:
+    - Frogs should not hunt medium or large slimes (too dangerous)
+    - Tongue attack range of 10 blocks prevents them from being too powerful
+    - Small hitbox (0.5x0.5) makes them vulnerable but hard to accidentally hit
+    - Low health (10 HP / 5 hearts) balances their hunting ability
+
+    EDGE CASES:
+    - What if no water nearby when breeding? Should fail gracefully or search for water
+    - Tadpoles in flowing water should not be swept away too easily
+    - Froglight production should not be farmable at exploitative rates (cooldown important)
+    - Variant should be stored as persistent data to survive chunk unload/reload
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+# Quick-reference values for ecosystem balancing
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 1.0
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: 60
+    provides_to_predator: 20
+
+  population_target: "Common, 8-15 per swamp/mangrove swamp biome"
+
+  removal_impact: "Small slime/magma cube overpopulation in swamps, loss of renewable froglight source"

@@ -1,0 +1,626 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - CAMEL UNIQUE PROFILE
+# Template Version: 2.0
+# ============================================================================
+# This file defines the unique behaviors of the camel that are not covered
+# by the standard template systems. These are signature features that make
+# the camel distinct from other mobs in the ecosystem.
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:camel"
+  display_name: "Camel"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "CATHEMERAL"
+
+  reference:
+    real_world_analog: "Dromedary Camel (Camelus dromedarius)"
+    ecological_role: "Desert transport mount and primary consumer"
+
+  tags: ["desert", "mount", "two_seats", "dash_ability", "tall_mount", "step_height"]
+
+
+# ============================================================================
+# PHYSICAL OVERRIDES
+# ============================================================================
+physical:
+  health:
+    base: 16                    # 32 HP - already set in mod_registry
+
+  size:
+    width: 1.7
+    height: 2.375               # Tallest passive mob
+
+  biomass:
+    adult: null
+
+  movement:
+    speeds:
+      walk: null
+      run: null
+      swim: null
+      fly: null
+
+
+# ============================================================================
+# INTERNAL STATE OVERRIDES
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: null
+
+  thirst:
+    enabled: false              # Already disabled
+
+  age:
+    baby_duration: 24000        # 20 minutes
+    max_age: null
+
+  social:
+    enabled: false              # Solitary
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule: null
+
+  weather:
+    rain: null
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: ["minecraft:desert", "minecraft:desert_hills"]
+      forbidden: []
+
+    required_nearby: []
+
+  territory:
+    enabled: false
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  # === LOCATION-TRIGGERED BEHAVIORS ===
+  location_triggers:
+    enabled: false
+    triggers: []
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "BLOCK"
+        target: "minecraft:cactus"
+        nutrition: 20
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+
+    secondary: []
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: null
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:husk"
+        threat_level: "MEDIUM"
+        detection_range: 32
+        response: "FLEE"
+
+      - entity: "minecraft:wolf"
+        threat_level: "MEDIUM"
+        detection_range: 32
+        response: "FLEE"
+
+      - entity: "minecraft:phantom"
+        threat_level: "LOW"
+        detection_range: 24
+        response: "FREEZE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: null
+    recent_food:
+      enabled: null
+    environment:
+      near_water: null
+      required_biomes: []
+    requires_shelter: null
+    season: null
+
+  density_effects:
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: null
+      behavior: "Camels show minimal courtship - they simply enter love mode when fed cactus"
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: null
+
+    birth:
+      offspring_count: 1
+      location_requirement: null
+
+  parental_care:
+    duration: 24000
+    behaviors:
+      protects_offspring: false
+      feeds_offspring: true
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+
+    leadership:
+      has_leader: null
+
+  herd_movement:
+    enabled: null
+
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: false
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 8                    # Uncommon
+    group_size: [1, 1]
+    conditions:
+      biomes: ["minecraft:desert", "minecraft:desert_hills"]
+      blocks: []
+
+  carrying_capacity:
+    caps:
+      per_chunk: 2
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "PASSIVE"
+
+  taming:
+    enabled: false               # Naturally tame - no taming process
+    items: []
+
+  player_breeding:
+    enabled: true
+    items:
+      - item: "minecraft:cactus"
+
+  drops:
+    on_death:
+      - item: "minecraft:experience"
+        count: [1, 3]
+        chance: 1.0
+        requires_player_kill: true
+        looting_bonus: true
+
+  interactions:
+    - action: "equip_saddle"
+      item: "minecraft:saddle"
+      result: "saddled"
+      description: "Allows player control when riding"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.camel.ambient"
+    hurt: "entity.camel.hurt"
+    death: "entity.camel.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "sit_rest"
+        frequency: 0.05
+        trigger: "random_interval"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+# These are the signature behaviors that make camels unique in Minecraft
+# ============================================================================
+
+unique_behaviors:
+  - name: "dash_sprint_ability"
+    description: |
+      Camel can perform a charged dash that launches up to 12 blocks forward
+      and 1 block upward. This is activated by holding the jump control while
+      riding, with the experience bar showing dash charge level.
+
+      WHEN: Player holds jump control while riding saddled camel
+      WHERE: Anywhere while mounted
+      WHAT: Camel charges forward rapidly, covering up to 12 blocks distance
+           with 1 block of vertical gain. Cooldown of 2.75 seconds (55 ticks)
+           between dashes. Camel cannot sprint briefly after dashing.
+      WHY: Provides fast desert traversal and escape capability
+
+    implementation_hints:
+      trigger_type: "PLAYER_INPUT"
+      priority: 5
+      duration: 15               # Dash duration in ticks
+      affects_others: false
+      world_modification: false
+
+  - name: "two_player_mount_system"
+    description: |
+      Camels are the only mob that naturally support two simultaneous riders.
+      The first player to mount gets the front seat and has full control.
+      The second rider is a passenger and cannot interfere with control.
+
+      WHEN: Players attempt to mount a saddled camel
+      WHERE: Anywhere
+      WHAT: First rider sits in front seat with full movement control.
+           Second rider sits in back seat as passenger. If front rider
+           dismounts, passenger takes control automatically.
+           Second rider cannot damage front rider or camel.
+      WHY: Unique cooperative transport for desert exploration
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 3
+      duration: null
+      affects_others: true       # Second player
+      world_modification: false
+
+  - name: "sitting_idle_animation"
+    description: |
+      Camels periodically sit down for 2-7 seconds with a detailed resting
+      animation. While sitting, they cannot be pushed by players or mobs.
+
+      WHEN: Random intervals when camel is idle and not being ridden
+      WHERE: Anywhere on solid ground
+      WHAT: Camel transitions to sitting state (height reduces to 0.945 blocks).
+           Remains seated for 40-140 ticks (2-7 seconds) before standing.
+           Cannot be pushed, moved, or mounted while sitting.
+           Instantly stands when harmed or detects cactus-holding player nearby.
+           Will not stand up if blocks are directly above.
+      WHY: Adds personality and visual variety to passive behavior
+
+    implementation_hints:
+      trigger_type: "RANDOM"
+      priority: 10
+      duration: [40, 140]        # 2-7 seconds in ticks
+      affects_others: false
+      world_modification: false
+
+  - name: "tall_mount_advantage"
+    description: |
+      The camel's height (2.375 blocks) provides passive protection to riders
+      from ground-based melee hostile mobs. Riders are positioned too high
+      to be reached by most melee attacks.
+
+      WHEN: Player is riding camel
+      WHERE: Anywhere
+      WHAT: Riders are elevated such that ground-based hostile mobs with
+           melee attacks cannot reach them. This includes zombies, husks,
+           skeletons (melee), spiders, slimes, etc. Only ranged or flying
+           mobs can attack mounted players.
+      WHY: Gameplay advantage encouraging camel use in dangerous areas
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 1
+      duration: null
+      affects_others: true       # Protects rider
+      world_modification: false
+
+  - name: "enhanced_step_height"
+    description: |
+      Camels can automatically step up 1.5 blocks without jumping, compared
+      to the 1-block step height of other mounts. This allows traversing
+      fences, walls, and other terrain obstacles.
+
+      WHEN: Camel encounters obstacle up to 1.5 blocks high while moving
+      WHERE: Anywhere during movement
+      WHAT: Camel automatically steps up blocks up to 1.5 blocks high
+           without requiring jump input. Can surmount fences, walls,
+           and other barriers that stop horses, donkeys, and mules.
+      WHY: Superior terrain navigation for desert exploration
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 2
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "cactus_following_behavior"
+    description: |
+      Camels follow players holding cactus but will stop following if
+      separated beyond a certain distance. They will immediately stand
+      up from sitting when cactus is detected.
+
+      WHEN: Player holds cactus within detection range
+      WHERE: Within 10 blocks (Java) or 16 blocks (Bedrock)
+      WHAT: Camel follows player holding cactus. Stops following if
+           distance exceeds threshold. If camel is sitting, immediately
+           stands up and approaches when cactus detected.
+      WHY: Standard breeding/leading mechanic for cactus-only diet
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: 6
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "fall_damage_resistance"
+    description: |
+      Camels take reduced fall damage compared to other mobs, reflecting
+      their real-world desert adaptations.
+
+      WHEN: Camel takes fall damage
+      WHERE: Anywhere
+      WHAT: Safe fall distance of 6 blocks (vs 3 for most mobs).
+           Takes 50% of normal fall damage (rounded up).
+      WHY: Realistic adaptation to desert terrain and height
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 4
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "threat_response_flee"
+    description: |
+      When harmed, camels immediately flee even from sitting position.
+      They stand up instantly when hurt.
+
+      WHEN: Camel takes damage from any source
+      WHERE: Anywhere, even while sitting
+      WHAT: Immediately transitions from sitting to standing (if seated)
+           and flees from threat at increased speed for 48 blocks.
+      WHY: Passive mob survival behavior
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 1
+      duration: 100              # Flee duration
+      affects_others: false
+      world_modification: false
+
+  - name: "natural_taming"
+    description: |
+      Camels are naturally tame and require no taming process. They can
+      always be ridden once saddled, with no trust progression needed.
+
+      WHEN: Player attempts to interact with camel
+      WHERE: Anywhere
+      WHAT: Camel has neutral-to-positive attitude toward players by default.
+           No taming items, experience, or progression required.
+           Simply equip saddle to enable riding control.
+      WHY: Gameplay convenience and distinct from horse taming
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 0
+      duration: null
+      affects_others: true       # Player interaction
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+relationships:
+  predators:
+    - entity: "minecraft:husk"
+      notes: "Desert variant zombie - primary natural predator in desert biome"
+
+    - entity: "minecraft:wolf"
+      notes: "Will hunt camels if encountered, though wolves rare in deserts"
+
+    - entity: "minecraft:phantom"
+      notes: "Aerial threat - camels freeze rather than flee from flying mobs"
+
+  prey: []                       # Herbivore - does not hunt
+
+  competitors:
+    - entity: "minecraft:rabbit"
+      resource: "Cactus"
+      interaction: "Rabbits also eat desert vegetation, minimal competition"
+
+    - entity: "minecraft:sheep"
+      resource: "Any vegetation"
+      interaction: "Minimal overlap - sheep rare in deep desert"
+
+  mutualists: []                 # No known mutualistic relationships
+
+  commensals:
+    - entity: "minecraft:player"
+      benefit_given: "Transport for two players simultaneously"
+      benefit_received: "Protection, food (cactus), and breeding"
+
+  special:
+    - entity: "minecraft:villager"
+      relationship: "commensal_association"
+      description: "Camels spawn at desert villages, implied association with villagers"
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+narrative:
+  summary: |
+    The Camel is a large desert-adapted herbivore that serves as the premier
+    mount for desert exploration in Minecraft. Based on the real-world
+    dromedary camel, it combines passive temperament with unique mobility
+    advantages including a dash ability, two-rider capacity, and enhanced
+    step height for traversing difficult terrain.
+
+  behavior_overview: |
+    Camels are solitary, passive animals that spend most of their time
+    wandering desert terrain and grazing exclusively on cacti. They exhibit
+    a distinctive sitting behavior, resting for 2-7 seconds at random intervals
+    with a fully visible resting animation. Despite being specialized for
+    desert life, they paradoxically take damage from cactus blocks while
+    feeding on them - a quirk of their implementation. When harmed, they
+    immediately flee, even rising instantly from their seated position.
+
+    Camels are unique among mounts for their naturally tame disposition -
+    they require no taming process and can be ridden immediately once saddled.
+    Their signature dash ability allows rapid traversal of up to 12 blocks
+    forward, with a 2.75-second cooldown between uses. Perhaps most notably,
+    they naturally support two simultaneous riders - a feature no other mob
+    possesses - making them ideal for cooperative desert exploration.
+
+  ecological_importance: |
+    In the vanilla ecosystem, camels serve as the primary large herbivore of
+    desert biomes, though their spawning is limited to one per desert village
+    during world generation. They fill the niche of desert transport animal,
+    providing players with safe passage through hostile terrain - riders are
+    elevated beyond the reach of most ground-based hostile mobs. Their exclusive
+    cactus diet creates a simple food chain dynamic where they serve as prey
+    for husks and wolves, while their low spawn rate and solitary nature prevent
+    overgrazing of desert vegetation.
+
+    From a gameplay perspective, camels fill an important role as the only
+    mount that can carry two players simultaneously, enabling shared adventures
+    in dangerous environments. Their enhanced step height and dash ability provide
+    traversal advantages no other mount can match, making them the superior choice
+    for desert exploration despite their lack of cargo storage.
+
+  design_notes: |
+    CAMEL-SPECIFIC IMPLEMENTATION NOTES:
+
+    1. SPACING RARITY: The one-per-village spawn rate makes camels quite rare.
+       Consider whether this mod should increase spawning or maintain vanilla
+       scarcity for balance reasons.
+
+    2. CACTUS PARADOX: Camels eat cactus but take damage from touching cactus
+       blocks. This is vanilla behavior but seems counterintuitive. Consider
+       whether to preserve this quirk or add cactus immunity.
+
+    3. NO STORAGE: Unlike llamas, donkeys, and mules, camels cannot equip
+       chests. Their two-rider capacity compensates for this (2x player
+       inventory), but consider whether saddlebag storage should be added
+       as a mod feature.
+
+    4. HEIGHT ADVANTAGE: The 2.375-block height prevents most melee mob attacks
+       on riders. This is significant - verify that hostile mob AI properly
+       cannot reach elevated riders, or this protection is meaningless.
+
+    5. STEP HEIGHT: 1.5 blocks allows surmounting fences and walls. Ensure this
+       doesn't make players effectively invulnerable in enclosed areas -
+       they should still need to break some barriers.
+
+    6. SITTING ANIMATION: The 2-7 second sitting duration is purely cosmetic
+       but provides character. Don't make sitting camels immobile for too long
+       or players may find it annoying when trying to mount.
+
+    7. BABY GROWTH: 20 minutes is substantial but cactus acceleration (-10s
+       per feeding) provides player agency. This balance feels appropriate.
+
+    8. DESERT ONLY: Camels spawn only in desert biomes. If adding spawn
+       variations (wandering traders, rare desert spawns), maintain the
+       thematic connection to desert environments.
+
+    9. SOCIAL BEHAVIOR: Real dromedaries are social herd animals, but Minecraft
+       camels spawn solitary. Consider adding herd behavior as a mod feature
+       for greater ecological realism.
+
+    10. BREEDING SCARCITY: Players must find multiple desert villages to obtain
+        breeding pairs. This creates gameplay incentive for exploration but
+        may frustrate some players. Consider alternative acquisition methods.
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+balance:
+  spawn_rate_multiplier: 1.0     # Maintain vanilla rarity
+  breeding_rate_multiplier: 1.0
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: 40        # Low metabolism - desert adapted
+    provides_to_predator: 180    # High biomass reward
+
+  population_target: "Very rare, 0-2 per desert village, low overall density"
+
+  removal_impact: "Minimal ecological impact - primarily affects player transport options and desert atmosphere"

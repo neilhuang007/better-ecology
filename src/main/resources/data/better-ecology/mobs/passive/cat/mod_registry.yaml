@@ -1,0 +1,991 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - GENERALIZED BEHAVIOR TEMPLATE
+# Version: 2.0
+# Mob: Cat (minecraft:cat)
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:cat"
+  display_name: "Cat"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "SECONDARY_CONSUMER"
+    diet_type: "CARNIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "CREPUSCULAR"
+
+  reference:
+    real_world_analog: "Domestic cat (Felis catus)"
+    ecological_role: "Small predator control, pest hunter, companion animal"
+
+  tags: ["tameable", "village_spawner", "predator_repellent"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  health:
+    base: 5                         # 10 HP = 5 hearts
+    baby_multiplier: 0.5
+
+  size:
+    width: 0.6
+    height: 0.7
+    baby_scale: 0.5
+
+  biomass:
+    adult: 40                       # Small predator
+    baby: 10
+    transfer_efficiency: 0.1
+
+  movement:
+    speeds:
+      walk: 0.25
+      run: 0.5                      # Fast and agile
+      swim: 0.15
+      fly: 0.0
+      climb: 0.2                    # Can climb
+
+    capabilities:
+      can_swim: true
+      can_jump: true
+      jump_height: 1.2              # Good jumper
+      avoids_water: true            # Dislikes water
+      avoids_cliffs: true
+      cliff_threshold: 5
+
+    conditional_modifiers:
+      baby: 0.7
+      elderly: 0.8
+      injured: 0.6
+      hungry: 0.8
+      fleeing: 1.5
+      hunting: 1.4                  # Very fast when hunting
+      carrying_offspring: 0.7
+      in_water_nonaquatic: 0.5
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 80
+    decay_rate: 0.025               # Slightly faster metabolism
+
+    thresholds:
+      satiated: 80
+      hungry: 50
+      very_hungry: 25
+      starving: 10
+
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 200
+
+  thirst:
+    enabled: false
+
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+
+    gain_when_satiated: 0.01
+    loss_when_hungry: 0.02
+    loss_when_starving: 0.1
+
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.6              # Cats rest frequently
+
+    costs:
+      sprinting: 0.3
+      hunting: 0.4
+      fleeing: 0.4
+      flying: 0.0
+      swimming: 0.3                 # Swimming is costly for cats
+
+  age:
+    enabled: true
+    baby_duration: 24000            # 20 minutes
+    maturity_age: 24000
+    elderly_age: null
+    max_age: null
+
+  social:
+    enabled: false                  # Solitary animals
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 4000]             # Dawn - moderately active
+        activity: 0.7
+        label: "morning"
+      - time: [4000, 8000]          # Morning to noon - less active
+        activity: 0.4
+        label: "late_morning"
+      - time: [8000, 12000]         # Noon to dusk - resting
+        activity: 0.3
+        label: "afternoon"
+      - time: [12000, 13500]        # Dusk - very active (hunting time)
+        activity: 1.0
+        label: "dusk"
+      - time: [13500, 18000]        # Evening - active
+        activity: 0.8
+        label: "evening"
+      - time: [18000, 22500]        # Night - moderately active
+        activity: 0.6
+        label: "night"
+      - time: [22500, 24000]        # Pre-dawn - active (hunting time)
+        activity: 0.9
+        label: "pre_dawn"
+
+    low_activity_behavior:
+      action: "rest"
+      seek_shelter: false           # Cats rest wherever comfortable
+      reduced_awareness: true
+      awareness_multiplier: 0.6
+
+  weather:
+    rain:
+      activity_multiplier: 0.4
+      seek_shelter: true
+      shelter_priority: 5           # Really dislikes rain
+    thunder:
+      activity_multiplier: 0.2
+      seek_shelter: true
+      panic_chance: 0.1
+    snow:
+      activity_multiplier: 0.6
+      seek_shelter: true
+    clear:
+      activity_multiplier: 1.0
+
+  seasons:
+    enabled: false
+
+  lunar:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  habitat:
+    biomes:
+      allowed: []                   # Can live anywhere
+      preferred: ["plains", "forest", "savanna", "taiga"]
+      forbidden: []
+
+    altitude:
+      min: -64
+      max: 320
+      preferred: [60, 90]
+
+    required_nearby:
+      - feature: "village"
+        max_distance: 128
+        reason: "spawn_condition"
+
+  territory:
+    enabled: false
+
+  home_range:
+    enabled: true
+    radius: 48                      # Moderate home range
+    has_home_point: true
+    home_type: "SPAWN_POINT"        # Returns to village or taming location
+
+  shelter:
+    needs_shelter: false            # Uses shelter opportunistically
+    shelter_uses: ["resting", "hiding"]
+
+    valid_shelters:
+      - type: "structure"
+        description: "Village houses or player structures"
+        min_enclosure: 0.5
+      - type: "vegetation"
+        description: "Under trees or bushes"
+        blocks: ["leaves", "tall_grass"]
+        min_enclosure: 0.3
+
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  food_sources:
+    primary:
+      - type: "ITEM"
+        target: "minecraft:cod"
+        nutrition: 40
+        saturation: 8000
+        consumption_time: 40
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 8
+        health_effect: 2
+      - type: "ITEM"
+        target: "minecraft:salmon"
+        nutrition: 40
+        saturation: 8000
+        consumption_time: 40
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 8
+        health_effect: 2
+
+    secondary:
+      - type: "ENTITY"
+        target: "minecraft:rabbit"
+        nutrition: 35
+        saturation: 7000
+        consumption_time: 100
+        method: "HUNT"
+        world_effect:
+          action: "DAMAGE"
+        condition_gain: 7
+        health_effect: 0
+      - type: "ENTITY"
+        target: "minecraft:turtle"
+        nutrition: 30
+        saturation: 6000
+        consumption_time: 80
+        method: "HUNT"
+        world_effect:
+          action: "DAMAGE"
+        condition_gain: 6
+        health_effect: 0
+        notes: "Only hunts baby turtles"
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 16
+      when_hungry: 24
+      when_starving: 32
+    search_interval: 160
+
+    memory:
+      remembers_locations: true
+      memory_duration: 24000
+      remembers_depleted: true
+      avoids_depleted_for: 12000
+      shares_with_group: false
+
+    sustainability:
+      enabled: true
+      dont_deplete_fully: true
+      minimum_remaining: 2
+      patch_return_delay: 6000
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  as_predator:
+    enabled: true
+
+    prey:
+      targets: ["minecraft:rabbit", "minecraft:turtle"]
+
+      selection_rules:
+        avoid_babies: false         # Specifically hunts baby turtles
+        avoid_babies_exception: "always_hunts_babies"
+
+        avoid_mothers_with_young: false
+        avoid_mothers_exception: "none"
+
+        prefer_weak: false          # Opportunistic hunter
+        weak_preference: 1.0
+
+        prefer_isolated: true
+        isolated_preference: 1.3
+
+        sustainable_hunting:
+          enabled: false            # Cats are opportunistic
+
+    hunting:
+      method: "STALK"
+
+      chase:
+        max_duration: 200
+        give_up_distance: 24
+        stamina_cost_per_tick: 0.2
+
+      ambush:
+        patience_duration: 600
+        requires_cover: false
+
+      pack:
+        min_hunters: 1
+        coordination_radius: 0
+
+      success_rate:
+        base: 0.5                   # Skilled hunters
+        modifiers:
+          prey_is_baby: 1.8
+          prey_is_elderly: 1.3
+          prey_is_injured: 1.5
+          prey_is_isolated: 1.4
+          hunter_is_hungry: 1.2
+          pack_hunt_per_member: 0.0
+
+    post_kill:
+      eating_duration: 200
+      guards_kill: false
+      guard_duration: 0
+      shares_with: []
+      caches_excess: false
+
+    triggers:
+      hunger_threshold: 70
+      opportunistic: true
+      opportunistic_hunger_min: 50
+      cooldown_after_kill: 2400
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:wolf"
+        threat_level: "MEDIUM"
+        detection_range: 16
+        response: "FLEE"
+      - entity: "minecraft:ocelot"
+        threat_level: "LOW"
+        detection_range: 12
+        response: "FLEE"
+
+    default_response:
+      detection_range: 16
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.5
+        flee_distance: 24
+        flee_toward: "SHELTER"
+        zigzag: false
+
+      freeze:
+        duration: [60, 120]
+        break_on_approach: true
+        break_distance: 6
+
+      alarm:
+        gives_alarm: false
+        alarm_radius: 0
+        alarm_triggers_group_flee: false
+
+    all_clear:
+      predator_distance: 32
+      time_since_seen: 400
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: true
+  method: "SEXUAL"
+
+  requirements:
+    min_age: 24000
+    max_age: null
+    min_health: 0.8
+    min_condition: 65
+    min_hunger: 60
+
+    recent_food:
+      enabled: true
+      time_window: 12000
+      meals_required: 2
+
+    environment:
+      near_water: false
+      water_max_distance: 0
+      required_biomes: []
+      required_blocks_nearby: []
+      min_light: 0
+      max_light: 15
+
+    requires_shelter: false
+    shelter_type: null
+
+    time_of_day: null
+    season: null
+    weather: null
+
+    mate_required: true
+    mate_max_distance: 16
+
+  density_effects:
+    enabled: true
+    check_radius: 64
+
+    density_curve:
+      - count: 2
+        multiplier: 1.5
+      - count: 4
+        multiplier: 1.0
+      - count: 8
+        multiplier: 0.3
+      - count: 12
+        multiplier: 0.0
+
+  mate_selection:
+    search_radius: 32
+    search_interval: 1000
+
+    preferences:
+      prefer_healthy: true
+      prefer_good_condition: true
+      avoid_relatives: true
+      relative_recognition_duration: 48000
+
+    courtship:
+      enabled: false
+      behavior: null
+      duration: 0
+      can_reject: false
+      rejection_cooldown: 0
+
+  breeding:
+    cooldown: 24000
+
+    gestation:
+      type: "INSTANT"
+      duration: 0
+      behavior_during: []
+
+    birth:
+      offspring_count: [1, 3]
+      condition_affects_count: true
+      location_requirement: null
+
+  parental_care:
+    enabled: true
+    duration: 24000
+
+    behaviors:
+      protects_offspring: true
+      protection_aggression: 1.5
+      protection_radius: 8
+
+      feeds_offspring: false
+      teaches_offspring: false
+      carries_offspring: false
+
+    offspring_behavior:
+      follows_parent: true
+      follow_distance: 4
+      max_separation: 16
+      separation_distress: true
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+
+    composition:
+      mixed_sex: false
+      mixed_age: false
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  herd_movement:
+    enabled: false
+    cohesion_radius: 0
+    separation_distance: 0
+    alignment: false
+
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+      radius: 0
+      chain_calling: false
+
+    contact_calls:
+      enabled: true
+      when: ["separated", "wants_attention"]
+      radius: 16
+
+    mating_calls:
+      enabled: false
+      radius: 0
+      time: null
+
+  behaviors:
+    greeting: false
+    allogrooming: false
+    play: true                      # Kittens play
+    huddling: false
+    dominance_hierarchy: false
+
+  group_benefits:
+    predator_detection_bonus: 0.0
+    foraging_efficiency_bonus: 0.0
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  terrain:
+    enabled: false
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+      seeds: []
+      method: null
+      dispersal_radius: 0
+
+    pollination:
+      enabled: false
+      flowers: []
+      radius: 0
+
+    nutrient_cycling:
+      enabled: false
+      fertilizes: false
+      fertilize_radius: 0
+
+    decomposition:
+      enabled: false
+      decomposes: []
+      result: null
+
+  responses:
+    drinking:
+      enabled: false
+      frequency: 0
+      water_blocks: []
+      duration: 0
+      congregates: false
+
+    temperature:
+      heat_seek_shade: false
+      heat_seek_water: false
+      cold_seek_shelter: false
+      cold_huddling: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  spawning:
+    weight: 10
+    group_size: [1, 1]
+
+    conditions:
+      blocks: ["grass_block"]
+      biomes: ["plains", "forest", "savanna", "taiga"]
+      light: [7, 15]
+      altitude: [60, 90]
+      time: null
+      weather: null
+      special: "village_spawning"   # 1 cat per 4 beds
+
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 4
+      regional: null
+
+    resources:
+      enabled: false
+      requirements: []
+
+    over_capacity:
+      - threshold: 1.2
+        effects: ["reduced_breeding"]
+      - threshold: 1.5
+        effects: ["dispersal"]
+
+  dispersal:
+    enabled: false
+    triggers: []
+    distance: [64, 128]
+
+  mortality:
+    old_age:
+      enabled: false
+      max_age: null
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+      base_chance: 0.0
+      crowding_multiplier: 0.0
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "FEARFUL"          # Untamed cats flee
+
+  distances:
+    detection: 32
+    caution: 16
+    flee: 8
+
+  habituation:
+    enabled: true
+    rate: 0.02
+    decay: 0.001
+    max_habituation: 0.6
+    habituated_flee_distance: 3
+
+  taming:
+    enabled: true
+    items: ["minecraft:cod", "minecraft:salmon"]
+    chance: 0.33
+    requires_habituation: false
+
+  player_breeding:
+    enabled: true
+    items: ["minecraft:cod", "minecraft:salmon"]
+    bypasses_conditions: true       # Player can force breeding
+
+  drops:
+    on_death:
+      - item: "minecraft:string"
+        count: [0, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+  interactions:
+    - action: "right_click"
+      item: null
+      result: "sits_if_tamed"
+      description: "Tamed cats can be told to sit/stand"
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  sounds:
+    ambient: "minecraft:entity.cat.ambient"
+    hurt: "minecraft:entity.cat.hurt"
+    death: "minecraft:entity.cat.death"
+    baby: "minecraft:entity.cat.ambient"
+    alarm: null
+    mating: "minecraft:entity.cat.ambient"
+    eating: "minecraft:entity.generic.eat"
+
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "sit_and_rest"
+        frequency: 600
+        trigger: "low_activity"
+      - behavior: "groom_self"
+        frequency: 800
+        trigger: "random"
+      - behavior: "stretch"
+        frequency: 1200
+        trigger: "after_resting"
+
+  personality_traits:
+    boldness:
+      base: 0.3                     # Generally cautious
+      variation: 0.3
+    activity:
+      base: 0.5
+      variation: 0.2
+    sociability:
+      base: 0.4                     # Moderately social when tamed
+      variation: 0.3
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+
+ai_priority_framework:
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  physiological:
+    critical_health: 3
+    drink_water: 4
+    eat_food: 5
+    find_shelter: 6
+
+  reproduction:
+    care_for_offspring: 7
+    breed: 8
+    find_mate: 9
+
+  social:
+    group_cohesion: 10
+    social_interaction: 11
+
+  hunting:
+    hunt_prey: 12
+
+  location:
+    location_triggered: 13
+    territory_patrol: 14
+
+  default:
+    wander: 15
+    idle: 16
+    rest: 17
+
+
+# ============================================================================
+# SYSTEM 15: FELINE BEHAVIOR FRAMEWORK
+# ============================================================================
+
+feline_behavior:
+  enabled: true
+
+  # Hunting Behaviors
+  hunting:
+    stalking:
+      enabled: true
+      stalk_speed: 0.3
+      detection_range: 16.0
+      pounce_distance: 3.0
+      give_up_angle: 45.0
+
+    pouncing:
+      enabled: true
+      pounce_speed: 1.5
+      pounce_range: 4.0
+      pounce_cooldown: 60
+      pounce_force: 0.8
+
+    creeping:
+      enabled: true
+      creep_speed: 0.2
+      alert_threshold: 0.5
+      creep_duration: 100
+
+  # Stealth Behaviors
+  stealth:
+    quiet_movement:
+      enabled: true
+      stealth_modifier: 0.7
+      sound_reduction: 0.3
+
+    squeeze_through_gaps:
+      enabled: true
+      squeeze_range: 3.0
+      squeeze_speed: 0.4
+
+    landing_on_feet:
+      enabled: true
+      no_fall_damage: true
+      max_safe_fall_height: 256
+
+  # Social Behaviors
+  social:
+    purring:
+      enabled: true
+      max_purr_duration: 200
+      affection_threshold: 0.6
+
+    hissing:
+      enabled: true
+      hiss_duration: 40
+      threat_range: 8.0
+
+    rub_affection:
+      enabled: true
+      rub_range: 1.5
+      affection_gain: 5.0
+      rub_duration: 60
+
+  # Gift Giving (Tamed Cats Only)
+  gift_giving:
+    enabled: true
+    gift_cooldown: 24000
+    trust_threshold: 0.7
+    search_range: 32
+
+    possible_gifts:
+      - "minecraft:rabbit"
+      - "minecraft:chicken"
+      - "minecraft:cod"
+      - "minecraft:salmon"
+      - "minecraft:bone"
+      - "minecraft:rotten_flesh"
+      - "minecraft:string"
+      - "minecraft:feather"
+      - "minecraft:phantom_membrane"
+
+  # Special Abilities
+  special:
+    creeper_detection:
+      enabled: true
+      detection_range: 16.0
+      deterrence_range: 6.0
+      protection_speed: 0.5
+
+    phantom_repel:
+      enabled: true
+      repel_range: 16.0
+      detection_range: 32.0
+      requires_sleeping: true
+
+  # Affection System
+  affection:
+    enabled: true
+
+    # Personality Types (randomly assigned)
+    personalities:
+      - "playful"    # Gains trust faster from play
+      - "shy"        # Requires more patience
+      - "aggressive" # More independent
+      - "cuddly"     # Gains trust faster from petting
+      - "lazy"       # Less active
+      - "hunter"     # Better hunter
+      - "independent" # Balanced
+
+    # Trust Levels
+    trust:
+      initial: 0.0
+      max: 100.0
+
+      # Trust gains
+      petting_gain: 2.0
+      feeding_gain: 5.0
+      play_gain: 3.0
+      gift_accepted_gain: 10.0
+
+      # Trust losses
+      hit_loss: 20.0
+      ignored_loss: 0.1
+      failed_attack_loss: 5.0
+
+    # Behavior thresholds
+    thresholds:
+      follow_player: 50.0
+      allow_petting: 20.0
+      give_gifts: 70.0
+      sleep_near_player: 80.0
+
+
+# ============================================================================
+# SYSTEM 16: UNIQUE BEHAVIOR FRAMEWORK
+# ============================================================================
+
+unique_behavior_template:
+  structure:
+    name: ""
+    description: ""
+
+    triggers:
+      - type: ""
+        conditions: {}
+
+    requirements:
+      all_of: []
+      any_of: []
+      none_of: []
+
+    actions: []
+
+    effects:
+      on_self: []
+      on_others: []
+      on_world: []
+
+    priority: 10
+    duration: null
+    cooldown: null
+    interruptible: true
+
+# ============================================================================
+# SYSTEM 15: ANIMAL-ANIMAL INTERACTIONS
+# ============================================================================
+
+interaction:
+  predators: []
+  prey:
+    - "minecraft:chicken"
+    - "minecraft:parrot"
+
+  symbiotic_partners: []
+  competitors:
+    - "minecraft:wolf"               # Cats avoid dogs
+
+  herd_compatible: []
+
+  relationship_decay_rate: 0.002
+  trust_build_rate: 0.02
+  grudge_build_rate: 0.03
+
+  gives_warning_calls: false
+  can_mourn: false
+  can_grieve: false
+  can_play: true
+  can_be_altruistic: false
+  can_teach: false
+

@@ -1,0 +1,612 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - RABBIT UNIQUE PROFILE
+# Template Version: 2.0
+# ============================================================================
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:rabbit"
+  display_name: "Rabbit"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "CREPUSCULAR"
+
+  reference:
+    real_world_analog: "European Rabbit / Cottontail Rabbit"
+    ecological_role: "Small, fast-breeding prey animal that controls vegetation and provides food for carnivores"
+
+  tags: ["small_prey", "crop_raider", "herbivore", "fast_breeder", "timid"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 1.5                    # 3 HP
+  size:
+    width: 0.4
+    height: 0.5
+  biomass:
+    adult: 15
+  movement:
+    speeds:
+      walk: 0.3
+      run: 0.55
+      swim: 0.15
+      fly: 0.0
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.03             # Fast metabolism, needs to eat often
+  thirst:
+    enabled: false
+  age:
+    baby_duration: 24000
+    max_age: null
+  social:
+    enabled: false
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    # Crepuscular - most active at dawn and dusk
+    schedule:
+      - time: [0, 3000]
+        activity: 1.0
+        label: "dawn_active"
+      - time: [3000, 9000]
+        activity: 0.4
+        label: "morning_rest"
+      - time: [9000, 12000]
+        activity: 0.3
+        label: "afternoon_rest"
+      - time: [12000, 14000]
+        activity: 1.0
+        label: "dusk_active"
+      - time: [14000, 22500]
+        activity: 0.2
+        label: "night_rest"
+      - time: [22500, 24000]
+        activity: 0.6
+        label: "pre_dawn"
+
+  weather:
+    rain:
+      activity_multiplier: 0.5
+      seek_shelter: true
+      shelter_priority: 4
+    thunder:
+      activity_multiplier: 0.2
+      seek_shelter: true
+      panic_chance: 0.3
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: ["plains", "flower_forest", "meadow", "forest", "birch_forest", "taiga", "snowy_plains", "desert"]
+      forbidden: ["ocean", "deep_ocean", "river", "frozen_ocean", "frozen_river"]
+    required_nearby: []
+
+  territory:
+    enabled: false
+    size: null
+
+  shelter:
+    needs_shelter: true
+    shelter_uses: ["sleeping", "breeding", "baby_rearing", "hiding"]
+    valid_shelters:
+      - type: "vegetation"
+        description: "Dense grass, ferns, or under bushes"
+        blocks: ["tall_grass", "fern", "large_fern", "leaves", "azalea_leaves"]
+        min_enclosure: 0.3
+      - type: "burrow"
+        description: "Small holes or caves"
+        must_dig: false
+      - type: "cave"
+        description: "Natural cave or overhang"
+        min_enclosure: 0.5
+
+  location_triggers:
+    enabled: false
+    triggers: []
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "BLOCK"
+        target: "minecraft:carrots"
+        nutrition: 40
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+
+      - type: "ITEM"
+        target: "minecraft:carrot"
+        nutrition: 40
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: null
+
+      - type: "BLOCK"
+        target: "minecraft:dandelion"
+        nutrition: 25
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+
+      - type: "ITEM"
+        target: "minecraft:golden_carrot"
+        nutrition: 60
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: null
+
+    secondary:
+      - type: "BLOCK"
+        target: "minecraft:grass"
+        nutrition: 15
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+
+      - type: "BLOCK"
+        target: "#minecraft:flowers"
+        nutrition: 20
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+
+    emergency:
+      - type: "BLOCK"
+        target: "minecraft:tall_grass"
+        nutrition: 10
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+
+  foraging:
+    search_radius:
+      base: 16
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:wolf"
+        threat_level: "EXTREME"
+        detection_range: 28
+        response: "FLEE"
+        flee:
+          speed_multiplier: 1.8
+          flee_distance: 64
+          flee_toward: "SHELTER"
+          zigzag: true
+
+      - entity: "minecraft:fox"
+        threat_level: "EXTREME"
+        detection_range: 24
+        response: "FLEE"
+        flee:
+          speed_multiplier: 1.8
+          flee_distance: 56
+          flee_toward: "SHELTER"
+          zigzag: true
+
+      - entity: "minecraft:ocelot"
+        threat_level: "HIGH"
+        detection_range: 20
+        response: "FLEE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: 60
+    recent_food:
+      enabled: true
+    environment:
+      near_water: false
+      required_biomes: []
+    requires_shelter: false
+    season: null
+
+  density_effects:
+    density_curve:
+      - count: 2
+        multiplier: 1.5
+      - count: 4
+        multiplier: 1.2
+      - count: 8
+        multiplier: 1.0
+      - count: 16
+        multiplier: 0.6
+      - count: 24
+        multiplier: 0.2
+      - count: 32
+        multiplier: 0.0
+
+  mate_selection:
+    courtship:
+      enabled: false
+      behavior: ""
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: 0
+    birth:
+      offspring_count: [1, 3]
+      location_requirement: null
+
+  parental_care:
+    duration: 12000
+    behaviors:
+      protects_offspring: false
+      feeds_offspring: false
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+    leadership:
+      has_leader: false
+      leader_selection: ""
+
+  herd_movement:
+    enabled: false
+
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: true
+    actions:
+      - trigger: "foraging"
+        description: "Rabbits raid carrot crops, destroying them when eating"
+        target: "minecraft:carrots"
+        result: null
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false
+      congregates: false
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 10
+    group_size: [2, 3]
+    conditions:
+      biomes: ["plains", "desert", "flower_forest", "taiga", "meadow", "forest", "birch_forest", "snowy_plains"]
+      blocks: ["grass_block", "snow", "sand"]
+
+  carrying_capacity:
+    caps:
+      per_chunk: 12
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  taming:
+    enabled: false
+    items: []
+
+  player_breeding:
+    enabled: true
+    items: ["minecraft:carrot", "minecraft:golden_carrot", "minecraft:dandelion"]
+
+  drops:
+    on_death:
+      - item: "minecraft:rabbit_hide"
+        count: [0, 1]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+      - item: "minecraft:rabbit"
+        count: [0, 1]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+      - item: "minecraft:rabbit_foot"
+        count: [0, 1]
+        chance: 0.1
+        requires_player_kill: false
+        looting_bonus: 0.03
+
+  interactions: []
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.rabbit.ambient"
+    hurt: "entity.rabbit.hurt"
+    death: "entity.rabbit.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "nose_twitch"
+        frequency: 100
+        trigger: "random"
+
+      - behavior: "ear_rotation"
+        frequency: 80
+        trigger: "alert"
+
+      - behavior: "stand_on_hind_legs"
+        frequency: 200
+        trigger: "scanning"
+
+      - behavior: "groom"
+        frequency: 300
+        trigger: "safe"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+
+unique_behaviors:
+  - name: "crop_raiding"
+    description: |
+      Rabbits actively seek out and raid carrot crops in farms.
+
+      WHEN: When hungry (hunger < 60) and carrot crops are detected within search radius
+      WHERE: Farmland with mature carrot crops
+      WHAT: The rabbit will pathfind to the carrot crop, eat it (destroying the crop block),
+            and gain significant nutrition and condition improvement
+      WHY: Represents rabbits' reputation as agricultural pests and provides player interaction challenge
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 6                # Higher priority than normal foraging when hungry
+      duration: 100
+      affects_others: false
+      world_modification: true   # Destroys crop blocks
+
+  - name: "zigzag_fleeing"
+    description: |
+      When fleeing from predators, rabbits use erratic zigzag movement patterns.
+
+      WHEN: Actively fleeing from a detected predator
+      WHERE: Anywhere during chase
+      WHAT: Instead of running in a straight line, the rabbit should randomly change direction
+            every 10-20 ticks at angles of 30-90 degrees while maintaining high speed toward safety
+      WHY: Realistic predator evasion behavior that makes rabbits harder to catch
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 2                # Part of flee behavior
+      duration: null             # Duration of flee
+      affects_others: false
+      world_modification: false
+
+  - name: "variant_spawning"
+    description: |
+      Rabbits spawn in different color variants based on biome.
+
+      WHEN: On spawn
+      WHERE: Different biomes
+      WHAT:
+        - Plains/Meadow: Brown, Salt & Pepper (50% each)
+        - Desert: Gold (100%)
+        - Snowy biomes: White (80%), White Splotched (20%)
+        - Forest/Taiga: Brown, Salt & Pepper, Black (40%, 40%, 20%)
+      WHY: Adds visual variety and biome-appropriate camouflage
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: null
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "toast_easter_egg"
+    description: |
+      Rabbits named "Toast" using a name tag display a unique black and white texture.
+
+      WHEN: A rabbit is renamed to "Toast" with a name tag
+      WHERE: Anywhere
+      WHAT: The rabbit's texture changes to a special black and white pattern
+      WHY: Easter egg tribute to a real player's rabbit
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: null
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "killer_bunny"
+    description: |
+      Extremely rare hostile rabbit variant (not naturally spawning in survival).
+
+      WHEN: Special spawn condition or command
+      WHERE: Anywhere
+      WHAT: White rabbit with red eyes that actively attacks players and mobs,
+            deals 5 damage (2.5 hearts), moves faster than normal rabbits
+      WHY: Unique hostile variant for special encounters and reference to Monty Python
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: null
+      duration: null
+      affects_others: true       # Attacks players and mobs
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+
+relationships:
+  predators:
+    - entity: "minecraft:wolf"
+      notes: "Wolves actively hunt rabbits as primary prey"
+
+    - entity: "minecraft:fox"
+      notes: "Foxes hunt rabbits, especially at night"
+
+    - entity: "minecraft:ocelot"
+      notes: "Ocelots occasionally hunt rabbits"
+
+    - entity: "ecosystem:lynx"
+      notes: "Lynx consider rabbits primary prey (if lynx exists in mod)"
+
+  prey: []
+
+  competitors:
+    - entity: "minecraft:sheep"
+      resource: "grass"
+      interaction: "Compete for grass and vegetation in same areas"
+
+    - entity: "minecraft:cow"
+      resource: "grass"
+      interaction: "Compete for grass in plains biomes"
+
+  mutualists: []
+
+  commensals: []
+
+  special:
+    - entity: "minecraft:player"
+      relationship: "fear_and_utility"
+      description: "Rabbits fear players but can be bred by them for resources. Players may farm or hunt rabbits."
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+
+narrative:
+  summary: |
+    The rabbit is a small, timid herbivore that fills the crucial role of abundant prey in the ecosystem.
+    With high reproduction rates and fearful behavior, rabbits balance rapid population growth with high predation pressure.
+    Their crop-raiding tendencies create interesting player interactions as both a pest and a resource.
+
+  behavior_overview: |
+    Rabbits spend their days hiding in vegetation and emerging at dawn and dusk to forage for grass, flowers, and
+    especially carrots. They are constantly alert, with their large ears rotating to detect danger. At the slightest
+    sign of a predator, they bolt in zigzag patterns toward the nearest shelter - dense vegetation, burrows, or any
+    overhead cover. Despite their fearfulness, rabbits breed prolifically when food is abundant, quickly recovering
+    from predation losses. Players may find them raiding carrot farms, hopping through meadows, or resting under bushes.
+    Their distinctive hopping gait and occasional nose twitches give them personality despite their shy nature.
+
+  ecological_importance: |
+    Rabbits are a keystone prey species. They convert plant matter into biomass that supports carnivores like wolves
+    and foxes. Their rapid breeding ensures a stable food supply for predators while maintaining population balance
+    through high mortality rates. As crop raiders, they create agricultural pressure on players. Without rabbits,
+    carnivore populations would lack a readily available small prey option, and vegetation would face less grazing pressure.
+    Their foraging also helps control flower and grass spread in some biomes.
+
+  design_notes: |
+    Balance considerations:
+    - High spawn rates and breeding compensate for low health (3 HP) and vulnerability
+    - Crop raiding should be noticeable but not devastating - make players want to protect farms
+    - Fleeing behavior must feel responsive and realistic - zigzag movement is key
+    - Multiple color variants add visual interest and biome immersion
+    - Killer bunny is intentionally rare/non-survival for special occasions only
+    - Toast easter egg should be easily discoverable with name tags
+
+    Performance notes:
+    - Keep search radius moderate to avoid lag with large rabbit populations
+    - Limit pathfinding complexity during fleeing to maintain performance
+
+    Player experience:
+    - Should feel abundant but not overwhelming
+    - Easy to breed for farming but challenging to protect from wild predators
+    - Satisfying to watch predator-prey interactions
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 1.2  # Breeds faster than most mobs
+  mortality_rate_multiplier: 1.5 # High mortality from predation
+
+  energy_flow:
+    daily_requirement: 80        # Needs to eat frequently
+    provides_to_predator: 25     # Small meal for predators
+
+  population_target: "Common to abundant, 8-16 per plains biome, 4-8 per forest biome"
+
+  removal_impact: |
+    Removing rabbits would eliminate the primary small prey for wolves and foxes, forcing these predators
+    to rely entirely on larger prey or alternative food sources. It would also remove crop raiding pressure,
+    making farming slightly easier. Vegetation like grass and flowers would face less grazing pressure in
+    areas where rabbits were previously common. The ecosystem would lose an important energy transfer link
+    between primary producers and secondary consumers.

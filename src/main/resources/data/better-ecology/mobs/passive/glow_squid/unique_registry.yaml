@@ -1,0 +1,470 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Mob: Glow Squid
+# Template Version: 2.0
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:glow_squid"
+  display_name: "Glow Squid"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "FILTER_FEEDER"
+    social_type: "SOLITARY"
+    activity_pattern: "CATHEMERAL"
+
+  reference:
+    real_world_analog: "Deep-sea bioluminescent squid (e.g., Firefly Squid)"
+    ecological_role: "Bioluminescent filter feeder that provides natural lighting in deep, dark underground water bodies"
+
+  tags: ["aquatic", "bioluminescent", "underground", "passive_light_source", "deep_water"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 10
+  size:
+    width: 0.8
+    height: 0.8
+  biomass:
+    adult: 80
+  movement:
+    speeds:
+      walk: 0.0
+      run: 0.0
+      swim: 0.2
+      fly: 0.0
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.015         # Slower - efficient filter feeder
+  thirst:
+    enabled: false            # Aquatic species
+  age:
+    baby_duration: 24000
+    max_age: null             # No natural death from age
+  social:
+    enabled: false            # Solitary creature
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    # Active at all times - underground and cathemeral
+    schedule:
+      - time: [0, 24000]
+        activity: 1.0
+        label: "always_active"
+
+  weather:
+    # No weather response - deep underground
+    rain:
+      activity_multiplier: 1.0
+      seek_shelter: false
+    thunder:
+      activity_multiplier: 1.0
+      seek_shelter: false
+      panic_chance: 0.0
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []             # Any biome with underground water
+      preferred: ["deep_dark", "dripstone_caves", "lush_caves"]
+      forbidden: []
+    required_nearby:
+      - feature: "water"
+        max_distance: 0
+        reason: "Must spawn in water blocks"
+      - feature: "darkness"
+        max_distance: 0
+        reason: "Requires light level 0 (total darkness)"
+
+  territory:
+    enabled: false
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "BLOCK"
+        target: "minecraft:water"
+        nutrition: 5
+        method: "FILTER"
+        world_effect:
+          action: "NONE"
+          result: ""
+
+    secondary: []
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 8
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:axolotl"
+        threat_level: "HIGH"
+        detection_range: 16
+        response: "FLEE"
+        notes: "Natural predator in underground waters"
+
+      - entity: "minecraft:drowned"
+        threat_level: "MEDIUM"
+        detection_range: 12
+        response: "FLEE"
+        notes: "Opportunistic threat in dark waters"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  enabled: false              # Cannot breed in Minecraft
+
+  requirements:
+    min_condition: null
+    recent_food:
+      enabled: false
+    environment:
+      near_water: true
+      required_biomes: []
+    requires_shelter: false
+    season: null
+
+  density_effects:
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: false
+      behavior: ""
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: 0
+    birth:
+      offspring_count: [0, 0]
+      location_requirement: ""
+
+  parental_care:
+    duration: 0
+    behaviors:
+      protects_offspring: false
+      feeds_offspring: false
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+    leadership:
+      has_leader: false
+      leader_selection: ""
+
+  herd_movement:
+    enabled: false
+
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: false
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false          # Always in water
+      congregates: false
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 8
+    group_size: [2, 4]
+    conditions:
+      biomes: []
+      blocks: ["minecraft:water"]
+      light: [0, 0]           # Total darkness only
+      altitude: [-64, 30]     # Below Y=30
+
+  carrying_capacity:
+    caps:
+      per_chunk: 4
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  taming:
+    enabled: false
+    items: []
+
+  player_breeding:
+    enabled: false
+    items: []
+
+  drops:
+    on_death:
+      - item: "minecraft:glow_ink_sac"
+        count: [1, 3]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+  interactions: []
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "minecraft:entity.glow_squid.ambient"
+    hurt: "minecraft:entity.glow_squid.hurt"
+    death: "minecraft:entity.glow_squid.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "gentle_floating"
+        frequency: 1.0
+        trigger: "always"
+      - behavior: "tentacle_waving"
+        frequency: 0.8
+        trigger: "idle"
+      - behavior: "emit_particles"
+        frequency: 1.0
+        trigger: "always"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+
+unique_behaviors:
+  - name: "bioluminescent_glow"
+    description: |
+      The glow squid is bioluminescent, constantly emitting a soft cyan glow that illuminates
+      the dark underground waters where it dwells.
+
+      WHEN: At all times while alive
+      WHERE: Anywhere in water
+      WHAT:
+        - Emits cyan glowing particles constantly (light level effect)
+        - When damaged, particle emission intensifies dramatically for 2-3 seconds
+        - Creates aesthetic glow effect similar to vanilla behavior
+        - Provides subtle ambient lighting in completely dark environments
+      WHY:
+        - Ecological: Bioluminescence may serve as camouflage in deep water or communication
+        - Gameplay: Provides visual interest and minor light source in dark caves
+        - Makes the mob easier to spot in dark underground lakes
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 5
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "hypnotic_defense"
+    description: |
+      When damaged by a player or mob, the glow squid releases a burst of glowing particles
+      that create a hypnotic effect, briefly disorienting attackers.
+
+      WHEN: Immediately upon taking damage
+      WHERE: Anywhere in water
+      WHAT:
+        - Releases a burst of cyan glowing particles in all directions
+        - Particle burst is more intense than normal glow
+        - Lasts 2-3 seconds before returning to normal glow level
+        - Does not inflict any status effects (vanilla behavior)
+      WHY:
+        - Ecological: Defensive adaptation to startle/confuse predators
+        - Gameplay: Visual feedback when damaging the mob
+        - Matches vanilla Minecraft glow squid behavior
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 1
+      duration: 60             # 3 seconds
+      affects_others: true
+      world_modification: false
+
+  - name: "darkness_requirement"
+    description: |
+      Glow squids only spawn in complete darkness (light level 0) below Y=30. This makes
+      them exclusive to deep underground water bodies and rare to encounter.
+
+      WHEN: During natural spawning
+      WHERE: Any water block below Y=30 with light level 0
+      WHAT:
+        - Check light level must be exactly 0
+        - Altitude must be Y=30 or lower
+        - Must be in water block
+        - Can spawn in any biome that meets these conditions
+      WHY:
+        - Ecological: Simulates deep-sea dwelling behavior
+        - Gameplay: Creates rarity and encourages deep cave exploration
+        - Makes glow ink sacs a valuable resource
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: null
+      duration: null
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+
+relationships:
+  # Predators (who hunts this mob)
+  predators:
+    - entity: "minecraft:axolotl"
+      notes: "Primary natural predator in underground water systems"
+    - entity: "minecraft:drowned"
+      notes: "Opportunistic predator in dark waters"
+
+  # Prey (what this mob hunts)
+  prey: []
+
+  # Competitors (compete for same resources)
+  competitors:
+    - entity: "minecraft:squid"
+      resource: "water_space"
+      interaction: "Compete for similar habitat but in different depth zones"
+
+  # Mutualists (mutually beneficial)
+  mutualists: []
+
+  # Commensals (one benefits, other unaffected)
+  commensals:
+    - entity: "various"
+      notes: "Other mobs benefit from the light provided by glow squids"
+
+  # Special relationships
+  special: []
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+
+narrative:
+  summary: |
+    The glow squid is a bioluminescent cephalopod that dwells in the darkest depths of underground
+    water bodies. Unlike its surface-dwelling cousin the squid, it has adapted to total darkness
+    through the evolution of natural bioluminescence, creating an eerie cyan glow in pitch-black caves.
+
+  behavior_overview: |
+    Glow squids are solitary, passive creatures that drift lazily through deep underground lakes and
+    flooded caverns. They are filter feeders, sustaining themselves on microscopic organisms in the water.
+    Their most striking feature is their constant bioluminescent glow, which intensifies dramatically when
+    they are threatened or harmed. This defensive display serves to startle predators like axolotls. They
+    are extremely shy around players and will flee when approached. Unlike regular squids, they cannot
+    breed and are only found through natural spawning in completely dark environments below Y=30.
+
+  ecological_importance: |
+    Glow squids serve as a unique deep-cave indicator species, signaling to players that they have found
+    a sufficiently dark underground water source. They provide a renewable source of glow ink sacs, which
+    have decorative applications. Ecologically, they represent an adaptation to extreme low-light
+    environments and serve as prey for underground predators like axolotls. Their bioluminescence adds
+    atmospheric value to deep cave systems. If removed, deep caves would lose their primary source of
+    natural bioluminescent life and glow ink sacs would become unobtainable.
+
+  design_notes: |
+    - Glow squids cannot breed in vanilla Minecraft, so reproduction is disabled
+    - They require total darkness (light level 0) to spawn, making them rare
+    - The bioluminescence is purely visual and doesn't actually emit block light
+    - When damaged, particle emission should significantly increase for visual feedback
+    - They should be more common in deep dark biomes and underground aquifers
+    - Consider spawning them in groups of 2-4 to create visually striking clusters
+    - They are completely passive and have no aggressive behaviors
+    - Movement should be slow, graceful floating/swimming behavior
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 0.8  # Somewhat rare due to strict spawn requirements
+  breeding_rate_multiplier: 0.0  # Cannot breed
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: 20      # Low - filter feeder
+    provides_to_predator: 80   # When eaten by axolotls or drowned
+
+  population_target: "Uncommon, 3-8 per deep underground water body"
+
+  removal_impact: "Loss of glow ink sac source; reduced atmospheric lighting in deep caves; loss of prey for axolotls"

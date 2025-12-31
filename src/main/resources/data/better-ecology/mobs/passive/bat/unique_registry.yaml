@@ -1,0 +1,543 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# Mob: Bat (minecraft:bat)
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:bat"
+  display_name: "Bat"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "SECONDARY_CONSUMER"
+    diet_type: "INSECTIVORE"
+    social_type: "COLONY"
+    activity_pattern: "NOCTURNAL"
+
+  reference:
+    real_world_analog: "Cave-dwelling microbat (e.g., Little Brown Bat, Pipistrelle)"
+    ecological_role: "Nocturnal insectivore providing pest control and atmospheric ambience in caves"
+
+  tags: ["flying", "nocturnal", "cave_dwelling", "ambient", "halloween_special"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 3                        # 6 HP - smallest mob in Minecraft
+  size:
+    width: 0.5
+    height: 0.9
+  biomass:
+    adult: 5                       # Extremely low biomass
+  movement:
+    speeds:
+      walk: 0.0                    # Cannot walk
+      run: 0.0
+      swim: 0.0                    # Cannot swim
+      fly: 0.6                     # Fast, erratic flight
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    enabled: false                 # Ambient mob - no survival needs
+    decay_rate: 0.0
+  thirst:
+    enabled: false
+  age:
+    baby_duration: 0
+    max_age: null
+  social:
+    enabled: false
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    # Strictly nocturnal - complete reversal of diurnal pattern
+    schedule:
+      - time: [0, 12000]           # Full daylight
+        activity: 0.0              # Roosting, completely inactive
+        label: "day_roosting"
+      - time: [12000, 13000]       # Dusk transition
+        activity: 0.3              # Beginning to stir
+        label: "awakening"
+      - time: [13000, 22500]       # Night
+        activity: 1.0              # Fully active, flying
+        label: "active_night"
+      - time: [22500, 24000]       # Pre-dawn
+        activity: 0.5              # Returning to roost
+        label: "roosting_return"
+
+  weather:
+    rain:
+      activity_multiplier: 0.3     # Minimal flying in rain
+      seek_shelter: true
+      shelter_priority: 5
+    thunder:
+      activity_multiplier: 0.1
+      seek_shelter: true
+      panic_chance: 0.0
+    snow:
+      activity_multiplier: 0.2
+      seek_shelter: true
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []                  # Spawns in all biomes
+      preferred: []
+      forbidden: []
+    altitude:
+      min: -64
+      max: 63                      # Only spawns below Y=63
+      preferred: [-64, 40]
+    required_nearby:
+      - feature: "solid_block_above"
+        max_distance: 5
+        reason: "Needs ceiling to roost on"
+      - feature: "caves"
+        max_distance: 0
+        reason: "Cave-dwelling species"
+
+  territory:
+    enabled: false
+    size: null
+
+  home_range:
+    enabled: true
+    radius: 32
+    has_home_point: true           # Returns to same roosting spot
+    home_type: "ROOST"
+
+  shelter:
+    needs_shelter: true
+    shelter_uses: ["sleeping", "hiding", "daytime_refuge"]
+    valid_shelters:
+      - type: "cave_ceiling"
+        description: "Hangs from any solid block with air space below in dark areas"
+        blocks: ["stone", "deepslate", "andesite", "diorite", "granite", "any_solid"]
+        min_enclosure: 0.0
+        requires_ceiling: true
+        light_level: [0, 3]
+
+  # === LOCATION-TRIGGERED BEHAVIORS ===
+  location_triggers:
+    enabled: true
+    triggers:
+      - name: "roosting_attachment"
+        description: |
+          During daytime (0-12000 ticks), bats seek out solid ceiling blocks in dark
+          areas (light level 3 or less) within caves. Once a suitable block is found,
+          the bat attaches upside-down to the underside and remains motionless,
+          entering a roosting state. The bat will stay attached until nighttime
+          begins (12000+ ticks) or it is disturbed by a player or entity coming
+          within 4 blocks.
+        location:
+          blocks: ["any_solid_block"]
+          requires_air_below: true
+          light_level: [0, 3]
+          time: [0, 12000]
+        behavior:
+          action: "attach_and_hang"
+          duration: "until_night"
+          disturbance_distance: 4
+          recovery_time: 200
+
+      - name: "erratic_night_flight"
+        description: |
+          During nighttime hours (13000-22500 ticks), bats fly in erratic,
+          unpredictable patterns through caves and open areas. Flight paths
+          should appear random with frequent direction changes, mimicking
+          insect-hunting behavior even though no actual hunting occurs.
+        location:
+          time: [13000, 22500]
+          light_level: [0, 15]
+        behavior:
+          action: "erratic_flight"
+          pattern: "random_direction_changes"
+          change_frequency: [40, 100]
+          vertical_movement: true
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary: []                    # No food sources - ambient mob
+    secondary: []
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 0
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    # Bats are small and vulnerable but rarely targeted
+    predators:
+      - entity: "minecraft:cat"
+        threat_level: "MEDIUM"
+        detection_range: 12
+        response: "FLEE"
+        flee_distance: 20
+        flee_toward: "SHELTER"
+
+      - entity: "minecraft:ocelot"
+        threat_level: "MEDIUM"
+        detection_range: 12
+        response: "FLEE"
+        flee_distance: 20
+        flee_toward: "SHELTER"
+
+    default_response:
+      detection_range: 16
+      response_type: "FLEE"
+      flee:
+        speed_multiplier: 1.3
+        flee_distance: 32
+        flee_toward: "SHELTER"
+        zigzag: true               # Erratic escape flight
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  enabled: false                   # Bats do not breed in vanilla Minecraft
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "COLONY"
+    size:
+      min: 1
+      optimal: 8
+      max: 20
+    composition:
+      mixed_sex: true
+      mixed_age: true
+      family_based: false
+    leadership:
+      has_leader: false
+      leader_selection: null
+
+  herd_movement:
+    enabled: false
+
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: false
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+    nutrient_cycling:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false
+      congregates: false
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 10
+    group_size: [1, 8]
+    conditions:
+      biomes: []                   # All biomes
+      blocks: ["stone", "deepslate", "andesite", "diorite", "granite"]
+      light: [0, 3]                # Must be dark
+      altitude: [-64, 63]          # Below Y=63
+      time: [13000, 24000]         # Night spawning
+      weather: null
+
+  carrying_capacity:
+    caps:
+      per_chunk: 8                 # Relatively low density
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  distances:
+    detection: 16
+    caution: 8
+    flee: 4
+
+  habituation:
+    enabled: false
+
+  taming:
+    enabled: false
+    items: []
+
+  player_breeding:
+    enabled: false
+    items: []
+
+  drops:
+    on_death: []                   # No drops in vanilla
+
+  interactions: []
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.bat.ambient"
+    hurt: "entity.bat.hurt"
+    death: "entity.bat.death"
+    baby: null
+    alarm: null
+    mating: null
+    eating: null
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "hang_upside_down"
+        frequency: 1.0
+        trigger: "daytime_roosting"
+        description: "Hangs motionless from ceiling during day"
+
+      - behavior: "erratic_flight"
+        frequency: 1.0
+        trigger: "nighttime_active"
+        description: "Rapid, unpredictable flight pattern with frequent direction changes"
+
+      - behavior: "squeaking"
+        frequency: 0.2
+        trigger: "nighttime_flight"
+        description: "Occasional ambient squeaking sounds while flying"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+
+unique_behaviors:
+  - name: "roosting_cycle"
+    description: |
+      Bats exhibit a strict day-night activity cycle tied to Minecraft's time system.
+
+      WHEN: Daytime begins (tick 0) or when current time is between 0-12000
+      WHERE: In caves or dark areas (light level ≤ 3) with solid ceiling blocks
+      WHAT: The bat locates a suitable ceiling block within its home range (32 blocks
+            from spawn point) and attaches to it upside-down. It remains completely
+            motionless in this roosting state, recovering energy. If disturbed by a
+            player or mob within 4 blocks, it briefly flies away then attempts to
+            re-roost. At dusk (tick 12000), bats gradually wake up and begin flying.
+      WHY: Simulates realistic nocturnal behavior and provides atmospheric cave ambience
+
+    implementation_hints:
+      trigger_type: "TIME"
+      priority: 4
+      duration: "until_nighttime"
+      affects_others: false
+      world_modification: false
+      state_changes:
+        - "enters_roosting_state"
+        - "locks_position_to_ceiling"
+        - "disables_gravity"
+        - "reduces_hitbox_detection"
+
+  - name: "erratic_flight_pattern"
+    description: |
+      During nighttime, bats fly in highly unpredictable patterns.
+
+      WHEN: Nighttime (ticks 13000-22500) and not roosting
+      WHERE: Throughout cave systems and open night areas
+      WHAT: Every 40-100 ticks, the bat randomly changes direction in 3D space,
+            including vertical movement. Flight paths appear jerky and insect-like.
+            Bats avoid flying into blocks but don't pathfind intelligently - they
+            simply redirect when encountering obstacles. Flight speed is 0.6 blocks/tick.
+      WHY: Creates distinctive, recognizable bat behavior and ambience; represents
+           echolocation-based insect hunting even though actual hunting isn't simulated
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 7
+      duration: "continuous_while_active"
+      affects_others: false
+      world_modification: false
+      movement_type: "random_3d_vectors"
+      collision_response: "random_redirect"
+
+  - name: "halloween_spawn_boost"
+    description: |
+      During Minecraft's Halloween period (October 20-November 3), bat spawning
+      increases significantly.
+
+      WHEN: Real-world date is October 20 through November 3
+      WHERE: All valid bat spawn locations
+      WHAT: Spawn weight increases from 10 to 50, and group sizes increase to [3, 12].
+            This creates much larger bat populations during Halloween.
+      WHY: Seasonal atmosphere and thematic holiday enhancement
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: null
+      duration: "seasonal"
+      affects_others: false
+      world_modification: false
+      spawn_modifier: 5.0
+
+  - name: "disturbance_response"
+    description: |
+      Roosting bats react to nearby player or entity movement.
+
+      WHEN: Bat is in roosting state during daytime
+      WHERE: Entity comes within 4 blocks of roosting bat
+      WHAT: Bat detaches from ceiling, emits hurt sound (even without damage), and
+            flies erratically away for 3-5 seconds before attempting to find a new
+            roosting spot nearby (within 16 blocks).
+      WHY: Creates interactive cave exploration moments and realistic startle behavior
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: 2
+      duration: 100
+      affects_others: false
+      world_modification: false
+      detection_radius: 4
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+
+relationships:
+  # Predators (who hunts this mob)
+  predators:
+    - entity: "minecraft:cat"
+      notes: "Cats may occasionally hunt bats, though difficult due to flight"
+    - entity: "minecraft:ocelot"
+      notes: "Ocelots may hunt bats in jungle caves"
+
+  # Prey (what this mob hunts)
+  prey: []
+
+  # Competitors (compete for same resources)
+  competitors: []
+
+  # Mutualists (mutually beneficial)
+  mutualists: []
+
+  # Commensals (one benefits, other unaffected)
+  commensals: []
+
+  # Special relationships
+  special:
+    - entity: "minecraft:spider"
+      relationship: "neutral_cohabitation"
+      description: "Both inhabit caves; spiders ignore bats due to small size"
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+
+narrative:
+  summary: |
+    The bat is Minecraft's smallest and most fragile ambient mob, serving purely
+    atmospheric rather than functional purposes. These nocturnal cave-dwellers add
+    life to underground spaces through their distinctive roosting and erratic flight.
+
+  behavior_overview: |
+    Bats spend their days hanging motionless from cave ceilings in dark areas,
+    entering a roosting state that leaves them vulnerable but hidden. When darkness
+    falls (or during perpetual cave darkness), they take flight in unpredictable,
+    jerky patterns that make them difficult to follow or catch. They're easily
+    startled by player proximity, emitting squeaking sounds as they flee to find
+    new roosting spots. Despite their insectivore classification, bats don't
+    actually hunt or eat in-game - they exist solely for ambience. During Halloween,
+    their populations surge dramatically, filling caves and night skies with their
+    erratic flight.
+
+  ecological_importance: |
+    Bats serve no direct ecological function in the vanilla ecosystem - they don't
+    eat, breed, or provide resources. However, they're crucial for atmospheric
+    world-building, making caves feel alive and inhabited. Their presence signals
+    to players that they're in a dark, enclosed space. Removing bats would make
+    caves feel sterile and lifeless, particularly during exploration. In an expanded
+    ecosystem mod, bats could represent insect population control and serve as a
+    minor food source for cave-dwelling predators.
+
+  design_notes: |
+    Bats are intentionally weak (6 HP) and skittish with no drops, discouraging
+    players from killing them. Their erratic flight AI makes them difficult to hit,
+    which combines with their lack of drops to make them "not worth the effort."
+    The roosting behavior provides visual interest and creates interactive moments
+    when players disturb them. Consider adding very rare drop items (1% chance for
+    bat wing or guano) to give minimal reward for persistent hunters without
+    encouraging bat farming. Ensure spawning is limited to prevent cave lag from
+    excessive bat entities. The Halloween spawn boost is hardcoded to real-world
+    date, not in-game mechanics.
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 0.0    # No breeding
+  mortality_rate_multiplier: 1.5   # Fragile, dies easily
+
+  energy_flow:
+    daily_requirement: 0           # No food needs
+    provides_to_predator: 5        # Very low energy gain for predators
+
+  population_target: "Uncommon to Common; 3-8 per cave system; 8-20 during Halloween"
+
+  removal_impact: "Minimal ecological impact; significant atmospheric impact. Caves would feel empty and lifeless without bat ambience."

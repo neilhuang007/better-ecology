@@ -1,0 +1,80 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - GENERALIZED PROFILE
+# Mob: Bee (Apis mellifera)
+# ============================================================================
+
+# ============================================================================
+# BEHAVIOR CONFIGURATION
+# ============================================================================
+behaviors:
+  enabled: true
+  priority: 5                    # High priority for bee behaviors
+  max_force: 0.15                # Maximum steering force
+  max_speed: 0.3                 # Maximum flying speed
+
+  # Bee-specific behavior weights
+  pollination: 1.5               # Flower and crop pollination
+  hive_return: 2.0               # Return to hive with nectar
+  waggle_dance: 0.5              # Food source communication
+  hive_defense: 2.5              # Hive protection behavior
+
+  # Standard behavior weights (minimal for bees)
+  separation: 0.5                # Reduced flocking for solitary foraging
+  alignment: 0.0                 # No alignment needed
+  cohesion: 0.3                  # Weak cohesion to hive area
+  pursuit: 0.0                   # No hunting
+  evasion: 0.0                   # No fleeing (bees fight back)
+  territorialDefense: 0.0        # Replaced by hive_defense
+  foodSeek: 0.0                  # Replaced by pollination
+  waterSeek: 0.0                 # Bees don't seek water
+  shelterSeek: 0.0               # Replaced by hive_return
+  obstacleAvoidance: 1.0         # Basic obstacle avoidance
+  lightPreference: 0.3           # Prefer daylight
+  wander: 0.3                    # Light wandering near hive
+
+# ============================================================================
+# RESOURCE PRODUCTION CONFIGURATION
+# ============================================================================
+resource_production:
+  enabled: true
+  resource_type: "honey"         # Type of resource produced
+
+  # Production settings
+  production_rate: 2.0           # Base production per cycle
+  production_interval: 1200      # Ticks between production checks (1 minute)
+  max_capacity: 100.0            # Maximum accumulated resource
+
+  # Quality factors
+  base_quality: 1.0              # Base quality multiplier
+  environment_bonus: 0.1         # Quality bonus in good conditions
+
+  # Activity modifiers
+  active_modifier: 1.0           # Production during day/clear weather
+  inactive_modifier: 0.0         # Production at night/rain (none)
+
+  # Honey type configuration
+  honey_types:
+    regular:
+      flower: "default"
+      quality_multiplier: 1.0
+      color: "yellow"
+      effects: ["saturation"]
+
+    sunflower:
+      flower: "sunflower"
+      quality_multiplier: 1.3
+      color: "bright_yellow"
+      effects: ["extra_saturation"]
+
+    cornflower:
+      flower: "cornflower"
+      quality_multiplier: 1.2
+      color: "blue"
+      effects: ["speed_boost"]
+
+    wither_rose:
+      flower: "wither_rose"
+      quality_multiplier: 0.5
+      color: "dark_gray"
+      effects: ["poison"]
+      dangerous: true

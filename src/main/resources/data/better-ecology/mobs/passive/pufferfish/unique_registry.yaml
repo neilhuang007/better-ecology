@@ -1,0 +1,642 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Mob: Pufferfish
+# ============================================================================
+#
+# This file defines unique behaviors for the pufferfish, focusing on its iconic
+# inflation defense mechanism and aquatic passive nature.
+#
+# UNIQUE BEHAVIORS:
+# - Three-state inflation system (deflated, half-inflated, fully inflated)
+# - Poison damage on contact based on inflation state
+# - Slow movement when inflated
+# - Can be captured with water buckets
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:pufferfish"
+  display_name: "Pufferfish"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "OMNIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Porcupinefish/Pufferfish (Tetraodontidae)"
+    ecological_role: "Small defensive fish with toxic defense, helps control small marine organisms and serves as prey for larger predators"
+
+  tags: ["aquatic", "toxic", "defensive", "small_fish"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: null                  # Use mod_registry default (1.5)
+
+  size:
+    width: null                 # Use mod_registry default (0.35)
+    height: null                # Use mod_registry default (0.35)
+
+  biomass:
+    adult: null                 # Use mod_registry default (15)
+
+  movement:
+    speeds:
+      walk: null                # Use mod_registry default (0.0)
+      run: null                 # Use mod_registry default (0.0)
+      swim: null                # Use mod_registry default (0.13)
+      fly: null                 # Use mod_registry default (0.0)
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: null            # Use mod_registry default (0.015)
+
+  thirst:
+    enabled: null               # Use mod_registry default (false)
+
+  age:
+    baby_duration: null         # Use mod_registry default (24000)
+    max_age: null               # Use mod_registry default (null)
+
+  social:
+    enabled: null               # Use mod_registry default (false)
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule: null              # Use mod_registry default schedule
+
+  weather:
+    rain: null                  # Use mod_registry default (1.0 activity)
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []               # Use mod_registry default (empty, any aquatic)
+      preferred: []             # Use mod_registry default (warm_ocean, lukewarm_ocean)
+      forbidden: []             # Use mod_registry default (frozen_ocean, cold_ocean)
+    required_nearby: []         # Use mod_registry default (water nearby)
+
+  territory:
+    enabled: null               # Use mod_registry default (false)
+
+  shelter:
+    needs_shelter: null         # Use mod_registry default (false)
+    shelter_uses: []            # Use mod_registry default (empty)
+    valid_shelters: []          # Use mod_registry default (empty)
+
+  # === LOCATION-TRIGGERED BEHAVIORS ===
+  # [UNIQUE] Pufferfish have no unique location-triggered behaviors
+  location_triggers:
+    enabled: false
+    triggers: []
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary: []                 # Use mod_registry default (small_fish_food)
+
+    secondary: []               # Use mod_registry default (kelp)
+
+    emergency: []               # Use mod_registry default (empty)
+
+  foraging:
+    search_radius:
+      base: null                # Use mod_registry default (12)
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false              # Pufferfish are not predators
+
+  as_prey:
+    enabled: true               # Use mod_registry default
+
+    predators:
+      - entity: "minecraft:dolphin"
+        threat_level: "MEDIUM"
+        detection_range: 16
+        response: "PUFF_AND_FLEE"
+        notes: "Dolphins avoid pufferfish when inflated, may hunt when deflated"
+
+      - entity: "minecraft:drowned"
+        threat_level: "LOW"
+        detection_range: 12
+        response: "PUFF"
+        notes: "Drowned may attempt to attack but suffer poison damage"
+
+      - entity: "minecraft:guardian"
+        threat_level: "HIGH"
+        detection_range: 24
+        response: "PUFF_AND_FLEE"
+        notes: "Guardians can attack from range, pufferfish inflates and swims away"
+
+      - entity: "minecraft:elder_guardian"
+        threat_level: "EXTREME"
+        detection_range: 32
+        response: "PUFF_AND_FLEE"
+        notes: "Elder guardians are major threat, immediate inflation and flee"
+
+      - entity: "#ecosystem:large_fish"
+        threat_level: "MEDIUM"
+        detection_range: 14
+        response: "PUFF"
+        notes: "Large predatory fish avoid inflated pufferfish"
+
+      - entity: "minecraft:player"
+        threat_level: "MEDIUM"
+        detection_range: 8
+        response: "PUFF"
+        notes: "Players approaching cause inflation"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: null         # Use mod_registry default
+    recent_food:
+      enabled: null             # Use mod_registry default (true)
+    environment:
+      near_water: null          # Use mod_registry default (false)
+      required_biomes: []       # Use mod_registry default (warm_ocean, lukewarm_ocean)
+    requires_shelter: null      # Use mod_registry default (false)
+    season: null                # Use mod_registry default (null)
+
+  density_effects:
+    density_curve: null         # Use mod_registry default curve
+
+  mate_selection:
+    courtship:
+      enabled: null             # Use mod_registry default (false)
+      behavior: ""              # No courtship for pufferfish
+
+  breeding:
+    gestation:
+      type: null                # Use mod_registry default ("INSTANT")
+      duration: null            # Use mod_registry default (0)
+
+    birth:
+      offspring_count: null     # Use mod_registry default ([1, 3])
+      location_requirement: ""  # No special location needed
+
+  parental_care:
+    duration: null              # Use mod_registry default (0)
+    behaviors:
+      protects_offspring: null  # Use mod_registry default (false)
+      feeds_offspring: null     # Use mod_registry default (false)
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: ""                    # SOLITARY - matches mod_registry
+    size:
+      min: null                 # Use mod_registry default (1)
+      optimal: null             # Use mod_registry default (1)
+      max: null                 # Use mod_registry default (1)
+
+    leadership:
+      has_leader: null          # Use mod_registry default (false)
+      leader_selection: ""      # No leader
+
+  herd_movement:
+    enabled: null               # Use mod_registry default (false)
+
+  communication:
+    alarm_calls:
+      enabled: null             # Use mod_registry default (false)
+      types: []                 # No alarm calls
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: null               # Use mod_registry default (false)
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: null             # Use mod_registry default (false)
+    pollination:
+      enabled: null             # Use mod_registry default (false)
+
+  responses:
+    drinking:
+      enabled: null             # Use mod_registry default (false)
+      congregates: null         # Use mod_registry default (null)
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: null                # Use mod_registry default (15)
+    group_size: null            # Use mod_registry default ([3, 5])
+    conditions:
+      biomes: []                # Use mod_registry default (warm_ocean, lukewarm_ocean)
+      blocks: []                # Use mod_registry default (water)
+
+  carrying_capacity:
+    caps:
+      per_chunk: null           # Use mod_registry default (5)
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "NEUTRAL_DEFENSIVE"
+  # Pufferfish don't attack but defend themselves when touched
+
+  taming:
+    enabled: null               # Use mod_registry default (false)
+    items: []
+
+  player_breeding:
+    enabled: null               # Use mod_registry default (false)
+    items: []
+
+  drops:
+    on_death: []                # Use mod_registry default (pufferfish item, bone_meal)
+
+  interactions:
+    - action: "bucket_capture"
+      item: "minecraft:water_bucket"
+      result: "minecraft:pufferfish_bucket"
+      description: |
+        Player can capture pufferfish in a water bucket by right-clicking.
+        Captured pufferfish retains its inflation state.
+        When released from bucket, pufferfish will be deflated.
+
+    - action: "touch_inflated"
+      item: "hand"
+      result: "poison_damage"
+      description: |
+        Touching an inflated pufferfish causes poison damage.
+        Half-inflated: Poison II for 4 seconds
+        Fully-inflated: Poison II for 8 seconds + Magic damage
+
+    - action: "auto_deflate"
+      item: "none"
+      result: "deflate_over_time"
+      description: |
+        Pufferfish slowly deflate over time when no threats are present.
+        Takes 10-15 seconds to fully deflate.
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: ""                 # Use mod_registry default
+    hurt: ""                    # Use mod_registry default
+    death: ""                   # Use mod_registry default
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "slow_drift"
+        frequency: null         # Use mod_registry default (0.8)
+        trigger: "idle"
+      - behavior: "occasional_burst"
+        frequency: 0.1
+        trigger: "random"
+        description: "Occasionally swims in short burst, then drifts"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+# Pufferfish have a unique inflation defense mechanism with three states
+# ============================================================================
+
+unique_behaviors:
+  # === BEHAVIOR 1: INFLATION DEFENSE MECHANISM ===
+  - name: "inflation_defense"
+    description: |
+      Pufferfish can inflate their bodies when threatened as a defensive mechanism.
+      This is their primary defense against predators and approaching entities.
+
+      WHEN:
+      - A player or predator approaches within 3 blocks
+      - The pufferfish takes damage
+      - A nearby entity is damaged (threat detection)
+
+      WHERE:
+      - Anywhere in water
+      - Can inflate even when caught on fishing rod
+
+      WHAT:
+      1. Pufferfish has 3 inflation states: DEFLATED (default), HALF_INFLATED, FULLY_INFLATED
+      2. Transition to HALF_INFLATED when entity is 3-5 blocks away
+      3. Transition to FULLY_INFLATED when entity is 0-2 blocks away or taking damage
+      4. Inflation takes 0.5 seconds to reach half, 1 second total to reach full
+      5. While inflated, pufferfish movement speed is reduced (70%, 40%, 10% per state)
+      6. Contact with inflated pufferfish causes poison/magic damage
+
+      INFLATION STATES:
+      - DEFLATED (0):
+        * Size: 0.35 x 0.35 blocks
+        * Speed: 100% (normal swim speed)
+        * Damage: None
+        * Visual: Normal pufferfish model
+
+      - HALF_INFLATED (1):
+        * Size: 0.5 x 0.5 blocks
+        * Speed: 70% of normal
+        * Damage: Poison II for 4 seconds on contact
+        * Visual: Spines partially extended, body 50% larger
+
+      - FULLY_INFLATED (2):
+        * Size: 0.7 x 0.7 blocks (double original size)
+        * Speed: 40% of normal
+        * Damage: Poison II for 8 seconds + 2 magic damage on contact
+        * Visual: Spines fully extended, body spherical
+
+      DEFLATION:
+      - Auto-deflate when no threats within 8 blocks for 5 seconds
+      - Takes 3 seconds to fully deflate
+      - Cannot inflate again for 2 seconds after fully deflating (cooldown)
+
+      WHY:
+      - Mimics real pufferfish defense mechanism
+      - Creates interesting gameplay risk/reward
+      - Makes pufferfish challenging to catch or farm
+      - Provides passive defense without aggression
+
+    implementation_hints:
+      trigger_type: "PROXIMITY_AND_DAMAGE"
+      priority: 3                    # High priority, just above escape
+      duration: null                 # State persists until safe
+      affects_others: true           # Damages entities on contact
+      world_modification: false
+
+      # Entity data to track:
+      # - inflationState (integer: 0, 1, 2)
+      # - inflationProgress (float: 0.0 to 1.0)
+      # - lastInflationTime (long)
+      # - deflateCooldown (int, in ticks)
+
+      # Visual effects:
+      # - Scale model based on inflation state
+      # - Extend spine particles when inflated
+      # - Play puff_in.ogg and puff_out.ogg sounds
+
+  # === BEHAVIOR 2: SWIM AWAY WHEN THREATENED ===
+  - name: "defensive_swimming"
+    description: |
+      Pufferfish attempt to slowly swim away from threats while inflated.
+
+      WHEN:
+      - Inflated and threat detected
+      - Threat is within 6 blocks
+
+      WHERE:
+      - Any water
+
+      WHAT:
+      1. Pick a direction away from the threat
+      2. Swim slowly (based on inflation state) in that direction
+      3. Change direction randomly every 2-3 seconds
+      4. Continue until threat is 16+ blocks away
+      5. Then begin deflation sequence
+
+      WHY:
+      - Pufferfish are slow when inflated, so they attempt to flee
+      - Creates chase mechanic for players
+      - Makes pufferfish more dynamic than static
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 4
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  # === BEHAVIOR 3: WATER DEATH ===
+  - name: "suffocation_on_land"
+    description: |
+      Pufferfish cannot survive out of water.
+
+      WHEN:
+      - Not in water for more than 10 seconds
+
+      WHERE:
+      - On land or in air
+
+      WHAT:
+      1. Take 1 damage every second while out of water
+      2. Play flop animation
+      3. Cannot move when on land
+      4. Dies after being out of water for 20 seconds
+
+      WHY:
+      - Prevents pufferfish from being farmed on land
+      - Realistic aquatic behavior
+      - Encourages bucket capture
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: 1                    # Highest priority (survival)
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  # === BEHAVIOR 4: FLEE FROM FISHING ROD ===
+  - name: "fishing_rod_avoidance"
+    description: |
+      Pufferfish attempt to swim away when a fishing rod hook is nearby.
+
+      WHEN:
+      - Fishing rod bobber within 4 blocks
+
+      WHERE:
+      - Any water
+
+      WHAT:
+      1. Detect fishing rod bobber entity
+      2. Swim in opposite direction at 120% speed
+      3. Inflate to half-state if bobber gets within 2 blocks
+      4. Continue avoiding until bobber is 12+ blocks away
+
+      WHY:
+      - Makes fishing more challenging
+      - Realistic avoidance behavior
+      - Creates mini-game for fishing pufferfish
+
+    implementation_hints:
+      trigger_type: "PROXIMITY"
+      priority: 5
+      duration: null
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+# Pufferfish have few special relationships beyond predator/prey
+# ============================================================================
+
+relationships:
+  # Predators (who hunts this mob)
+  predators:
+    - entity: "minecraft:dolphin"
+      notes: "Dolphins will hunt pufferfish when they're deflated, but avoid them when inflated due to poison damage"
+
+    - entity: "minecraft:guardian"
+      notes: "Guardians can attack pufferfish from range with their laser, but pufferfish inflation can reduce damage"
+
+    - entity: "#ecosystem:large_marine_predators"
+      notes: "Large predators may learn to avoid inflated pufferfish, targeting them when deflated"
+
+  # Prey (what this mob hunts)
+  prey: []                            # Pufferfish don't hunt
+
+  # Competitors (compete for same resources)
+  competitors:
+    - entity: "#ecosystem:small_fish"
+      resource: "Small marine organisms and food items"
+      interaction: "passive_coexistence"
+
+    - entity: "minecraft:tropical_fish"
+      resource: "Food and space"
+      interaction: "passive_coexistence"
+
+  # Mutualists (mutually beneficial)
+  mutualists: []                      # No known mutualistic relationships
+
+  # Commensals (one benefits, other unaffected)
+  commensals: []                      # None
+
+  # Special relationships
+  special:
+    - entity: "minecraft:turtle"
+      relationship: "indicators"
+      description: "Both species inhabit warm oceans, presence of pufferfish indicates healthy coral reef ecosystem"
+
+    - entity: "minecraft:squid"
+      relationship: "habitat_sharing"
+      description: "Share same aquatic habitats but don't interact directly"
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+# Free-form description for AI to understand pufferfish "character"
+# ============================================================================
+
+narrative:
+  summary: |
+    The pufferfish is a small, slow-swimming fish found in warm and lukewarm oceans.
+    Despite its peaceful nature, it possesses a formidable defense mechanism: the ability
+    to inflate its body and extend poisonous spines when threatened. This makes it a
+    challenging catch for players and predators alike.
+
+  behavior_overview: |
+    Pufferfish spend most of their time slowly drifting through warm ocean waters,
+    occasionally darting in short bursts before returning to a leisurely swim. They
+    are solitary creatures with no social behaviors, content to feed on small marine
+    organisms and avoid confrontation.
+
+    However, when threatened, the pufferfish transforms instantly. It can inflate to
+    half its size within half a second, and to full size in one second. The fully
+    inflated pufferfish is covered in poisonous spines that can severely harm any
+    creature that touches it. During inflation, the pufferfish swims even slower
+    but attempts to flee from danger.
+
+    The pufferfish's inflation is its primary and only defense. It cannot attack
+    or fight back directly. Instead, it relies on predators learning to avoid its
+    poisonous embrace. This makes the pufferfish a passive but dangerous creature -
+    it will never harm you unless you touch it while it's inflated.
+
+    Out of water, pufferfish are helpless. They flop around and quickly succumb to
+    suffocation, making bucket capture the humane way to transport them.
+
+  ecological_importance: |
+    Pufferfish occupy an important niche in the ocean ecosystem as a toxic prey
+    species. Their presence teaches predators to recognize and avoid poisonous prey,
+    which can protect other toxic species as well. They help control populations of
+    small marine organisms and serve as a challenging food source for specialized
+    predators that have learned to catch them when deflated.
+
+    If pufferfish were removed, predators like dolphins would lose a challenging
+    food source, and small marine organism populations might increase unchecked.
+    More importantly, the ecosystem would lose an example of chemical defense,
+    potentially affecting predator learning and behavior.
+
+  design_notes: |
+    BALANCE CONSIDERATIONS:
+    - The inflation mechanic should feel fair, not frustrating
+    - Players should be able to catch pufferfish with careful timing
+    - The poison damage should be significant enough to discourage casual contact
+    - Bucket capture should be the recommended way to transport them
+
+    IMPLEMENTATION NOTES:
+    - Visual feedback is crucial: players must clearly see the inflation state
+    - Spine particles or geometry should make the danger obvious
+    - Sound effects (puffing up/deflating) add important audio cues
+    - The deflation delay prevents players from instant-catch after deflating
+
+    EDGE CASES:
+    - What happens when fishing? The pufferfish should inflate when hooked
+    - What about dolphins? They should be smart enough to avoid inflated pufferfish
+    - Multiplayer interaction: Multiple players approaching should not stack damage
+    - Depth consideration: Should inflation work at all ocean depths? Yes.
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+# Quick-reference values for ecosystem balancing
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 1.0         # Standard spawn rate
+  breeding_rate_multiplier: 1.0      # Standard breeding
+  mortality_rate_multiplier: 1.2     # Slightly higher due to small size and many predators
+
+  energy_flow:
+    daily_requirement: 8             # Low energy need for small fish
+    provides_to_predator: 15         # Low biomass, but predators learn to avoid
+
+  population_target: "Uncommon, 3-8 per warm/lukewarm ocean biome chunk"
+
+  removal_impact: |
+    Minor ecological impact. Small marine organism populations would increase slightly.
+    Predators would lose a challenging food source and an opportunity to learn
+    prey avoidance behaviors. No cascading effects expected due to pufferfish's
+    solitary nature and lack of dependencies.

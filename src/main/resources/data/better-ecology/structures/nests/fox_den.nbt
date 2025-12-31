@@ -1,0 +1,18 @@
+# ============================================================================
+# FOX DEN STRUCTURE
+# Multi-entrancy den for foxes
+# Location: Natural caves or dug burrows in hillsides
+# ============================================================================
+
+# Placeholder for fox den structure
+#
+# The structure should consist of:
+# - Main chamber: 4x4x3 space with wool/feather bedding
+# - Multiple entrances: 2-3 openings for escape routes
+# - Tunnels: 2 high x 1 wide connecting chambers
+# - Hidden entrances under bushes or rocks
+# - Storage area: Items dropped by fox
+#
+# Size: Variable (5-15 blocks total depth)
+# 2-3 entrances for emergency escape
+# Soft lining for comfort during daytime sleep

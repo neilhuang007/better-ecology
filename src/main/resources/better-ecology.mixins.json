@@ -1,0 +1,27 @@
+{
+	"required": true,
+	"package": "me.javavirtualenv.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"MobEcologyMixin",
+		"AnimalEcologyMixin",
+		"LivingEntityEcologyMixin",
+		"NaturalSpawnerMixin",
+		"LevelChunkMixin",
+		"EntityRemovalMixin",
+		"animal.AllayMixin",
+		"animal.StriderMixin",
+		"animal.CowInteractionMixin",
+		"ecology.mixin.AnimalBreedingMixin",
+		"block.NoteBlockMixin",
+		"villager.VillagerMixin",
+		"villager.VillagerTradingMixin",
+		"villager.WanderingTraderMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}

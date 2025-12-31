@@ -1,0 +1,637 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# Mob: Bee
+# ============================================================================
+#
+# This file defines unique behaviors specific to bees that aren't covered
+# by the generalized template systems.
+#
+# KEY UNIQUE BEHAVIORS:
+# - Pollination mechanics (crop growth acceleration)
+# - Hive/nest interactions (honey storage, anger system)
+# - Stinging behavior (death after sting, poison effect)
+# - Flower following behavior
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:bee"
+  display_name: "Bee"
+
+  classification:
+    category: "NEUTRAL"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "COLONY"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Honey bee (Apis mellifera)"
+    ecological_role: "Pollinator and honey producer - critical for plant reproduction"
+
+  tags: ["flying", "pollinator", "social", "venomous", "eusocial"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 10                      # 5 hearts (Minecraft default)
+  size:
+    width: 0.4
+    height: 0.4
+  biomass:
+    adult: 5
+  movement:
+    speeds:
+      walk: 0.1                   # Can walk slowly
+      fly: 0.15                   # Flight speed
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.02
+  age:
+    baby_duration: 1200           # 1 minute as baby (in-game time)
+    max_age: null                 # Bees don't die of old age
+  social:
+    enabled: true
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule: null                # Use template defaults
+
+  weather:
+    rain: null                    # Use template defaults
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: []
+      forbidden: []
+    required_nearby:
+      - feature: "flowers"
+        max_distance: 32
+        reason: "Required for pollination and food"
+
+  territory:
+    enabled: false
+    size: null
+
+  shelter:
+    needs_shelter: true
+    shelter_uses: ["sleeping", "refuge", "honey_production", "breeding"]
+    valid_shelters: ["bee_nest", "beehive"]
+
+  # === LOCATION-TRIGGERED BEHAVIORS ===
+  location_triggers:
+    enabled: true
+    triggers:
+      - name: "flower_pollination"
+        description: |
+          When near flowers, bee lands and pollinates them. After pollination,
+          bee gains pollen particles and can accelerate crop growth. Pollination
+          takes 2-4 seconds per flower. Bee will visit multiple flowers before
+          returning to hive.
+        location:
+          blocks: ["#minecraft:flowers"]
+          biomes: []
+          near_water: null
+          time: [0, 12000]         # Daytime only
+        behavior:
+          duration: [40, 80]       # 2-4 seconds
+          activity: "pollinating"
+          particle_effect: "pollen"
+          gain_item: "pollen"
+
+      - name: "crop_pollination"
+        description: |
+          When bee has pollen and flies over crops, it pollinates them causing
+          accelerated growth. Each crop can only be pollinated once. Bee must
+          be within 2 blocks vertically and have pollen.
+        location:
+          blocks: ["minecraft:wheat", "minecraft:potatoes", "minecraft:carrots",
+                   "minecraft:beetroots", "minecraft:melon_stem", "minecraft:pumpkin_stem"]
+          biomes: []
+          near_water: null
+          time: null
+        behavior:
+          requires_state: "has_pollen"
+          growth_boost: 1.5        # 50% faster growth
+          max_pollinations_per_trip: 10
+          lose_pollen_after: true
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "BLOCK"
+        target: "#minecraft:flowers"
+        nutrition: 40
+        method: "POLLINATE"
+        world_effect:
+          action: "POLLINATE"
+          result: "crop_growth_boost"
+
+    secondary: []
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 22
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:frog"
+        threat_level: "EXTREME"
+        detection_range: 16
+        response: "FLEE"
+      - entity: "minecraft:armadillo"
+        threat_level: "HIGH"
+        detection_range: 12
+        response: "FLEE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: null
+    recent_food:
+      enabled: true
+    environment:
+      near_water: null
+      required_biomes: []
+    requires_shelter: null
+    season: null
+
+  density_effects:
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: false
+      behavior: "Bees breed through flowers, no courtship"
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: 0
+    birth:
+      offspring_count: [1, 1]
+      location_requirement: "near_flowers"
+
+  parental_care:
+    duration: 1200
+    behaviors:
+      protects_offspring: true
+      feeds_offspring: false
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "COLONY"
+    size:
+      min: 1
+      optimal: 3
+      max: 3
+    leadership:
+      has_leader: false
+      leader_selection: ""
+
+  herd_movement:
+    enabled: false
+
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "hive_attacked"
+          call: "anger_pheromone"
+          group_response: "swarm_defend"
+          radius: 32
+        - trigger: "bee_stung"
+          call: "anger_pheromone"
+          group_response: "aggressive_swarm"
+          radius: 24
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: false
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: true
+
+  responses:
+    drinking:
+      enabled: false
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 8
+    group_size: [1, 3]
+    conditions:
+      biomes: []
+
+  carrying_capacity:
+    caps:
+      per_chunk: null
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "NEUTRAL"
+
+  taming:
+    enabled: false
+    items: []
+
+  player_breeding:
+    enabled: true
+    items: ["#minecraft:flowers"]
+
+  drops:
+    on_death: []
+
+  interactions:
+    - action: "follow_flower"
+      item: "#minecraft:flowers"
+      result: "follow_player"
+      description: "Bee follows player holding any flower"
+
+    - action: "harvest_honey"
+      item: "glass_bottle"
+      result: "honey_bottle"
+      description: "Harvest honey from beehive (angers bees if no campfire nearby)"
+      requires_block: "beehive_honeyed"
+
+    - action: "harvest_comb"
+      item: "shears"
+      result: "honeycomb"
+      description: "Harvest honeycomb from beehive (angers bees if no campfire nearby)"
+      requires_block: "beehive_honeyed"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.bee.loop"
+    hurt: "entity.bee.hurt"
+    death: "entity.bee.death"
+    sting: "entity.bee.sting"
+    pollinate: "entity.bee.pollinate"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "hover"
+        frequency: 0.7
+        trigger: "idle"
+      - behavior: "circle"
+        frequency: 0.4
+        trigger: "has_pollen"
+      - behavior: "dance"
+        frequency: 0.15
+        trigger: "found_flowers"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+unique_behaviors:
+  # === POLLINATION SYSTEM ===
+  - name: "pollination_mechanic"
+    description: |
+      Bees visit flowers, collect pollen (visible as pollen particles on body),
+      then transfer pollen to crops to accelerate their growth. This is the
+      core unique behavior that makes bees ecologically valuable.
+
+      WHEN: During daytime (0-12000 ticks), when not angry, when hungry or
+           randomly during foraging
+      WHERE: Any flower within 22 blocks of hive, then crops within flight path
+      WHAT: Bee flies to flower, lands for 2-4 seconds (pollinating animation),
+           gains pollen particles, flies to crops, deposits pollen causing
+           instant growth tick, returns to hive after 5-10 pollinations
+      WHY: Makes bees essential for farming, provides ecological purpose
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 14
+      duration: null
+      affects_others: true        # Crops benefit
+      world_modification: true     # Crop growth
+
+  # === HIVE/NEST SYSTEM ===
+  - name: "hive_interaction"
+    description: |
+      Bees live in hives/nests and use them for shelter, breeding, and honey
+      production. Hives have honey levels (0-5) that bees gradually fill.
+
+      WHEN: At night (13000-23000), during rain, when producing honey, when
+           needing to deposit pollen
+      WHERE: Within 3 blocks of bee nest or beehive
+      WHAT: Bee enters hive, becomes invisible/invulnerable, performs hive
+           activities (convert pollen to honey, rest, breed), exits when
+           conditions are met (morning, rain stops, honey deposited)
+      WHY: Creates home base behavior, protects bees at night, enables honey
+           farming gameplay
+
+    implementation_hints:
+      trigger_type: "TIME"
+      priority: 7
+      duration: [100, 400]       # Time spent inside hive
+      affects_others: false
+      world_modification: false
+
+  # === ANGER SYSTEM ===
+  - name: "anger_mechanic"
+    description: |
+      Bees become angry when hive is harmed, when bee is attacked, or when
+      player harvests honey without campfire smoke. Anger spreads to nearby
+      bees and causes them to sting and attack.
+
+      WHEN: Hive takes damage, bee takes damage, player harvests honeycomb/
+           honey without campfire within 10 blocks
+      WHERE: Within 32 blocks of affected bee/hive
+      WHAT: Angered bees gain red particle effect, fly speed +40%, chase
+           target and attempt to sting. Anger level: 0-400, decays 1 per
+           second. Other bees in radius join attack.
+      WHY: Defensive behavior, makes honey harvesting challenging,
+           creates consequence for harming colony
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 3
+      duration: [200, 400]       # Anger duration in ticks
+      affects_others: true        # Other bees join attack
+      world_modification: false
+
+  # === STINGING BEHAVIOR ===
+  - name: "sting_attack"
+    description: |
+      When angry bee reaches target, it stings once dealing damage + poison,
+      then dies. This is a one-time attack that costs the bee its life.
+
+      WHEN: Angered bee reaches target (within 1 block)
+      WHERE: Any location, bee just needs contact with target
+      WHAT: Bee deals 2-3 heart damage + Poison II for 10 seconds, then
+           takes 999 damage (dies instantly), leaves "stinger" visual for
+           5 seconds on target
+      WHY: Realistic bee behavior, high cost for attacking player, creates
+           meaningful consequence to angering bees
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 2
+      duration: null              # Instant
+      affects_others: true        # Target takes damage
+      world_modification: false
+
+  # === FLOWER FOLLOWING ===
+  - name: "flower_attraction"
+    description: |
+      Bees will follow players holding flowers, allowing players to lead
+      them to new locations or crops that need pollination.
+
+      WHEN: Player within 10 blocks holding any flower item
+      WHERE: Any location
+      WHAT: Bee moves toward player, follows within 3-5 blocks, stops if
+           player puts flower away or moves too fast (>22 blocks away)
+      WHY: Allows players to relocate bees for pollination, creates
+           positive interaction beyond breeding
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: 16
+      duration: null              # While holding flower
+      affects_others: false
+      world_modification: false
+
+  # === HONEY PRODUCTION ===
+  - name: "honey_production"
+    description: |
+      Bees gradually fill hive with honey over time as they pollinate flowers.
+      Honey level 0-5 displayed on hive model. At level 5, hive is "full"
+           and ready for harvest.
+
+      WHEN: Bee returns to hive with pollen (after pollinating flowers)
+      WHERE: Inside hive
+      WHAT: Each pollen deposit increases hive honey level by 1. Requires
+           5 trips to fill hive (0->1->2->3->4->5). Takes ~2 minutes of
+           bee activity to fill hive.
+      WHY: Creates renewable resource, time-based progression, reward for
+           keeping bees alive
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 15
+      duration: null
+      affects_others: false
+      world_modification: true     # Hive state changes
+
+  # === RAIN/NIGHT RETURN ===
+  - name: "weather_awareness"
+    description: |
+      Bees recognize rain and approaching night, returning to hive before
+      weather turns or darkness falls.
+
+      WHEN: Rain starts, or time approaches 12000 (dusk)
+      WHERE: Any location outside hive
+      WHAT: Bee abandons current activity (even if pollinating), flies
+           directly to hive at increased speed (+20%), enters hive and
+           stays until weather clears or morning (time 0)
+      WHY: Realistic behavior, protects bees from rain, creates predictable
+           patterns players can observe
+
+    implementation_hints:
+      trigger_type: "TIME"
+      priority: 3
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  # === CAMPFIRE CALMING ===
+  - name: "campfire_soothe"
+    description: |
+      Bees near campfire smoke will not attack when honey is harvested.
+      Campfire placed under hive creates smoke column that pacifies bees.
+
+      WHEN: Player harvests honey/honeycomb from hive
+      WHERE: Campfire within 10 blocks below hive (y-level check)
+      WHAT: Bees do not become angry during harvest if campfire smoke present
+      WHY: Allows safe honey farming, creates gameplay mechanic for
+           managing bees, encourages campfire use
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 1
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  # === INFERTILE BEE REPRODUCTION ===
+  - name: "colony_reproduction"
+    description: |
+      Bees don't reproduce individually; instead, colonies reproduce. When a
+      hive is full (3 bees) and conditions are good, new bees spawn in pairs.
+
+      WHEN: Hive has 3 bees, flowers nearby, breeding flower fed to any bee
+      WHERE: New baby bee spawns at hive location
+      WHAT: Parent bee enters "love mode", baby spawns, hive population can
+           temporarily exceed 3 until dispersal or death
+      WHY: More realistic than individual pairing, maintains colony concept,
+           prevents uncontrolled bee multiplication
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 9
+      duration: 6000             # Breeding cooldown
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+relationships:
+  predators:
+    - entity: "minecraft:frog"
+      notes: "Frogs hunt and eat bees as primary prey"
+
+    - entity: "minecraft:armadillo"
+      notes: "Armadillos eat bees when encountered (insectivore behavior)"
+
+  prey: []
+
+  competitors:
+    - entity: "minecraft:butterfly"
+      resource: "Flowers"
+      interaction: "Both pollinate flowers, minimal competition due to
+                    different active times and flower preferences"
+
+  mutualists: []
+
+  commensals: []
+
+  special:
+    - entity: "minecraft:player"
+      relationship: "Symbiotic"
+      description: "Players can protect bees with campfires, relocate them
+                    with flowers, and breed them. Bees provide pollination
+                    service for crops and honey resource."
+
+    - entity: "minecraft:iron_golem"
+      relationship: "Protection"
+      description: "Iron golems do not attack bees, creating safe zones for
+                    bee colonies near villages"
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+narrative:
+  summary: |
+    The Bee is a small flying insect that lives in colonies and serves as the
+    primary pollinator in the Minecraft ecosystem. By visiting flowers and
+    transferring pollen to crops, bees accelerate agricultural growth, making
+    them essential partners for players. Their colonies (hives) produce honey
+    as a valuable resource.
+
+  behavior_overview: |
+    Bees lead a busy life centered around their hive. During clear daytime
+    weather, they venture out to find flowers, spending several seconds at
+    each one collecting pollen. With pollen visible on their bodies, they
+    fly erratically between their hive and nearby crops, depositing pollen
+    to accelerate growth. At night or during rain, all bees return to the
+    safety of their hive. Bees are normally peaceful but will fiercely defend
+    their colony if provoked—the entire hive will swarm any attacker, each
+    bee willing to sacrifice its life with a single venomous sting. Players
+    can lead bees by holding flowers, and can safely harvest honey by placing
+    a campfire beneath the hive to calm the colony.
+
+  ecological_importance: |
+    Without bees, crop farming would be significantly slower as players would
+    lose the 50% growth boost from pollination. Bees are the only passive mob
+    that directly benefits players' agriculture efforts. Their absence would
+    remove honey as a renewable resource, affecting food, brewing, and sugar
+    production. The entire pollination mechanic would disappear from the game,
+    reducing ecosystem complexity and player-creature interaction depth.
+
+  design_notes: |
+    Bees should feel like busy workers—constantly moving between hive and
+    flowers with purpose. Their flight path should be erratic but goal-directed.
+    The anger system needs to be dangerous enough that players respect hives
+    but not so punishing that accidental destruction ruins gameplay. The
+    campfire mechanic is crucial for giving players control over the danger.
+    Pollination shouldn't be so fast that crops grow instantly, but fast enough
+    that maintaining a bee colony feels rewarding. Bees should die in water
+    but survive falling damage due to flying. Bee population should be limited
+    by hive count to prevent world clutter.
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 1.0
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: 8          # Pollen from ~2 flowers per day
+    provides_to_predator: 5       # Very low biomass
+
+  population_target: "Common, 3-6 per hive, hives spawn in flower-rich areas"
+
+  removal_impact: "Significant - loss of pollination buff (50% crop growth speed),
+                  loss of honey resource, reduced ecosystem complexity"

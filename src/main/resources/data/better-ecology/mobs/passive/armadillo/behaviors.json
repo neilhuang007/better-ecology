@@ -1,0 +1,148 @@
+{
+  "behaviors": {
+    "enabled": true,
+    "priority": 1,
+    "max_force": 0.2,
+    "max_speed": 0.15,
+
+    "separation": 0.8,
+    "alignment": 0.5,
+    "cohesion": 0.6,
+
+    "pursuit": 0.0,
+    "evasion": 1.5,
+    "avoidance": 0.0,
+    "attraction": 0.0,
+    "escape": 0.0,
+    "panic": 2.0,
+    "flight_initiation": 0.0,
+    "alarm_signal": 0.0,
+
+    "predator_avoidance": 2.5,
+
+    "roll_priority": 1,
+    "unroll_priority": 2,
+    "forage_priority": 5,
+    "burrow_priority": 6
+  },
+  "hunger": {
+    "enabled": true,
+    "max_value": 100,
+    "starting_value": 80,
+    "decay_rate": 0.015,
+    "damage_threshold": 5,
+    "damage_amount": 1.0,
+    "damage_interval": 200
+  },
+  "thirst": {
+    "enabled": true,
+    "max_value": 100,
+    "starting_value": 85,
+    "decay_rate": 0.015,
+    "thirst_threshold": 20
+  },
+  "condition": {
+    "enabled": true,
+    "max_value": 100,
+    "starting_value": 85,
+    "gain_when_satiated": 0.025,
+    "loss_when_hungry": 0.02,
+    "loss_when_starving": 0.1
+  },
+  "energy": {
+    "enabled": true,
+    "max_value": 100,
+    "recovery_rate": 0.7,
+    "exhaustion_threshold": 15,
+    "foraging_cost": 0.12,
+    "fleeing_cost": 0.25,
+    "burrowing_cost": 0.2,
+    "rolled_cost": 0.005
+  },
+  "age": {
+    "enabled": true,
+    "baby_duration": 24000,
+    "maturity_age": 24000
+  },
+  "movement": {
+    "base_speed": 0.15,
+    "roll_speed": 0.3,
+    "walk_speed": 0.15
+  },
+  "health": {
+    "base_health": 12.0,
+    "damage_reduction_while_rolled": 0.8
+  },
+  "size": {
+    "width": 0.7,
+    "height": 0.65,
+    "baby_scale": 0.5
+  },
+  "diet": {
+    "is_insectivore": true,
+    "eats_insects_from_blocks": true,
+    "insect_blocks": [
+      "minecraft:grass_block",
+      "minecraft:dirt",
+      "minecraft:sand",
+      "minecraft:coarse_dirt",
+      "minecraft:podzol",
+      "minecraft:mycelium"
+    ]
+  },
+  "temporal": {
+    "activity_pattern": "crepuscular",
+    "active_at_dawn": true,
+    "active_at_dusk": true,
+    "active_at_night": true,
+    "rest_during_day": true
+  },
+  "burrowing": {
+    "enabled": true,
+    "dig_cooldown": 1200,
+    "burrow_search_range": 64.0,
+    "min_burrow_distance": 12.0,
+    "burrow_capacity": 4,
+    "daytime_burrow_chance": 0.7,
+    "flee_burrow_chance": 0.9
+  },
+  "rolling_defense": {
+    "enabled": true,
+    "roll_duration_ticks": 60,
+    "unroll_duration_ticks": 40,
+    "min_roll_time_ticks": 60,
+    "roll_trigger_distance": 8.0,
+    "unroll_safe_distance": 16.0,
+    "damage_reduction": 0.8,
+    "movement_disabled_while_rolled": true
+  },
+  "insect_foraging": {
+    "enabled": true,
+    "scent_range": 12.0,
+    "sniff_duration_ticks": 40,
+    "dig_duration_ticks": 30,
+    "hunger_restore": 30,
+    "forage_cooldown_ticks": 600,
+    "min_hunger_threshold": 70
+  },
+  "predator_avoidance": {
+    "enabled": true,
+    "detection_radius": 24.0,
+    "flee_weight": 1.5,
+    "roll_threshold": 8.0,
+    "predators": [
+      "minecraft:wolf",
+      "minecraft:cat",
+      "minecraft:ocelot",
+      "minecraft:fox"
+    ],
+    "ignore_tamed": true
+  },
+  "panic": {
+    "enabled": true,
+    "duration_ticks": 200,
+    "trigger_on_attack": true,
+    "trigger_on_loud_noise": true,
+    "trigger_on_predator_nearby": true
+  }
+}

@@ -1,0 +1,842 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - SHEEP (Ovis aries)
+# Mod Registry Configuration
+# Version: 2.0
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:sheep"
+  display_name: "Sheep"
+
+  # Ecological classification
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "HERD"
+    activity_pattern: "DIURNAL"
+
+  # Reference information
+  reference:
+    real_world_analog: "Ovis aries (Domestic Sheep)"
+    ecological_role: "Primary consumer, grazer that maintains grassland balance and provides wool/mutton resources"
+
+  # Tags for system filtering
+  tags: ["farmable", "dyeable", "wool_producer", "grassland", "herd_animal"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  # Health
+  health:
+    base: 8                         # 8 hearts (16 HP)
+    baby_multiplier: 0.5
+
+  # Size
+  size:
+    width: 0.9
+    height: 1.3
+    baby_scale: 0.5
+
+  # Biomass
+  biomass:
+    adult: 80
+    baby: 20
+    transfer_efficiency: 0.1
+
+  # Movement capabilities
+  movement:
+    speeds:
+      walk: 0.23
+      run: 0.23                     # Sheep don't sprint
+      swim: 0.15
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: true
+      jump_height: 1.0
+      avoids_water: false
+      avoids_cliffs: true
+      cliff_threshold: 4
+
+    conditional_modifiers:
+      baby: 0.8
+      elderly: 0.8
+      injured: 0.7
+      hungry: 0.9
+      fleeing: 1.2
+      hunting: 0.0
+      carrying_offspring: 1.0
+      in_water_nonaquatic: 0.4
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  # Hunger system
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 80
+    decay_rate: 0.015
+
+    thresholds:
+      satiated: 75
+      hungry: 45
+      very_hungry: 20
+      starving: 10
+
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 200
+
+  # Thirst system (disabled)
+  thirst:
+    enabled: true
+    max_value: 100
+    starting_value: 100
+    decay_rate: 0.012             # Sheep moderate water needs
+    thresholds:
+      satisfied: 75
+      thirsty: 45
+      dehydrated: 15
+
+
+  # Body condition
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+
+    gain_when_satiated: 0.015
+    loss_when_hungry: 0.02
+    loss_when_starving: 0.1
+
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  # Energy/Stamina
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.6
+
+    costs:
+      sprinting: 0.0
+      hunting: 0.0
+      fleeing: 0.3
+      flying: 0.0
+      swimming: 0.25
+
+  # Age tracking
+  age:
+    enabled: true
+    baby_duration: 24000            # 20 minutes
+    maturity_age: 24000
+    elderly_age: null
+    max_age: null
+
+  # Social needs
+  social:
+    enabled: true
+    max_value: 100
+    decay_rate: 0.03                # Sheep are very social
+    recovery_rate: 0.15
+    loneliness_threshold: 40
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  # Daily cycle
+  daily_cycle:
+    schedule:
+      - time: [0, 6000]             # Dawn to noon
+        activity: 1.0
+        label: "morning"
+      - time: [6000, 12000]         # Noon to dusk
+        activity: 0.9
+        label: "afternoon"
+      - time: [12000, 13500]        # Dusk
+        activity: 0.7
+        label: "dusk"
+      - time: [13500, 22500]        # Night
+        activity: 0.3
+        label: "night"
+      - time: [22500, 24000]        # Pre-dawn
+        activity: 0.5
+        label: "pre_dawn"
+
+    low_activity_behavior:
+      action: "REST"
+      seek_shelter: false
+      reduced_awareness: true
+      awareness_multiplier: 0.6
+
+  # Weather responses
+  weather:
+    rain:
+      activity_multiplier: 0.7
+      seek_shelter: false
+      shelter_priority: 1
+    thunder:
+      activity_multiplier: 0.4
+      seek_shelter: true
+      panic_chance: 0.15
+    snow:
+      activity_multiplier: 0.8
+      seek_shelter: false
+    clear:
+      activity_multiplier: 1.0
+
+  # Seasonal behaviors
+  seasons:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  # Habitat requirements
+  habitat:
+    biomes:
+      allowed: []                   # All grassy biomes
+      preferred: ["plains", "savanna", "meadow", "forest", "taiga", "snowy_taiga"]
+      forbidden: ["pale_garden", "ice_spikes", "wooded_badlands"]
+
+    altitude:
+      min: -64
+      max: 320
+      preferred: [63, 180]
+
+    required_nearby:
+      - feature: "grass"
+        max_distance: 16
+        reason: "Requires grass for wool regrowth"
+
+  # Territory system
+  territory:
+    enabled: false
+
+  # Home range
+  home_range:
+    enabled: true
+    radius: 48
+    has_home_point: false
+    home_type: null
+
+  # Shelter requirements
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  # Food sources categorized by preference
+  food_sources:
+    primary:
+      - type: "BLOCK"
+        target: "minecraft:grass_block"
+        nutrition: 25
+        saturation: 4000
+        consumption_time: 40
+        method: "GRAZE"
+        world_effect:
+          action: "CONVERT"
+          result: "minecraft:dirt"
+        condition_gain: 4
+        health_effect: 0
+
+      - type: "BLOCK"
+        target: "minecraft:short_grass"
+        nutrition: 15
+        saturation: 2000
+        consumption_time: 30
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 2
+        health_effect: 0
+
+    secondary:
+      - type: "BLOCK"
+        target: "minecraft:fern"
+        nutrition: 12
+        saturation: 1800
+        consumption_time: 30
+        method: "BROWSE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 2
+        health_effect: 0
+
+      - type: "BLOCK"
+        target: "minecraft:tall_grass"
+        nutrition: 18
+        saturation: 2500
+        consumption_time: 35
+        method: "BROWSE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 3
+        health_effect: 0
+
+    emergency: []
+
+  # Foraging behavior
+  foraging:
+    search_radius:
+      base: 12
+      when_hungry: 20
+      when_starving: 32
+    search_interval: 120
+
+    memory:
+      remembers_locations: true
+      memory_duration: 12000
+      remembers_depleted: true
+      avoids_depleted_for: 6000
+      shares_with_group: true
+
+    sustainability:
+      enabled: true
+      dont_deplete_fully: true
+      minimum_remaining: 3
+      patch_return_delay: 4000
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  # === AS PREDATOR ===
+  as_predator:
+    enabled: false
+
+  # === AS PREY ===
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:wolf"
+        threat_level: "HIGH"
+        detection_range: 24
+        response: "FLEE"
+
+    default_response:
+      detection_range: 20
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.2
+        flee_distance: 32
+        flee_toward: "GROUP"
+        zigzag: false
+
+      alarm:
+        gives_alarm: true
+        alarm_radius: 24
+        alarm_triggers_group_flee: true
+
+    all_clear:
+      predator_distance: 48
+      time_since_seen: 300
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: true
+  method: "SEXUAL"
+
+  # === BREEDING REQUIREMENTS ===
+  requirements:
+    min_age: 24000
+    max_age: null
+    min_health: 0.6
+    min_condition: 60
+    min_hunger: 50
+
+    recent_food:
+      enabled: true
+      time_window: 8000
+      meals_required: 2
+
+    environment:
+      near_water: false
+      water_max_distance: 32
+      required_biomes: []
+      required_blocks_nearby: []
+      min_light: 0
+      max_light: 15
+
+    requires_shelter: false
+    shelter_type: null
+
+    time_of_day: null
+    season: null
+    weather: null
+
+    mate_required: true
+    mate_max_distance: 16
+
+  # === POPULATION DENSITY EFFECTS ===
+  density_effects:
+    enabled: true
+    check_radius: 48
+
+    density_curve:
+      - count: 2
+        multiplier: 1.5
+      - count: 6
+        multiplier: 1.0
+      - count: 12
+        multiplier: 0.7
+      - count: 20
+        multiplier: 0.3
+      - count: 30
+        multiplier: 0.1
+
+  # === MATE SELECTION ===
+  mate_selection:
+    search_radius: 32
+    search_interval: 1200
+
+    preferences:
+      prefer_healthy: true
+      prefer_good_condition: true
+      avoid_relatives: true
+      relative_recognition_duration: 48000
+
+    courtship:
+      enabled: false
+
+  # === BREEDING PROCESS ===
+  breeding:
+    cooldown: 6000                  # 5 minutes
+
+    gestation:
+      type: "INSTANT"
+      duration: 0
+      behavior_during: []
+
+    birth:
+      offspring_count: [1, 1]
+      condition_affects_count: false
+      location_requirement: null
+
+  # === PARENTAL CARE ===
+  parental_care:
+    enabled: true
+    duration: 24000
+
+    behaviors:
+      protects_offspring: true
+      protection_aggression: 1.5
+      protection_radius: 6
+
+      feeds_offspring: false
+      teaches_offspring: false
+      carries_offspring: false
+
+    offspring_behavior:
+      follows_parent: true
+      follow_distance: 3
+      max_separation: 12
+      separation_distress: true
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  # Group structure
+  group:
+    type: "HERD"
+    size:
+      min: 2
+      optimal: 6
+      max: 20
+
+    composition:
+      mixed_sex: true
+      mixed_age: true
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  # Herd/flock movement
+  herd_movement:
+    enabled: true
+    cohesion_radius: 16
+    separation_distance: 2.5
+    alignment: true
+
+  # Communication
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "predator_detected"
+          call: "bleating_alarm"
+          group_response: "flee_together"
+      radius: 24
+      chain_calling: true
+
+    contact_calls:
+      enabled: true
+      when: ["separated", "distressed"]
+      radius: 32
+
+    mating_calls:
+      enabled: false
+
+  # Social behaviors
+  behaviors:
+    greeting: false
+    allogrooming: false
+    play: true                      # Baby sheep play
+    huddling: true                  # For warmth
+    dominance_hierarchy: false
+
+  # Group benefits
+  group_benefits:
+    predator_detection_bonus: 0.1
+    foraging_efficiency_bonus: 0.05
+    thermoregulation_bonus: 0.1
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  # Terrain modifications
+  terrain:
+    enabled: true
+    actions:
+      - trigger: "grazing"
+        action: "CONVERT"
+        target_blocks: ["grass_block"]
+        result_block: "dirt"
+        frequency: 0.001             # Per tick when grazing
+        radius: 0
+
+      - trigger: "grazing"
+        action: "DESTROY"
+        target_blocks: ["short_grass", "fern", "tall_grass"]
+        result_block: null
+        frequency: 0.001
+        radius: 0
+
+  # Ecosystem services
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+
+    pollination:
+      enabled: false
+
+    nutrient_cycling:
+      enabled: true
+      fertilizes: true              # Sheep manure
+      fertilize_radius: 1
+
+    decomposition:
+      enabled: false
+
+  # Environmental responses
+  responses:
+    drinking:
+      enabled: false
+
+    temperature:
+      heat_seek_shade: false
+      heat_seek_water: false
+      cold_seek_shelter: false
+      cold_huddling: true
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  # Spawning rules
+  spawning:
+    weight: 12
+    group_size: [2, 4]
+
+    conditions:
+      blocks: ["grass_block"]
+      biomes: ["plains", "savanna", "meadow", "forest", "taiga", "snowy_taiga"]
+      light: [9, 15]
+      altitude: null
+      time: null
+      weather: null
+
+  # Carrying capacity
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 10
+      regional: null
+
+    resources:
+      enabled: false
+
+    over_capacity:
+      - threshold: 1.3
+        effects: ["reduced_breeding"]
+      - threshold: 1.6
+        effects: ["starvation", "dispersal"]
+
+  # Dispersal
+  dispersal:
+    enabled: true
+    triggers: ["overcrowding"]
+    distance: [64, 128]
+
+  # Natural mortality
+  mortality:
+    old_age:
+      enabled: false
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  # Fear/approach distances
+  distances:
+    detection: 24
+    caution: 10
+    flee: 6
+
+  # Habituation
+  habituation:
+    enabled: true
+    rate: 0.02
+    decay: 0.001
+    max_habituation: 0.9
+    habituated_flee_distance: 2
+
+  # Taming
+  taming:
+    enabled: false
+
+  # Player breeding
+  player_breeding:
+    enabled: true
+    items: ["minecraft:wheat"]
+    bypasses_conditions: true       # Players can force breeding
+
+  # Drops
+  drops:
+    on_death:
+      - item: "minecraft:wool"
+        count: [1, 1]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 0
+
+      - item: "minecraft:mutton"
+        count: [1, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+    on_interaction:
+      - action: "shear"
+        item: "minecraft:shears"
+        result: "minecraft:wool"
+        count: [1, 3]
+        description: "Shearing removes wool without killing"
+
+  # Special interactions
+  interactions:
+    - action: "dye"
+      item: "#minecraft:dyes"
+      result: "colored_sheep"
+      description: "Right-click with dye to change wool color"
+
+    - action: "feed"
+      item: "minecraft:wheat"
+      result: "attract_follow"
+      description: "Holding wheat attracts sheep within 6 blocks"
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  # Sounds
+  sounds:
+    ambient: "minecraft:entity.sheep.ambient"
+    hurt: "minecraft:entity.sheep.hurt"
+    death: "minecraft:entity.sheep.death"
+    baby: "minecraft:entity.sheep.ambient"
+    alarm: "minecraft:entity.sheep.ambient"
+    mating: null
+    eating: "minecraft:entity.sheep.ambient"
+
+  # Idle animations
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "head_down_graze"
+        frequency: 200
+        trigger: "near_grass"
+
+      - behavior: "look_around"
+        frequency: 150
+        trigger: "idle"
+
+      - behavior: "tail_wag"
+        frequency: 300
+        trigger: "content"
+
+  # Individual variation
+  personality_traits:
+    boldness:
+      base: 0.3
+      variation: 0.2
+    activity:
+      base: 0.6
+      variation: 0.15
+    sociability:
+      base: 0.8
+      variation: 0.1
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+
+ai_priority_framework:
+  # Standard priority with sheep-specific adjustments
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  physiological:
+    critical_health: 3
+    drink_water: -1               # Disabled
+    eat_food: 4
+    find_shelter: -1              # Disabled
+
+  reproduction:
+    care_for_offspring: 5
+    breed: 6
+    find_mate: 7
+
+  social:
+    group_cohesion: 8
+    social_interaction: 9
+
+  hunting:
+    hunt_prey: -1                 # Disabled
+
+  location:
+    location_triggered: 10
+    territory_patrol: -1          # Disabled
+
+  default:
+    wander: 11
+    idle: 12
+    rest: 13
+
+
+# ============================================================================
+# SYSTEM 15: ANIMAL-ANIMAL INTERACTIONS
+# ============================================================================
+# Sheep are herd prey animals with alarm calling behavior
+# ============================================================================
+
+interaction:
+  # === SPECIES RELATIONSHIPS ===
+
+  # Predators sheep fear
+  predators:
+    - "minecraft:wolf"            # Primary predator
+    - "minecraft:fox"             # Secondary predator (threatens lambs)
+
+  # Sheep don't hunt
+  prey: []
+
+  # Symbiotic partners (none)
+  symbiotic_partners: []
+
+  # No direct competition
+  competitors: []
+
+  # Can join mixed herds with cows
+  herd_compatible:
+    - "minecraft:cow"
+    - "minecraft:mooshroom"
+
+  # === DYNAMIC RELATIONSHIP SYSTEM ===
+
+  relationship_decay_rate: 0.001
+  trust_build_rate: 0.015              # Strong herd bonding
+  grudge_build_rate: 0.02
+
+  # === SOCIAL BEHAVIORS ===
+
+  gives_warning_calls: true            # Sheep bleat to warn herd
+  warning_cooldown: 120
+
+  can_mourn: false
+
+  can_grieve: false
+
+  can_play: true                       # Lambs play together
+
+  can_be_altruistic: false             # Sheep are not altruistic
+
+  can_teach: false

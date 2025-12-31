@@ -1,0 +1,17 @@
+# ============================================================================
+# TURTLE NEST STRUCTURE
+# Sand egg chamber for sea turtles
+# Location: Dug into sand beaches near water
+# ============================================================================
+
+# Placeholder for turtle nest structure
+#
+# The structure should consist of:
+# - Excavated sand pit (2x2x1 deep)
+# - Sand blocks placed back on top after laying
+# - Surface marked with disturbed sand texture
+# - Eggs placed at bottom of chamber
+#
+# Size: 2x2x1 egg chamber
+# Placed within 10 blocks of water
+# Covered after laying

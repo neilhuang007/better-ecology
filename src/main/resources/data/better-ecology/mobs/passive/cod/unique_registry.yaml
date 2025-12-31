@@ -1,0 +1,503 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# Mob: Atlantic Cod (minecraft:cod)
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:cod"
+  display_name: "Atlantic Cod"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "SECONDARY_CONSUMER"
+    diet_type: "PISCIVORE"
+    social_type: "HERD"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Atlantic cod (Gadus morhua)"
+    ecological_role: "Mid-level predator feeding on smaller fish and plankton; important prey for dolphins, drowned, and guardians. Schooling behavior provides predator defense and foraging efficiency."
+
+  tags: ["aquatic", "schooling", "marine", "edible", "bucket_capturable"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 1.5                       # 3 HP (weak fish)
+  size:
+    width: 0.5
+    height: 0.3
+  biomass:
+    adult: 15                       # Small fish biomass
+  movement:
+    speeds:
+      walk: 0.0
+      run: 0.0
+      swim: 0.2
+      fly: 0.0
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.015               # Slower metabolism
+  thirst:
+    enabled: false                  # Aquatic
+  age:
+    baby_duration: 24000
+    max_age: null
+  social:
+    enabled: true                   # Schooling fish need social
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 6000]
+        activity: 1.0
+        label: "morning"
+      - time: [6000, 12000]
+        activity: 0.9
+        label: "afternoon"
+      - time: [12000, 13500]
+        activity: 0.7
+        label: "dusk"
+      - time: [13500, 22500]
+        activity: 0.4               # Less active at night
+        label: "night"
+      - time: [22500, 24000]
+        activity: 0.6
+        label: "pre_dawn"
+
+  weather:
+    rain: null                      # Unaffected underwater
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: ["cold_ocean", "frozen_ocean", "lukewarm_ocean", "deep_cold_ocean", "deep_frozen_ocean", "deep_lukewarm_ocean"]
+      forbidden: ["warm_ocean", "deep_warm_ocean"]
+    required_nearby:
+      - feature: "water"
+        max_distance: 0
+        reason: "Aquatic mob - must be in water to survive"
+
+  territory:
+    enabled: false
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  location_triggers:
+    enabled: false
+    triggers: []
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "ENTITY"
+        target: "#ecosystem:small_fish"
+        nutrition: 25
+        method: "HUNT"
+        world_effect:
+          action: "NONE"
+          result: ""
+
+    secondary:
+      - type: "ENTITY"
+        target: "#ecosystem:zooplankton"
+        nutrition: 15
+        method: "FILTER"
+        world_effect:
+          action: "NONE"
+          result: ""
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 12
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: true
+
+    prey:
+      targets: ["#ecosystem:small_fish", "#ecosystem:zooplankton"]
+      selection_rules:
+        avoid_babies: false
+        sustainable_hunting:
+          enabled: false
+          min_prey_count: null
+
+    hunting:
+      method: "CHASE"
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:dolphin"
+        threat_level: "HIGH"
+        detection_range: 16
+        response: "FLEE"
+      - entity: "minecraft:drowned"
+        threat_level: "MEDIUM"
+        detection_range: 12
+        response: "FLEE"
+      - entity: "minecraft:guardian"
+        threat_level: "EXTREME"
+        detection_range: 20
+        response: "FLEE"
+      - entity: "minecraft:elder_guardian"
+        threat_level: "EXTREME"
+        detection_range: 24
+        response: "FLEE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: 60
+    recent_food:
+      enabled: true
+    environment:
+      near_water: true
+      required_biomes: ["cold_ocean", "frozen_ocean", "lukewarm_ocean", "deep_cold_ocean", "deep_frozen_ocean", "deep_lukewarm_ocean"]
+    requires_shelter: false
+    season: null
+
+  density_effects:
+    density_curve:
+      - count: 3
+        multiplier: 1.5
+      - count: 6
+        multiplier: 1.0
+      - count: 10
+        multiplier: 0.6
+      - count: 15
+        multiplier: 0.3
+      - count: 20
+        multiplier: 0.0
+
+  mate_selection:
+    courtship:
+      enabled: false
+      behavior: ""
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: null
+    birth:
+      offspring_count: [2, 4]       # Multiple offspring
+      location_requirement: ""
+
+  parental_care:
+    duration: 0
+    behaviors:
+      protects_offspring: false
+      feeds_offspring: false
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "HERD"
+    size:
+      min: 3
+      optimal: 5
+      max: 6
+    leadership:
+      has_leader: false
+      leader_selection: ""
+
+  herd_movement:
+    enabled: true
+
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "predator_detected"
+          call: "rapid_swimming"
+          group_response: "tight_schooling"
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: false
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 15
+    group_size: [3, 6]
+    conditions:
+      biomes: ["cold_ocean", "frozen_ocean", "lukewarm_ocean", "deep_cold_ocean", "deep_frozen_ocean", "deep_lukewarm_ocean"]
+      blocks: []
+
+  carrying_capacity:
+    caps:
+      per_chunk: 12
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  taming:
+    enabled: false
+    items: []
+
+  player_breeding:
+    enabled: false
+    items: []
+
+  drops:
+    on_death:
+      - item: "minecraft:cod"
+        count: [1, 1]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 0
+      - item: "minecraft:bone_meal"
+        count: [1, 1]
+        chance: 0.05
+        requires_player_kill: false
+        looting_bonus: 0
+
+  interactions:
+    - action: "bucket_capture"
+      item: "minecraft:water_bucket"
+      result: "minecraft:cod_bucket"
+      description: "Player can capture cod using water bucket"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.cod.ambient"
+    hurt: "entity.cod.hurt"
+    death: "entity.cod.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "swim_in_circle"
+        frequency: 0.1
+        trigger: "random"
+      - behavior: "quick_dart"
+        frequency: 0.05
+        trigger: "random"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+
+unique_behaviors:
+  - name: "tight_schooling_defense"
+    description: |
+      When a predator is detected nearby, cod will rapidly form tighter schools
+      with their group members, reducing inter-fish spacing from normal 1.5 blocks
+      to approximately 0.8 blocks. This defensive schooling makes individual targeting
+      more difficult for predators and increases group awareness.
+
+      WHEN: Predator detected within 16 blocks
+      WHERE: Any water body where school exists
+      WHAT: Group members move closer together in synchronized swimming pattern
+      WHY: Defensive behavior - "selfish herd" effect provides individual protection
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 2
+      duration: 400
+      affects_others: true
+      world_modification: false
+
+  - name: "opportunistic_feeding_swarm"
+    description: |
+      When one cod detects and begins pursuing prey (small fish or zooplankton),
+      nearby school members will converge on the area to participate in feeding.
+      This creates a brief feeding frenzy where multiple cod chase the same
+      general area, increasing hunting success for the group.
+
+      WHEN: School member begins hunting prey
+      WHERE: Within 8 blocks of hunting cod
+      WHAT: Other cod in school move toward hunting area and seek prey
+      WHY: Cooperative foraging increases success rate for schooling fish
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 7
+      duration: 200
+      affects_others: true
+      world_modification: false
+
+  - name: "current_riding"
+    description: |
+      Cod have a subtle preference for swimming with water currents rather than
+      against them when not actively hunting or fleeing. They will tend to align
+      their swimming direction with flowing water when wandering, conserving energy.
+
+      WHEN: During normal wandering behavior
+      WHERE: In moving water (streams, underwater currents)
+      WHAT: Adjust swimming direction to align with water flow
+      WHY: Energy conservation - realistic fish behavior
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 14
+      duration: null
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+
+relationships:
+  # Predators (who hunts this mob)
+  predators:
+    - entity: "minecraft:dolphin"
+      notes: "Primary natural predator - actively hunts cod schools"
+    - entity: "minecraft:drowned"
+      notes: "Opportunistic predator - will attack if hungry"
+    - entity: "minecraft:guardian"
+      notes: "Territorial predator - attacks on sight"
+    - entity: "minecraft:elder_guardian"
+      notes: "Territorial predator - highly dangerous"
+    - entity: "minecraft:player"
+      notes: "Harvested for food via fishing or bucket capture"
+
+  # Prey (what this mob hunts)
+  prey:
+    - entity: "#ecosystem:small_fish"
+      notes: "Primary food source - smaller fish species"
+    - entity: "#ecosystem:zooplankton"
+      notes: "Secondary food source - filter feeding behavior"
+
+  # Competitors (compete for same resources)
+  competitors:
+    - entity: "minecraft:salmon"
+      resource: "small_fish"
+      interaction: "Compete for same prey in overlapping habitats"
+
+  # Mutualists (mutually beneficial)
+  mutualists: []
+
+  # Commensals (one benefits, other unaffected)
+  commensals: []
+
+  # Special relationships
+  special: []
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+
+narrative:
+  summary: |
+    The Atlantic Cod is a schooling marine fish found in cold and lukewarm ocean
+    waters. As a mid-level predator, it feeds on smaller fish and plankton while
+    serving as an important food source for larger marine predators and players.
+
+  behavior_overview: |
+    Cod are highly social fish that form schools of 3-6 individuals for protection
+    and foraging efficiency. They swim actively during daylight hours, hunting
+    small prey through coordinated chasing behavior. When threatened, schools
+    tighten formation and flee rapidly in synchronized patterns. Cod exhibit
+    no parental care - they spawn multiple offspring which immediately join
+    existing schools or form new ones. They are naturally fearful of players
+    but can be captured in buckets for transport or farming.
+
+  ecological_importance: |
+    Cod serve a critical role as mid-level consumers in the marine food web,
+    converting smaller prey biomass into food for apex predators. Their schooling
+    behavior creates dynamic movement patterns in ocean biomes and their
+    relatively high spawn rate ensures steady population presence. Removal of
+    cod would create a trophic gap, potentially leading to overpopulation of
+    small fish and starvation of dolphin populations. They also provide
+    sustainable food source for players through fishing and farming.
+
+  design_notes: |
+    Schooling behavior is the defining characteristic - ensure school cohesion
+    AI is robust and responsive. Flee behavior should be quick and coordinated
+    when predators approach. Balance spawning to maintain 8-12 individuals per
+    ocean chunk without overcrowding. Bucket capture mechanic should be
+    preserved for player convenience. Consider adding visual variety in school
+    formations (loose vs tight) based on threat level.
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 1.0
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: 40           # Energy needed per day
+    provides_to_predator: 15        # Energy given when eaten (biomass * transfer)
+
+  population_target: "Common - 15-25 per ocean biome, in schools of 3-6"
+
+  removal_impact: "Moderate impact - dolphins and guardians lose food source, small fish populations may increase unchecked. Players lose easy fishing target."

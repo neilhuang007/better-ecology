@@ -1,0 +1,920 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - CHICKEN BEHAVIOR PROFILE
+# Version: 2.0
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:chicken"
+  display_name: "Chicken"
+
+  # Ecological classification
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"           # Granivore - seed eater
+    social_type: "FLOCK"
+    activity_pattern: "DIURNAL"
+
+  # Reference information
+  reference:
+    real_world_analog: "Domestic chicken (Gallus gallus domesticus)"
+    ecological_role: "Small ground-dwelling bird that consumes seeds, converts vegetation to protein (eggs/meat), and serves as prey for carnivores"
+
+  # Tags for system filtering
+  tags: ["avian", "ground_dwelling", "egg_layer", "domesticated", "prey_species"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  # Health
+  health:
+    base: 2                         # 4 HP = 2 hearts
+    baby_multiplier: 0.5
+
+  # Size (affects hitbox and various calculations)
+  size:
+    width: 0.4                      # Java Edition
+    height: 0.7
+    baby_scale: 0.5
+
+  # Biomass - abstract unit for food chain calculations
+  biomass:
+    adult: 25                       # Small bird
+    baby: 8
+    transfer_efficiency: 0.1
+
+  # Movement capabilities
+  movement:
+    speeds:
+      walk: 0.2                     # Slow walker
+      run: 0.3                      # Moderate sprint
+      swim: 0.1                     # Poor swimmer
+      fly: 0.0                      # Cannot truly fly
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: true
+      jump_height: 1.0
+      avoids_water: true
+      avoids_cliffs: true
+      cliff_threshold: 3.5          # Vanilla chicken cliff avoidance
+
+    # Speed modifiers applied conditionally
+    conditional_modifiers:
+      baby: 0.9                     # Baby chickens are relatively quick
+      elderly: 0.8
+      injured: 0.6
+      hungry: 0.8
+      fleeing: 1.4
+      hunting: 1.0
+      carrying_offspring: 1.0
+      in_water_nonaquatic: 0.5
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  # Hunger system
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 80
+    decay_rate: 0.015               # Faster metabolism for small bird
+
+    thresholds:
+      satiated: 80
+      hungry: 50
+      very_hungry: 25
+      starving: 10
+
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 200
+
+  # Thirst system
+  thirst:
+    enabled: false
+
+  # Body condition
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+
+    gain_when_satiated: 0.015
+    loss_when_hungry: 0.02
+    loss_when_starving: 0.1
+
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  # Energy/Stamina
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.6              # Quick recovery
+
+    costs:
+      sprinting: 0.2
+      hunting: 0.0
+      fleeing: 0.3
+      flying: 0.0
+      swimming: 0.3
+
+  # Age tracking
+  age:
+    enabled: true
+    baby_duration: 24000            # 20 minutes in vanilla
+    maturity_age: 24000
+    elderly_age: null
+    max_age: null
+
+  # Social needs
+  social:
+    enabled: true                   # Chickens are social
+    max_value: 100
+    decay_rate: 0.008               # When alone
+    recovery_rate: 0.12             # When with flock
+    loneliness_threshold: 35
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  # Daily cycle
+  daily_cycle:
+    schedule:
+      - time: [0, 6000]             # Dawn to noon
+        activity: 1.0
+        label: "morning"
+      - time: [6000, 12000]         # Noon to dusk
+        activity: 1.0
+        label: "afternoon"
+      - time: [12000, 13500]        # Dusk
+        activity: 0.6
+        label: "dusk"
+      - time: [13500, 22500]        # Night
+        activity: 0.2               # Minimal activity
+        label: "night"
+      - time: [22500, 24000]        # Pre-dawn
+        activity: 0.5
+        label: "pre_dawn"
+
+    low_activity_behavior:
+      action: "rest"
+      seek_shelter: false           # Chickens don't strongly seek shelter
+      reduced_awareness: true
+      awareness_multiplier: 0.6
+
+  # Weather responses
+  weather:
+    rain:
+      activity_multiplier: 0.8
+      seek_shelter: false
+      shelter_priority: 2
+    thunder:
+      activity_multiplier: 0.5
+      seek_shelter: true
+      panic_chance: 0.15
+    snow:
+      activity_multiplier: 0.7
+      seek_shelter: false
+    clear:
+      activity_multiplier: 1.0
+
+  # Seasonal behaviors
+  seasons:
+    enabled: false
+
+  # Moon phases
+  lunar:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  # Habitat requirements
+  habitat:
+    biomes:
+      allowed: []                   # Chickens spawn in most biomes
+      preferred: ["plains", "forest", "birch_forest", "flower_forest", "savanna"]
+      forbidden: ["desert", "snowy_plains", "ice_spikes", "snowy_slopes", "meadow", "wooded_badlands", "jagged_peaks", "frozen_peaks", "stony_peaks"]
+
+    altitude:
+      min: -64
+      max: 320
+      preferred: [60, 100]
+
+    required_nearby: []
+
+  # Territory system
+  territory:
+    enabled: false
+
+  # Home range
+  home_range:
+    enabled: true
+    radius: 32                      # Small home range
+    has_home_point: false
+    home_type: null
+
+  # Shelter requirements
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  # Food sources categorized by preference
+  food_sources:
+    primary:
+      - type: "ITEM"
+        target: "minecraft:wheat_seeds"
+        nutrition: 20
+        saturation: 3000
+        consumption_time: 30
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 3
+        health_effect: 0
+
+      - type: "ITEM"
+        target: "minecraft:beetroot_seeds"
+        nutrition: 20
+        saturation: 3000
+        consumption_time: 30
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 3
+        health_effect: 0
+
+      - type: "ITEM"
+        target: "minecraft:melon_seeds"
+        nutrition: 20
+        saturation: 3000
+        consumption_time: 30
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 3
+        health_effect: 0
+
+      - type: "ITEM"
+        target: "minecraft:pumpkin_seeds"
+        nutrition: 20
+        saturation: 3000
+        consumption_time: 30
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 3
+        health_effect: 0
+
+      - type: "ITEM"
+        target: "minecraft:torchflower_seeds"
+        nutrition: 20
+        saturation: 3000
+        consumption_time: 30
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 3
+        health_effect: 0
+
+      - type: "ITEM"
+        target: "minecraft:pitcher_pod"
+        nutrition: 20
+        saturation: 3000
+        consumption_time: 30
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 3
+        health_effect: 0
+
+    secondary:
+      # Chickens may peck at grass seeds
+      - type: "BLOCK"
+        target: "minecraft:grass"
+        nutrition: 8
+        saturation: 1200
+        consumption_time: 60
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: "minecraft:air"
+        condition_gain: 1
+        health_effect: 0
+
+    emergency: []
+
+  # Foraging behavior
+  foraging:
+    search_radius:
+      base: 12
+      when_hungry: 20
+      when_starving: 32
+    search_interval: 160
+
+    memory:
+      remembers_locations: true
+      memory_duration: 12000
+      remembers_depleted: true
+      avoids_depleted_for: 6000
+      shares_with_group: true       # Chickens follow each other to food
+
+    sustainability:
+      enabled: false                # Chickens don't leave food behind
+      dont_deplete_fully: false
+      minimum_remaining: 0
+      patch_return_delay: 0
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  # === AS PREDATOR ===
+  as_predator:
+    enabled: false
+
+  # === AS PREY ===
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:fox"
+        threat_level: "HIGH"
+        detection_range: 20
+        response: "FLEE"
+
+      - entity: "minecraft:ocelot"
+        threat_level: "HIGH"
+        detection_range: 18
+        response: "FLEE"
+
+      - entity: "minecraft:cat"
+        threat_level: "HIGH"
+        detection_range: 16
+        response: "FLEE"
+
+    default_response:
+      detection_range: 16
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.4
+        flee_distance: 32
+        flee_toward: "RANDOM"
+        zigzag: true                # Chickens run erratically
+
+      freeze:
+        duration: [0, 0]
+        break_on_approach: false
+        break_distance: 0
+
+      alarm:
+        gives_alarm: true
+        alarm_radius: 16
+        alarm_triggers_group_flee: true
+
+    all_clear:
+      predator_distance: 48
+      time_since_seen: 300
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: true
+  method: "SEXUAL"
+
+  # === BREEDING REQUIREMENTS ===
+  requirements:
+    min_age: 24000
+    max_age: null
+    min_health: 0.6
+    min_condition: 55              # Lower threshold for chickens
+    min_hunger: 50
+
+    recent_food:
+      enabled: true
+      time_window: 6000            # Shorter window
+      meals_required: 2
+
+    environment:
+      near_water: false
+      water_max_distance: 32
+      required_biomes: []
+      required_blocks_nearby: []
+      min_light: 0
+      max_light: 15
+
+    requires_shelter: false
+    shelter_type: null
+
+    time_of_day: null
+    season: null
+    weather: null
+
+    mate_required: true
+    mate_max_distance: 16
+
+  # === POPULATION DENSITY EFFECTS ===
+  density_effects:
+    enabled: true
+    check_radius: 48
+
+    density_curve:
+      - count: 2
+        multiplier: 1.5
+      - count: 6
+        multiplier: 1.0
+      - count: 12
+        multiplier: 0.6
+      - count: 20
+        multiplier: 0.2
+      - count: 30
+        multiplier: 0.0
+
+  # === MATE SELECTION ===
+  mate_selection:
+    search_radius: 24
+    search_interval: 800
+
+    preferences:
+      prefer_healthy: true
+      prefer_good_condition: true
+      avoid_relatives: false        # Chickens aren't picky
+      relative_recognition_duration: 0
+
+    courtship:
+      enabled: false
+      behavior: null
+      duration: 0
+      can_reject: false
+      rejection_cooldown: 0
+
+  # === BREEDING PROCESS ===
+  breeding:
+    cooldown: 6000                  # 5 minutes (vanilla)
+
+    gestation:
+      type: "INSTANT"
+      duration: 0
+      behavior_during: []
+
+    birth:
+      offspring_count: [1, 1]
+      condition_affects_count: false
+      location_requirement: null
+
+  # === PARENTAL CARE ===
+  parental_care:
+    enabled: true
+    duration: 4800                  # Brief care period
+
+    behaviors:
+      protects_offspring: false
+      protection_aggression: 0.0
+      protection_radius: 0
+
+      feeds_offspring: false
+      teaches_offspring: false
+      carries_offspring: false
+
+    offspring_behavior:
+      follows_parent: true
+      follow_distance: 3
+      max_separation: 12
+      separation_distress: false
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  # Group structure
+  group:
+    type: "FLOCK"
+    size:
+      min: 2
+      optimal: 6
+      max: 12
+
+    composition:
+      mixed_sex: true
+      mixed_age: true
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  # Herd/flock movement
+  herd_movement:
+    enabled: true
+    cohesion_radius: 8
+    separation_distance: 1.5
+    alignment: true
+
+  # Communication
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "predator_nearby"
+          call: "clucking_alarm"
+          group_response: "flee_scatter"
+      radius: 16
+      chain_calling: false
+
+    contact_calls:
+      enabled: true
+      when: ["separated", "found_food"]
+      radius: 16
+
+    mating_calls:
+      enabled: false
+      radius: 0
+      time: null
+
+  # Social behaviors list
+  behaviors:
+    greeting: false
+    allogrooming: true              # Chickens preen near each other
+    play: false
+    huddling: true                  # Chickens cluster together
+    dominance_hierarchy: true       # Pecking order
+
+  # Group benefits
+  group_benefits:
+    predator_detection_bonus: 0.15
+    foraging_efficiency_bonus: 0.1
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  # Terrain modifications
+  terrain:
+    enabled: true
+    actions:
+      - trigger: "foraging"
+        action: "DESTROY"
+        target_blocks: ["minecraft:grass", "minecraft:tall_grass"]
+        result_block: "minecraft:air"
+        frequency: 0.02
+        radius: 1
+
+  # Ecosystem services
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+      seeds: []
+      method: null
+      dispersal_radius: 0
+
+    pollination:
+      enabled: false
+      flowers: []
+      radius: 0
+
+    nutrient_cycling:
+      enabled: false
+      fertilizes: false
+      fertilize_radius: 0
+
+    decomposition:
+      enabled: false
+      decomposes: []
+      result: null
+
+  # Environmental responses
+  responses:
+    drinking:
+      enabled: false
+      frequency: 0
+      water_blocks: []
+      duration: 0
+      congregates: false
+
+    temperature:
+      heat_seek_shade: false
+      heat_seek_water: false
+      cold_seek_shelter: false
+      cold_huddling: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  # Spawning rules
+  spawning:
+    weight: 10
+    group_size: [4, 4]              # Vanilla spawns in groups of 4
+
+    conditions:
+      blocks: ["minecraft:grass_block"]
+      biomes: []                    # Use habitat.biomes
+      light: [9, 15]
+      altitude: null
+      time: null
+      weather: null
+
+  # Carrying capacity
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 12
+      regional: null
+
+    resources:
+      enabled: false
+      requirements: []
+
+    over_capacity:
+      - threshold: 1.2
+        effects: ["reduced_breeding"]
+      - threshold: 1.5
+        effects: ["starvation", "dispersal"]
+      - threshold: 2.0
+        effects: ["aggression"]
+
+  # Dispersal
+  dispersal:
+    enabled: false
+    triggers: []
+    distance: [0, 0]
+
+  # Natural mortality
+  mortality:
+    old_age:
+      enabled: false
+      max_age: null
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+      base_chance: 0.0
+      crowding_multiplier: 0.0
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  # Fear/approach distances
+  distances:
+    detection: 16
+    caution: 10
+    flee: 6
+
+  # Habituation
+  habituation:
+    enabled: true
+    rate: 0.015
+    decay: 0.001
+    max_habituation: 0.9            # Can become quite tame
+    habituated_flee_distance: 2
+
+  # Taming
+  taming:
+    enabled: false
+    items: []
+    chance: 0.0
+    requires_habituation: false
+
+  # Player breeding
+  player_breeding:
+    enabled: true
+    items: ["minecraft:wheat_seeds", "minecraft:beetroot_seeds", "minecraft:melon_seeds", "minecraft:pumpkin_seeds", "minecraft:torchflower_seeds", "minecraft:pitcher_pod"]
+    bypasses_conditions: true       # Player can force breed
+
+  # Drops
+  drops:
+    on_death:
+      - item: "minecraft:feather"
+        count: [0, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+      - item: "minecraft:chicken"
+        count: [1, 1]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+    on_interaction: []
+
+  # Special interactions
+  interactions: []
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  # Sounds
+  sounds:
+    ambient: "minecraft:entity.chicken.ambient"
+    hurt: "minecraft:entity.chicken.hurt"
+    death: "minecraft:entity.chicken.death"
+    baby: "minecraft:entity.chicken.ambient"
+    alarm: "minecraft:entity.chicken.ambient"
+    mating: null
+    eating: "minecraft:entity.chicken.ambient"
+
+  # Idle animations
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "head_peck"
+        frequency: 100
+        trigger: "idle"
+
+      - behavior: "wing_flap"
+        frequency: 200
+        trigger: "idle"
+
+      - behavior: "head_turn"
+        frequency: 80
+        trigger: "idle"
+
+  # Individual variation
+  personality_traits:
+    boldness:
+      base: 0.3                     # Generally timid
+      variation: 0.2
+    activity:
+      base: 0.7                     # Active birds
+      variation: 0.15
+    sociability:
+      base: 0.8                     # Very social
+      variation: 0.1
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+# Using standard priority ordering from template
+
+ai_priority_framework:
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  physiological:
+    critical_health: 3
+    drink_water: 4
+    eat_food: 5
+    eat_grain: 6                   # CUSTOM: Crop eating behavior
+
+  reproduction:
+    care_for_offspring: 7
+    lay_egg: 8                     # CUSTOM: Egg laying behavior
+    breed: 9
+    find_mate: 10
+
+  social:
+    group_cohesion: 11
+    social_interaction: 12
+
+  hunting:
+    hunt_prey: 13
+
+  location:
+    location_triggered: 14
+    territory_patrol: 15
+
+  default:
+    wander: 16
+    idle: 17
+    rest: 18
+
+
+# ============================================================================
+# SYSTEM 15: CHICKEN-SPECIAL BEHAVIORS
+# ============================================================================
+
+egg_laying:
+  enabled: true
+
+  # === EGG LAYING BEHAVIOR ===
+  # Priority in AI goal system (lower = higher priority)
+  lay_priority: 8
+  eat_grain_priority: 6
+
+  # Timing (in ticks)
+  min_interval: 6000               # ~5 minutes minimum
+  max_interval: 12000              # ~10 minutes maximum
+
+  # Requirements (as percentage of max value)
+  hunger_threshold: 0.3            # Need at least 30% hunger to lay
+  energy_threshold: 0.4            # Need at least 40% energy to lay
+
+  # Special egg types
+  golden_egg_chance: 0.01          # 1% chance for golden egg (very rare!)
+
+  # === NESTING BEHAVIOR ===
+  nest_search_radius: 16.0         # How far to search for nest
+  nest_search_interval: 100        # Ticks between nest searches
+  nesting_duration: 60             # How long to sit on nest before laying
+
+  # Nesting preferences (chickens prefer soft materials)
+  prefers_hay: true                # Hay blocks are favorite nesting material
+  prefers_grass: true              # Grass blocks are acceptable
+
+  # === GRAIN/CROP EATING BEHAVIOR ===
+  grain_search_radius: 12.0        # How far to search for crops
+  grain_search_interval: 160       # Ticks between crop searches
+  grain_search_cooldown: 200       # Cooldown after eating before searching again
+  grain_eating_duration: 40        # Ticks to eat a crop
+
+  # Hunger threshold for eating crops (as percentage)
+  grain_hunger_threshold: 0.6      # Eat crops when hunger below 60%
+
+  # Crop preferences
+  eats_wheat: true                 # Chickens love wheat crops
+  eats_carrots: true               # Will eat carrots
+  eats_potatoes: true              # Will eat potatoes
+  eats_beetroots: true             # Will eat beetroots
+
+  # === SEED DROPPING BEHAVIOR ===
+  # Chickens disperse seeds through digestion
+  seed_drop_interval: 1200         # Check for seed drop every minute
+  seed_drop_chance: 0.15           # 15% chance to drop a seed per check
+  # Seeds have 30% chance to survive digestion (viable for planting)
+
+# ============================================================================
+# SYSTEM 15: ANIMAL-ANIMAL INTERACTIONS
+# ============================================================================
+
+interaction:
+  predators:
+    - "minecraft:fox"
+    - "minecraft:cat"
+    - "minecraft:ocelot"
+
+  prey: []
+  symbiotic_partners: []
+  competitors: []
+  herd_compatible: []
+
+  relationship_decay_rate: 0.002
+  trust_build_rate: 0.015
+  grudge_build_rate: 0.01
+
+  gives_warning_calls: true
+  warning_cooldown: 80
+
+  can_mourn: false
+  can_grieve: false
+  can_play: true
+  can_be_altruistic: false
+  can_teach: false
+

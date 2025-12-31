@@ -1,0 +1,430 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# ============================================================================
+#
+# This file defines a specific mob by:
+# 1. Overriding defaults from the Generalized Template
+# 2. Providing natural language descriptions for unique behaviors
+# 3. Specifying relationships with other mobs
+#
+# INSTRUCTIONS FOR AI:
+# - Read the Generalized Template first to understand all systems
+# - Values here OVERRIDE template defaults
+# - Empty/null values mean "use template default"
+# - Natural language descriptions should be interpreted and implemented
+# - [UNIQUE] sections require custom implementation logic
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: ""                    # REQUIRED
+  display_name: ""              # REQUIRED
+
+  classification:
+    category: ""
+    trophic_level: ""
+    diet_type: ""
+    social_type: ""
+    activity_pattern: ""
+
+  reference:
+    real_world_analog: ""
+    ecological_role: ""
+
+  tags: []
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: null
+  size:
+    width: null
+    height: null
+  biomass:
+    adult: null
+  movement:
+    speeds:
+      walk: null
+      run: null
+      swim: null
+      fly: null
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: null
+  thirst:
+    enabled: null
+  age:
+    baby_duration: null
+    max_age: null
+  social:
+    enabled: null
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    # Override schedule if different from template
+    # Only include times that differ
+    schedule: null
+
+  weather:
+    # Only specify if different from template
+    rain: null
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: []
+      forbidden: []
+    required_nearby: []
+
+  territory:
+    enabled: null
+    size: null
+
+  shelter:
+    needs_shelter: null
+    shelter_uses: []
+    valid_shelters: []
+
+  # === LOCATION-TRIGGERED BEHAVIORS ===
+  # [UNIQUE] Describe in natural language what should happen where
+  location_triggers:
+    enabled: false
+    triggers: []
+    # Example format:
+    # - name: "beach_gathering"
+    #   description: |
+    #     When on sand blocks in beach biome, near water (1-8 blocks),
+    #     during morning hours (0-6000 ticks), this mob should gather
+    #     in groups of 3-12 individuals and rest together for 1000-3000 ticks.
+    #     They should space themselves 1-2 blocks apart in a loose cluster.
+    #   location:
+    #     blocks: ["sand"]
+    #     biomes: ["beach"]
+    #     near_water: {min: 1, max: 8}
+    #     time: [0, 6000]
+    #   behavior:
+    #     group_size: [3, 12]
+    #     spacing: [1, 2]
+    #     duration: [1000, 3000]
+    #     activity: "communal_resting"
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      # List primary food sources
+      - type: ""                # BLOCK | ENTITY | ITEM
+        target: ""              # ID or tag
+        nutrition: null
+        method: ""              # GRAZE | HUNT | etc.
+        world_effect:
+          action: ""
+          result: ""
+
+    secondary: []
+    emergency: []
+
+  foraging:
+    # Only override if different from template
+    search_radius:
+      base: null
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+    # If enabled, specify:
+    prey:
+      targets: []
+      selection_rules:
+        # Override specific rules
+        avoid_babies: null
+        sustainable_hunting:
+          enabled: null
+          min_prey_count: null
+
+    hunting:
+      method: ""
+
+  as_prey:
+    enabled: true
+
+    # List predators with responses
+    predators:
+      - entity: ""              # Predator ID
+        threat_level: ""        # LOW | MEDIUM | HIGH | EXTREME
+        detection_range: null
+        response: ""            # FLEE | FREEZE | etc.
+        # Additional response details as needed
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    # Only override requirements different from template
+    min_condition: null
+    recent_food:
+      enabled: null
+    environment:
+      near_water: null
+      required_biomes: []
+    requires_shelter: null
+    season: null
+
+  density_effects:
+    # Override density curve if different
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: null
+      behavior: ""              # Describe courtship behavior
+
+  breeding:
+    gestation:
+      type: ""
+      duration: null
+    birth:
+      offspring_count: null
+      location_requirement: ""
+
+  parental_care:
+    duration: null
+    behaviors:
+      protects_offspring: null
+      feeds_offspring: null
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: ""
+    size:
+      min: null
+      optimal: null
+      max: null
+    leadership:
+      has_leader: null
+      leader_selection: ""
+
+  herd_movement:
+    enabled: null
+
+  communication:
+    alarm_calls:
+      enabled: null
+      # Describe alarm call system
+      types: []
+      # Example:
+      # - trigger: "aerial_predator"
+      #   call: "high_pitched_whistle"
+      #   group_response: "freeze_and_look_up"
+      # - trigger: "ground_predator"
+      #   call: "barking_alarm"
+      #   group_response: "flee_to_cover"
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: null
+    actions: []
+    # Example:
+    # - trigger: "foraging"
+    #   description: "Converts grass_block to dirt when grazing"
+    #   target: "grass_block"
+    #   result: "dirt"
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: null
+    pollination:
+      enabled: null
+
+  responses:
+    drinking:
+      enabled: null
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: null
+    group_size: null
+    conditions:
+      biomes: []
+      blocks: []
+
+  carrying_capacity:
+    caps:
+      per_chunk: null
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: ""
+
+  taming:
+    enabled: null
+    items: []
+
+  player_breeding:
+    enabled: null
+    items: []
+
+  drops:
+    on_death: []
+    # Format: {item, count: [min, max], chance, requires_player_kill, looting_bonus}
+
+  interactions: []
+  # Format: {action, item, result, description}
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: ""
+    hurt: ""
+    death: ""
+
+  idle_behaviors:
+    behaviors: []
+    # Format: {behavior, frequency, trigger}
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+# Describe behaviors unique to this mob that aren't covered by standard systems.
+# Use natural language - AI should interpret and implement appropriate logic.
+# ============================================================================
+
+unique_behaviors:
+  # List each unique behavior with full description
+  - name: ""
+    description: |
+      [Natural language description of the behavior]
+      
+      WHEN: [Describe trigger conditions]
+      WHERE: [Describe location requirements]  
+      WHAT: [Describe exactly what the mob does]
+      WHY: [Ecological/gameplay purpose]
+
+    # Structured hints for implementation (optional)
+    implementation_hints:
+      trigger_type: ""          # TIME | LOCATION | STATE | EVENT
+      priority: null
+      duration: null
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+# Describe relationships with other specific mobs beyond predator/prey.
+# ============================================================================
+
+relationships:
+  # Predators (who hunts this mob)
+  predators: []
+  # Format: {entity, notes}
+
+  # Prey (what this mob hunts)
+  prey: []
+
+  # Competitors (compete for same resources)
+  competitors: []
+  # Format: {entity, resource, interaction}
+
+  # Mutualists (mutually beneficial)
+  mutualists: []
+  # Format: {entity, benefit_given, benefit_received}
+
+  # Commensals (one benefits, other unaffected)
+  commensals: []
+
+  # Special relationships
+  special: []
+  # Format: {entity, relationship, description}
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+# Free-form description for AI to understand this mob's "character"
+# ============================================================================
+
+narrative:
+  summary: |
+    [2-3 sentence summary of what this mob is and how it fits the ecosystem]
+
+  behavior_overview: |
+    [Paragraph describing typical daily life, key behaviors, and personality]
+
+  ecological_importance: |
+    [Explain why this mob matters to the ecosystem - what breaks if removed?]
+
+  design_notes: |
+    [Any additional notes for implementation - edge cases, balance concerns, etc.]
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+# Quick-reference values for ecosystem balancing
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 1.0
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: null     # Energy needed per day
+    provides_to_predator: null  # Energy given when eaten
+
+  population_target: ""         # e.g., "Common, 15-25 per forest biome"
+
+  removal_impact: ""            # What happens if this mob is removed?

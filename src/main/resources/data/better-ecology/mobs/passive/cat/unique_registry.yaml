@@ -1,0 +1,610 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# Mob: Cat (minecraft:cat)
+# ============================================================================
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:cat"
+  display_name: "Cat"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "SECONDARY_CONSUMER"
+    diet_type: "CARNIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "CREPUSCULAR"
+
+  reference:
+    real_world_analog: "Domestic cat (Felis catus)"
+    ecological_role: "Small predator control, pest hunter, companion animal that repels larger hostile mobs"
+
+  tags: ["tameable", "village_spawner", "predator_repellent", "gift_giver"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 5                         # 10 HP
+  size:
+    width: 0.6
+    height: 0.7
+  biomass:
+    adult: 40
+  movement:
+    speeds:
+      walk: 0.25
+      run: 0.5
+      climb: 0.2
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.025
+  thirst:
+    enabled: false
+  age:
+    baby_duration: 24000
+    max_age: null
+  social:
+    enabled: false
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    # Crepuscular activity pattern - most active at dawn and dusk
+    schedule:
+      - time: [0, 4000]
+        activity: 0.7
+        label: "dawn_active"
+      - time: [4000, 8000]
+        activity: 0.4
+        label: "morning_rest"
+      - time: [8000, 12000]
+        activity: 0.3
+        label: "afternoon_rest"
+      - time: [12000, 13500]
+        activity: 1.0
+        label: "dusk_active"
+      - time: [13500, 18000]
+        activity: 0.8
+        label: "evening_active"
+      - time: [18000, 22500]
+        activity: 0.6
+        label: "night"
+      - time: [22500, 24000]
+        activity: 0.9
+        label: "pre_dawn_active"
+
+  weather:
+    rain:
+      activity_multiplier: 0.4
+      seek_shelter: true
+      shelter_priority: 5
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: ["plains", "forest", "savanna", "taiga"]
+      forbidden: []
+    required_nearby:
+      - feature: "village"
+        max_distance: 128
+        reason: "village_spawning"
+
+  territory:
+    enabled: false
+    size: null
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: ["resting", "rain_protection"]
+    valid_shelters:
+      - type: "structure"
+        description: "Village houses or player structures"
+        min_enclosure: 0.5
+      - type: "vegetation"
+        description: "Under trees"
+        blocks: ["leaves"]
+        min_enclosure: 0.3
+
+  location_triggers:
+    enabled: false
+    triggers: []
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "ITEM"
+        target: "minecraft:cod"
+        nutrition: 40
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: null
+      - type: "ITEM"
+        target: "minecraft:salmon"
+        nutrition: 40
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: null
+
+    secondary:
+      - type: "ENTITY"
+        target: "minecraft:rabbit"
+        nutrition: 35
+        method: "HUNT"
+        world_effect:
+          action: "DAMAGE"
+          result: null
+      - type: "ENTITY"
+        target: "minecraft:turtle"
+        nutrition: 30
+        method: "HUNT"
+        world_effect:
+          action: "DAMAGE"
+          result: null
+        notes: "Only hunts baby turtles"
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 16
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: true
+
+    prey:
+      targets: ["minecraft:rabbit", "minecraft:turtle"]
+      selection_rules:
+        avoid_babies: false
+        sustainable_hunting:
+          enabled: false
+          min_prey_count: null
+
+    hunting:
+      method: "STALK"
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:wolf"
+        threat_level: "MEDIUM"
+        detection_range: 16
+        response: "FLEE"
+      - entity: "minecraft:ocelot"
+        threat_level: "LOW"
+        detection_range: 12
+        response: "FLEE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: 65
+    recent_food:
+      enabled: true
+    environment:
+      near_water: false
+      required_biomes: []
+    requires_shelter: false
+    season: null
+
+  density_effects:
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: false
+      behavior: ""
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: 0
+    birth:
+      offspring_count: [1, 3]
+      location_requirement: null
+
+  parental_care:
+    duration: 24000
+    behaviors:
+      protects_offspring: true
+      feeds_offspring: false
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+    leadership:
+      has_leader: false
+      leader_selection: null
+
+  herd_movement:
+    enabled: false
+
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: false
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 10
+    group_size: [1, 1]
+    conditions:
+      biomes: ["plains", "forest", "savanna", "taiga"]
+      blocks: ["grass_block"]
+
+  carrying_capacity:
+    caps:
+      per_chunk: 4
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  taming:
+    enabled: true
+    items: ["minecraft:cod", "minecraft:salmon"]
+
+  player_breeding:
+    enabled: true
+    items: ["minecraft:cod", "minecraft:salmon"]
+
+  drops:
+    on_death:
+      - item: "minecraft:string"
+        count: [0, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+  interactions:
+    - action: "right_click"
+      item: null
+      result: "sit_toggle"
+      description: "Tamed cats can be told to sit or stand"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "minecraft:entity.cat.ambient"
+    hurt: "minecraft:entity.cat.hurt"
+    death: "minecraft:entity.cat.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "sit_and_rest"
+        frequency: 600
+        trigger: "low_activity"
+      - behavior: "groom_self"
+        frequency: 800
+        trigger: "random"
+      - behavior: "stretch"
+        frequency: 1200
+        trigger: "after_resting"
+      - behavior: "purr"
+        frequency: 1000
+        trigger: "near_tamed_owner"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+
+unique_behaviors:
+  - name: "creeper_and_phantom_repellent"
+    description: |
+      Cats naturally repel creepers and phantoms within a certain radius.
+
+      WHEN: Always active when cat is present
+      WHERE: Within 6-16 block radius of cat
+      WHAT: Creepers actively avoid cats and flee if too close. Phantoms will not
+            target players who are near cats. This is a passive aura effect.
+      WHY: Provides gameplay utility - cats protect players and their builds from
+           creepers and reduce phantom attacks during sleep
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 5
+      duration: null
+      affects_others: true
+      world_modification: false
+      parameters:
+        creeper_flee_radius: 6
+        creeper_avoid_radius: 16
+        phantom_protection_radius: 16
+
+  - name: "morning_gift_giving"
+    description: |
+      Tamed cats that are not sitting have a chance to bring gifts to their owner
+      when the player wakes up from sleep.
+
+      WHEN: When player sleeps through the night and wakes up
+      WHERE: Cat must be within 8 blocks of player when they wake
+      WHAT: Cat has a 70% chance to bring a "gift" item and drop it near the player.
+            Gifts include: rabbit hide, rabbit foot, string, rotten flesh, feather,
+            raw chicken, or phantom membrane (rare).
+      WHY: Rewards players for keeping cats, mimics real cat behavior of bringing
+           prey to owners, provides useful items
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 8
+      duration: null
+      affects_others: false
+      world_modification: true
+      parameters:
+        max_distance: 8
+        gift_chance: 0.7
+        gift_pool:
+          - item: "minecraft:rabbit_hide"
+            weight: 10
+          - item: "minecraft:rabbit_foot"
+            weight: 10
+          - item: "minecraft:string"
+            weight: 16
+          - item: "minecraft:rotten_flesh"
+            weight: 16
+          - item: "minecraft:feather"
+            weight: 6
+          - item: "minecraft:raw_chicken"
+            weight: 10
+          - item: "minecraft:phantom_membrane"
+            weight: 2
+
+  - name: "sit_on_beds_and_furnaces"
+    description: |
+      Cats have a tendency to sit on beds, chests, and active furnaces when idle.
+
+      WHEN: When idle and not following owner (for tamed cats) or during low activity periods
+      WHERE: Within home range, near village structures or player bases
+      WHAT: Cat will pathfind to nearby beds, chests, or active furnaces and sit on top
+            of them. This can prevent player access to chests/beds temporarily.
+      WHY: Adds personality and realism (cats love sitting on things), creates minor
+           gameplay interaction (player must move cat to access blocked chests)
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: 13
+      duration: [1200, 6000]
+      affects_others: false
+      world_modification: false
+      parameters:
+        search_radius: 8
+        target_blocks: ["minecraft:bed", "minecraft:chest", "minecraft:furnace"]
+        furnace_must_be_active: true
+
+  - name: "multiple_variants"
+    description: |
+      Cats spawn with 11 different texture variants representing different breeds.
+
+      WHEN: On spawn
+      WHERE: Any valid spawn location
+      WHAT: Randomly select from 11 variants: tabby, black, red, siamese, british_shorthair,
+            calico, persian, ragdoll, white, jellie, all_black. Village cats have different
+            spawn weights than naturally spawning cats.
+      WHY: Adds variety and collectability, encourages exploration
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 0
+      duration: null
+      affects_others: false
+      world_modification: false
+      parameters:
+        variants:
+          - "tabby"
+          - "black"
+          - "red"
+          - "siamese"
+          - "british_shorthair"
+          - "calico"
+          - "persian"
+          - "ragdoll"
+          - "white"
+          - "jellie"
+          - "all_black"
+        village_spawn_weights:
+          tabby: 51
+          black: 50
+          red: 50
+          siamese: 50
+          british_shorthair: 50
+          calico: 50
+          persian: 50
+          ragdoll: 50
+          white: 50
+          jellie: 1
+          all_black: 1
+
+  - name: "village_spawning_mechanism"
+    description: |
+      Cats spawn in villages based on the number of beds, with a cap.
+
+      WHEN: During world generation and periodically during gameplay
+      WHERE: In villages with at least 1 villager and 4 beds
+      WHAT: Spawn 1 cat per 4 beds, up to a maximum of 10 cats per village.
+            Cats spawn within village boundaries near beds.
+      WHY: Populates villages with cats naturally, scales with village size
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 0
+      duration: null
+      affects_others: false
+      world_modification: true
+      parameters:
+        beds_per_cat: 4
+        max_cats_per_village: 10
+        min_beds: 4
+        min_villagers: 1
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+
+relationships:
+  predators:
+    - entity: "minecraft:wolf"
+      notes: "Cats flee from wild wolves"
+
+  prey:
+    - entity: "minecraft:rabbit"
+      notes: "Actively hunts rabbits"
+    - entity: "minecraft:turtle"
+      notes: "Hunts baby turtles only"
+
+  competitors:
+    - entity: "minecraft:ocelot"
+      resource: "small_prey"
+      interaction: "territorial_avoidance"
+    - entity: "minecraft:fox"
+      resource: "rabbits_and_chickens"
+      interaction: "competitive_hunting"
+
+  mutualists: []
+
+  commensals:
+    - entity: "minecraft:villager"
+      benefit_given: "pest_control"
+      benefit_received: "food_and_shelter"
+
+  special:
+    - entity: "minecraft:creeper"
+      relationship: "feared_by"
+      description: "Creepers actively flee from cats and avoid them"
+    - entity: "minecraft:phantom"
+      relationship: "repels"
+      description: "Cats prevent phantoms from targeting nearby players"
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+
+narrative:
+  summary: |
+    The cat is a small, agile predator that serves as both a pest controller and
+    companion animal in Minecraft villages. With 11 unique variants, cats add visual
+    variety while providing important gameplay benefits through their mob-repelling abilities.
+
+  behavior_overview: |
+    Cats are crepuscular hunters, most active during dawn and dusk hours when they
+    stalk rabbits and baby turtles. They are generally fearful of players until tamed
+    with raw fish, after which they become loyal companions. Tamed cats follow their
+    owners, sit on command, and bring morning gifts after the player sleeps. They have
+    a quirky tendency to sit on beds, chests, and furnaces, sometimes blocking player
+    access. Wild cats spawn in villages at a rate of 1 per 4 beds, integrating naturally
+    into village life. Their most notable trait is their passive aura that repels creepers
+    and phantoms, making them valuable protective companions.
+
+  ecological_importance: |
+    Cats fill a unique niche as small predator controllers, helping to manage rabbit
+    and baby turtle populations. Their presence in villages provides passive protection
+    against creepers, preventing explosive damage to structures. The cat-creeper dynamic
+    creates interesting gameplay as players can strategically place cats to protect builds.
+    Without cats, creepers would be more threatening near bases, and rabbit populations
+    might grow unchecked in certain areas. The gift-giving behavior provides a renewable
+    source of certain items, particularly phantom membranes.
+
+  design_notes: |
+    - Village spawning should check for beds and villagers periodically
+    - Creeper avoidance AI needs to check for nearby cats constantly
+    - Gift-giving should only trigger on actual sleep, not bed usage
+    - Sitting on blocks should be interruptible by player interaction
+    - Tamed cats should teleport to owner like wolves when too far
+    - Baby turtles should be specifically targetable (not adult turtles)
+    - Consider balance: gift drop rates shouldn't make phantom membrane too common
+    - Variant selection should persist through breeding and respawning
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 1.0
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: 40           # Needs about 1 fish per day
+    provides_to_predator: 30        # Small meal for larger predators
+
+  population_target: "4-8 per village, rare in wild"
+
+  removal_impact: |
+    Removing cats would make creepers significantly more dangerous near player bases
+    and villages. Rabbit and baby turtle populations could grow in areas without foxes.
+    Players would lose access to morning gifts including phantom membranes. Villages
+    would feel less lively without the variety of cat variants.

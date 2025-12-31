@@ -1,0 +1,62 @@
+# ============================================================================
+# NEST BUILDING CONFIGURATION TEMPLATE - SAND NEST
+# For animals that dig nests in sand (turtles)
+# ============================================================================
+
+nest_building:
+  enabled: true
+
+  nest_type: "sand"                    # Dig egg chambers in sand
+
+  building_speed: 0.6                  # Slower digging in sand
+  nest_size: 2                         # Smaller egg chamber
+
+  search_radius: 64                    # Travel far to suitable beaches
+  prefer_shelter: false                # Open sand beaches
+
+  territorial_defense: false           # Don't defend after laying
+
+  max_materials: 0                     # No materials needed
+
+  required_materials: {}               # Empty - sand only
+
+  # Sand-specific preferences
+  preferred_nesting_blocks:
+    - "minecraft:sand"                 # Only sand
+    - "minecraft:red_sand"             # Also red sand
+
+  # Beach requirements
+  near_water: true                     # Must be near water
+  water_distance: 10                   # Max distance from water
+
+  # Homing behavior
+  homing:
+    enabled: true                      # Return to same beach
+    birth_beach_preference: 2.0        # Strong preference for birth beach
+    beach_memory_duration: 72000       # Remember beach for 3 days
+
+  quality:
+    min_for_breeding: 0.5
+    min_for_egg_laying: 0.5
+    excellent: 0.9
+
+    high_quality_benefits:
+      egg_hatching_speed: 1.3          # Faster egg development
+      hatchling_health_bonus: 1.2
+      hatchling_survival_bonus: 1.3
+
+    low_quality_penalties:
+      egg_failure_chance: 0.5          # High failure in poor nests
+      flooding_risk: 0.4               # Eggs may wash away
+      predation_risk: 0.3              # Easier for predators to find
+
+  disturbance:
+    max_disturbances: 2                # Very sensitive
+    cooldown_after_disturbance: 1000
+    recovery_rate: 0.001
+
+  seasonal:
+    spring_activity: 1.0
+    summer_activity: 1.5               # Peak nesting in summer
+    winter_activity: 0.0
+    winter_maintenance: false

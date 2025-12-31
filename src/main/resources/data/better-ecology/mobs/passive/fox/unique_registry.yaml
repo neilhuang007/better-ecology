@@ -1,0 +1,606 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# Mob: Fox (minecraft:fox)
+# ============================================================================
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:fox"
+  display_name: "Fox"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "SECONDARY_CONSUMER"
+    diet_type: "CARNIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "NOCTURNAL"
+
+  reference:
+    real_world_analog: "Red Fox (Vulpes vulpes)"
+    ecological_role: "Small nocturnal predator that hunts rabbits, chickens, fish, and baby turtles. Controls small prey populations and disperses berry seeds."
+
+  tags: ["nocturnal", "hunter", "item_carrier", "pouncer", "berry_disperser"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 10                    # 10 HP (5 hearts)
+  size:
+    width: 0.6
+    height: 0.7
+  biomass:
+    adult: 50
+  movement:
+    speeds:
+      walk: 0.3
+      run: 0.5
+      swim: 0.2
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.025           # Active hunter, faster metabolism
+  thirst:
+    enabled: false
+  age:
+    baby_duration: 24000
+    max_age: null
+  social:
+    enabled: false
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    # NOCTURNAL - sleeps during day, active at night
+    schedule:
+      - time: [0, 6000]         # Morning - sleeping
+        activity: 0.2
+        label: "morning"
+      - time: [6000, 12000]     # Afternoon - sleeping
+        activity: 0.1
+        label: "afternoon"
+      - time: [12000, 13500]    # Dusk - waking
+        activity: 0.5
+        label: "dusk"
+      - time: [13500, 22500]    # Night - active hunting
+        activity: 1.0
+        label: "night"
+      - time: [22500, 24000]    # Pre-dawn - still active
+        activity: 0.9
+        label: "pre_dawn"
+
+  weather:
+    snow:
+      activity_multiplier: 1.0  # Adapted to snow (especially snow variant)
+      seek_shelter: false
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: ["taiga", "snowy_taiga", "grove", "snowy_slopes", "old_growth_spruce_taiga", "old_growth_pine_taiga"]
+      forbidden: ["desert", "badlands", "mushroom_fields"]
+    required_nearby: []
+
+  territory:
+    enabled: false
+
+  shelter:
+    needs_shelter: true
+    shelter_uses: ["sleeping", "hiding"]
+    valid_shelters:
+      - type: "vegetation"
+        description: "Dense leaves, bushes, or tall grass"
+        blocks: ["leaves", "tall_grass", "fern", "sweet_berry_bush"]
+        min_enclosure: 0.4
+      - type: "cave"
+        description: "Small caves or overhangs for daytime sleeping"
+        min_enclosure: 0.5
+
+  # === LOCATION-TRIGGERED BEHAVIORS ===
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "ENTITY"
+        target: "minecraft:chicken"
+        nutrition: 40
+        method: "HUNT"
+        world_effect:
+          action: "NONE"
+
+      - type: "ENTITY"
+        target: "minecraft:rabbit"
+        nutrition: 35
+        method: "HUNT"
+        world_effect:
+          action: "NONE"
+
+      - type: "ENTITY"
+        target: "minecraft:turtle"
+        nutrition: 25
+        method: "HUNT"
+        world_effect:
+          action: "NONE"
+        notes: "Only baby turtles"
+
+    secondary:
+      - type: "ENTITY"
+        target: "minecraft:cod"
+        nutrition: 20
+        method: "HUNT"
+        world_effect:
+          action: "NONE"
+
+      - type: "ENTITY"
+        target: "minecraft:salmon"
+        nutrition: 20
+        method: "HUNT"
+        world_effect:
+          action: "NONE"
+
+      - type: "ENTITY"
+        target: "minecraft:tropical_fish"
+        nutrition: 15
+        method: "HUNT"
+        world_effect:
+          action: "NONE"
+
+    emergency:
+      - type: "ITEM"
+        target: "minecraft:sweet_berries"
+        nutrition: 10
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+
+      - type: "ITEM"
+        target: "minecraft:glow_berries"
+        nutrition: 10
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+
+  foraging:
+    search_radius:
+      base: 20
+      when_hungry: 32
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: true
+
+    prey:
+      targets: ["minecraft:chicken", "minecraft:rabbit", "minecraft:turtle", "minecraft:cod", "minecraft:salmon", "minecraft:tropical_fish"]
+      selection_rules:
+        avoid_babies: false     # Foxes hunt babies/juveniles
+        sustainable_hunting:
+          enabled: true
+          min_prey_count: 3
+
+    hunting:
+      method: "OPPORTUNISTIC"   # Pounces on prey when spotted
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:wolf"
+        threat_level: "HIGH"
+        detection_range: 20
+        response: "FLEE"
+
+      - entity: "minecraft:polar_bear"
+        threat_level: "EXTREME"
+        detection_range: 24
+        response: "FLEE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: 65
+    recent_food:
+      enabled: true
+    environment:
+      near_water: false
+      required_biomes: []
+    requires_shelter: false
+    season: null
+
+  density_effects:
+    density_curve:
+      - count: 2
+        multiplier: 1.3
+      - count: 4
+        multiplier: 1.0
+      - count: 8
+        multiplier: 0.6
+      - count: 12
+        multiplier: 0.2
+
+  mate_selection:
+    courtship:
+      enabled: false
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: 0
+    birth:
+      offspring_count: [1, 3]
+      location_requirement: null
+
+  parental_care:
+    duration: 24000
+    behaviors:
+      protects_offspring: true
+      feeds_offspring: false
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 2
+    leadership:
+      has_leader: false
+
+  herd_movement:
+    enabled: false
+
+  communication:
+    alarm_calls:
+      enabled: false
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: false
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: true
+      seeds: ["minecraft:sweet_berries", "minecraft:glow_berries"]
+      method: "GUT_PASSAGE"
+      dispersal_radius: 32
+      notes: "Foxes eat berries and spread seeds through droppings"
+
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 8
+    group_size: [1, 3]
+    conditions:
+      biomes: ["taiga", "snowy_taiga", "grove", "snowy_slopes", "old_growth_spruce_taiga", "old_growth_pine_taiga"]
+      blocks: ["grass_block", "snow", "snow_block", "podzol"]
+
+  carrying_capacity:
+    caps:
+      per_chunk: 4
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  taming:
+    enabled: false
+
+  player_breeding:
+    enabled: true
+    items: ["minecraft:sweet_berries", "minecraft:glow_berries"]
+
+  drops:
+    on_death: []
+
+  interactions: []
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "minecraft:entity.fox.ambient"
+    hurt: "minecraft:entity.fox.hurt"
+    death: "minecraft:entity.fox.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "sit_and_observe"
+        frequency: 0.1
+        trigger: "resting"
+      - behavior: "head_tilt"
+        frequency: 0.05
+        trigger: "curious"
+      - behavior: "pounce_practice"
+        frequency: 0.02
+        trigger: "playful"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+
+unique_behaviors:
+  - name: "item_carrying"
+    description: |
+      Foxes can pick up items in their mouth and carry them around.
+
+      WHEN: When a fox encounters a dropped item on the ground
+      WHERE: Anywhere in their active range
+      WHAT: The fox picks up the item in its mouth, carries it while moving,
+            and may drop it later. Foxes can only hold one item at a time.
+            They prefer food items but will pick up any item.
+      WHY: Adds unique character to foxes and creates emergent gameplay
+           (foxes might steal player items, relocate items)
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 8
+      duration: null
+      affects_others: false
+      world_modification: true
+
+  - name: "pouncing_attack"
+    description: |
+      Foxes perform a distinctive high pounce when attacking prey.
+
+      WHEN: During hunting behavior, when pursuing prey
+      WHERE: When within 4-8 blocks of prey target
+      WHAT: Fox leaps high into the air (up to 4 blocks) in a pouncing arc
+            toward the prey. This is both a movement and attack.
+            Success rate is higher when pouncing vs regular attack.
+      WHY: Signature fox hunting behavior; makes hunting visually distinct
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 12
+      duration: 30
+      affects_others: true
+      world_modification: false
+
+  - name: "trust_mechanic"
+    description: |
+      Baby foxes born from player-bred parents trust the player.
+
+      WHEN: When a baby fox is born from two foxes bred by a player
+      WHERE: Anywhere
+      WHAT: The baby fox "trusts" the player who bred its parents.
+            Trusted foxes do not flee from the trusted player.
+            They may follow the player at a distance.
+            Trust cannot be gained any other way and does not transfer to wild foxes.
+            Trust persists into adulthood.
+      WHY: Reward for breeding foxes; creates semi-tame companions
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 5
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "sleeping_behavior"
+    description: |
+      Foxes sleep during the day in sheltered locations.
+
+      WHEN: During daylight hours (time 0-12000)
+      WHERE: In shelter (under trees, in caves, in bushes)
+      WHAT: Fox finds a sheltered spot and curls up to sleep.
+            While sleeping, awareness is greatly reduced.
+            Fox can be woken by nearby danger or loud noises.
+            Prefers shaded areas with overhead cover.
+      WHY: Nocturnal behavior pattern; makes foxes vulnerable during day
+
+    implementation_hints:
+      trigger_type: "TIME"
+      priority: 6
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "snow_variant"
+    description: |
+      Foxes have two color variants: red (default) and snow (white).
+
+      WHEN: At spawn time
+      WHERE: Snow variant spawns only in snowy taiga biomes and variants
+            Red variant spawns in all other allowed biomes
+      WHAT: Two visual variants with identical behavior.
+            Snow foxes are white/blue-grey colored.
+            Breeding two snow foxes always produces snow babies.
+            Breeding red fox with snow fox can produce either variant.
+      WHY: Biome adaptation; visual variety
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: null
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "berry_eating"
+    description: |
+      Foxes can eat berries from berry bushes and will seek them as emergency food.
+
+      WHEN: When hungry and no prey available, or opportunistically
+      WHERE: Near sweet berry bushes or glow berry vines
+      WHAT: Fox approaches berry bush and consumes berries directly.
+            This removes berries from the bush but doesn't destroy it.
+            Provides small nutrition (not as good as meat).
+            Fox may damage berry bush slightly in the process.
+      WHY: Omnivorous feeding behavior; prevents starvation in prey-scarce areas
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 13
+      duration: 60
+      affects_others: false
+      world_modification: true
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+
+relationships:
+  # Predators (who hunts this mob)
+  predators:
+    - entity: "minecraft:wolf"
+      notes: "Wolves are natural predators; foxes flee on sight"
+    - entity: "minecraft:polar_bear"
+      notes: "Polar bears are threats in snowy biomes; foxes flee"
+
+  # Prey (what this mob hunts)
+  prey:
+    - entity: "minecraft:chicken"
+      notes: "Primary prey; hunted opportunistically"
+    - entity: "minecraft:rabbit"
+      notes: "Primary prey; hunted opportunistically"
+    - entity: "minecraft:turtle"
+      notes: "Only hunts baby turtles"
+    - entity: "minecraft:cod"
+      notes: "Secondary prey; hunted near water"
+    - entity: "minecraft:salmon"
+      notes: "Secondary prey; hunted near water"
+    - entity: "minecraft:tropical_fish"
+      notes: "Secondary prey; opportunistic"
+
+  # Competitors (compete for same resources)
+  competitors:
+    - entity: "minecraft:wolf"
+      resource: "rabbits and prey animals"
+      interaction: "Avoidance; wolves dominant"
+    - entity: "minecraft:cat"
+      resource: "chickens"
+      interaction: "Competition but no direct conflict"
+
+  # Mutualists (mutually beneficial)
+  mutualists: []
+
+  # Commensals (one benefits, other unaffected)
+  commensals:
+    - entity: "minecraft:sweet_berry_bush"
+      benefit_given: "seed dispersal through berry consumption"
+      benefit_received: "emergency food source"
+
+  # Special relationships
+  special:
+    - entity: "minecraft:player"
+      relationship: "trust_when_bred"
+      description: "Baby foxes born from player-bred parents trust that player"
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+
+narrative:
+  summary: |
+    The fox is a small, agile nocturnal predator that hunts chickens, rabbits, fish, and baby turtles.
+    Known for its distinctive pouncing attack and ability to carry items in its mouth, the fox is both
+    a clever hunter and an opportunistic scavenger that supplements its diet with berries.
+
+  behavior_overview: |
+    Foxes sleep during the day in sheltered spots under trees or in small caves, becoming active at dusk.
+    During the night, they patrol their home range hunting small prey with characteristic high pounces.
+    They are solitary hunters but may be seen in pairs during breeding season or with offspring.
+
+    Foxes are wary of players and will flee when approached, but baby foxes born from player-bred parents
+    develop a trust that lasts into adulthood. These trusted foxes don't flee and may follow the player.
+
+    When not hunting, foxes may pick up items in their mouth and carry them around, sometimes stealing
+    player items or relocating dropped objects. They prefer food items but will grab anything interesting.
+
+    In areas with sparse prey, foxes supplement their diet by eating berries from bushes, though this
+    provides less nutrition than meat. They have two color variants: red foxes in temperate areas and
+    white snow foxes in snowy taiga biomes.
+
+  ecological_importance: |
+    Foxes serve as important predator population control for small prey species (chickens, rabbits).
+    Without foxes, these prey populations could explode in nocturnal hours when other predators are less active.
+
+    Foxes also provide seed dispersal services for sweet berry and glow berry plants through their droppings,
+    helping these plants spread to new areas.
+
+    As mesopredators (mid-level predators), foxes are both predator and prey, linking different trophic levels.
+    They compete with wolves and cats for prey, creating complex predator dynamics.
+
+  design_notes: |
+    - The pounce attack should be visually distinctive and have a slight success bonus
+    - Item carrying should work with any item but prioritize food items
+    - Trust mechanic is ONLY for player-bred babies, not wild-tamed foxes
+    - Sleeping during day makes foxes vulnerable to daytime predators/players
+    - Snow variant is purely cosmetic but adds visual interest to snowy biomes
+    - Berry eating is emergency food, not preferred; prevents starvation
+    - Foxes should feel clever and mischievous, not just aggressive hunters
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 1.0
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: 40        # Needs ~1 chicken or rabbit per day
+    provides_to_predator: 50     # Provides this much energy when eaten
+
+  population_target: "Uncommon, 2-4 per taiga biome, 1-2 per chunk max"
+
+  removal_impact: |
+    Without foxes, nocturnal small prey (chickens, rabbits) would face reduced predation pressure
+    at night. Berry bushes would have reduced seed dispersal. The ecosystem would lose a distinctive
+    mesopredator that creates interesting player interactions through item carrying and trust mechanics.

@@ -1,0 +1,31 @@
+{
+  "minecraft:tropical_fish": {
+    "behaviors": {
+      "enabled": true,
+      "priority": 2,
+      "max_force": 0.12,
+      "max_speed": 0.25,
+      "separation": 1.8,
+      "alignment": 1.0,
+      "cohesion": 1.4,
+      "schooling": 1.7,
+      "current_riding": 0.6,
+      "evasion": 1.8
+    },
+    "schooling": {
+      "enabled": true,
+      "school_size": 5,
+      "perception_radius": 8.0,
+      "separation_distance": 1.0,
+      "cohesion_strength": 1.4,
+      "alignment_strength": 1.0
+    },
+    "aquatic": {
+      "enabled": true,
+      "depth_preference": "shallow",
+      "surface_seeking": 0.5,
+      "current_resistance": 0.5,
+      "color_variation": true
+    }
+  }
+}

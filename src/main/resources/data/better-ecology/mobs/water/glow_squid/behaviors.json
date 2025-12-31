@@ -1,0 +1,40 @@
+{
+  "minecraft:glow_squid": {
+    "behaviors": {
+      "enabled": true,
+      "priority": 2,
+      "max_force": 0.12,
+      "max_speed": 0.25,
+      "ink_cloud": 1.5,
+      "vertical_migration": 0.8,
+      "prey_attraction": 0.5,
+      "evasion": 1.8
+    },
+    "defense": {
+      "enabled": true,
+      "ink_cloud_radius": 8.0,
+      "ink_cloud_duration": 400,
+      "ink_release_threshold": 6.0,
+      "blindness_duration": 80,
+      "slowdown_duration": 40
+    },
+    "hunting": {
+      "enabled": true,
+      "attraction_radius": 8.0,
+      "glow_particle_effect": true,
+      "prey_types": ["cod", "salmon", "tropical_fish"]
+    },
+    "migration": {
+      "enabled": true,
+      "day_depth": 50.0,
+      "night_depth": 58.0,
+      "migration_interval": 12000
+    },
+    "aquatic": {
+      "enabled": true,
+      "depth_preference": "deep",
+      "surface_seeking": 0.1,
+      "current_resistance": 0.6
+    }
+  }
+}

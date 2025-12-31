@@ -1,0 +1,647 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# Mob: Donkey (minecraft:donkey)
+# ============================================================================
+#
+# This file defines a specific mob by:
+# 1. Overriding defaults from the Generalized Template
+# 2. Providing natural language descriptions for unique behaviors
+# 3. Specifying relationships with other mobs
+#
+# INSTRUCTIONS FOR AI:
+# - Read the Generalized Template first to understand all systems
+# - Values here OVERRIDE template defaults
+# - Empty/null values mean "use template default"
+# - Natural language descriptions should be interpreted and implemented
+# - [UNIQUE] sections require custom implementation logic
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:donkey"
+  display_name: "Donkey"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "HERD"
+    activity_pattern: "CREPUSCULAR"
+
+  reference:
+    real_world_analog: "Domestic donkey (Equus africanus asinus)"
+    ecological_role: "Grazing herbivore and pack animal; can be tamed for transport and storage"
+
+  tags: ["domesticated", "equine", "pack_animal", "grazer", "tameable", "rideable", "storage"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: null
+  size:
+    width: null
+    height: null
+  biomass:
+    adult: null
+  movement:
+    speeds:
+      walk: null
+      run: null
+      swim: null
+      fly: null
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: null
+  thirst:
+    enabled: null
+  age:
+    baby_duration: null
+    max_age: null
+  social:
+    enabled: null
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule: null
+
+  weather:
+    rain: null
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: []
+      forbidden: []
+    required_nearby: []
+
+  territory:
+    enabled: null
+    size: null
+
+  shelter:
+    needs_shelter: null
+    shelter_uses: []
+    valid_shelters: []
+
+  location_triggers:
+    enabled: false
+    triggers: []
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "ITEM"
+        target: "minecraft:golden_apple"
+        nutrition: 20
+        method: "HAND_FEED"
+        world_effect:
+          action: "NONE"
+          result: null
+
+      - type: "ITEM"
+        target: "minecraft:golden_carrot"
+        nutrition: 20
+        method: "HAND_FEED"
+        world_effect:
+          action: "NONE"
+          result: null
+
+      - type: "ITEM"
+        target: "minecraft:hay_block"
+        nutrition: 20
+        method: "HAND_FEED"
+        world_effect:
+          action: "NONE"
+          result: null
+
+      - type: "ITEM"
+        target: "minecraft:apple"
+        nutrition: 10
+        method: "HAND_FEED"
+        world_effect:
+          action: "NONE"
+          result: null
+
+    secondary:
+      - type: "ITEM"
+        target: "minecraft:wheat"
+        nutrition: 8
+        method: "HAND_FEED"
+        world_effect:
+          action: "NONE"
+          result: null
+
+      - type: "ITEM"
+        target: "minecraft:sugar"
+        nutrition: 5
+        method: "HAND_FEED"
+        world_effect:
+          action: "NONE"
+          result: null
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: null
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:wolf"
+        threat_level: "HIGH"
+        detection_range: 20
+        response: "FLEE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: null
+    recent_food:
+      enabled: null
+    environment:
+      near_water: null
+      required_biomes: []
+    requires_shelter: null
+    season: null
+
+  density_effects:
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: null
+      behavior: "Donkeys approach each other briefly when fed golden food items; simple mingling animation with heart particles"
+
+  breeding:
+    gestation:
+      type: "LIVE_BIRTH"
+      duration: null
+    birth:
+      offspring_count: null
+      location_requirement: "None required"
+
+  parental_care:
+    duration: null
+    behaviors:
+      protects_offspring: null
+      feeds_offspring: null
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "HERD"
+    size:
+      min: null
+      optimal: null
+      max: null
+    leadership:
+      has_leader: null
+      leader_selection: "No defined leader; loose herd structure"
+
+  herd_movement:
+    enabled: null
+
+  communication:
+    alarm_calls:
+      enabled: null
+      types:
+        - trigger: "predator_detected"
+          call: "bray_alarm"
+          group_response: "alert_and_flee"
+        - trigger: "player_mount_attempt"
+          call: "protest_bray"
+          group_response: "none"
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: null
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: null
+    pollination:
+      enabled: null
+
+  responses:
+    drinking:
+      enabled: null
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: null
+    group_size: null
+    conditions:
+      biomes: []
+      blocks: []
+
+  carrying_capacity:
+    caps:
+      per_chunk: null
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "NEUTRAL"
+
+  taming:
+    enabled: true
+    items:
+      - item: "minecraft:wheat"
+        temper_boost: 3
+        health_restore: 1
+      - item: "minecraft:sugar"
+        temper_boost: 1
+        health_restore: 1
+      - item: "minecraft:apple"
+        temper_boost: 3
+        health_restore: 2
+      - item: "minecraft:golden_apple"
+        temper_boost: 10
+        health_restore: 10
+      - item: "minecraft:golden_carrot"
+        temper_boost: 10
+        health_restore: 8
+      - item: "minecraft:hay_block"
+        temper_boost: 5
+        health_restore: 4
+
+  player_breeding:
+    enabled: true
+    items:
+      - item: "minecraft:golden_apple"
+        triggers_love_mode: true
+        condition_restore: 20
+      - item: "minecraft:golden_carrot"
+        triggers_love_mode: true
+        condition_restore: 20
+
+  drops:
+    on_death:
+      - item: "minecraft:leather"
+        count: [0, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+      - item: "minecraft:chest"
+        count: [1, 1]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 0
+        condition: "had_chest_equipped"
+
+  interactions:
+    - action: "mount_attempt"
+      item: "none"
+      result: "temper_increase_or_tame"
+      description: |
+        Player attempts to ride untamed donkey with empty hand.
+        Donkey has temper stat (0-100). On mount attempt:
+        - Generate random number 0-99
+        - If random < temper: donkey becomes tamed
+        - If random >= temper: temper increases by 5, player is bucked off
+        - Feeding food items increases temper by varying amounts
+        - Once tamed, displays heart particles
+
+    - action: "equip_saddle"
+      item: "minecraft:saddle"
+      result: "rideable_controlled"
+      description: |
+        Player uses saddle on tamed adult donkey.
+        Donkey becomes rideable with directional control.
+        Cannot be removed from saddle without killing donkey.
+        Baby donkeys cannot equip saddles.
+
+    - action: "equip_chest"
+      item: "minecraft:chest"
+      result: "storage_unlocked"
+      description: |
+        Player uses chest on tamed adult donkey.
+        Donkey gains 15 additional inventory slots.
+        Chest is permanent - can only be removed by killing donkey.
+        Chest and all contents drop when donkey is killed.
+        Baby donkeys cannot equip chests.
+        Can access inventory by: sneaking + inventory key, or mounting + inventory key.
+
+    - action: "breed_with_horse"
+      item: "minecraft:golden_apple"
+      result: "mule_offspring"
+      description: |
+        Crossbreeding tamed donkey with tamed horse produces mule.
+        Both parents must be fed golden apple or golden carrot.
+        Mules are sterile and cannot breed.
+        Mules inherit donkey's chest-carrying ability.
+        Mules have variable stats like horses but cannot wear horse armor.
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.donkey.ambient"
+    hurt: "entity.donkey.hurt"
+    death: "entity.donkey.death"
+    eat: "entity.donkey.eat"
+    buck: "entity.donkey.angry"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "rear_up"
+        frequency: 400
+        trigger: "random"
+      - behavior: "tail_swish"
+        frequency: 200
+        trigger: "random"
+      - behavior: "head_lower_graze"
+        frequency: 300
+        trigger: "random"
+      - behavior: "ear_flick"
+        frequency: 150
+        trigger: "random"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+# Describe behaviors unique to this mob that aren't covered by standard systems.
+# Use natural language - AI should interpret and implement appropriate logic.
+# ============================================================================
+
+unique_behaviors:
+  - name: "temper_based_taming"
+    description: |
+      Donkeys use a unique temper-based taming system requiring repeated mounting attempts.
+
+      WHEN: Player attempts to mount an untamed adult donkey with an empty hand
+      WHERE: Anywhere the donkey exists
+      WHAT: The donkey tracks a "temper" value from 0-100:
+        - On mount attempt, generate random number 0-99
+        - If random < current temper: donkey becomes tamed
+        - If random >= temper: temper increases by 5, player gets bucked off
+        - Each feeding attempt increases temper by varying amounts (wheat: +3, sugar: +1, apple: +3, golden apple: +10, golden carrot: +10, hay: +5)
+        - Taming is complete when random roll succeeds, showing heart particles
+        - Baby donkeys cannot be tamed
+      WHY: Creates a multi-step taming process that rewards persistence and resource investment
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 5
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "chest_storage_capability"
+    description: |
+      Donkeys can equip chests to provide portable inventory storage.
+
+      WHEN: Player uses a chest item on a tamed adult donkey
+      WHERE: Anywhere the donkey exists
+      WHAT: The donkey gains additional inventory capabilities:
+        - 15 extra inventory slots become available
+        - Chest is visually attached to donkey model
+        - Chest cannot be removed except by killing the donkey
+        - Inventory accessible via: mounting + inventory key, or sneaking nearby + inventory key
+        - When donkey dies, chest and all contents drop as items
+        - Baby donkeys cannot equip chests
+      WHY: Provides unique mobile storage utility differentiating donkeys from horses
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 8
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "mule_hybrid_breeding"
+    description: |
+      Donkeys can crossbreed with horses to produce sterile mule offspring.
+
+      WHEN: Tamed donkey and tamed horse are both fed golden apples or golden carrots
+      WHERE: Within 16 blocks of each other
+      WHAT: Creates unique hybrid offspring:
+        - Both parents must be tamed before breeding
+        - Both parents must be fed golden food item simultaneously
+        - Love mode activates for both parents (heart particles)
+        - Parents mingle for approximately 5 seconds
+        - Baby mule spawns near parents
+        - Mules inherit stats from both parents using average formula with variation
+        - Mules are sterile - cannot breed with any equine
+        - Mules have donkey's chest-carrying ability (can equip chests)
+        - Mules cannot wear horse armor (like donkeys)
+        - Mule speed ranges from 4.8375 to 14.5125 blocks/second
+        - 68% of mules are faster than minecarts
+      WHY: Creates unique breeding gameplay with strategic decisions for transport vs storage
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 6
+      duration: null
+      affects_others: true
+      world_modification: false
+
+  - name: "controlled_riding"
+    description: |
+      Donkeys can be saddled and ridden with full directional control.
+
+      WHEN: Player uses saddle on tamed adult donkey, then mounts it
+      WHERE: Anywhere the donkey exists
+      WHAT: Provides controllable mount for player:
+        - Donkey must be tamed before saddle can be equipped
+        - Only adult donkeys can equip saddles (not babies)
+        - Once saddled, player can mount and control direction
+        - Movement speed: 0.175 (7.38 blocks/second) for spawned donkeys
+        - Jump strength: 0.5 for spawned donkeys (fixed in Bedrock, variable 0.4-1.0 in Java for bred donkeys)
+        - Can swim slowly while carrying player
+        - Can carry player and chest inventory simultaneously
+        - Slower backward movement, sideways speed similar to player
+        - Saddle cannot be removed without killing donkey
+      WHY: Provides reliable, albeit slower, transport option with storage capacity
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 7
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "equine_stat_variation"
+    description: |
+      Donkeys have three variable stats with different inheritance patterns for spawned vs bred individuals.
+
+      WHEN: Donkey spawns naturally or is bred
+      WHERE: At spawn time or birth
+      WHAT: Stats are determined as follows:
+        HEALTH (all donkeys):
+          - Random between 15-30 HP (7.5-15 hearts)
+          - Average: 22.5 HP (11.25 hearts)
+          - Displays correctly except odd numbers don't show half-heart
+
+        MOVEMENT SPEED:
+          - Spawned donkeys: Fixed at 0.175 (7.38 blocks/second) - Java and Bedrock
+          - Bred donkeys (Java only): Variable 0.1125 to 0.3375 (5.7 to 14.2 blocks/second)
+          - Bred donkeys (Bedrock): Fixed at 0.175 (same as spawned)
+
+        JUMP STRENGTH:
+          - Spawned donkeys (Java): Fixed value
+          - Spawned donkeys (Bedrock): Fixed at 0.5
+          - Bred donkeys (Java only): Variable 0.4 to 1.0
+          - Bred donkeys (Bedrock): Fixed at 0.5 (same as spawned)
+      WHY: Provides variety in donkey capabilities with bred donkeys potentially having superior stats
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 4
+      duration: null
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+# Describe relationships with other specific mobs beyond predator/prey.
+# ============================================================================
+
+relationships:
+  predators: []
+
+  prey: []
+
+  competitors:
+    - entity: "minecraft:horse"
+      resource: "grass_block"
+      interaction: "Donkeys and horses compete for grazing territory in plains and savanna biomes, though they do not exhibit aggressive competition"
+
+  mutualists: []
+
+  commensals: []
+
+  special:
+    - entity: "minecraft:horse"
+      relationship: "crossbreeding_partner"
+      description: |
+        Donkeys and horses have a unique crossbreeding relationship:
+        - Tamed donkey + tamed horse = mule offspring
+        - Mules are sterile hybrid offspring combining traits from both parents
+        - Mules inherit chest-carrying ability from donkeys
+        - Mules have variable movement/jump stats like horses
+        - Mules cannot be equipped with horse armor (like donkeys)
+        - This represents the only hybrid breeding mechanic in Minecraft
+        - Mirrors real-world biology where horse-donkey hybrids are sterile
+
+    - entity: "minecraft:mule"
+      relationship: "offspring"
+      description: |
+        Mules are sterile offspring of donkey-horse pairings:
+        - Produced by breeding tamed donkey with tamed horse
+        - Cannot breed with any equine (mules, donkeys, or horses)
+        - Inherit chest-carrying capability from donkey parent
+        - Have variable stats influenced by both parents
+        - Provide combination of horse speed variety and donkey storage capacity
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+# Free-form description for AI to understand this mob's "character"
+# ============================================================================
+
+narrative:
+  summary: |
+    The Donkey is a domesticated pack animal descended from the African wild ass, naturally spawning in plains, savannas, and meadows. As a passive herbivore, it serves as both a wild grazer and a valuable tameable mount with unique storage capabilities that distinguish it from horses.
+
+  behavior_overview: |
+    Donkeys are gentle, herd-oriented animals that spend their days grazing on grass and resting during the hottest hours. They are naturally cautious but not aggressive - when threatened, they flee rather than fight. What makes donkeys special is their dual utility as both riding animals and mobile storage units. Unlike horses, all donkeys can be equipped with chests to provide 15 inventory slots, making them invaluable for long mining expeditions or base-building projects. Their taming process requires patience - players must repeatedly mount the donkey, being bucked off until the donkey's "temper" stat is high enough, or accelerate the process by feeding the donkey various food items. Donkeys also possess the unique ability to crossbreed with horses, producing sterile mule offspring that inherit desirable traits from both parents.
+
+  ecological_importance: |
+    In the ecosystem, donkeys serve as mid-sized grazing herbivores that help control vegetation growth in plains and savanna biomes. They provide an important food source for predators like wolves. Their ability to disperse seeds through grazing contributes to plant propagation. From a gameplay perspective, donkeys bridge the gap between horses (fast transport) and llamas (storage animals), offering a balanced option with moderate speed and significant cargo capacity. Their crossbreeding with horses to create mules adds depth to the domestication gameplay, allowing players to breed animals with specific trait combinations. Without donkeys, players would lose access to chest-equipped mounts and the unique mule hybrid, significantly reducing strategic options for transport and storage.
+
+  design_notes: |
+    Key implementation considerations for donkeys:
+
+    1. Taming System: The temper-based taming mechanic (0-100 scale) must be carefully implemented. Each mount attempt should generate a random 0-99 number, comparing it to current temper. Failed attempts increase temper by 5. Feeding items should provide variable temper increases (wheat: +3, sugar: +1, apple: +3, golden apple/carrot: +10, hay: +5).
+
+    2. Chest Equipment: Once a chest is equipped, it becomes permanent. The only way to remove it is killing the donkey, which drops the chest AND all contents. This creates a meaningful decision point for players. Inventory access needs two methods: mount + inventory key, or sneak nearby + inventory key.
+
+    3. Baby Restrictions: Critical that baby donkeys cannot equip saddles, chests, or be tamed. Only adult donkeys should accept equipment. Babies take 20 minutes to mature.
+
+    4. Crossbreeding: The mule breeding logic must handle sterility correctly - mules should never be able to breed with any equine. Mule stat inheritance uses a variation of average formula from both parents.
+
+    5. Stat Variation: Spawned donkeys have fixed speed (0.175) but variable health (15-30 HP). Bred donkeys in Java Edition can have variable speed and jump, but Bedrock donkeys always use fixed values regardless of spawning method.
+
+    6. Health Display: Donkeys with odd health values don't display the last half-heart in the health bar (e.g., 15 HP displays as 14 HP). This is a vanilla quirk that should be preserved for authenticity.
+
+    7. Compatibility: Donkeys are technically a texture variant of horses in vanilla code. Any horse-related systems should consider donkey compatibility, especially for breeding mechanics.
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+# Quick-reference values for ecosystem balancing
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 0.6
+  breeding_rate_multiplier: 0.8
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: 180         # Moderate food needs due to efficient digestion
+    provides_to_predator: 225      # Good biomass return
+
+  population_target: "Uncommon, 2-8 per plains/savanna biome, with meadows having 1-2 per spawn group"
+
+  removal_impact: "Loss of chest-equipped transport option and mule breeding capability; players lose mobile storage utility and hybrid offspring production"

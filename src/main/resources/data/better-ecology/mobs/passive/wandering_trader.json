@@ -1,0 +1,27 @@
+{
+  "entity_type": "minecraft:wandering_trader",
+  "handles": [
+    "villager_behavior"
+  ],
+  "behaviors": {
+    "trading": {
+      "enabled": true,
+      "reputation_gain_rate": 0.5,
+      "max_reputation": 200,
+      "price_discount_per_reputation": 0.001,
+      "max_discount": 0.3,
+      "special_deal_chance": 0.02,
+      "rare_deal_chance": 0.01
+    },
+    "gossip": {
+      "enabled": true,
+      "spread_chance": 0.2,
+      "decay_time_days": 7,
+      "max_gossip_per_type": 10
+    }
+  },
+  "weights": {
+    "wander": 1.0,
+    "obstacle_avoidance": 2.5
+  }
+}

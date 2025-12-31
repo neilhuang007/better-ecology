@@ -1,0 +1,745 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# ============================================================================
+#
+# Mob: Axolotl (Ambystoma mexicanum)
+# Classification: Passive aquatic mob with cooperative combat abilities
+#
+# This file defines a specific mob by:
+# 1. Overriding defaults from the Generalized Template
+# 2. Providing natural language descriptions for unique behaviors
+# 3. Specifying relationships with other mobs
+#
+# INSTRUCTIONS FOR AI:
+# - Read the Generalized Template first to understand all systems
+# - Values here OVERRIDE template defaults
+# - Empty/null values mean "use template default"
+# - Natural language descriptions should be interpreted and implemented
+# - [UNIQUE] sections require custom implementation logic
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:axolotl"
+  display_name: "Axolotl"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "SECONDARY_CONSUMER"
+    diet_type: "PISCIVORE"
+    social_type: "COOPERATIVE"
+    activity_pattern: "CATHEMERAL"
+
+  reference:
+    real_world_analog: "Mexican axolotl (Ambystoma mexicanum) - critically endangered salamander"
+    ecological_role: "Apex aquatic predator in cave ecosystems, controls fish and hostile aquatic mob populations"
+
+  tags: ["aquatic", "amphibian", "cave_dweller", "regenerative", "endangered_awareness", "cooperative_hunter"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 14                    # 14 HP (7 hearts)
+
+  size:
+    width: 1.3                  # Hitbox width
+    height: 0.6                 # Hitbox height
+
+  movement:
+    speeds:
+      walk: null                # Use template
+      run: null                 # Use template
+      swim: null                # Use template
+      fly: null                 # Use template
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: null            # Use template
+
+  thirst:
+    enabled: null               # Use template (disabled - lives in water)
+
+  age:
+    baby_duration: 24000        # 20 minutes to adulthood
+    max_age: null
+
+  social:
+    enabled: null               # Use template
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule: null              # Use template (cathemeral)
+
+  weather:
+    rain: null                  # Use template (underground - unaffected)
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []               # Use template
+      preferred: ["lush_caves"]
+      forbidden: []
+
+    required_nearby:
+      - feature: "water"
+        max_distance: 2
+        reason: "Must spawn in water"
+      - feature: "clay_block"
+        max_distance: 5
+        vertical_direction: "down"
+        reason: "Clay block within 5 blocks below required for spawning"
+      - feature: "stone_block"
+        max_distance: 5
+        reason: "Must spawn near stone-type blocks"
+
+  territory:
+    enabled: null               # Use template (disabled)
+
+  shelter:
+    needs_shelter: null         # Use template
+
+  # === LOCATION-TRIGGERED BEHAVIORS ===
+  # [UNIQUE] Axolotl location-based behaviors
+  location_triggers:
+    enabled: true
+    triggers:
+      - name: "land_exposure_survival"
+        description: |
+          When axolotl is on land (not in water), it has 6000 ticks (5 minutes)
+          to find deep water (2+ blocks deep) before taking damage. Will search
+          for water within 16 blocks and pathfind to it. Survives during rain
+          without water damage.
+        location:
+          blocks: ["air"]
+          in_water: false
+        behavior:
+          search_range: 16
+          water_depth_requirement: 2
+          survival_time: 6000
+          rain_immunity: true
+
+      - name: "lush_caves_affinity"
+        description: |
+          In lush caves biome with water, shows increased activity and comfort.
+          More likely to patrol and hunt in these areas.
+        location:
+          biomes: ["lush_caves"]
+          in_water: true
+        behavior:
+          activity_multiplier: 1.2
+          hunting_priority_boost: 1.1
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      # Hostile aquatic mobs (priority targets)
+      - type: "ENTITY"
+        target: "minecraft:drowned"
+        nutrition: 30
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: "item_drop"
+
+      - type: "ENTITY"
+        target: "minecraft:guardian"
+        nutrition: 25
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: "item_drop"
+
+      - type: "ENTITY"
+        target: "minecraft:elder_guardian"
+        nutrition: 25
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: "item_drop"
+
+      # Passive fish (secondary priority)
+      - type: "ENTITY"
+        target: "minecraft:tropical_fish"
+        nutrition: 20
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: "item_drop"
+
+      - type: "ENTITY"
+        target: "minecraft:cod"
+        nutrition: 18
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: "item_drop"
+
+      - type: "ENTITY"
+        target: "minecraft:salmon"
+        nutrition: 18
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: "item_drop"
+
+    secondary:
+      - type: "ENTITY"
+        target: "minecraft:squid"
+        nutrition: 15
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: "item_drop"
+
+      - type: "ENTITY"
+        target: "minecraft:glow_squid"
+        nutrition: 15
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: "item_drop"
+
+      - type: "ENTITY"
+        target: "minecraft:tadpole"
+        nutrition: 12
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: "item_drop"
+
+    emergency:
+      - type: "ENTITY"
+        target: "minecraft:pufferfish"
+        nutrition: 10
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: "item_drop"
+
+  foraging:
+    search_radius:
+      base: null                # Use template
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: true
+
+    prey:
+      targets:
+        - "minecraft:drowned"
+        - "minecraft:guardian"
+        - "minecraft:elder_guardian"
+        - "minecraft:tropical_fish"
+        - "minecraft:cod"
+        - "minecraft:salmon"
+        - "minecraft:squid"
+        - "minecraft:glow_squid"
+        - "minecraft:tadpole"
+        - "minecraft:pufferfish"
+
+      selection_rules:
+        avoid_babies: false     # Will hunt babies
+        sustainable_hunting:
+          enabled: false        # Minecraft mobs respawn
+
+    hunting:
+      method: "CHASE"
+      # Hunting cooldown: 2 minutes (2400 ticks) after non-hostile prey
+      non_hostile_cooldown: 2400
+      # Prioritize hostile mobs over passive mobs
+      hostile_priority: 1.5
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:player"
+        threat_level: "MEDIUM"
+        detection_range: 16
+        response: "FLEE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: null         # Use template
+    recent_food:
+      enabled: null             # Use template
+    environment:
+      near_water: null          # Use template
+      required_biomes: null     # Use template
+    requires_shelter: null      # Use template
+    season: null                # Use template
+
+  density_effects:
+    density_curve: null         # Use template
+
+  mate_selection:
+    courtship:
+      enabled: null
+      behavior: "Simple breeding with tropical fish bucket"
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: 0
+
+    birth:
+      offspring_count: [1, 1]   # Always 1 baby
+      location_requirement: "in_water"
+
+  parental_care:
+    duration: 24000             # 20 minutes - baby follows adult
+    behaviors:
+      protects_offspring: null  # Use template
+      feeds_offspring: null     # Use template
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "LOOSE_ASSOCIATION"
+    size:
+      min: 1
+      optimal: 2
+      max: 4
+
+    leadership:
+      has_leader: false
+      leader_selection: ""
+
+  herd_movement:
+    enabled: null
+
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "player_combat_assist"
+          call: "combat_ready"
+          group_response: "join_combat"
+          description: "When player attacks hostile aquatic mob, nearby axolotls join fight"
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: null
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: null
+
+    pollination:
+      enabled: null
+
+  responses:
+    drinking:
+      enabled: null
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 8                   # Moderate spawn weight
+    group_size: [1, 4]
+
+    conditions:
+      biomes: ["lush_caves"]
+      blocks: ["water"]
+      light_level: 0            # Must spawn in complete darkness
+      altitude_max: 63          # Below Y=63
+
+  carrying_capacity:
+    caps:
+      per_chunk: 4              # Max 4 axolotls per chunk
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "NEUTRAL"
+
+  taming:
+    enabled: false              # Cannot be tamed, only captured
+
+  player_breeding:
+    enabled: true
+    items:
+      - "minecraft:tropical_fish_bucket"
+
+  drops:
+    on_death: []                # No drops
+
+  interactions:
+    - action: "bucket_capture"
+      item: "minecraft:water_bucket"
+      result: "minecraft:axolotl_bucket"
+      description: "Can be captured in water bucket and transported"
+
+    - action: "combat_assistance"
+      item: null
+      result: "regeneration_buff"
+      description: |
+        Grants Regeneration I to players after cooperative combat kills.
+        5 seconds per axolotl, max 2 minutes in Java Edition.
+        Removes Mining Fatigue debuff from player.
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.axolotl.idle_water"
+    hurt: "entity.axolotl.hurt"
+    death: "entity.axolotl.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "swim_patrol"
+        frequency: 0.4
+        trigger: "in_water"
+
+      - behavior: "surface_breathing"
+        frequency: 0.1
+        trigger: "low_air"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+# Describe behaviors unique to this mob that aren't covered by standard systems.
+# Use natural language - AI should interpret and implement appropriate logic.
+# ============================================================================
+
+unique_behaviors:
+  # === PLAYING DEAD MECHANIC ===
+  - name: "playing_dead"
+    description: |
+      DEFENSIVE THANATOSIS: When damaged underwater, axolotl has 1/3 chance to
+      play dead. Flips over, becomes motionless, gains Regeneration I for 10
+      seconds (200 ticks), restoring 4 HP. Hostile aquatic mobs disengage and
+      treat axolotl as dead during this state.
+
+      WHEN: Triggered when taking damage underwater
+      CONDITIONS:
+        - Random chance: 1/3 (33.33%)
+        - OR damage amount > random integer (0-2)
+        - OR current health < 50% of maximum
+      WHERE: Only underwater (not on land)
+      WHAT: Axolotl flips over, becomes motionless on ground, applies
+        Regeneration I effect for 200 ticks, restores 4 HP over duration
+      WHY: Real-world axolotls use death-feigning (thanatosis) as defensive
+        strategy. Provides survival advantage without making mob invincible.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      event: "damaged"
+      priority: 2
+      duration: 200
+      affects_others: true      # Enemies ignore axolotl
+      world_modification: false
+
+  # === COOPERATIVE COMBAT BUFFS ===
+  - name: "cooperative_combat_buffs"
+    description: |
+      PLAYER COOPERATION: When axolotl assists player in killing hostile aquatic
+      mob (drowned, guardian, elder guardian), player receives Regeneration I
+      and Mining Fatigue is removed.
+
+      WHEN: After player and axolotl together kill hostile aquatic mob
+      WHERE: Anywhere (but typically underwater)
+      WHAT:
+        - Applies Regeneration I to player
+        - Duration: 100 ticks (5 seconds) per participating axolotl
+        - Java Edition max: 2400 ticks (2 minutes)
+        - Bedrock Edition: Uncapped stacking
+        - Removes Mining Fatigue debuff if present
+      WHY: Encourages players to bring axolotls as companions for underwater
+        exploration and ocean monument raids. Mirrors real-world axolotl's
+        regenerative properties and creates unique gameplay synergy.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      event: "combat_kill_cooperative"
+      priority: 5
+      duration: null
+      affects_others: true      # Buffs player
+      world_modification: false
+
+  # === BLUE AXOLOTL RARITY ===
+  - name: "blue_axolotl_genetics"
+    description: |
+      ENDANGERED SPECIES REPRESENTATION: Blue axolotl variant has 1/1,200
+      (0.083%) chance from breeding, representing estimated wild population of
+      Mexican axolotls (50-1,000 individuals remaining).
+
+      WHEN: During breeding between any two axolotls
+      WHERE: Anywhere breeding occurs
+      WHAT:
+        - 1/1,200 chance: Baby is blue variant
+        - 1,199/1,200 chance: Baby matches one parent's color
+        - Breeding two blue axolotls: Nearly guaranteed blue offspring
+        - Blue axolotls cannot spawn naturally in world
+      WHY: Educational conservation awareness. Mojang stated this rarity
+        represents the critically endangered status of real axolotls.
+        Creates engaging collection goal for players.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      event: "breeding"
+      priority: 10
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  # === HUNTING AQUATIC MOBS ===
+  - name: "aquatic_predator"
+    description: |
+      CAVE APEX PREDATOR: Axolotls hunt various aquatic mobs including hostile
+      mobs (drowned, guardians) and passive mobs (fish, squid, tadpoles).
+      Prioritizes hostile mobs. 2-minute cooldown after non-hostile kills.
+
+      WHEN: Hungry or opportunistically when prey nearby
+      WHERE: Underwater in any biome
+      WHAT:
+        - Targets: drowned, guardians, elder guardians (priority)
+        - Secondary: tropical fish, cod, salmon, squid, glow squid, tadpoles
+        - Never attacks: turtles, dolphins, frogs, other axolotls
+        - Non-hostile kill cooldown: 2400 ticks (2 minutes)
+        - Damage: 2 HP (1 heart) per attack
+      WHY: Ecological role as apex predator in underground water systems.
+        Controls aquatic mob populations. Cooldown prevents overhunting
+        of passive mobs.
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 6
+      duration: null
+      affects_others: true      # Affects prey populations
+      world_modification: false
+
+  # === WATER FLOW IMMUNITY ===
+  - name: "water_flow_immunity"
+    description: |
+      FLOW RESISTANCE: Unlike most aquatic mobs, axolotls cannot be pushed
+      or moved by flowing water. Still affected by bubble columns.
+
+      WHEN: Constant passive effect
+      WHERE: In any flowing water
+      WHAT: Axolotl position cannot be changed by water flow physics
+      WHY: Unique trait distinguishing axolotls from fish/squid. Allows
+        better positioning in cave water systems. Still affected by bubble
+        columns for balance.
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 1
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  # === PUFFERFISH INTERACTION ===
+  - name: "pufferfish_trigger"
+    description: |
+      PUFFERFISH INFLATION: Axolotl's presence causes nearby pufferfish to
+      inflate their defensive state.
+
+      WHEN: Axolotl approaches pufferfish
+      WHERE: Underwater near pufferfish
+      WHAT: Pufferfish within detection range inflate to defensive state
+      WHY: Unique interaction creating dynamic ecosystem behavior.
+      Suggests pufferfish recognize axolotl as potential predator.
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: 3
+      duration: null
+      affects_others: true      # Triggers pufferfish
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+# Describe relationships with other specific mobs beyond predator/prey.
+# ============================================================================
+
+relationships:
+  # Predators (who hunts this mob)
+  predators:
+    - entity: "minecraft:player"
+      notes: "Can be bucket-captured and bred, not typically hunted for food"
+
+  # Prey (what this mob hunts)
+  prey:
+    - entity: "minecraft:drowned"
+      interaction: "Priority target - hunted aggressively"
+    - entity: "minecraft:guardian"
+      interaction: "Priority target - hunted aggressively"
+    - entity: "minecraft:elder_guardian"
+      interaction: "Priority target - hunted aggressively despite danger"
+    - entity: "minecraft:tropical_fish"
+      interaction: "Hunted with 2-minute cooldown"
+    - entity: "minecraft:cod"
+      interaction: "Hunted with 2-minute cooldown"
+    - entity: "minecraft:salmon"
+      interaction: "Hunted with 2-minute cooldown"
+    - entity: "minecraft:squid"
+      interaction: "Hunted with 2-minute cooldown"
+    - entity: "minecraft:glow_squid"
+      interaction: "Hunted with 2-minute cooldown"
+    - entity: "minecraft:tadpole"
+      interaction: "Hunted with 2-minute cooldown"
+    - entity: "minecraft:pufferfish"
+      interaction: "Hunted, triggers inflation"
+
+  # Competitors (compete for same resources)
+  competitors:
+    - entity: "minecraft:dolphin"
+      resource: "Fish populations"
+      interaction: "No direct competition - different habitats"
+
+  # Mutualists (mutually beneficial)
+  mutualists:
+    - entity: "minecraft:player"
+      benefit_given: "Combat assistance against hostile aquatic mobs"
+      benefit_received: "Protection, transportation via bucket, breeding with tropical fish"
+      notes: "Unique cooperative relationship - axolotls grant Regeneration I and remove Mining Fatigue"
+
+  # Commensals (one benefits, other unaffected)
+  commensals: []
+
+  # Special relationships
+  special:
+    - entity: "minecraft:pufferfish"
+      relationship: "Trigger-response"
+      description: "Axolotl presence causes pufferfish to inflate defensively"
+
+    - entity: "minecraft:turtle"
+      relationship: "Non-aggression"
+      description: "Axolotls never hunt turtles - selective predation maintains biodiversity"
+
+    - entity: "minecraft:frog"
+      relationship: "Non-aggression"
+      description: "Axolotls never hunt frogs"
+
+    - entity: "minecraft:guardian"
+      relationship: "Counter"
+      description: "Axolotls are effective counters to guardians despite Mining Fatigue - can remove debuff from players"
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+# Free-form description for AI to understand this mob's "character"
+# ============================================================================
+
+narrative:
+  summary: |
+    The axolotl is a critically endangered Mexican salamander species that has
+    become the apex aquatic predator of Minecraft's lush caves. These unique
+    amphibians combine regenerative abilities, cooperative combat instincts,
+    and distinctive death-feigning defense to thrive in underground water systems.
+    Their rare blue variant (1/1,200 breeding chance) represents real-world
+    conservation awareness.
+
+  behavior_overview: |
+    Axolotls are active cathemeral hunters that patrol underwater cave systems,
+    preying on fish, squid, and hostile aquatic mobs. They exhibit remarkable
+    adaptive behaviors: playing dead when damaged (1/3 chance) to recover with
+    Regeneration I, cooperating with players to defeat guardians and drowned,
+    and demonstrating selective predation that spares turtles, dolphins, and
+    frogs. Unlike most aquatic mobs, they resist water flow and survive on land
+    during rain. Socially loose but cooperative, multiple axolotls may join
+    player combat, stacking regeneration buffs. They breed using tropical fish
+    buckets, with babies following adults for 20 minutes before independence.
+
+  ecological_importance: |
+    As the apex predator in lush cave ecosystems, axolotls regulate populations
+    of fish, squid, glow squid, and hostile aquatic mobs. Their selective
+    predation (sparing turtles, dolphins, frogs) maintains biodiversity while
+    their 2-minute hunting cooldown on non-hostile prey prevents overexploitation.
+    By countering guardians and drowned, they create safer underwater environments
+    for exploration. Their ability to remove Mining Fatigue makes them essential
+    partners for ocean monument raids. Critically, their blue variant's extreme
+    rarity (1/1,200) educates players about real-world axolotl endangerment,
+    with only 50-1,000 individuals remaining in Mexico's Lake Xochimilco.
+
+  design_notes: |
+    KEY IMPLEMENTATION PRIORITIES:
+    1. Playing dead mechanic requires multi-condition trigger (1/3 chance OR
+       damage > random(0-2) OR health < 50%). Must apply Regeneration I for
+       exactly 200 ticks, restore 4 HP, and cause hostile mobs to disengage.
+    2. Cooperative combat buffs must track participating axolotls and apply
+       Regeneration I for 5 seconds per axolotl (max 2 minutes Java, uncapped
+       Bedrock). Must remove Mining Fatigue debuff.
+    3. Blue variant genetics: 1/1,200 chance from ANY breeding pair, otherwise
+       baby matches parent color. Two blue parents produce guaranteed blue.
+    4. Hunting priority: Hostile mobs (drowned, guardians) > Passive mobs.
+       2-minute cooldown after non-hostile kills prevents resource depletion.
+    5. Water flow immunity: Cannot be pushed by flowing water but still affected
+       by bubble columns for balance.
+    6. Land survival: 5 minutes (6000 ticks) before damage, pathfinds to 2+
+       block deep water within 16 blocks. Rain immunity prevents death during storms.
+    7. Spawning requires: Lush caves, light level 0, Y<63, underwater, clay block
+       within 5 blocks below, stone block within 5 blocks.
+    8. Bucket capture makes axolotls despawn-proof, enabling player habitat creation.
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+# Quick-reference values for ecosystem balancing
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 1.0    # Baseline spawning - rare but findable
+  breeding_rate_multiplier: 0.5 # Slower breeding due to blue rarity mechanics
+  mortality_rate_multiplier: 0.8 # Lower due to playing dead mechanic
+
+  energy_flow:
+    daily_requirement: 40       # Moderate energy needs as cold-water predator
+    provides_to_predator: 6     # Low biomass (small prey for larger predators)
+
+  population_target: "Uncommon, 1-4 per lush caves chunk, blue variant extremely rare (1/1,200)"
+
+  removal_impact: "Fish and squid populations would increase significantly in lush caves. Players lose guardian counter and Mining Fatigue removal. Loss of educational conservation awareness."

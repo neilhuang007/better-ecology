@@ -1,0 +1,958 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - GENERALIZED BEHAVIOR TEMPLATE
+# Version: 2.0
+# Mob: Ocelot
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:ocelot"
+  display_name: "Ocelot"
+
+  # Ecological classification
+  classification:
+    category: "PASSIVE"
+    trophic_level: "SECONDARY_CONSUMER"
+    diet_type: "CARNIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "CREPUSCULAR"
+
+  # Reference information
+  reference:
+    real_world_analog: "Ocelot (Leopardus pardalis)"
+    ecological_role: "Small predator controlling chicken and small bird populations in jungle ecosystems"
+
+  # Tags for system filtering
+  tags: ["jungle", "feline", "shy", "creeper_deterrent"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  # Health
+  health:
+    base: 5                     # 10 HP = 5 hearts
+    baby_multiplier: 0.5
+
+  # Size (affects hitbox and various calculations)
+  size:
+    width: 0.6
+    height: 0.7
+    baby_scale: 0.5
+
+  # Biomass - abstract unit for food chain calculations
+  biomass:
+    adult: 50
+    baby: 15
+    transfer_efficiency: 0.1    # 10% energy transfer up food chain
+
+  # Movement capabilities
+  movement:
+    speeds:
+      walk: 0.4
+      run: 0.6                  # Fast and agile
+      swim: 0.15
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: true
+      jump_height: 1.5          # Good jumper
+      avoids_water: true
+      avoids_cliffs: true
+      cliff_threshold: 4
+
+    # Speed modifiers applied conditionally
+    conditional_modifiers:
+      baby: 0.8
+      elderly: 0.8
+      injured: 0.6
+      hungry: 0.9
+      fleeing: 1.8              # Very fast when fleeing
+      hunting: 1.4              # Fast when hunting
+      carrying_offspring: 0.7
+      in_water_nonaquatic: 0.4
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  # Hunger system
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 80
+    decay_rate: 0.025           # Slightly faster metabolism
+
+    # Thresholds that trigger behaviors
+    thresholds:
+      satiated: 80
+      hungry: 50
+      very_hungry: 25
+      starving: 10
+
+    # Starvation damage
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 200
+
+  # Thirst system
+  thirst:
+    enabled: false
+
+  # Body condition
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+
+    gain_when_satiated: 0.01
+    loss_when_hungry: 0.02
+    loss_when_starving: 0.1
+
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  # Energy/Stamina
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.5
+
+    costs:
+      sprinting: 0.3
+      hunting: 0.5
+      fleeing: 0.4
+      flying: 0.0
+      swimming: 0.3
+
+  # Age tracking
+  age:
+    enabled: true
+    baby_duration: 24000        # 20 minutes
+    maturity_age: 24000
+    elderly_age: null
+    max_age: null
+
+  # Social needs
+  social:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  # Daily cycle - Crepuscular (most active dawn/dusk)
+  daily_cycle:
+    schedule:
+      - time: [0, 3000]         # Dawn
+        activity: 1.0           # Fully active
+        label: "dawn"
+      - time: [3000, 9000]      # Morning
+        activity: 0.4
+        label: "morning"
+      - time: [9000, 12000]     # Midday
+        activity: 0.2
+        label: "midday"
+      - time: [12000, 13500]    # Dusk
+        activity: 1.0           # Fully active
+        label: "dusk"
+      - time: [13500, 18000]    # Evening
+        activity: 0.6
+        label: "evening"
+      - time: [18000, 24000]    # Night
+        activity: 0.3
+        label: "night"
+
+    # What "low activity" means
+    low_activity_behavior:
+      action: "rest"
+      seek_shelter: true
+      reduced_awareness: true
+      awareness_multiplier: 0.5
+
+  # Weather responses
+  weather:
+    rain:
+      activity_multiplier: 0.4
+      seek_shelter: true
+      shelter_priority: 4
+    thunder:
+      activity_multiplier: 0.2
+      seek_shelter: true
+      panic_chance: 0.3
+    snow:
+      activity_multiplier: 0.5
+      seek_shelter: true
+    clear:
+      activity_multiplier: 1.0
+
+  # Seasonal behaviors
+  seasons:
+    enabled: false
+
+  # Moon phases
+  lunar:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  # Habitat requirements
+  habitat:
+    biomes:
+      allowed: ["minecraft:jungle", "minecraft:bamboo_jungle", "minecraft:sparse_jungle"]
+      preferred: ["minecraft:jungle", "minecraft:bamboo_jungle"]
+      forbidden: []
+
+    altitude:
+      min: 60
+      max: 100
+      preferred: [63, 90]
+
+    required_nearby:
+      - feature: "trees"
+        max_distance: 16
+        reason: "Needs jungle canopy for hunting and shelter"
+
+  # Territory system
+  territory:
+    enabled: false
+
+  # Home range
+  home_range:
+    enabled: true
+    radius: 48
+    has_home_point: false
+    home_type: null
+
+  # Shelter requirements
+  shelter:
+    needs_shelter: true
+    shelter_uses: ["sleeping", "breeding", "hiding"]
+
+    valid_shelters:
+      - type: "vegetation"
+        description: "Dense jungle leaves or tall grass"
+        blocks: ["leaves", "tall_grass", "bamboo"]
+        min_enclosure: 0.4
+      - type: "cave"
+        description: "Natural cave or overhang"
+        min_enclosure: 0.6
+
+  # Location-triggered behaviors
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  # Food sources categorized by preference
+  food_sources:
+    primary:
+      - type: "ENTITY"
+        target: "minecraft:chicken"
+        nutrition: 40
+        saturation: 8000
+        consumption_time: 60
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 8
+        health_effect: 0
+
+    secondary:
+      - type: "ITEM"
+        target: "minecraft:cod"
+        nutrition: 30
+        saturation: 6000
+        consumption_time: 40
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: null
+        condition_gain: 6
+        health_effect: 2
+
+      - type: "ITEM"
+        target: "minecraft:salmon"
+        nutrition: 30
+        saturation: 6000
+        consumption_time: 40
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: null
+        condition_gain: 6
+        health_effect: 2
+
+    emergency: []
+
+  # Foraging behavior
+  foraging:
+    search_radius:
+      base: 16
+      when_hungry: 24
+      when_starving: 32
+    search_interval: 200
+
+    # Memory system
+    memory:
+      remembers_locations: true
+      memory_duration: 24000
+      remembers_depleted: true
+      avoids_depleted_for: 12000
+      shares_with_group: false
+
+    # Sustainable foraging
+    sustainability:
+      enabled: false              # Predator - kills prey
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  # === AS PREDATOR ===
+  as_predator:
+    enabled: true
+
+    # Prey selection
+    prey:
+      targets: ["minecraft:chicken"]
+
+      # Hunting intelligence rules
+      selection_rules:
+        avoid_babies: true
+        avoid_babies_exception: "very_hungry"
+
+        avoid_mothers_with_young: false
+        avoid_mothers_exception: null
+
+        prefer_weak: true
+        weak_preference: 1.5
+
+        prefer_isolated: true
+        isolated_preference: 1.3
+
+        # Population awareness
+        sustainable_hunting:
+          enabled: true
+          monitors_population: true
+          monitor_radius: 128
+          min_prey_count: 3
+          reduced_hunting_threshold: 6
+          reduced_hunting_multiplier: 0.6
+
+    # Hunt execution
+    hunting:
+      method: "STALK"
+
+      chase:
+        max_duration: 200
+        give_up_distance: 32
+        stamina_cost_per_tick: 0.4
+
+      ambush:
+        patience_duration: 800
+        requires_cover: true
+
+      pack:
+        min_hunters: 1
+        coordination_radius: 0
+
+      success_rate:
+        base: 0.45              # Better hunter than most
+        modifiers:
+          prey_is_baby: 1.6
+          prey_is_elderly: 1.4
+          prey_is_injured: 2.0
+          prey_is_isolated: 1.5
+          hunter_is_hungry: 1.2
+          pack_hunt_per_member: 0.0
+
+    # Post-kill behavior
+    post_kill:
+      eating_duration: 300
+      guards_kill: true
+      guard_duration: 400
+      shares_with: ["offspring"]
+      caches_excess: false
+
+    # When to hunt
+    triggers:
+      hunger_threshold: 70
+      opportunistic: true
+      opportunistic_hunger_min: 85
+      cooldown_after_kill: 4000
+
+  # === AS PREY ===
+  as_prey:
+    enabled: true
+
+    predators: []               # No natural predators in vanilla
+
+    # Default predator response
+    default_response:
+      detection_range: 16
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.8
+        flee_distance: 48
+        flee_toward: "SHELTER"
+        zigzag: true
+
+      freeze:
+        duration: [0, 0]
+        break_on_approach: true
+        break_distance: 6
+
+      alarm:
+        gives_alarm: false
+        alarm_radius: 0
+        alarm_triggers_group_flee: false
+
+    # All-clear conditions
+    all_clear:
+      predator_distance: 64
+      time_since_seen: 600
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: true
+  method: "SEXUAL"
+
+  # === BREEDING REQUIREMENTS ===
+  requirements:
+    # Physical requirements
+    min_age: 24000
+    max_age: null
+    min_health: 0.8
+    min_condition: 65
+    min_hunger: 60
+
+    # Recent feeding
+    recent_food:
+      enabled: true
+      time_window: 12000
+      meals_required: 2
+
+    # Environmental requirements
+    environment:
+      near_water: false
+      water_max_distance: 32
+      required_biomes: ["minecraft:jungle", "minecraft:bamboo_jungle", "minecraft:sparse_jungle"]
+      required_blocks_nearby: []
+      min_light: 0
+      max_light: 15
+
+    # Shelter requirement
+    requires_shelter: false
+    shelter_type: null
+
+    # Temporal requirements
+    time_of_day: null
+    season: null
+    weather: null
+
+    # Social requirements
+    mate_required: true
+    mate_max_distance: 16
+
+  # === POPULATION DENSITY EFFECTS ===
+  density_effects:
+    enabled: true
+    check_radius: 64
+
+    density_curve:
+      - count: 2
+        multiplier: 1.5
+      - count: 4
+        multiplier: 1.0
+      - count: 8
+        multiplier: 0.4
+      - count: 12
+        multiplier: 0.1
+      - count: 16
+        multiplier: 0.0
+
+  # === MATE SELECTION ===
+  mate_selection:
+    search_radius: 32
+    search_interval: 1000
+
+    preferences:
+      prefer_healthy: true
+      prefer_good_condition: true
+      avoid_relatives: true
+      relative_recognition_duration: 48000
+
+    courtship:
+      enabled: false
+      behavior: null
+      duration: 200
+      can_reject: true
+      rejection_cooldown: 2000
+
+  # === BREEDING PROCESS ===
+  breeding:
+    cooldown: 24000
+
+    gestation:
+      type: "INSTANT"
+      duration: 0
+      behavior_during: []
+
+    birth:
+      offspring_count: [1, 2]   # Can spawn with 1-2 kittens
+      condition_affects_count: true
+      location_requirement: null
+
+  # === PARENTAL CARE ===
+  parental_care:
+    enabled: true
+    duration: 24000
+
+    behaviors:
+      protects_offspring: true
+      protection_aggression: 2.5
+      protection_radius: 8
+
+      feeds_offspring: false
+      teaches_offspring: false
+      carries_offspring: false
+
+    offspring_behavior:
+      follows_parent: true
+      follow_distance: 3
+      max_separation: 12
+      separation_distress: true
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  # Group structure
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+
+    composition:
+      mixed_sex: false
+      mixed_age: false
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  # Herd/flock movement
+  herd_movement:
+    enabled: false
+
+  # Communication
+  communication:
+    alarm_calls:
+      enabled: false
+
+    contact_calls:
+      enabled: false
+
+    mating_calls:
+      enabled: false
+
+  # Social behaviors list
+  behaviors:
+    greeting: false
+    allogrooming: false
+    play: true                  # Kittens play
+    huddling: false
+    dominance_hierarchy: false
+
+  # Group benefits
+  group_benefits:
+    predator_detection_bonus: 0.0
+    foraging_efficiency_bonus: 0.0
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  # Terrain modifications
+  terrain:
+    enabled: false
+    actions: []
+
+  # Ecosystem services
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+
+    pollination:
+      enabled: false
+
+    nutrient_cycling:
+      enabled: false
+
+    decomposition:
+      enabled: false
+
+  # Environmental responses
+  responses:
+    drinking:
+      enabled: false
+
+    temperature:
+      heat_seek_shade: true
+      heat_seek_water: false
+      cold_seek_shelter: true
+      cold_huddling: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  # Spawning rules
+  spawning:
+    weight: 8
+    group_size: [1, 3]          # Can spawn with 1-2 kittens (1 adult + 0-2 babies)
+
+    conditions:
+      blocks: ["grass_block", "leaves"]
+      biomes: ["minecraft:jungle", "minecraft:bamboo_jungle", "minecraft:sparse_jungle"]
+      light: [7, 15]            # Spawns in light
+      altitude: [60, 100]
+      time: null
+      weather: null
+
+  # Carrying capacity
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 2              # Rare, solitary
+      regional: null
+
+    # Over-capacity effects
+    over_capacity:
+      - threshold: 1.2
+        effects: ["reduced_breeding"]
+      - threshold: 1.5
+        effects: ["dispersal"]
+
+  # Dispersal
+  dispersal:
+    enabled: true
+    triggers: ["adulthood", "overcrowding"]
+    distance: [128, 256]
+
+  # Natural mortality
+  mortality:
+    old_age:
+      enabled: false
+      max_age: null
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  # Fear/approach distances
+  distances:
+    detection: 16
+    caution: 10
+    flee: 6
+
+  # Habituation (getting used to players)
+  habituation:
+    enabled: false              # Ocelots don't habituate normally
+    rate: 0.0
+    decay: 0.0
+    max_habituation: 0.0
+    habituated_flee_distance: 6
+
+  # Taming - Note: Ocelots have a TRUST mechanic, not taming
+  taming:
+    enabled: false
+
+  # Player breeding
+  player_breeding:
+    enabled: false
+
+  # Drops
+  drops:
+    on_death: []
+
+    on_interaction: []
+
+  # Special interactions
+  interactions: []
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  # Sounds
+  sounds:
+    ambient: "entity.ocelot.ambient"
+    hurt: "entity.ocelot.hurt"
+    death: "entity.ocelot.death"
+    baby: "entity.ocelot.ambient"
+    alarm: null
+    mating: null
+    eating: "entity.generic.eat"
+
+  # Idle animations
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "sit_and_watch"
+        frequency: 0.02
+        trigger: "idle"
+      - behavior: "groom"
+        frequency: 0.015
+        trigger: "idle"
+      - behavior: "stalk_practice"
+        frequency: 0.01
+        trigger: "idle"
+
+  # Individual variation
+  personality_traits:
+    boldness:
+      base: 0.2               # Very shy
+      variation: 0.1
+    activity:
+      base: 0.6
+      variation: 0.2
+    sociability:
+      base: 0.1               # Very unsocial
+      variation: 0.1
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+
+ai_priority_framework:
+  # Survival (highest priority)
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  # Physiological needs
+  physiological:
+    critical_health: 3
+    drink_water: 4
+    eat_food: 5
+    find_shelter: 6
+
+  # Reproduction
+  reproduction:
+    care_for_offspring: 7
+    breed: 8
+    find_mate: 9
+
+  # Social
+  social:
+    group_cohesion: 10
+    social_interaction: 11
+
+  # Hunting (for predators)
+  hunting:
+    hunt_prey: 12
+
+  # Location behaviors
+  location:
+    location_triggered: 13
+    territory_patrol: 14
+
+  # Default behaviors
+  default:
+    wander: 15
+    idle: 16
+    rest: 17
+
+
+# ============================================================================
+# SYSTEM 15: FELINE BEHAVIOR FRAMEWORK
+# ============================================================================
+
+feline_behavior:
+  enabled: true
+
+  # Hunting Behaviors
+  hunting:
+    stalking:
+      enabled: true
+      stalk_speed: 0.35        # Faster than domestic cats
+      detection_range: 20.0    # Better detection
+      pounce_distance: 4.0
+      give_up_angle: 40.0      # More persistent
+
+    pouncing:
+      enabled: true
+      pounce_speed: 1.6        # Faster and more powerful
+      pounce_range: 5.0
+      pounce_cooldown: 50
+      pounce_force: 0.9
+
+    creeping:
+      enabled: true
+      creep_speed: 0.25
+      alert_threshold: 0.4
+      creep_duration: 120
+
+  # Stealth Behaviors
+  stealth:
+    quiet_movement:
+      enabled: true
+      stealth_modifier: 0.65   # Better stealth
+      sound_reduction: 0.25
+
+    squeeze_through_gaps:
+      enabled: true
+      squeeze_range: 3.5
+      squeeze_speed: 0.45
+
+    landing_on_feet:
+      enabled: true
+      no_fall_damage: true
+      max_safe_fall_height: 256
+
+  # Social Behaviors
+  social:
+    purring:
+      enabled: false           # Ocelots are wild, don't purr at players
+
+    hissing:
+      enabled: true
+      hiss_duration: 50
+      threat_range: 10.0       # More aggressive
+
+    rub_affection:
+      enabled: false           # Ocelots don't show affection to players
+
+  # Gift Giving (Disabled for wild ocelots)
+  gift_giving:
+    enabled: false
+
+  # Special Abilities
+  special:
+    creeper_detection:
+      enabled: true
+      detection_range: 20.0    # Better creeper detection
+      deterrence_range: 8.0
+      protection_speed: 0.6
+
+    phantom_repel:
+      enabled: false           # Ocelots don't repel phantoms
+
+  # Affection System (Disabled - ocelots are wild)
+  affection:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 16: UNIQUE BEHAVIOR FRAMEWORK
+# ============================================================================
+
+unique_behavior_template:
+  structure:
+    name: ""
+    description: ""
+
+    triggers:
+      - type: ""
+        conditions: {}
+
+    requirements:
+      all_of: []
+      any_of: []
+      none_of: []
+
+    actions: []
+
+    effects:
+      on_self: []
+      on_others: []
+      on_world: []
+
+    priority: 10
+    duration: null
+    cooldown: null
+    interruptible: true
+
+# ============================================================================
+# SYSTEM 15: ANIMAL-ANIMAL INTERACTIONS
+# ============================================================================
+
+interaction:
+  predators: []
+  prey:
+    - "minecraft:chicken"
+    - "minecraft:parrot"
+
+  symbiotic_partners: []
+  competitors: []
+  herd_compatible: []
+
+  relationship_decay_rate: 0.002
+  trust_build_rate: 0.015
+  grudge_build_rate: 0.03
+
+  gives_warning_calls: false
+  can_mourn: false
+  can_grieve: false
+  can_play: true
+  can_be_altruistic: false
+  can_teach: false
+

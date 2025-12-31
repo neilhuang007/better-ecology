@@ -1,0 +1,53 @@
+# ============================================================================
+# ARCHETYPE: DIURNAL HERD ANIMAL
+# ============================================================================
+# For herd animals that are active during the day
+# ============================================================================
+
+social:
+  group:
+    type: "HERD"
+    size:
+      min: 3
+      optimal: 6
+      max: 12
+
+  herd_movement:
+    enabled: true
+    cohesion_radius: 12
+    separation_distance: 2
+    alignment: true
+
+  group_benefits:
+    predator_detection_bonus: 0.15
+    foraging_efficiency_bonus: 0.05
+
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 12000]
+        activity: 1.0
+        label: "day_active"
+      - time: [12000, 13500]
+        activity: 0.4
+        label: "dusk_rest"
+      - time: [13500, 22500]
+        activity: 0.1
+        label: "night_sleep"
+      - time: [22500, 24000]
+        activity: 0.3
+        label: "pre_dawn"
+
+    low_activity_behavior:
+      action: "REST"
+      seek_shelter: false
+      reduced_awareness: true
+      awareness_multiplier: 0.4
+
+internal_state:
+  social:
+    enabled: true
+    max_value: 100
+    decay_rate: 0.02
+    recovery_rate: 0.15
+    loneliness_threshold: 40

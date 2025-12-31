@@ -1,0 +1,140 @@
+{
+  "entity": "minecraft:parrot",
+  "enabled": true,
+  "behaviors": {
+    "mimic": {
+      "enabled": true,
+      "base_accuracy": 0.75,
+      "accuracy_variation": 0.2,
+      "mimic_chance": 0.05,
+      "mimic_cooldown_ticks": 200,
+      "warning_chance": 0.8,
+      "warning_range": 32.0,
+      "warning_accuracy_bonus": 0.15,
+      "warning_cooldown_ticks": 100,
+      "mimic_volume": 0.7,
+      "mimic_pitch": 1.0,
+      "notification_radius": 16.0,
+      "show_mimic_particles": true,
+      "mimic_weights": {
+        "ZOMBIE": 0.3,
+        "SKELETON": 0.25,
+        "SPIDER": 0.2,
+        "CREEPER": 0.15,
+        "ENDERMAN": 0.1
+      }
+    },
+    "music": {
+      "enabled": true,
+      "detection_radius": 64,
+      "arrival_distance": 6.0,
+      "flight_speed": 1.2,
+      "prefer_high_perches": true,
+      "perch_height_bonus": 0.3,
+      "note_block_memory_ticks": 100
+    },
+    "dance": {
+      "enabled": true,
+      "show_particles": true,
+      "particle_interval": 5,
+      "particle_spread": 1.0,
+      "particle_height": 0.5,
+      "enable_party_effect": true,
+      "party_check_interval": 40,
+      "party_radius": 16.0,
+      "party_join_chance": 0.3,
+      "dance_styles": {
+        "BOUNCE": {
+          "discs": ["13", "cat"],
+          "jump_interval": 10
+        },
+        "SPIN": {
+          "discs": ["blocks", "chirp"],
+          "spin_interval": 5
+        },
+        "WIGGLE": {
+          "discs": ["far", "mall"],
+          "wiggle_speed": 0.1
+        },
+        "HEAD_BOB": {
+          "discs": ["mellohi", "stal"],
+          "bob_interval": 8
+        },
+        "WING_FLAP": {
+          "discs": ["strad", "ward"],
+          "flap_interval": 6
+        },
+        "PARTY": {
+          "discs": ["11", "wait"],
+          "bounce_interval": 5
+        },
+        "RAVE": {
+          "discs": ["otherside", "5", "pigstep", "relic"],
+          "spin_speed": 30
+        },
+        "DISCO": {
+          "discs": ["pigstep"],
+          "beat_multiplier": 0.3
+        }
+      }
+    },
+    "perch": {
+      "enabled": true,
+      "search_radius": 32,
+      "prefer_high_perches": true,
+      "min_perch_height": 5,
+      "height_bonus": 1.0,
+      "distance_penalty": 0.1,
+      "leaf_bonus": 10.0,
+      "preferred_block_bonus": 5.0,
+      "prefer_isolated_perches": true,
+      "threat_detection_radius": 16.0,
+      "threat_penalty": 20.0,
+      "preferred_blocks": [
+        "minecraft:oak_fence",
+        "minecraft:birch_fence",
+        "minecraft:jungle_fence",
+        "minecraft:acacia_fence",
+        "minecraft:dark_oak_fence",
+        "minecraft:oak_log",
+        "minecraft:birch_log",
+        "minecraft:jungle_log",
+        "minecraft:acacia_log",
+        "minecraft:dark_oak_log"
+      ],
+      "shoulder_perch_range": 3.0,
+      "spook_radius": 8.0,
+      "max_perch_ticks": 1200,
+      "perch_adjust_interval": 40,
+      "glide_speed": 0.8
+    },
+    "behavior": {
+      "enable_music": true,
+      "enable_perch": true,
+      "enable_mimic": true,
+      "perch_seek_chance": 0.01,
+      "music_detection_interval": 60
+    }
+  },
+  "movement": {
+    "fly_speed": 0.4,
+    "ground_speed": 0.2,
+    "can_fly": true,
+    "can_perch": true
+  },
+  "health": {
+    "max_health": 6
+  },
+  "hunger": {
+    "max_hunger": 80,
+    "decay_rate": 0.02
+  },
+  "breeding": {
+    "cooldown_ticks": 6000,
+    "min_condition": 60.0
+  },
+  "temporal": {
+    "active_during_day": true,
+    "active_during_night": false
+  }
+}

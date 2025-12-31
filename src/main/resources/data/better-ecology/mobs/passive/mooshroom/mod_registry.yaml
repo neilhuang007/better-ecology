@@ -1,0 +1,686 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - MOOSHROOM BEHAVIOR PROFILE
+# Version: 2.0
+# ============================================================================
+# This file defines the Mooshroom mob's behaviors within the Better Ecology mod.
+# Values override defaults from the Generalized Template.
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:mooshroom"
+  display_name: "Mooshroom"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "HERD"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Domestic cattle with mushroom symbiosis"
+    ecological_role: "Rare mushroom-grazing herbivore that maintains fungal ecosystem in mushroom fields; provides unique food source through mushroom stew"
+
+  tags: ["fungal_symbiosis", "rare", "migratory_restricted", "milkable"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  health:
+    base: 10
+    baby_multiplier: 0.5
+
+  size:
+    width: 0.9
+    height: 1.4
+    baby_scale: 0.5
+
+  biomass:
+    adult: 120
+    baby: 30
+    transfer_efficiency: 0.1
+
+  movement:
+    speeds:
+      walk: 0.25
+      run: 0.35
+      swim: 0.15
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: true
+      jump_height: 1.0
+      avoids_water: false
+      avoids_cliffs: true
+      cliff_threshold: 4
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 80
+    decay_rate: 0.018
+
+    thresholds:
+      satiated: 80
+      hungry: 50
+      very_hungry: 25
+      starving: 10
+
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 200
+
+  thirst:
+    enabled: true
+    max_value: 100
+    starting_value: 100
+    decay_rate: 0.015             # Mooshrooms need regular water access
+    thresholds:
+      satisfied: 75
+      thirsty: 45
+      dehydrated: 15
+
+
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+    gain_when_satiated: 0.01
+    loss_when_hungry: 0.02
+    loss_when_starving: 0.1
+
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.5
+
+    costs:
+      sprinting: 0.3
+      fleeing: 0.4
+
+  age:
+    enabled: true
+    baby_duration: 24000
+    maturity_age: 24000
+    elderly_age: null
+    max_age: null
+
+  social:
+    enabled: true
+    max_value: 100
+    decay_rate: 0.01
+    recovery_rate: 0.1
+    loneliness_threshold: 30
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 6000]
+        activity: 1.0
+        label: "morning"
+      - time: [6000, 12000]
+        activity: 0.9
+        label: "afternoon"
+      - time: [12000, 13500]
+        activity: 0.7
+        label: "dusk"
+      - time: [13500, 22500]
+        activity: 0.3
+        label: "night"
+      - time: [22500, 24000]
+        activity: 0.5
+        label: "pre_dawn"
+
+    low_activity_behavior:
+      action: "rest"
+      seek_shelter: false
+      reduced_awareness: true
+      awareness_multiplier: 0.6
+
+  weather:
+    rain:
+      activity_multiplier: 0.9
+      seek_shelter: false
+      shelter_priority: 1
+    thunder:
+      activity_multiplier: 0.5
+      seek_shelter: true
+      panic_chance: 0.15
+    clear:
+      activity_multiplier: 1.0
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  habitat:
+    biomes:
+      allowed: ["mushroom_fields"]
+      preferred: ["mushroom_fields"]
+      forbidden: []
+
+    altitude:
+      min: -64
+      max: 320
+      preferred: [60, 90]
+
+    required_nearby:
+      - feature: "mycelium"
+        max_distance: 32
+        reason: "Symbiotic relationship with mycelium network"
+
+  territory:
+    enabled: false
+
+  home_range:
+    enabled: true
+    radius: 48
+    has_home_point: false
+    home_type: null
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  food_sources:
+    primary:
+      - type: "BLOCK"
+        target: "minecraft:mycelium"
+        nutrition: 25
+        saturation: 4000
+        consumption_time: 40
+        method: "GRAZE"
+        world_effect:
+          action: "CONVERT"
+          result: "minecraft:dirt"
+        condition_gain: 3
+        health_effect: 0
+
+      - type: "BLOCK"
+        target: "minecraft:red_mushroom"
+        nutrition: 15
+        saturation: 2000
+        consumption_time: 30
+        method: "BROWSE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 2
+        health_effect: 0
+
+      - type: "BLOCK"
+        target: "minecraft:brown_mushroom"
+        nutrition: 15
+        saturation: 2000
+        consumption_time: 30
+        method: "BROWSE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 2
+        health_effect: 0
+
+    secondary:
+      - type: "BLOCK"
+        target: "minecraft:grass_block"
+        nutrition: 20
+        saturation: 3000
+        consumption_time: 40
+        method: "GRAZE"
+        world_effect:
+          action: "CONVERT"
+          result: "minecraft:dirt"
+        condition_gain: 2
+        health_effect: 0
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 16
+      when_hungry: 24
+      when_starving: 40
+    search_interval: 180
+
+    memory:
+      remembers_locations: true
+      memory_duration: 24000
+      remembers_depleted: true
+      avoids_depleted_for: 12000
+      shares_with_group: true
+
+    sustainability:
+      enabled: true
+      dont_deplete_fully: true
+      minimum_remaining: 3
+      patch_return_delay: 8000
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:player"
+        threat_level: "MEDIUM"
+        detection_range: 24
+        response: "FLEE"
+        flee:
+          speed_multiplier: 1.3
+          flee_distance: 32
+          flee_toward: "GROUP"
+
+    default_response:
+      detection_range: 24
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.3
+        flee_distance: 32
+        flee_toward: "GROUP"
+        zigzag: false
+
+      alarm:
+        gives_alarm: true
+        alarm_radius: 24
+        alarm_triggers_group_flee: true
+
+    all_clear:
+      predator_distance: 48
+      time_since_seen: 600
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: true
+  method: "SEXUAL"
+
+  requirements:
+    min_age: 24000
+    max_age: null
+    min_health: 0.8
+    min_condition: 65
+    min_hunger: 60
+
+    recent_food:
+      enabled: true
+      time_window: 12000
+      meals_required: 2
+
+    environment:
+      near_water: false
+      required_biomes: ["mushroom_fields"]
+      required_blocks_nearby: []
+      min_light: 0
+      max_light: 15
+
+    requires_shelter: false
+    shelter_type: null
+
+    time_of_day: null
+    season: null
+    weather: null
+
+    mate_required: true
+    mate_max_distance: 16
+
+  density_effects:
+    enabled: true
+    check_radius: 64
+
+    density_curve:
+      - count: 2
+        multiplier: 1.5
+      - count: 4
+        multiplier: 1.2
+      - count: 8
+        multiplier: 1.0
+      - count: 12
+        multiplier: 0.6
+      - count: 16
+        multiplier: 0.2
+      - count: 20
+        multiplier: 0.0
+
+  mate_selection:
+    search_radius: 32
+    search_interval: 1000
+
+    preferences:
+      prefer_healthy: true
+      prefer_good_condition: true
+      avoid_relatives: true
+      relative_recognition_duration: 48000
+
+    courtship:
+      enabled: false
+
+  breeding:
+    cooldown: 24000
+
+    gestation:
+      type: "INSTANT"
+      duration: 0
+      behavior_during: []
+
+    birth:
+      offspring_count: [1, 1]
+      condition_affects_count: false
+      location_requirement: null
+
+  parental_care:
+    enabled: true
+    duration: 24000
+
+    behaviors:
+      protects_offspring: true
+      protection_aggression: 1.8
+      protection_radius: 8
+
+      feeds_offspring: false
+      teaches_offspring: false
+      carries_offspring: false
+
+    offspring_behavior:
+      follows_parent: true
+      follow_distance: 3
+      max_separation: 12
+      separation_distress: true
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  group:
+    type: "HERD"
+    size:
+      min: 2
+      optimal: 5
+      max: 10
+
+    composition:
+      mixed_sex: true
+      mixed_age: true
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  herd_movement:
+    enabled: true
+    cohesion_radius: 12
+    separation_distance: 2
+    alignment: true
+
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "predator_detected"
+          call: "low_moo"
+          group_response: "alert_and_prepare_flee"
+      radius: 24
+      chain_calling: true
+
+    contact_calls:
+      enabled: true
+      when: ["separated"]
+      radius: 32
+
+    mating_calls:
+      enabled: false
+
+  behaviors:
+    greeting: true
+    allogrooming: false
+    play: false
+    huddling: true
+    dominance_hierarchy: false
+
+  group_benefits:
+    predator_detection_bonus: 0.15
+    foraging_efficiency_bonus: 0.05
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  terrain:
+    enabled: true
+    actions:
+      - trigger: "foraging"
+        description: "Converts mycelium to dirt when overgrazing"
+        target_blocks: ["minecraft:mycelium"]
+        result_block: "minecraft:dirt"
+        frequency: 0.15
+        radius: 1
+        action: "CONVERT"
+
+      - trigger: "foraging"
+        description: "Converts grass to dirt when grazing"
+        target_blocks: ["minecraft:grass_block"]
+        result_block: "minecraft:dirt"
+        frequency: 0.1
+        radius: 1
+        action: "CONVERT"
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+
+    pollination:
+      enabled: false
+
+    nutrient_cycling:
+      enabled: true
+      fertilizes: true
+      fertilize_radius: 2
+
+    decomposition:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  spawning:
+    weight: 8
+    group_size: [2, 4]
+
+    conditions:
+      blocks: ["minecraft:mycelium"]
+      biomes: ["mushroom_fields"]
+      light: [9, 15]
+      altitude: [60, 90]
+      time: null
+      weather: null
+
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 6
+      regional: null
+
+    resources:
+      enabled: false
+
+    over_capacity:
+      - threshold: 1.2
+        effects: ["reduced_breeding"]
+      - threshold: 1.5
+        effects: ["starvation", "dispersal"]
+
+  dispersal:
+    enabled: false
+    triggers: []
+    distance: [0, 0]
+
+  mortality:
+    old_age:
+      enabled: false
+      max_age: null
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+      base_chance: 0.0
+      crowding_multiplier: 1.0
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "NEUTRAL"
+
+  distances:
+    detection: 24
+    caution: 12
+    flee: 6
+
+  habituation:
+    enabled: true
+    rate: 0.015
+    decay: 0.001
+    max_habituation: 0.9
+    habituated_flee_distance: 2
+
+  taming:
+    enabled: false
+    items: []
+    chance: 0.0
+    requires_habituation: false
+
+  player_breeding:
+    enabled: true
+    items: ["minecraft:wheat"]
+    bypasses_conditions: false
+
+  drops:
+    on_death:
+      - item: "minecraft:leather"
+        count: [0, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+      - item: "minecraft:beef"
+        count: [1, 3]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+  interactions:
+    - action: "milk"
+      item: "minecraft:bowl"
+      result: "minecraft:mushroom_stew"
+      description: "Right-click with bowl to get mushroom stew"
+      cooldown: 100
+
+    - action: "milk"
+      item: "minecraft:bucket"
+      result: "minecraft:milk_bucket"
+      description: "Right-click with bucket to get milk"
+      cooldown: 100
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  sounds:
+    ambient: "entity.cow.ambient"
+    hurt: "entity.cow.hurt"
+    death: "entity.cow.death"
+    baby: "entity.cow.ambient"
+    alarm: "entity.cow.ambient"
+    eating: "entity.generic.eat"
+
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "tail_swish"
+        frequency: 100
+        trigger: "random"
+
+      - behavior: "head_turn"
+        frequency: 120
+        trigger: "random"
+
+      - behavior: "mushroom_shake"
+        frequency: 600
+        trigger: "random"
+
+  personality_traits:
+    boldness:
+      base: 0.4
+      variation: 0.2
+    activity:
+      base: 0.5
+      variation: 0.15
+    sociability:
+      base: 0.7
+      variation: 0.2

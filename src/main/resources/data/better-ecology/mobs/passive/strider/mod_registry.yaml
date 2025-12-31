@@ -1,0 +1,777 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - GENERALIZED BEHAVIOR TEMPLATE
+# Version: 2.0
+# Mob: STRIDER
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:strider"
+  display_name: "Strider"
+
+  # Ecological classification
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "CATHEMERAL"
+
+  # Reference information
+  reference:
+    real_world_analog: "Water strider (adapted to lava)"
+    ecological_role: "Nether herbivore, lava surface ecosystem, provides transportation for other mobs"
+
+  # Tags for system filtering
+  tags: ["nether_exclusive", "lava_walker", "saddleable", "fire_immune", "water_vulnerable"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  # Health
+  health:
+    base: 10                    # 20 HP
+    baby_multiplier: 0.5
+
+  # Size
+  size:
+    width: 0.9
+    height: 1.7
+    baby_scale: 0.5
+
+  # Biomass
+  biomass:
+    adult: 120
+    baby: 30
+    transfer_efficiency: 0.1
+
+  # Movement capabilities
+  movement:
+    speeds:
+      walk: 0.175               # Slow on land
+      run: 0.175                # No running capability
+      swim: 0.08                # Very slow in water (sinking)
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: false           # They sink in water
+      can_jump: true
+      jump_height: 0.5
+      avoids_water: true        # Water damages them
+      avoids_cliffs: false
+      cliff_threshold: 4
+
+    # Speed modifiers applied conditionally
+    conditional_modifiers:
+      baby: 0.9
+      elderly: 0.8
+      injured: 0.7
+      hungry: 0.9
+      fleeing: 1.2
+      hunting: 1.0
+      carrying_offspring: 0.9
+      in_water_nonaquatic: 0.3
+      on_lava: 1.8              # Much faster on lava
+      off_lava: 0.5             # Slower when cold/off lava
+      saddled_with_fungus_stick: 2.2  # Boosted speed when controlled
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  # Hunger system
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 80
+    decay_rate: 0.015           # Slower decay
+
+    thresholds:
+      satiated: 80
+      hungry: 50
+      very_hungry: 25
+      starving: 10
+
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 200
+
+  # Thirst system (disabled - lava dwelling)
+  thirst:
+    enabled: false
+
+  # Body condition
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+
+    gain_when_satiated: 0.01
+    loss_when_hungry: 0.02
+    loss_when_starving: 0.1
+
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  # Energy/Stamina
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.6          # Faster recovery
+
+    costs:
+      sprinting: 0.2
+      hunting: 0.0
+      fleeing: 0.3
+      flying: 0.0
+      swimming: 0.5             # Swimming in lava costs energy
+
+  # Age tracking
+  age:
+    enabled: true
+    baby_duration: 24000        # 20 minutes
+    maturity_age: 24000
+    elderly_age: null
+    max_age: null
+
+  # Social needs
+  social:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  # Daily cycle - Cathemeral (active at all times)
+  daily_cycle:
+    schedule:
+      - time: [0, 6000]
+        activity: 0.9
+        label: "morning"
+      - time: [6000, 12000]
+        activity: 1.0
+        label: "afternoon"
+      - time: [12000, 13500]
+        activity: 0.95
+        label: "dusk"
+      - time: [13500, 22500]
+        activity: 0.85
+        label: "night"
+      - time: [22500, 24000]
+        activity: 0.9
+        label: "pre_dawn"
+
+    low_activity_behavior:
+      action: "reduced_wander"
+      seek_shelter: false       # No shelter needed
+      reduced_awareness: false
+      awareness_multiplier: 1.0
+
+  # Weather responses
+  weather:
+    rain:
+      activity_multiplier: 0.0  # Must avoid rain (takes damage)
+      seek_shelter: true
+      shelter_priority: 10
+    thunder:
+      activity_multiplier: 0.0
+      seek_shelter: true
+      panic_chance: 0.8
+    snow:
+      activity_multiplier: 0.0  # Must avoid
+      seek_shelter: true
+    clear:
+      activity_multiplier: 1.0
+
+  # Seasonal behaviors
+  seasons:
+    enabled: false
+
+  # Moon phases
+  lunar:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  # Habitat requirements
+  habitat:
+    biomes:
+      allowed: ["nether_wastes", "crimson_forest", "warped_forest", "soul_sand_valley", "basalt_deltas"]
+      preferred: ["nether_wastes", "crimson_forest", "warped_forest"]
+      forbidden: []
+
+    altitude:
+      min: -64
+      max: 320
+      preferred: [32, 96]
+
+    required_nearby:
+      - feature: "lava"
+        max_distance: 8
+        reason: "Primary habitat is lava surfaces"
+
+  # Territory system
+  territory:
+    enabled: false
+
+  # Home range
+  home_range:
+    enabled: true
+    radius: 32
+    has_home_point: false
+    home_type: null
+
+  # Shelter requirements
+  shelter:
+    needs_shelter: true         # From rain/water
+    shelter_uses: ["hiding"]
+
+    valid_shelters:
+      - type: "cave"
+        description: "Natural cave or overhang to escape rain in Overworld"
+        min_enclosure: 0.8
+      - type: "nether_structure"
+        description: "Any solid block overhead"
+        min_enclosure: 0.5
+
+  # Location-triggered behaviors
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  # Food sources
+  food_sources:
+    primary:
+      - type: "ITEM"
+        target: "minecraft:warped_fungus"
+        nutrition: 40
+        saturation: 8000
+        consumption_time: 60
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 8
+        health_effect: 0
+
+    secondary: []
+    emergency: []
+
+  # Foraging behavior
+  foraging:
+    search_radius:
+      base: 12
+      when_hungry: 20
+      when_starving: 32
+    search_interval: 300
+
+    # Memory system
+    memory:
+      remembers_locations: true
+      memory_duration: 12000
+      remembers_depleted: false
+      avoids_depleted_for: 0
+      shares_with_group: false
+
+    # Sustainable foraging
+    sustainability:
+      enabled: false
+      dont_deplete_fully: false
+      minimum_remaining: 0
+      patch_return_delay: 0
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  # === AS PREDATOR ===
+  as_predator:
+    enabled: false
+
+  # === AS PREY ===
+  as_prey:
+    enabled: true
+
+    predators: []               # No natural predators in vanilla
+
+    default_response:
+      detection_range: 16
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.2
+        flee_distance: 24
+        flee_toward: "SAFETY"   # Toward lava
+        zigzag: false
+
+    all_clear:
+      predator_distance: 32
+      time_since_seen: 400
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: true
+  method: "SEXUAL"
+
+  # === BREEDING REQUIREMENTS ===
+  requirements:
+    min_age: 24000
+    max_age: null
+    min_health: 0.5             # Lower requirement
+    min_condition: 50           # Lower requirement
+    min_hunger: 50
+
+    recent_food:
+      enabled: false            # Just need to be fed warped fungus
+      time_window: 0
+      meals_required: 0
+
+    environment:
+      near_water: false
+      water_max_distance: 0
+      required_biomes: []
+      required_blocks_nearby: []
+      min_light: 0
+      max_light: 15
+
+    requires_shelter: false
+    shelter_type: null
+
+    time_of_day: null
+    season: null
+    weather: null
+
+    mate_required: true
+    mate_max_distance: 16
+
+  # === POPULATION DENSITY EFFECTS ===
+  density_effects:
+    enabled: true
+    check_radius: 48
+
+    density_curve:
+      - count: 2
+        multiplier: 1.2
+      - count: 4
+        multiplier: 1.0
+      - count: 8
+        multiplier: 0.7
+      - count: 12
+        multiplier: 0.3
+      - count: 20
+        multiplier: 0.0
+
+  # === MATE SELECTION ===
+  mate_selection:
+    search_radius: 24
+    search_interval: 600
+
+    preferences:
+      prefer_healthy: true
+      prefer_good_condition: false
+      avoid_relatives: false
+      relative_recognition_duration: 0
+
+    courtship:
+      enabled: false
+
+  # === BREEDING PROCESS ===
+  breeding:
+    cooldown: 6000              # 5 minutes (300 seconds)
+
+    gestation:
+      type: "INSTANT"
+      duration: 0
+
+    birth:
+      offspring_count: [1, 1]   # Always 1 baby
+      condition_affects_count: false
+      location_requirement: null
+
+  # === PARENTAL CARE ===
+  parental_care:
+    enabled: true
+    duration: 24000             # Until baby grows up
+
+    behaviors:
+      protects_offspring: false
+      protection_aggression: 0.0
+      protection_radius: 0
+
+      feeds_offspring: false
+      teaches_offspring: false
+      carries_offspring: false  # Baby can ride on adult
+
+    offspring_behavior:
+      follows_parent: false     # Baby rides on adult instead
+      follow_distance: 0
+      max_separation: 0
+      separation_distress: false
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  # Group structure
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+
+    composition:
+      mixed_sex: false
+      mixed_age: false
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  # Herd/flock movement
+  herd_movement:
+    enabled: false
+
+  # Communication
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+      radius: 0
+      chain_calling: false
+
+    contact_calls:
+      enabled: false
+      when: []
+      radius: 0
+
+    mating_calls:
+      enabled: false
+      radius: 0
+      time: null
+
+  # Social behaviors
+  behaviors:
+    greeting: false
+    allogrooming: false
+    play: false
+    huddling: false
+    dominance_hierarchy: false
+
+  # Group benefits
+  group_benefits:
+    predator_detection_bonus: 0.0
+    foraging_efficiency_bonus: 0.0
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  # Terrain modifications
+  terrain:
+    enabled: false
+    actions: []
+
+  # Ecosystem services
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+      seeds: []
+      method: null
+      dispersal_radius: 0
+
+    pollination:
+      enabled: false
+      flowers: []
+      radius: 0
+
+    nutrient_cycling:
+      enabled: false
+      fertilizes: false
+      fertilize_radius: 0
+
+    decomposition:
+      enabled: false
+      decomposes: []
+      result: null
+
+  # Environmental responses
+  responses:
+    drinking:
+      enabled: false            # Lives in lava, doesn't drink water
+      frequency: 0
+      water_blocks: []
+      duration: 0
+      congregates: false
+
+    temperature:
+      heat_seek_shade: false
+      heat_seek_water: false    # Seeks lava instead
+      cold_seek_shelter: false
+      cold_huddling: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  # Spawning rules
+  spawning:
+    weight: 60                  # Relatively common in Nether
+    group_size: [2, 4]
+
+    conditions:
+      blocks: ["lava"]          # Spawns on lava surfaces
+      biomes: ["nether_wastes", "crimson_forest", "warped_forest", "soul_sand_valley", "basalt_deltas"]
+      light: [0, 15]
+      altitude: null
+      time: null
+      weather: null
+
+  # Carrying capacity
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 6
+      regional: null
+
+    resources:
+      enabled: false
+      requirements: []
+
+    over_capacity:
+      - threshold: 1.2
+        effects: ["reduced_breeding"]
+      - threshold: 1.5
+        effects: ["dispersal"]
+
+  # Dispersal
+  dispersal:
+    enabled: false
+    triggers: []
+    distance: [64, 128]
+
+  # Natural mortality
+  mortality:
+    old_age:
+      enabled: false
+      max_age: null
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+      base_chance: 0.0
+      crowding_multiplier: 0.0
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "PASSIVE"
+
+  # Fear/approach distances
+  distances:
+    detection: 16
+    caution: 8
+    flee: 0                     # Doesn't flee from players
+
+  # Habituation
+  habituation:
+    enabled: false
+    rate: 0.0
+    decay: 0.0
+    max_habituation: 0.0
+    habituated_flee_distance: 0
+
+  # Taming
+  taming:
+    enabled: false
+    items: []
+    chance: 0.0
+    requires_habituation: false
+
+  # Player breeding
+  player_breeding:
+    enabled: true
+    items: ["minecraft:warped_fungus"]
+    bypasses_conditions: true   # Player can breed striders easily
+
+  # Drops
+  drops:
+    on_death:
+      - item: "minecraft:string"
+        count: [2, 5]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+  # Special interactions
+  interactions:
+    - action: "saddle"
+      item: "minecraft:saddle"
+      result: "Can be ridden by player"
+      description: "Right-click with saddle to make rideable"
+    - action: "control"
+      item: "minecraft:warped_fungus_on_a_stick"
+      result: "Controls direction and boosts speed"
+      description: "Used to steer and speed up saddled strider"
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  # Sounds
+  sounds:
+    ambient: "entity.strider.ambient"
+    hurt: "entity.strider.hurt"
+    death: "entity.strider.death"
+    baby: "entity.strider.ambient"
+    alarm: "entity.strider.retreat"
+    mating: "entity.strider.happy"
+    eating: "entity.strider.eat"
+
+  # Idle behaviors
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "stand_still"
+        frequency: 200
+        trigger: "random"
+      - behavior: "look_around"
+        frequency: 100
+        trigger: "random"
+      - behavior: "shiver_when_cold"
+        frequency: 20
+        trigger: "off_lava"
+
+  # Individual variation
+  personality_traits:
+    boldness:
+      base: 0.6
+      variation: 0.2
+    activity:
+      base: 0.5
+      variation: 0.15
+    sociability:
+      base: 0.3
+      variation: 0.1
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+
+ai_priority_framework:
+  # Survival (highest priority)
+  survival:
+    breathe: 0
+    escape_danger: 1            # Flee from water/rain
+    flee_predator: 2
+
+  # Physiological needs
+  physiological:
+    critical_health: 3
+    drink_water: 99             # N/A - disabled
+    eat_food: 5
+    find_shelter: 4             # High priority when raining
+
+  # Reproduction
+  reproduction:
+    care_for_offspring: 7
+    breed: 8
+    find_mate: 9
+
+  # Social
+  social:
+    group_cohesion: 99          # N/A - solitary
+    social_interaction: 99
+
+  # Hunting
+  hunting:
+    hunt_prey: 99               # N/A - herbivore
+
+  # Location behaviors
+  location:
+    location_triggered: 6       # Return to lava
+    territory_patrol: 99
+
+  # Default behaviors
+  default:
+    wander: 15
+    idle: 16
+    rest: 17
+
+
+# ============================================================================
+# SYSTEM 15: UNIQUE BEHAVIOR FRAMEWORK
+# ============================================================================
+
+unique_behavior_template:
+  structure:
+    name: "lava_walking"
+    description: "Strider walks on lava surfaces without sinking"
+
+    triggers:
+      - type: "LOCATION"
+        conditions:
+          on_lava: true
+
+    requirements:
+      all_of: ["alive"]
+      any_of: []
+      none_of: []
+
+    actions: ["walk_on_lava_surface", "move_freely_on_lava"]
+
+    effects:
+      on_self: ["normal_movement_speed", "comfortable_state"]
+      on_others: []
+      on_world: []
+
+    priority: 1
+    duration: null
+    cooldown: null
+    interruptible: false

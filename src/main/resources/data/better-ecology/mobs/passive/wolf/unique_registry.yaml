@@ -1,0 +1,619 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# Wolf (minecraft:wolf)
+# ============================================================================
+#
+# This file defines the wolf mob by:
+# 1. Overriding defaults from the Generalized Template
+# 2. Providing natural language descriptions for unique behaviors
+# 3. Specifying relationships with other specific mobs
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:wolf"
+  display_name: "Wolf"
+
+  classification:
+    category: "NEUTRAL"
+    trophic_level: "APEX_PREDATOR"
+    diet_type: "CARNIVORE"
+    social_type: "PACK"
+    activity_pattern: "CATHEMERAL"
+
+  reference:
+    real_world_analog: "Gray wolf (Canis lupus)"
+    ecological_role: "Apex predator that regulates herbivore populations through cooperative pack hunting. Maintains ecosystem health by culling weak and sick prey animals."
+
+  tags: ["pack_hunter", "tameable", "loyal", "territorial", "cooperative"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 4                     # 8 HP wild (4 hearts), becomes 20 HP (10 hearts) when tamed
+  size:
+    width: 0.6
+    height: 0.85
+  biomass:
+    adult: 120
+  movement:
+    speeds:
+      walk: 0.3
+      run: 0.5
+      swim: 0.2
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.025           # Moderate hunger decay for active predator
+  thirst:
+    enabled: false
+  age:
+    baby_duration: 24000        # 20 minutes as pup
+    max_age: null               # No natural death
+  social:
+    enabled: true               # Pack animals need social interaction
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    # Wolves are cathemeral - active both day and night
+    schedule:
+      - time: [0, 24000]
+        activity: 1.0
+        label: "all_day"
+
+  weather:
+    rain:
+      activity_multiplier: 0.9
+      seek_shelter: false
+    snow:
+      activity_multiplier: 1.0  # Wolves excel in snow
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: ["forest", "taiga", "grove", "snowy_taiga", "old_growth_spruce_taiga", "old_growth_pine_taiga"]
+      forbidden: ["desert", "badlands", "ocean", "deep_ocean", "warm_ocean", "jungle"]
+    required_nearby: []
+
+  territory:
+    enabled: true
+    size: 48
+
+  shelter:
+    needs_shelter: true
+    shelter_uses: ["breeding", "baby_rearing", "resting"]
+    valid_shelters:
+      - type: "cave"
+        description: "Natural cave used as den site for breeding and pup rearing"
+        min_enclosure: 0.7
+      - type: "vegetation"
+        description: "Dense forest cover for temporary shelter"
+        blocks: ["leaves", "spruce_leaves"]
+        min_enclosure: 0.5
+
+  # === LOCATION-TRIGGERED BEHAVIORS ===
+  location_triggers:
+    enabled: true
+    triggers:
+      - name: "den_guarding"
+        description: |
+          When pack members with pups are near the den (cave shelter within 16 blocks),
+          adult wolves without pups will patrol the area and become more aggressive
+          to threats. This behavior activates when there are baby wolves in the pack.
+          Guards will circle the den at 8-12 blocks distance and attack any hostile
+          mobs or non-pack wolves that approach within 20 blocks.
+        location:
+          near_shelter: true
+          max_distance: 16
+          requires_pups_in_pack: true
+        behavior:
+          activity: "guard_patrol"
+          patrol_radius: [8, 12]
+          aggression_radius: 20
+          attack_non_pack: true
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "ENTITY"
+        target: "minecraft:sheep"
+        nutrition: 40
+        method: "HUNT"
+        world_effect:
+          action: "NONE"
+
+      - type: "ENTITY"
+        target: "minecraft:rabbit"
+        nutrition: 25
+        method: "HUNT"
+        world_effect:
+          action: "NONE"
+
+      - type: "ENTITY"
+        target: "minecraft:fox"
+        nutrition: 30
+        method: "HUNT"
+        world_effect:
+          action: "NONE"
+
+    secondary:
+      # GAMEPLAY EXCEPTION: Wolves hunting skeletons is a Minecraft-specific behavior,
+      # not realistic ecology. In real ecosystems, wolves do not hunt undead creatures.
+      # This is included to match vanilla Minecraft mechanics where wolves attack skeletons.
+      - type: "ENTITY"
+        target: "minecraft:skeleton"
+        nutrition: 20
+        method: "HUNT"
+        world_effect:
+          action: "NONE"
+
+    emergency:
+      - type: "ITEM"
+        target: "minecraft:rotten_flesh"
+        nutrition: 10
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+
+  foraging:
+    search_radius:
+      base: 24
+      when_hungry: 48
+      when_starving: 64
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: true
+
+    prey:
+      targets: ["minecraft:sheep", "minecraft:rabbit", "minecraft:fox", "minecraft:skeleton"]
+      selection_rules:
+        avoid_babies: true
+        avoid_babies_exception: "starving"
+        avoid_mothers_with_young: false
+        prefer_weak: true
+        prefer_isolated: true
+        sustainable_hunting:
+          enabled: true
+          min_prey_count: 3
+
+    hunting:
+      method: "PACK"
+
+  as_prey:
+    enabled: false
+
+    predators: []
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: 70
+    recent_food:
+      enabled: true
+    environment:
+      near_water: false
+      required_biomes: []
+    requires_shelter: true
+    season: null
+
+  density_effects:
+    density_curve:
+      - count: 2
+        multiplier: 1.5
+      - count: 6
+        multiplier: 1.0
+      - count: 10
+        multiplier: 0.4
+      - count: 15
+        multiplier: 0.1
+
+  mate_selection:
+    courtship:
+      enabled: false
+      behavior: ""
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: 0
+    birth:
+      offspring_count: [2, 4]
+      location_requirement: "in_shelter"
+
+  parental_care:
+    duration: 24000
+    behaviors:
+      protects_offspring: true
+      feeds_offspring: true
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "PACK"
+    size:
+      min: 2
+      optimal: 6
+      max: 12
+    leadership:
+      has_leader: true
+      leader_selection: "STRONGEST"
+
+  herd_movement:
+    enabled: true
+
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "hostile_detected"
+          call: "warning_growl"
+          group_response: "gather_and_defend"
+        - trigger: "pack_separated"
+          call: "howl"
+          group_response: "regroup"
+        - trigger: "found_prey"
+          call: "hunting_bark"
+          group_response: "join_hunt"
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: false
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: true
+      congregates: true
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 5
+    group_size: [4, 6]
+    conditions:
+      biomes: ["forest", "taiga", "grove", "snowy_taiga", "old_growth_spruce_taiga", "old_growth_pine_taiga"]
+      blocks: ["grass_block", "snow", "dirt", "podzol"]
+
+  carrying_capacity:
+    caps:
+      per_chunk: 3
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "NEUTRAL"
+
+  taming:
+    enabled: true
+    items: ["bone"]
+
+  player_breeding:
+    enabled: true
+    items: ["beef", "porkchop", "chicken", "mutton", "rabbit", "rotten_flesh"]
+
+  drops:
+    on_death: []
+
+  interactions:
+    - action: "equip_armor"
+      item: "wolf_armor"
+      result: "equipped"
+      description: "Tamed wolves can wear wolf armor crafted from armadillo scutes for protection"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.wolf.ambient"
+    hurt: "entity.wolf.hurt"
+    death: "entity.wolf.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "sit"
+        frequency: 0.001
+        trigger: "random"
+      - behavior: "shake_when_wet"
+        frequency: 0.01
+        trigger: "wet"
+      - behavior: "howl_at_night"
+        frequency: 0.0005
+        trigger: "night"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+unique_behaviors:
+  - name: "pack_coordination"
+    description: |
+      WHAT: Wolves in a pack coordinate their hunting behavior. When one wolf
+      engages prey, nearby pack members within 32 blocks will join the hunt.
+      Pack members will attempt to surround prey, with some cutting off escape
+      routes while others attack directly. The pack leader initiates hunts and
+      other pack members defer to the leader's target selection.
+
+      WHEN: Triggered when any pack member enters combat with a prey entity
+      and other pack members are within coordination radius and not currently
+      engaged in higher priority tasks (protecting pups, fleeing danger).
+
+      WHERE: Anywhere within the pack's territory or hunting range.
+
+      WHY: Simulates realistic wolf pack hunting behavior, increasing hunting
+      success and creating emergent tactical gameplay. Makes wolves more
+      dangerous in groups, encouraging players to approach carefully.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 12
+      duration: null
+      affects_others: true
+      world_modification: false
+
+  - name: "loyalty_bonding"
+    description: |
+      WHAT: When tamed by a player, wolves form a permanent loyalty bond.
+      Tamed wolves will follow their owner, teleport if too far away,
+      defend their owner from attacks, and attack entities their owner attacks.
+      When the owner sits the wolf down, it stays in place until commanded
+      to stand. Tamed wolves have increased health (20 HP instead of 8 HP).
+
+      WHEN: Activates immediately upon successful taming and persists until
+      the wolf dies or is released.
+
+      WHERE: Globally - tamed wolves follow owner across all dimensions.
+
+      WHY: Core Minecraft mechanic for companion animals. Provides player
+      utility and emotional attachment. Balances wolf danger (when wild)
+      with player benefit (when tamed).
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 7
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "collar_customization"
+    description: |
+      WHAT: Tamed wolves wear colored collars that can be dyed by players
+      using any of the 16 Minecraft dyes. This allows players to distinguish
+      between different tamed wolves and personalize their companions.
+
+      WHEN: After taming, players can right-click with dye to change collar
+      color at any time.
+
+      WHERE: Anywhere.
+
+      WHY: Aesthetic customization and practical identification for players
+      with multiple wolves. Minimal gameplay impact but high player satisfaction.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 16
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "pack_howling"
+    description: |
+      WHAT: Wild wolves occasionally howl, especially at night or when
+      separated from their pack. When one wolf howls, nearby pack members
+      (within 48 blocks) may join in, creating a chorus. This serves as
+      both atmospheric audio and a signal to separated pack members.
+
+      WHEN: Random chance during night hours (increased frequency), or
+      triggered when pack members are separated beyond visual range but
+      within audio range (24-48 blocks).
+
+      WHERE: Throughout the wolf's habitat, particularly in forests and taigas.
+
+      WHY: Atmospheric immersion and realistic wolf behavior. Creates
+      memorable gameplay moments and helps players locate wolf packs.
+      Audio cue warns players of nearby wolves.
+
+    implementation_hints:
+      trigger_type: "RANDOM"
+      priority: 16
+      duration: 60
+      affects_others: true
+      world_modification: false
+
+  - name: "aggressive_when_hurt"
+    description: |
+      WHAT: When any wolf in a pack is attacked, all nearby pack members
+      (within 32 blocks) immediately become hostile to the attacker and
+      coordinate a group attack. This includes wild wolves defending each
+      other and tamed wolves defending their pack (if multiple wolves share
+      the same owner). Neutral status is only restored if the wolf is killed
+      or the attacker leaves the area and sufficient time passes.
+
+      WHEN: Triggered immediately when a pack member takes damage from any
+      entity capable of being attacked (players, mobs, etc.).
+
+      WHERE: Within pack coordination radius.
+
+      WHY: Makes attacking even a single wolf dangerous, encouraging tactical
+      gameplay. Reinforces pack social structure and creates risk/reward for
+      engaging wolves. Protects pack integrity.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 2
+      duration: null
+      affects_others: true
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+relationships:
+  # Predators (who hunts this mob)
+  predators: []
+  # Wolves are apex predators with no natural predators
+
+  # Prey (what this mob hunts)
+  prey:
+    - entity: "minecraft:sheep"
+      notes: "Primary prey target, prefers isolated individuals"
+    - entity: "minecraft:rabbit"
+      notes: "Secondary prey, hunted opportunistically"
+    - entity: "minecraft:fox"
+      notes: "Territorial conflict and food source"
+    - entity: "minecraft:skeleton"
+      notes: "GAMEPLAY EXCEPTION: Wolves naturally attack skeletons in Minecraft (vanilla mechanic), not realistic ecology"
+
+  # Competitors (compete for same resources)
+  competitors:
+    - entity: "minecraft:fox"
+      resource: "rabbits and chickens"
+      interaction: "Wolves will attack foxes on sight, both for food and to eliminate competition"
+
+  # Mutualists (mutually beneficial)
+  mutualists: []
+
+  # Commensals (one benefits, other unaffected)
+  commensals: []
+
+  # Special relationships
+  special:
+    - entity: "minecraft:player"
+      relationship: "tameable"
+      description: "Can be tamed with bones, becoming loyal companions that defend owner and follow commands"
+    - entity: "minecraft:llama"
+      relationship: "neutral"
+      description: "Wolves don't attack llamas, and llamas won't spit at wolves unless provoked"
+    - entity: "minecraft:armadillo"
+      relationship: "resource_provider"
+      description: "Armadillos drop scutes which can be crafted into wolf armor"
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+narrative:
+  summary: |
+    Wolves are intelligent pack-hunting carnivores that roam forests and
+    taigas in coordinated family groups. They are neutral to players by
+    default but can be tamed to become loyal companions, or provoked to
+    become dangerous pack hunters.
+
+  behavior_overview: |
+    A wolf's day consists of patrolling territory with its pack, hunting
+    prey cooperatively, and defending pack resources. Wild wolves operate
+    as tight family units with dominant breeding pairs and subordinate
+    helpers. They hunt primarily sheep and rabbits, using pack tactics to
+    surround and overwhelm prey. When approached by players, wild wolves
+    are wary but not immediately aggressive. However, harming any pack
+    member triggers coordinated group retaliation.
+
+    Tamed wolves transform from wild hunters into devoted companions. They
+    gain increased health, follow their owner loyally, and defend against
+    all threats. Tamed wolves can wear armor for protection and their collar
+    can be customized with dyes. They teleport to keep up with their owner
+    and can be commanded to sit or stand.
+
+    Pack social structure is central to wolf behavior. Howling keeps separated
+    members in contact, hunting is coordinated with flanking and pursuit roles,
+    and the entire pack defends pups near den sites. This creates emergent
+    tactical gameplay and memorable encounters.
+
+  ecological_importance: |
+    Wolves serve as top-down regulators of herbivore populations, particularly
+    sheep. They prevent overgrazing and maintain biodiversity by culling weak
+    individuals. Without wolves, sheep populations would explode, leading to
+    vegetation depletion. Wolves also provide trophic cascades - their presence
+    affects prey behavior, which affects grazing patterns, which affects plant
+    communities.
+
+    From a gameplay perspective, wolves create risk in forest biomes, reward
+    tactical thinking (don't attack lone wolves unless you can handle the pack),
+    and provide companion utility when tamed. They're the bridge between
+    dangerous wildlife and helpful allies.
+
+  design_notes: |
+    Wolf implementation must carefully balance wild danger with tamed utility.
+    Wild wolves should feel threatening in packs but not overwhelmingly so.
+    Pack coordination AI is critical - wolves should hunt together, not
+    individually. The taming mechanic should feel rewarding but not trivial
+    (33% chance per bone creates anticipation).
+
+    Health difference between wild (8 HP) and tamed (20 HP) is intentional -
+    wild wolves die easily to create pack attrition, while tamed wolves are
+    durable companions. Wolf armor (added in 1.20.5) provides late-game
+    protection requiring armadillo scutes.
+
+    Edge cases: Ensure tamed wolves don't attack their owner's other tamed
+    wolves. Pack coordination should break if pack members are too far apart.
+    Wolves should teleport to players across dimensions but not while sitting.
+    Collar dye should persist through world saves.
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 1.0
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: 60       # Needs one good hunt every 1-2 days
+    provides_to_predator: 120   # If wolves had predators
+
+  population_target: "Uncommon, 1-2 packs per forest/taiga biome region (4-12 individuals total)"
+
+  removal_impact: "Herbivore populations (especially sheep) would increase unchecked, leading to overgrazing. Player loses access to tameable combat companions. Skeletons would be slightly more prevalent."

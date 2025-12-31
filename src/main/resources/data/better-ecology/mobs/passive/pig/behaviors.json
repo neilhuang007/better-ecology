@@ -1,0 +1,131 @@
+{
+  "behaviors": {
+    "rooting": {
+      "enabled": true,
+      "weight": 1.0,
+      "search_range": 8,
+      "search_vertical_range": 2,
+      "rooting_duration": 40,
+      "truffle_chance": {
+        "grass_block": 0.05,
+        "mycelium": 0.15,
+        "podzol": 0.12
+      },
+      "grass_to_dirt_chance": 0.3,
+      "rootable_blocks": [
+        "minecraft:grass_block",
+        "minecraft:mycelium",
+        "minecraft:podzol",
+        "minecraft:dirt",
+        "minecraft:coarse_dirt"
+      ]
+    },
+    "mud_bathing": {
+      "enabled": true,
+      "weight": 0.8,
+      "search_range": 16,
+      "search_vertical_range": 4,
+      "bathing_duration": 200,
+      "condition_restore_rate": 0.1,
+      "mud_effect_duration": 6000,
+      "mud_blocks": [
+        "minecraft:water",
+        "minecraft:mud",
+        "minecraft:clay"
+      ]
+    },
+    "social_mud_bathing": {
+      "enabled": true,
+      "weight": 0.6,
+      "attraction_range": 12,
+      "max_bathing_pigs": 4,
+      "social_duration": 400,
+      "attraction_chance": 0.3
+    },
+    "crop_feeding": {
+      "enabled": true,
+      "weight": 0.7,
+      "search_range": 12,
+      "search_vertical_range": 2,
+      "eating_duration": 30,
+      "feeding_chance": 0.15,
+      "edible_crops": [
+        "minecraft:carrots",
+        "minecraft:potatoes",
+        "minecraft:beetroots"
+      ],
+      "hunger_restore": {
+        "minecraft:carrots": 20,
+        "minecraft:potatoes": 25,
+        "minecraft:beetroots": 15
+      }
+    },
+    "truffle_seeking": {
+      "enabled": true,
+      "weight": 1.2,
+      "detection_range": 16,
+      "cooldown": 600,
+      "speed_modifier": 1.2
+    },
+    "sniffing": {
+      "enabled": true,
+      "weight": 0.5,
+      "detection_range": 12,
+      "sniff_duration": 60,
+      "cooldown": 200
+    }
+  },
+  "sounds": {
+    "rooting": {
+      "ambient": {
+        "sound": "entity.pig.ambient",
+        "volume": 0.6,
+        "pitch_range": [0.9, 1.2]
+      },
+      "sniff": {
+        "sound": "entity.sniffer.sniffing",
+        "volume": 0.5,
+        "pitch": 1.2
+      }
+    },
+    "mud_bathing": {
+      "ambient": {
+        "sound": "entity.pig.ambient",
+        "volume": 0.4,
+        "pitch": 0.8
+      },
+      "mud": {
+        "sound": "entity.slime.squish",
+        "volume": 0.5,
+        "pitch": 1.0
+      }
+    },
+    "feeding": {
+      "eat": {
+        "sound": "entity.pig.ambient",
+        "volume": 0.4,
+        "pitch": 1.1
+      }
+    }
+  },
+  "particles": {
+    "rooting": {
+      "type": "block",
+      "count": 5,
+      "spread": [0.15, 0.05, 0.15]
+    },
+    "sniffing": {
+      "type": "sneeze",
+      "count": 2,
+      "spread": [0.05, 0.05, 0.05]
+    },
+    "excitement": {
+      "type": "heart",
+      "count": 2
+    },
+    "social": {
+      "type": "happy_villager",
+      "count": 5
+    }
+  }
+}

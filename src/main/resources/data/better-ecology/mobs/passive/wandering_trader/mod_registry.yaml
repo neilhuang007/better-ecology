@@ -1,0 +1,819 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - GENERALIZED BEHAVIOR TEMPLATE
+# Version: 2.0
+# ============================================================================
+#
+# PURPOSE:
+# This template defines ALL possible behaviors, systems, and parameters for
+# ecosystem mobs. Individual mob profiles reference this template and only
+# specify values that differ from defaults or require unique implementation.
+#
+# HOW TO USE:
+# 1. AI reads this template ONCE to understand all available systems
+# 2. For each mob, AI reads the mob's Unique Profile
+# 3. Profile values override template defaults
+# 4. Profile descriptions guide implementation of unique behaviors
+#
+# CONVENTIONS:
+# - All time values are in ticks (20 ticks = 1 second)
+# - All distances are in blocks
+# - Percentages are 0.0-1.0 unless noted
+# - null = disabled/not applicable
+# - [] = empty list (none)
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+# Every mob must have basic identity. These have no defaults - must be specified.
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:wandering_trader"
+  display_name: "Wandering Trader"
+
+  # Ecological classification
+  classification:
+    category: "PASSIVE"
+    trophic_level: "SECONDARY_CONSUMER"
+    diet_type: "NONE"
+    social_type: "SOLITARY"
+    activity_pattern: "DIURNAL"
+
+  # Reference information
+  reference:
+    real_world_analog: "Traveling Merchant / Peddler"
+    ecological_role: "Cross-biome resource distributor and economic connector"
+
+  # Tags for system filtering
+  tags: ["trader", "nomadic", "economic", "temporal", "non-breeding"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+# Base physical properties. Most have sensible defaults for a medium animal.
+# ============================================================================
+
+physical:
+  # Health
+  health:
+    base: 10                    # 20 HP = 10 hearts
+    baby_multiplier: null       # No babies
+
+  # Size (affects hitbox and various calculations)
+  size:
+    width: 0.6
+    height: 1.9
+    baby_scale: null            # No babies
+
+  # Biomass - abstract unit for food chain calculations
+  biomass:
+    adult: 100
+    baby: null
+    transfer_efficiency: 0.1
+
+  # Movement capabilities
+  movement:
+    speeds:
+      walk: 0.35                # 0.7 blocks per second / 20 ticks = 0.35
+      run: 0.525                # 1.5x walk speed when fleeing
+      swim: 0.15
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: true
+      jump_height: 1.0
+      avoids_water: false
+      avoids_cliffs: true
+      cliff_threshold: 4
+
+    # Speed modifiers applied conditionally
+    conditional_modifiers:
+      baby: null
+      elderly: null
+      injured: 0.6
+      hungry: null
+      fleeing: 1.5
+      hunting: null
+      carrying_offspring: null
+      in_water_nonaquatic: 0.4
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+# Mobs track internal states that drive behavior priorities.
+# All values decay/recover over time based on actions.
+# ============================================================================
+
+internal_state:
+  # Hunger system - DISABLED for wandering trader
+  hunger:
+    enabled: false
+    max_value: null
+    starting_value: null
+    decay_rate: null
+    thresholds: null
+    starvation: null
+
+  # Thirst system - DISABLED
+  thirst:
+    enabled: true
+    max_value: 100
+    starting_value: 100
+    decay_rate: 0.018             # Humans need regular water access
+    thresholds:
+      satisfied: 75
+      thirsty: 45
+      dehydrated: 15
+    max_value: null
+    starting_value: null
+    decay_rate: null
+    thresholds: null
+
+  # Body condition - DISABLED
+  condition:
+    enabled: false
+    max_value: null
+    starting_value: null
+    gain_when_satiated: null
+    loss_when_hungry: null
+    loss_when_starving: null
+    thresholds: null
+
+  # Energy/Stamina
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.5
+    costs:
+      sprinting: 0.3
+      hunting: null
+      fleeing: 0.4
+      flying: null
+      swimming: 0.2
+
+  # Age tracking - DISABLED (no babies)
+  age:
+    enabled: false
+    baby_duration: null
+    maturity_age: null
+    elderly_age: null
+    max_age: null
+
+  # Social needs - DISABLED (solitary)
+  social:
+    enabled: false
+    max_value: null
+    decay_rate: null
+    recovery_rate: null
+    loneliness_threshold: null
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+# Defines WHEN behaviors are allowed/modified based on time.
+# ============================================================================
+
+temporal:
+  # Daily cycle
+  daily_cycle:
+    # Wandering traders maintain activity throughout day
+    schedule:
+      - time: [0, 12000]         # Daytime
+        activity: 1.0
+        label: "active_trading"
+      - time: [12000, 13500]     # Dusk - drinks invisibility potion
+        activity: 0.8
+        label: "dusk_preparation"
+      - time: [13500, 22500]     # Night - invisible
+        activity: 0.5
+        label: "night_invisible"
+      - time: [22500, 24000]     # Pre-dawn - drinks milk
+        activity: 0.8
+        label: "dawn_reveal"
+
+    # What "low activity" means
+    low_activity_behavior:
+      action: "REDUCED_WANDER"
+      seek_shelter: false
+      reduced_awareness: false
+      awareness_multiplier: 1.0
+
+  # Weather responses
+  weather:
+    rain:
+      activity_multiplier: 1.0
+      seek_shelter: false
+      shelter_priority: null
+    thunder:
+      activity_multiplier: 0.8
+      seek_shelter: false
+      panic_chance: 0.0
+    snow:
+      activity_multiplier: 1.0
+      seek_shelter: false
+    clear:
+      activity_multiplier: 1.0
+
+  # Seasonal behaviors - DISABLED
+  seasons:
+    enabled: false
+    spring: null
+    summer: null
+    autumn: null
+    winter: null
+
+  # Moon phases - DISABLED
+  lunar:
+    enabled: false
+    full_moon: null
+    new_moon: null
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+# Defines WHERE mob can exist and location-triggered behaviors.
+# ============================================================================
+
+spatial:
+  # Habitat requirements
+  habitat:
+    biomes:
+      allowed: []                # All biomes except Deep Dark
+      preferred: []
+      forbidden: ["minecraft:deep_dark"]
+
+    altitude:
+      min: -64
+      max: 320
+      preferred: [63, 128]
+
+    required_nearby: []          # Spawns near players/bells
+
+  # Territory system - ENABLED with wandering radius
+  territory:
+    enabled: true
+    size: 16                     # Wanders within 16 blocks of spawn
+    defends: false
+    marks: false
+    overlap_tolerance: 1.0       # Multiple can overlap
+    defense_against: []
+
+  # Home range (spawn point anchored)
+  home_range:
+    enabled: true
+    radius: 16
+    has_home_point: true
+    home_type: "SPAWN_POINT"
+
+  # Shelter requirements - DISABLED
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  # Location-triggered behaviors
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+# What mob eats, how it finds food, and consumption effects.
+# ============================================================================
+
+diet:
+  # Food sources - DISABLED (consumes only milk and potions)
+  food_sources:
+    primary: []
+    secondary: []
+    emergency: []
+
+  # Foraging behavior - DISABLED
+  foraging:
+    search_radius:
+      base: null
+      when_hungry: null
+      when_starving: null
+    search_interval: null
+    memory:
+      remembers_locations: false
+      memory_duration: null
+      remembers_depleted: false
+      avoids_depleted_for: null
+      shares_with_group: false
+    sustainability:
+      enabled: false
+      dont_deplete_fully: false
+      minimum_remaining: null
+      patch_return_delay: null
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+# Hunting behavior (as predator) and escape behavior (as prey).
+# ============================================================================
+
+predation:
+  # === AS PREDATOR ===
+  as_predator:
+    enabled: false
+    prey: []
+    selection_rules: null
+    hunting: null
+    post_kill: null
+    triggers: null
+
+  # === AS PREY ===
+  as_prey:
+    enabled: true
+
+    predators:
+      # Zombies and variants
+      - entity: "minecraft:zombie"
+        threat_level: "HIGH"
+        detection_range: 8
+        response: "FLEE"
+      - entity: "minecraft:zombie_villager"
+        threat_level: "HIGH"
+        detection_range: 8
+        response: "FLEE"
+      - entity: "minecraft:husk"
+        threat_level: "HIGH"
+        detection_range: 8
+        response: "FLEE"
+      - entity: "minecraft:drowned"
+        threat_level: "HIGH"
+        detection_range: 8
+        response: "FLEE"
+      - entity: "minecraft:zombified_piglin"
+        threat_level: "HIGH"
+        detection_range: 8
+        response: "FLEE"
+
+      # Illagers
+      - entity: "minecraft:pillager"
+        threat_level: "EXTREME"
+        detection_range: 8
+        response: "FLEE"
+      - entity: "minecraft:vindicator"
+        threat_level: "EXTREME"
+        detection_range: 8
+        response: "FLEE"
+      - entity: "minecraft:evoker"
+        threat_level: "EXTREME"
+        detection_range: 8
+        response: "FLEE"
+      - entity: "minecraft:illusioner"
+        threat_level: "EXTREME"
+        detection_range: 8
+        response: "FLEE"
+
+      # Other hostile mobs
+      - entity: "minecraft:ravager"
+        threat_level: "EXTREME"
+        detection_range: 8
+        response: "FLEE"
+      - entity: "minecraft:vex"
+        threat_level: "EXTREME"
+        detection_range: 8
+        response: "FLEE"
+      - entity: "minecraft:zoglin"
+        threat_level: "HIGH"
+        detection_range: 8
+        response: "FLEE"
+
+    # Default predator response
+    default_response:
+      detection_range: 8
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.5
+        flee_distance: 48
+        flee_toward: "RANDOM"
+        zigzag: false
+
+      freeze:
+        duration: null
+        break_on_approach: null
+        break_distance: null
+
+      alarm:
+        gives_alarm: false
+        alarm_radius: null
+        alarm_triggers_group_flee: false
+
+    # All-clear conditions
+    all_clear:
+      predator_distance: 16
+      time_since_seen: 200
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+# Breeding requirements, process, and parental care.
+# ============================================================================
+
+reproduction:
+  enabled: false                 # Cannot breed
+  method: null
+
+  # === BREEDING REQUIREMENTS ===
+  requirements:
+    min_age: null
+    max_age: null
+    min_health: null
+    min_condition: null
+    min_hunger: null
+    recent_food: null
+    environment: null
+    requires_shelter: false
+    shelter_type: null
+    time_of_day: null
+    season: null
+    weather: null
+    mate_required: false
+    mate_max_distance: null
+
+  # === POPULATION DENSITY EFFECTS ===
+  density_effects:
+    enabled: false
+    check_radius: null
+    density_curve: null
+
+  # === MATE SELECTION ===
+  mate_selection:
+    search_radius: null
+    search_interval: null
+    preferences: null
+    courtship: null
+
+  # === BREEDING PROCESS ===
+  breeding:
+    cooldown: null
+    gestation:
+      type: null
+      duration: null
+      behavior_during: []
+    birth:
+      offspring_count: null
+      condition_affects_count: false
+      location_requirement: null
+
+  # === PARENTAL CARE ===
+  parental_care:
+    enabled: false
+    duration: null
+    behaviors: null
+    offspring_behavior: null
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+# Group dynamics, communication, and social interactions.
+# ============================================================================
+
+social:
+  # Group structure - solitary but with llamas
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+
+    composition:
+      mixed_sex: null
+      mixed_age: null
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  # Herd/flock movement - DISABLED
+  herd_movement:
+    enabled: false
+    cohesion_radius: null
+    separation_distance: null
+    alignment: false
+
+  # Communication - DISABLED
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+      radius: null
+      chain_calling: false
+    contact_calls:
+      enabled: false
+      when: []
+      radius: null
+    mating_calls:
+      enabled: false
+      radius: null
+      time: null
+
+  # Social behaviors list
+  behaviors:
+    greeting: false
+    allogrooming: false
+    play: false
+    huddling: false
+    dominance_hierarchy: false
+
+  # Group benefits
+  group_benefits:
+    predator_detection_bonus: 0.0
+    foraging_efficiency_bonus: 0.0
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+# How mob affects the world around it.
+# ============================================================================
+
+environmental_impact:
+  # Terrain modifications - DISABLED
+  terrain:
+    enabled: false
+    actions: []
+
+  # Ecosystem services
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+      seeds: []
+      method: null
+      dispersal_radius: 0
+
+    pollination:
+      enabled: false
+      flowers: []
+      radius: 0
+
+    nutrient_cycling:
+      enabled: false
+      fertilizes: false
+      fertilize_radius: 0
+
+    decomposition:
+      enabled: false
+      decomposes: []
+      result: null
+
+  # Environmental responses
+  responses:
+    drinking:
+      enabled: false
+      frequency: null
+      water_blocks: []
+      duration: null
+      congregates: false
+
+    temperature:
+      heat_seek_shade: false
+      heat_seek_water: false
+      cold_seek_shelter: false
+      cold_huddling: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+# Spawning, carrying capacity, and natural mortality.
+# ============================================================================
+
+population:
+  # Spawning rules
+  spawning:
+    weight: 0                    # Spawned via special system, not mob caps
+    group_size: [1, 1]
+
+    conditions:
+      blocks: []                 # Any solid block
+      biomes: []                 # All biomes (except Deep Dark)
+      light: [0, 15]
+      altitude: null
+      time: null
+      weather: null
+
+  # Carrying capacity - unique system
+  carrying_capacity:
+    method: "HARD_CAP"
+
+    caps:
+      per_chunk: null
+      regional: 1                # Only 1 per loaded area
+
+    resources:
+      enabled: false
+      requirements: []
+
+    over_capacity: []
+
+  # Dispersal - DISABLED (despawns instead)
+  dispersal:
+    enabled: false
+    triggers: []
+    distance: null
+
+  # Natural mortality
+  mortality:
+    old_age:
+      enabled: false
+      max_age: null
+    starvation:
+      enabled: false             # No hunger system
+    disease:
+      enabled: false
+      base_chance: 0.0
+      crowding_multiplier: 1.0
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+# How mob interacts with players.
+# ============================================================================
+
+player_interaction:
+  base_attitude: "NEUTRAL"
+
+  # Fear/approach distances
+  distances:
+    detection: 16
+    caution: 8
+    flee: 0                      # Doesn't flee from players unless attacked
+
+  # Habituation - DISABLED
+  habituation:
+    enabled: false
+    rate: null
+    decay: null
+    max_habituation: null
+    habituated_flee_distance: null
+
+  # Taming - DISABLED
+  taming:
+    enabled: false
+    items: []
+    chance: null
+    requires_habituation: false
+
+  # Player breeding - DISABLED
+  player_breeding:
+    enabled: false
+    items: []
+    bypasses_conditions: false
+
+  # Drops
+  drops:
+    on_death:
+      - item: "minecraft:lead"
+        count: [2, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 0
+      - item: "minecraft:potion"
+        count: [1, 1]
+        chance: 0.085
+        requires_player_kill: true
+        looting_bonus: 0.01
+        nbt: "{Potion:'minecraft:invisibility'}"
+    on_interaction: []
+
+  # Special interactions
+  interactions:
+    - action: "trade"
+      item: null
+      result: "opens_trading_interface"
+      description: "Right-click to open trades"
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+# Visual and audio personality traits.
+# ============================================================================
+
+aesthetics:
+  # Sounds
+  sounds:
+    ambient: "entity.wandering_trader.ambient"
+    hurt: "entity.wandering_trader.hurt"
+    death: "entity.wandering_trader.death"
+    baby: null
+    alarm: null
+    mating: null
+    drinking: "entity.wandering_trader.drink"
+    eat: null
+
+  # Idle animations
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "look_at_player"
+        frequency: 0.1
+        trigger: "player_nearby"
+      - behavior: "hold_item"
+        frequency: 0.05
+        trigger: "random"
+      - behavior: "wander_around"
+        frequency: 0.2
+        trigger: "idle"
+
+  # Individual variation - minimal
+  personality_traits:
+    boldness:
+      base: 0.5
+      variation: 0.1
+    activity:
+      base: 0.5
+      variation: 0.1
+    sociability:
+      base: 0.5
+      variation: 0.1
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+# Standard priority ordering for AI goals.
+# Lower number = higher priority (evaluated first).
+# ============================================================================
+
+ai_priority_framework:
+  # Survival (highest priority)
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  # Physiological needs - minimal
+  physiological:
+    critical_health: 3
+    drink_water: null
+    eat_food: null
+    find_shelter: null
+
+  # Reproduction - DISABLED
+  reproduction:
+    care_for_offspring: null
+    breed: null
+    find_mate: null
+
+  # Social - minimal
+  social:
+    group_cohesion: null
+    social_interaction: null
+
+  # Hunting - DISABLED
+  hunting:
+    hunt_prey: null
+
+  # Location behaviors
+  location:
+    location_triggered: 4
+    territory_patrol: 5
+
+  # Default behaviors
+  default:
+    wander: 6
+    idle: 7
+    rest: 8
+
+
+# ============================================================================
+# SYSTEM 15: UNIQUE BEHAVIOR FRAMEWORK
+# ============================================================================
+# Template for defining behaviors not covered by standard systems.
+# Actual behaviors defined in unique profile.
+# ============================================================================
+
+unique_behavior_template:
+  structure:
+    name: ""
+    description: ""
+    triggers: []
+    requirements: []
+    actions: []
+    effects: []
+    priority: 10
+    duration: null
+    cooldown: null
+    interruptible: true

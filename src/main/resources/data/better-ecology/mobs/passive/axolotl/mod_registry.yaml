@@ -1,0 +1,1026 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - GENERALIZED BEHAVIOR TEMPLATE
+# Version: 2.0
+# ============================================================================
+#
+# PURPOSE:
+# This template defines ALL possible behaviors, systems, and parameters for
+# ecosystem mobs. Individual mob profiles reference this template and only
+# specify values that differ from defaults or require unique implementation.
+#
+# HOW TO USE:
+# 1. AI reads this template ONCE to understand all available systems
+# 2. For each mob, AI reads the mob's Unique Profile
+# 3. Profile values override template defaults
+# 4. Profile descriptions guide implementation of unique behaviors
+#
+# CONVENTIONS:
+# - All time values are in ticks (20 ticks = 1 second)
+# - All distances are in blocks
+# - Percentages are 0.0-1.0 unless noted
+# - null = disabled/not applicable
+# - [] = empty list (none)
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+# Every mob must have basic identity. These have no defaults - must be specified.
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:axolotl"
+  display_name: "Axolotl"
+
+  # Ecological classification
+  classification:
+    category: "PASSIVE"
+    trophic_level: "SECONDARY_CONSUMER"
+    diet_type: "PISCIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "CATHEMERAL"
+
+  # Reference information
+  reference:
+    real_world_analog: "Mexican axolotl (Ambystoma mexicanum) - critically endangered"
+    ecological_role: "Aquatic predator controlling small fish, squid, and hostile aquatic mob populations in underground water systems"
+
+  # Tags for system filtering
+  tags: ["aquatic", "amphibian", "cave_dweller", "regenerative"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+# Base physical properties. Most have sensible defaults for a medium animal.
+# ============================================================================
+
+physical:
+  # Health
+  health:
+    base: 7                     # 14 HP total
+    baby_multiplier: 0.5
+
+  # Size (affects hitbox and various calculations)
+  size:
+    width: 0.75
+    height: 0.42
+    baby_scale: 0.5
+
+  # Biomass - abstract unit for food chain calculations
+  # Rule: predator gains (prey_biomass * transfer_efficiency) energy from kill
+  biomass:
+    adult: 60
+    baby: 15
+    transfer_efficiency: 0.1    # 10% energy transfer up food chain
+
+  # Movement capabilities
+  movement:
+    speeds:
+      walk: 0.2                 # Slow on land
+      run: 0.3                  # Not very fast on land
+      swim: 0.6                 # Fast in water
+      fly: 0.0                  # Cannot fly
+      climb: 0.0                # Cannot climb
+
+    capabilities:
+      can_swim: true
+      can_jump: true
+      jump_height: 0.5
+      avoids_water: false
+      avoids_cliffs: true
+      cliff_threshold: 3
+
+    # Speed modifiers applied conditionally
+    # Format: condition -> multiplier
+    conditional_modifiers:
+      baby: 0.7
+      elderly: 0.8
+      injured: 0.6              # Below 30% health
+      hungry: 0.8               # Below 20% food
+      fleeing: 1.3              # When running from predator
+      hunting: 1.4              # When chasing prey
+      carrying_offspring: 0.7
+      in_water_nonaquatic: 0.4
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+# Mobs track internal states that drive behavior priorities.
+# All values decay/recover over time based on actions.
+# ============================================================================
+
+internal_state:
+  # Hunger system
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 80
+    decay_rate: 0.015           # Slower metabolism (aquatic)
+
+    # Thresholds that trigger behaviors
+    thresholds:
+      satiated: 80              # Above this: won't prioritize food
+      hungry: 50                # Below this: actively seek food
+      very_hungry: 25           # Below this: take risks for food
+      starving: 10              # Below this: desperate behaviors
+
+    # Starvation damage
+    starvation:
+      damage_threshold: 5       # Start taking damage below this
+      damage_amount: 1          # Hearts per interval
+      damage_interval: 200      # Ticks between damage
+
+  # Thirst system (optional - set enabled: false to disable)
+  thirst:
+    enabled: false              # Lives in water
+
+  # Body condition (overall fitness - affects breeding, survival)
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+
+    # Condition changes based on food intake vs needs
+    gain_when_satiated: 0.01    # Per tick when hunger > satiated
+    loss_when_hungry: 0.02      # Per tick when hunger < hungry
+    loss_when_starving: 0.1
+
+    thresholds:
+      excellent: 85             # Can breed, high survival
+      good: 65                  # Can breed
+      fair: 45                  # Cannot breed
+      poor: 25                  # Weakened
+      critical: 10              # Near death
+
+  # Energy/Stamina (for actions like sprinting, hunting)
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.6          # Faster recovery in water
+
+    costs:
+      sprinting: 0.2            # Low cost in water
+      hunting: 0.4
+      fleeing: 0.3
+      flying: 0.0
+      swimming: 0.1
+
+  # Age tracking
+  age:
+    enabled: true
+    baby_duration: 24000        # Ticks as baby (20 minutes)
+    maturity_age: 24000         # When can breed
+    elderly_age: null           # null = no old age
+    max_age: null               # null = immortal (no natural death)
+
+  # Social needs (for social species)
+  social:
+    enabled: false              # Solitary species
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+# Defines WHEN behaviors are allowed/modified based on time.
+# ============================================================================
+
+temporal:
+  # Daily cycle
+  daily_cycle:
+    # Activity levels by time of day
+    # Minecraft day: 0=dawn, 6000=noon, 12000=dusk, 18000=midnight
+    # Cathemeral - active throughout day and night
+    schedule:
+      - time: [0, 6000]         # Dawn to noon
+        activity: 0.9
+        label: "morning"
+      - time: [6000, 12000]     # Noon to dusk
+        activity: 0.8
+        label: "afternoon"
+      - time: [12000, 13500]    # Dusk
+        activity: 0.9
+        label: "dusk"
+      - time: [13500, 22500]    # Night
+        activity: 1.0           # Active at night in caves
+        label: "night"
+      - time: [22500, 24000]    # Pre-dawn
+        activity: 0.9
+        label: "pre_dawn"
+
+    # What "low activity" means
+    low_activity_behavior:
+      action: "REDUCED_WANDER"
+      seek_shelter: false       # Lives in water
+      reduced_awareness: false
+      awareness_multiplier: 1.0
+
+  # Weather responses
+  weather:
+    rain:
+      activity_multiplier: 1.0  # Underground, doesn't care
+      seek_shelter: false
+      shelter_priority: 0
+    thunder:
+      activity_multiplier: 1.0  # Underground, doesn't care
+      seek_shelter: false
+      panic_chance: 0.0
+    snow:
+      activity_multiplier: 1.0
+      seek_shelter: false
+    clear:
+      activity_multiplier: 1.0
+
+  # Seasonal behaviors (requires season system)
+  seasons:
+    enabled: false
+
+  # Moon phases (optional)
+  lunar:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+# Defines WHERE mob can exist and location-triggered behaviors.
+# ============================================================================
+
+spatial:
+  # Habitat requirements
+  habitat:
+    biomes:
+      allowed: []               # Can spawn in any biome with lush caves
+      preferred: ["lush_caves"]
+      forbidden: []
+
+    altitude:
+      min: -64
+      max: 30                   # Underground preference
+      preferred: [-20, 10]
+
+    required_nearby:            # Must have these within range to spawn/stay
+      - feature: "water"
+        max_distance: 2
+        reason: "Must be in or near water to survive"
+      - feature: "lush_caves_blocks"
+        max_distance: 32
+        reason: "Spawns in lush caves biome"
+
+  # Territory system
+  territory:
+    enabled: false
+    size: 0
+    defends: false
+    marks: false
+    overlap_tolerance: 1.0
+    defense_against: []
+
+  # Home range (non-defended area of activity)
+  home_range:
+    enabled: true
+    radius: 32                  # Small range in caves
+    has_home_point: false
+    home_type: null
+
+  # Shelter requirements
+  shelter:
+    needs_shelter: false        # Lives in water
+    shelter_uses: []
+
+    valid_shelters: []
+
+  # Location-triggered behaviors
+  # These activate when mob is at specific locations
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+# What mob eats, how it finds food, and consumption effects.
+# ============================================================================
+
+diet:
+  # Food sources categorized by preference
+  food_sources:
+    primary:
+      - type: "ENTITY"
+        target: "minecraft:tropical_fish"
+        nutrition: 40
+        saturation: 8000
+        consumption_time: 20
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 8
+        health_effect: 0
+
+      - type: "ENTITY"
+        target: "minecraft:cod"
+        nutrition: 35
+        saturation: 7000
+        consumption_time: 20
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 6
+        health_effect: 0
+
+      - type: "ENTITY"
+        target: "minecraft:salmon"
+        nutrition: 35
+        saturation: 7000
+        consumption_time: 20
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 6
+        health_effect: 0
+
+    secondary:
+      - type: "ENTITY"
+        target: "minecraft:squid"
+        nutrition: 30
+        saturation: 6000
+        consumption_time: 30
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 5
+        health_effect: 0
+
+      - type: "ENTITY"
+        target: "minecraft:glow_squid"
+        nutrition: 30
+        saturation: 6000
+        consumption_time: 30
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 5
+        health_effect: 0
+
+    emergency:
+      - type: "ENTITY"
+        target: "minecraft:drowned"
+        nutrition: 25
+        saturation: 5000
+        consumption_time: 40
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 3
+        health_effect: 0
+
+      - type: "ENTITY"
+        target: "minecraft:guardian"
+        nutrition: 20
+        saturation: 4000
+        consumption_time: 50
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 2
+        health_effect: -2        # Dangerous prey
+
+  # Foraging behavior
+  foraging:
+    search_radius:
+      base: 20
+      when_hungry: 32
+      when_starving: 48
+    search_interval: 100        # Ticks between searches
+
+    # Memory system
+    memory:
+      remembers_locations: true
+      memory_duration: 12000
+      remembers_depleted: true
+      avoids_depleted_for: 6000
+      shares_with_group: false
+
+    # Sustainable foraging
+    sustainability:
+      enabled: false            # Predator, doesn't need sustainability
+      dont_deplete_fully: false
+      minimum_remaining: 0
+      patch_return_delay: 0
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+# Hunting behavior (as predator) and escape behavior (as prey).
+# ============================================================================
+
+predation:
+  # === AS PREDATOR ===
+  as_predator:
+    enabled: true
+
+    # Prey selection
+    prey:
+      targets:
+        - "minecraft:tropical_fish"
+        - "minecraft:cod"
+        - "minecraft:salmon"
+        - "minecraft:squid"
+        - "minecraft:glow_squid"
+        - "minecraft:drowned"
+        - "minecraft:guardian"
+
+      # Hunting intelligence rules
+      selection_rules:
+        avoid_babies: false
+        avoid_babies_exception: null
+
+        avoid_mothers_with_young: false
+        avoid_mothers_exception: null
+
+        prefer_weak: true       # Target injured
+        weak_preference: 1.5
+
+        prefer_isolated: false  # Doesn't care about groups
+        isolated_preference: 1.0
+
+        # Population awareness
+        sustainable_hunting:
+          enabled: false        # Minecraft mobs respawn
+
+    # Hunt execution
+    hunting:
+      method: "CHASE"
+
+      chase:
+        max_duration: 200       # Quick hunter
+        give_up_distance: 32
+        stamina_cost_per_tick: 0.2
+
+      ambush:
+        patience_duration: 0
+        requires_cover: false
+
+      pack:
+        min_hunters: 1
+        coordination_radius: 0
+
+      success_rate:
+        base: 0.7               # Good hunter
+        modifiers:
+          prey_is_baby: 1.3
+          prey_is_elderly: 1.2
+          prey_is_injured: 1.5
+          prey_is_isolated: 1.0
+          hunter_is_hungry: 1.1
+          pack_hunt_per_member: 0.0
+
+    # Post-kill behavior
+    post_kill:
+      eating_duration: 100      # Quick eater
+      guards_kill: false
+      guard_duration: 0
+      shares_with: []
+      caches_excess: false
+
+    # When to hunt
+    triggers:
+      hunger_threshold: 70
+      opportunistic: true       # Will hunt when sees prey
+      opportunistic_hunger_min: 50
+      cooldown_after_kill: 1000
+
+  # === AS PREY ===
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:player"
+        threat_level: "MEDIUM"
+        detection_range: 16
+        response: "FLEE"
+
+    # Default predator response
+    default_response:
+      detection_range: 16
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.3
+        flee_distance: 24
+        flee_toward: "WATER"
+        zigzag: true            # Evasive movement
+
+      freeze:
+        duration: [0, 0]
+        break_on_approach: true
+        break_distance: 6
+
+      alarm:
+        gives_alarm: false
+        alarm_radius: 0
+        alarm_triggers_group_flee: false
+
+    # All-clear conditions
+    all_clear:
+      predator_distance: 32
+      time_since_seen: 300
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+# Breeding requirements, process, and parental care.
+# ============================================================================
+
+reproduction:
+  enabled: true
+  method: "SEXUAL"
+
+  # === BREEDING REQUIREMENTS ===
+  # ALL conditions must be met for breeding to occur
+  requirements:
+    # Physical requirements
+    min_age: 24000              # Must be adult
+    max_age: null
+    min_health: 0.7
+    min_condition: 60
+    min_hunger: 60
+
+    # Recent feeding
+    recent_food:
+      enabled: true
+      time_window: 12000
+      meals_required: 2
+
+    # Environmental requirements
+    environment:
+      near_water: true
+      water_max_distance: 2
+      required_biomes: []
+      required_blocks_nearby: []
+      min_light: 0
+      max_light: 15
+
+    # Shelter requirement
+    requires_shelter: false
+    shelter_type: null
+
+    # Temporal requirements
+    time_of_day: null
+    season: null
+    weather: null
+
+    # Social requirements
+    mate_required: true
+    mate_max_distance: 16
+
+  # === POPULATION DENSITY EFFECTS ===
+  density_effects:
+    enabled: true
+    check_radius: 48
+
+    # Breeding desire multipliers based on local population
+    density_curve:
+      - count: 2
+        multiplier: 1.3
+      - count: 4
+        multiplier: 1.0
+      - count: 8
+        multiplier: 0.6
+      - count: 12
+        multiplier: 0.2
+      - count: 16
+        multiplier: 0.0
+
+  # === MATE SELECTION ===
+  mate_selection:
+    search_radius: 24
+    search_interval: 1200
+
+    preferences:
+      prefer_healthy: true
+      prefer_good_condition: true
+      avoid_relatives: true
+      relative_recognition_duration: 48000
+
+    courtship:
+      enabled: false
+      behavior: null
+      duration: 0
+      can_reject: false
+      rejection_cooldown: 0
+
+  # === BREEDING PROCESS ===
+  breeding:
+    cooldown: 30000             # 25 minutes (5 minutes after Minecraft default)
+
+    gestation:
+      type: "INSTANT"
+      duration: 0
+      behavior_during: []
+
+    birth:
+      offspring_count: [1, 3]   # 1-3 babies
+      condition_affects_count: true
+      location_requirement: "in_water"
+
+  # === PARENTAL CARE ===
+  parental_care:
+    enabled: true
+    duration: 24000             # Until offspring independent
+
+    behaviors:
+      protects_offspring: true
+      protection_aggression: 1.5
+      protection_radius: 10
+
+      feeds_offspring: false
+      teaches_offspring: false
+      carries_offspring: false
+
+    offspring_behavior:
+      follows_parent: true
+      follow_distance: 3
+      max_separation: 12
+      separation_distress: true
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+# Group dynamics, communication, and social interactions.
+# ============================================================================
+
+social:
+  # Group structure
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+
+    composition:
+      mixed_sex: true
+      mixed_age: true
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  # Herd/flock movement
+  herd_movement:
+    enabled: false
+
+  # Communication
+  communication:
+    alarm_calls:
+      enabled: false
+
+    contact_calls:
+      enabled: false
+
+    mating_calls:
+      enabled: false
+
+  # Social behaviors list
+  behaviors:
+    greeting: false
+    allogrooming: false
+    play: false
+    huddling: false
+    dominance_hierarchy: false
+
+  # Group benefits
+  group_benefits:
+    predator_detection_bonus: 0.0
+    foraging_efficiency_bonus: 0.0
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+# How mob affects the world around it.
+# ============================================================================
+
+environmental_impact:
+  # Terrain modifications
+  terrain:
+    enabled: false
+    actions: []
+
+  # Ecosystem services
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+
+    pollination:
+      enabled: false
+
+    nutrient_cycling:
+      enabled: false
+
+    decomposition:
+      enabled: false
+
+  # Environmental responses
+  responses:
+    drinking:
+      enabled: false            # Lives in water
+
+    temperature:
+      heat_seek_shade: false
+      heat_seek_water: false
+      cold_seek_shelter: false
+      cold_huddling: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+# Spawning, carrying capacity, and natural mortality.
+# ============================================================================
+
+population:
+  # Spawning rules
+  spawning:
+    weight: 8                   # Moderate spawn rate
+    group_size: [1, 4]          # Small groups
+
+    conditions:
+      blocks: ["water"]
+      biomes: ["lush_caves"]
+      light: [0, 7]             # Dark areas
+      altitude: [-64, 30]
+      time: null
+      weather: null
+
+  # Carrying capacity
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 4              # Limited population
+      regional: null
+
+    # Resource-based (if method = RESOURCE_BASED)
+    resources:
+      enabled: false
+
+    # Over-capacity effects
+    over_capacity:
+      - threshold: 1.2
+        effects: ["reduced_breeding"]
+      - threshold: 1.5
+        effects: ["dispersal"]
+
+  # Dispersal
+  dispersal:
+    enabled: true
+    triggers: ["overcrowding"]
+    distance: [64, 128]
+
+  # Natural mortality
+  mortality:
+    old_age:
+      enabled: false
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+# How mob interacts with players.
+# ============================================================================
+
+player_interaction:
+  base_attitude: "NEUTRAL"      # Not aggressive, but not overly fearful
+
+  # Fear/approach distances
+  distances:
+    detection: 24
+    caution: 12
+    flee: 6
+
+  # Habituation (getting used to players)
+  habituation:
+    enabled: true
+    rate: 0.02                  # Becomes comfortable with players
+    decay: 0.001
+    max_habituation: 0.9
+    habituated_flee_distance: 2
+
+  # Taming
+  taming:
+    enabled: false
+
+  # Player breeding
+  player_breeding:
+    enabled: true
+    items: ["minecraft:tropical_fish_bucket"]
+    bypasses_conditions: true   # Can breed with bucket regardless
+
+  # Drops
+  drops:
+    on_death: []                # Doesn't drop items
+
+  # Special interactions
+  interactions:
+    - action: "bucket_capture"
+      item: "minecraft:water_bucket"
+      result: "minecraft:axolotl_bucket"
+      description: "Can be captured in water bucket"
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+# Visual and audio personality traits.
+# ============================================================================
+
+aesthetics:
+  # Sounds
+  sounds:
+    ambient: "entity.axolotl.idle_water"
+    hurt: "entity.axolotl.hurt"
+    death: "entity.axolotl.death"
+    baby: "entity.axolotl.idle_water"
+    alarm: null
+    mating: null
+    eating: "entity.axolotl.attack"
+
+  # Idle animations
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "swim_idle"
+        frequency: 0.3
+        trigger: "in_water"
+      - behavior: "play_dead"
+        frequency: 0.05
+        trigger: "damaged"
+
+  # Individual variation
+  personality_traits:
+    # Each individual gets random variation around base
+    boldness:
+      base: 0.5
+      variation: 0.2
+    activity:
+      base: 0.7
+      variation: 0.2
+    sociability:
+      base: 0.3
+      variation: 0.1
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+# Standard priority ordering for AI goals.
+# Lower number = higher priority (evaluated first).
+# ============================================================================
+
+ai_priority_framework:
+  # Survival (highest priority)
+  survival:
+    breathe: 0                  # Must stay in water or get air
+    escape_danger: 1
+    flee_predator: 2
+
+  # Physiological needs
+  physiological:
+    critical_health: 3
+    drink_water: -1             # Not needed (lives in water)
+    eat_food: 5
+    find_shelter: -1            # Not needed
+
+  # Reproduction
+  reproduction:
+    care_for_offspring: 7
+    breed: 8
+    find_mate: 9
+
+  # Social
+  social:
+    group_cohesion: -1          # Solitary
+    social_interaction: -1      # Solitary
+
+  # Hunting (for predators)
+  hunting:
+    hunt_prey: 6                # High priority
+
+  # Location behaviors
+  location:
+    location_triggered: 13
+    territory_patrol: -1        # No territory
+
+  # Default behaviors
+  default:
+    wander: 15
+    idle: 16
+    rest: 17
+
+
+# ============================================================================
+# SYSTEM 15: UNIQUE BEHAVIOR FRAMEWORK
+# ============================================================================
+# Template for defining behaviors not covered by standard systems.
+# Actual behaviors defined in unique profile.
+# ============================================================================
+
+unique_behavior_template:
+  # Every unique behavior should follow this structure:
+  structure:
+    name: ""
+    description: ""
+
+    # When does it happen?
+    triggers:
+      - type: ""
+        conditions: {}
+
+    # What conditions must be true?
+    requirements:
+      all_of: []
+      any_of: []
+      none_of: []
+
+    # What does the mob do?
+    actions: []
+
+    # What are the results?
+    effects:
+      on_self: []
+      on_others: []
+      on_world: []
+
+    # Behavior parameters
+    priority: 10
+    duration: null
+    cooldown: null
+    interruptible: true
+
+# ============================================================================
+# RESOURCE PRODUCTION CONFIGURATION
+# ============================================================================
+resource_production:
+  enabled: true
+  resource_type: "slime"         # Axolotls produce slime balls
+
+  # Production settings
+  production_rate: 1.5           # Base production per cycle
+  production_interval: 6000      # Ticks between production checks (5 minutes)
+  max_capacity: 75.0             # Maximum accumulated resource
+
+  # Quality factors
+  base_quality: 1.0              # Base quality multiplier
+  environment_bonus: 0.05        # Quality bonus in good conditions
+
+  # Playful behavior bonus
+  play_bonus: 1.5                # Multiplier when playing
+
+# ============================================================================
+# SYSTEM 15: ANIMAL-ANIMAL INTERACTIONS
+# ============================================================================
+
+interaction:
+  predators: []
+  prey:
+    - "minecraft:tropical_fish"
+    - "minecraft:pufferfish"
+    - "minecraft:salmon"
+    - "minecraft:cod"
+    - "minecraft:tadpole"
+
+  symbiotic_partners: []
+  competitors: []
+  herd_compatible: []
+
+  relationship_decay_rate: 0.002
+  trust_build_rate: 0.01
+  grudge_build_rate: 0.02
+
+  gives_warning_calls: false
+  can_mourn: false
+  can_grieve: false
+  can_play: true
+  can_be_altruistic: false
+  can_teach: false
+

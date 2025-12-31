@@ -1,0 +1,811 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - TROPICAL FISH
+# Version: 2.0
+# Mob ID: minecraft:tropical_fish
+# ============================================================================
+#
+# REFERENCE: Minecraft tropical fish are small, colorful aquatic mobs with
+# 2,700+ unique pattern/color combinations. They are passive schooling fish
+# that spawn in warm ocean biomes and lush caves. Key ecosystem role includes
+# being primary food source for axolotls and secondary prey for various
+# aquatic predators.
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:tropical_fish"
+  display_name: "Tropical Fish"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "FILTER_FEEDER"
+    social_type: "FISSION_FUSION"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Coral reef fish (various species)"
+    ecological_role: "Small schooling fish that serves as primary prey for axolotls and other aquatic predators. Forms dynamic schools that break and reform. Essential component of warm ocean food chains."
+
+  tags: ["aquatic", "schooling", "bucket_capturable", "axolotl_food", "colorful_variant"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  health:
+    base: 1.5                       # 3 HP
+    baby_multiplier: 0.5
+
+  size:
+    width: 0.5
+    height: 0.4
+    baby_scale: 0.5
+
+  biomass:
+    adult: 5                        # Small fish, low biomass
+    baby: 2
+    transfer_efficiency: 0.15       # Higher efficiency for small prey
+
+  movement:
+    speeds:
+      walk: 0.0                     # Cannot walk on land
+      run: 0.0
+      swim: 0.4                     # Fast swimmer
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: false
+      jump_height: 0.0
+      avoids_water: false
+      avoids_cliffs: false
+      cliff_threshold: 0
+
+    conditional_modifiers:
+      baby: 0.8
+      elderly: 1.0                  # No elderly phase
+      injured: 0.7
+      hungry: 0.9
+      fleeing: 1.5
+      hunting: 1.0
+      carrying_offspring: 1.0
+      in_water_nonaquatic: 0.0      # Dies out of water
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 80
+    decay_rate: 0.015               # Slow decay for small fish
+
+    thresholds:
+      satiated: 75
+      hungry: 40
+      very_hungry: 20
+      starving: 10
+
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 400
+
+  thirst:
+    enabled: false                  # Aquatic - no thirst mechanic
+
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+
+    gain_when_satiated: 0.02
+    loss_when_hungry: 0.01
+    loss_when_starving: 0.05
+
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.8              # Fast recovery
+
+    costs:
+      sprinting: 0.1
+      hunting: 0.0
+      fleeing: 0.3
+      flying: 0.0
+      swimming: 0.05                # Minimal cost for swimming
+
+  age:
+    enabled: true
+    baby_duration: 24000            # 20 minutes
+    maturity_age: 24000
+    elderly_age: null
+    max_age: null                   # No natural death from age
+
+  social:
+    enabled: true                   # Social schooling species
+    max_value: 100
+    decay_rate: 0.05                # Moderate decay when alone
+    recovery_rate: 0.2              # Strong recovery in school
+    loneliness_threshold: 40
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 6000]
+        activity: 1.0
+        label: "morning"
+      - time: [6000, 12000]
+        activity: 1.0
+        label: "afternoon"
+      - time: [12000, 13500]
+        activity: 0.8
+        label: "dusk"
+      - time: [13500, 22500]
+        activity: 0.4               # Reduced at night
+        label: "night"
+      - time: [22500, 24000]
+        activity: 0.7
+        label: "pre_dawn"
+
+    low_activity_behavior:
+      action: "REDUCED_WANDER"
+      seek_shelter: false           # Stays in water column
+      reduced_awareness: true
+      awareness_multiplier: 0.6
+
+  weather:
+    rain:
+      activity_multiplier: 1.0      # Unaffected underwater
+      seek_shelter: false
+      shelter_priority: 0
+    thunder:
+      activity_multiplier: 0.9
+      seek_shelter: false
+      panic_chance: 0.05
+    snow:
+      activity_multiplier: 1.0
+      seek_shelter: false
+    clear:
+      activity_multiplier: 1.0
+
+  seasons:
+    enabled: false
+
+  lunar:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  habitat:
+    biomes:
+      allowed: []                   # Will specify in unique profile
+      preferred: [
+        "minecraft:warm_ocean",
+        "minecraft:lukewarm_ocean",
+        "minecraft:deep_lukewarm_ocean",
+        "minecraft:lush_caves",
+        "minecraft:mangrove_swamp"
+      ]
+      forbidden: [
+        "minecraft:frozen_ocean",
+        "minecraft:deep_frozen_ocean",
+        "minecraft:cold_ocean",
+        "minecraft:deep_cold_ocean"
+      ]
+
+    altitude:
+      min: -64
+      max: 320
+      preferred: [50, 63]           # Preferred spawn depth
+
+    required_nearby:
+      - feature: "water"
+        max_distance: 0             # Must be in water
+        reason: "Aquatic mob - cannot survive out of water"
+
+  territory:
+    enabled: false
+
+  home_range:
+    enabled: true
+    radius: 48                      # School roaming range
+    has_home_point: false
+    home_type: null
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  food_sources:
+    primary:
+      - type: "BLOCK"
+        target: "minecraft:seagrass"
+        nutrition: 5
+        saturation: 1200
+        consumption_time: 30
+        method: "FILTER"
+        world_effect:
+          action: "NONE"
+          result: null
+        condition_gain: 1
+        health_effect: 0
+
+      - type: "BLOCK"
+        target: "minecraft:kelp"
+        nutrition: 5
+        saturation: 1200
+        consumption_time: 30
+        method: "FILTER"
+        world_effect:
+          action: "NONE"
+          result: null
+        condition_gain: 1
+        health_effect: 0
+
+    secondary:
+      - type: "ENTITY"
+        target: "#ecosystem:plankton"
+        nutrition: 3
+        saturation: 800
+        consumption_time: 20
+        method: "FILTER"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 1
+        health_effect: 0
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 12
+      when_hungry: 16
+      when_starving: 24
+    search_interval: 300
+
+    memory:
+      remembers_locations: false    # Simple fish, no food memory
+      memory_duration: 0
+      remembers_depleted: false
+      avoids_depleted_for: 0
+      shares_with_group: true       # School feeds together
+
+    sustainability:
+      enabled: false                # Filter feeders don't deplete
+      dont_deplete_fully: false
+      minimum_remaining: 0
+      patch_return_delay: 0
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  as_predator:
+    enabled: false                  # Pure prey species
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:axolotl"
+        threat_level: "HIGH"
+        detection_range: 16
+        response_type: "FLEE"
+        flee:
+          speed_multiplier: 1.5
+          flee_distance: 24
+          flee_toward: "RANDOM"
+          zigzag: true
+
+      - entity: "minecraft:dolphin"
+        threat_level: "MEDIUM"
+        detection_range: 20
+        response_type: "FLEE"
+        flee:
+          speed_multiplier: 1.4
+          flee_distance: 20
+          flee_toward: "SAFETY"
+          zigzag: true
+
+      - entity: "minecraft:drowned"
+        threat_level: "LOW"
+        detection_range: 12
+        response_type: "FLEE"
+        flee:
+          speed_multiplier: 1.3
+          flee_distance: 16
+          flee_toward: "RANDOM"
+          zigzag: false
+
+    default_response:
+      detection_range: 16
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.4
+        flee_distance: 20
+        flee_toward: "RANDOM"
+        zigzag: true
+
+      freeze:
+        duration: [0, 0]
+        break_on_approach: true
+        break_distance: 4
+
+      alarm:
+        gives_alarm: true           # Schools scatter together
+        alarm_radius: 16
+        alarm_triggers_group_flee: true
+
+    all_clear:
+      predator_distance: 32
+      time_since_seen: 200
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: true
+  method: "SEXUAL"
+
+  requirements:
+    min_age: 24000
+    max_age: null
+    min_health: 0.6
+    min_condition: 50              # Lower requirements than mammals
+    min_hunger: 50
+
+    recent_food:
+      enabled: false               # Fish breed readily
+
+    environment:
+      near_water: true             # Must be in water
+      water_max_distance: 0
+      required_biomes: [
+        "minecraft:warm_ocean",
+        "minecraft:lukewarm_ocean",
+        "minecraft:deep_lukewarm_ocean",
+        "minecraft:lush_caves",
+        "minecraft:mangrove_swamp"
+      ]
+      required_blocks_nearby: []
+      min_light: 0
+      max_light: 15
+
+    requires_shelter: false
+    shelter_type: null
+
+    time_of_day: null
+    season: null
+    weather: null
+
+    mate_required: true
+    mate_max_distance: 8
+
+  density_effects:
+    enabled: true
+    check_radius: 32
+
+    density_curve:
+      - count: 3
+        multiplier: 1.5
+      - count: 7
+        multiplier: 1.2
+      - count: 15
+        multiplier: 1.0
+      - count: 30
+        multiplier: 0.5
+      - count: 50
+        multiplier: 0.1
+
+  mate_selection:
+    search_radius: 16
+    search_interval: 800
+
+    preferences:
+      prefer_healthy: true
+      prefer_good_condition: false
+      avoid_relatives: false       # Fish don't track relatives
+      relative_recognition_duration: 0
+
+    courtship:
+      enabled: false
+      behavior: null
+      duration: 0
+      can_reject: false
+      rejection_cooldown: 0
+
+  breeding:
+    cooldown: 12000                # Fast breeding cycle
+
+    gestation:
+      type: "INSTANT"
+      duration: 0
+      behavior_during: []
+
+    birth:
+      offspring_count: [3, 8]      # Fish produce many offspring
+      condition_affects_count: true
+      location_requirement: "in_water"
+
+  parental_care:
+    enabled: false                 # No parental care
+    duration: 0
+
+    behaviors:
+      protects_offspring: false
+      protection_aggression: 0.0
+      protection_radius: 0
+      feeds_offspring: false
+      teaches_offspring: false
+      carries_offspring: false
+
+    offspring_behavior:
+      follows_parent: false
+      follow_distance: 0
+      max_separation: 0
+      separation_distress: false
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  group:
+    type: "FISSION_FUSION"
+    size:
+      min: 3
+      optimal: 7
+      max: 9
+
+    composition:
+      mixed_sex: true
+      mixed_age: true
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  herd_movement:
+    enabled: true
+    cohesion_radius: 8
+    separation_distance: 1.5
+    alignment: true                # Schools move together
+
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "predator_detected"
+          call: "rapid_movement"
+          group_response: "scatter_and_flee"
+      radius: 16
+      chain_calling: true
+
+    contact_calls:
+      enabled: false
+      when: []
+      radius: 0
+
+    mating_calls:
+      enabled: false
+      radius: 0
+      time: null
+
+  behaviors:
+    greeting: false
+    allogrooming: false
+    play: false
+    huddling: true                 # School cohesion
+    dominance_hierarchy: false
+
+  group_benefits:
+    predator_detection_bonus: 0.1
+    foraging_efficiency_bonus: 0.05
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  terrain:
+    enabled: false
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+      seeds: []
+      method: null
+      dispersal_radius: 0
+
+    pollination:
+      enabled: false
+      flowers: []
+      radius: 0
+
+    nutrient_cycling:
+      enabled: false
+      fertilizes: false
+      fertilize_radius: 0
+
+    decomposition:
+      enabled: false
+      decomposes: []
+      result: null
+
+  responses:
+    drinking:
+      enabled: false               # Aquatic
+      frequency: 0
+      water_blocks: []
+      duration: 0
+      congregates: false
+
+    temperature:
+      heat_seek_shade: false
+      heat_seek_water: false
+      cold_seek_shelter: false
+      cold_huddling: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  spawning:
+    weight: 15                     # Common in appropriate biomes
+    group_size: [3, 8]
+
+    conditions:
+      blocks: ["minecraft:water"]
+      biomes: [
+        "minecraft:warm_ocean",
+        "minecraft:lukewarm_ocean",
+        "minecraft:deep_lukewarm_ocean",
+        "minecraft:lush_caves",
+        "minecraft:mangrove_swamp"
+      ]
+      light: [0, 15]
+      altitude: [50, 63]           # Specific depth in oceans
+      time: null
+      weather: null
+
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 24                # Multiple schools per chunk
+      regional: null
+
+    resources:
+      enabled: false
+      requirements: []
+
+    over_capacity:
+      - threshold: 1.3
+        effects: ["reduced_breeding"]
+      - threshold: 1.8
+        effects: ["starvation", "dispersal"]
+      - threshold: 2.5
+        effects: ["disease"]
+
+  dispersal:
+    enabled: true
+    triggers: ["adulthood", "overcrowding"]
+    distance: [64, 128]
+
+  mortality:
+    old_age:
+      enabled: false
+      max_age: null
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+      base_chance: 0.0
+      crowding_multiplier: 1.0
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "PASSIVE"
+
+  distances:
+    detection: 16
+    caution: 8
+    flee: 4
+
+  habituation:
+    enabled: false                 # Tropical fish don't habituate
+    rate: 0.0
+    decay: 0.0
+    max_habituation: 0.0
+    habituated_flee_distance: 0
+
+  taming:
+    enabled: false
+    items: []
+    chance: 0.0
+    requires_habituation: false
+
+  player_breeding:
+    enabled: false
+    items: []
+    bypasses_conditions: false
+
+  drops:
+    on_death:
+      - item: "minecraft:tropical_fish"
+        count: [1, 1]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 0
+
+      - item: "minecraft:bone_meal"
+        count: [1, 1]
+        chance: 0.05
+        requires_player_kill: false
+        looting_bonus: 0
+
+    on_interaction: []
+
+  interactions:
+    - action: "bucket_capture"
+      item: "minecraft:water_bucket"
+      result: "minecraft:tropical_fish_bucket"
+      description: "Player can capture tropical fish in a water bucket. Fish retains its pattern/color variant. Used primarily for axolotl breeding."
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  sounds:
+    ambient: "minecraft:entity.tropical_fish.ambient"
+    hurt: "minecraft:entity.tropical_fish.hurt"
+    death: "minecraft:entity.tropical_fish.death"
+    baby: "minecraft:entity.tropical_fish.ambient"
+    alarm: "minecraft:entity.tropical_fish.flop"
+    mating: null
+    eating: null
+
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "swim_in_circle"
+        frequency: 0.02
+        trigger: "calm"
+
+      - behavior: "quick_dart"
+        frequency: 0.01
+        trigger: "random"
+
+      - behavior: "school_synchronization"
+        frequency: 0.05
+        trigger: "in_group"
+
+  personality_traits:
+    boldness:
+      base: 0.3                    # Naturally timid
+      variation: 0.15
+    activity:
+      base: 0.7                    # Active swimmers
+      variation: 0.2
+    sociability:
+      base: 0.9                    # Highly social
+      variation: 0.1
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+
+ai_priority_framework:
+  survival:
+    breathe: 0                     # Must stay in water
+    escape_danger: 1
+    flee_predator: 2
+
+  physiological:
+    critical_health: 3
+    drink_water: -1                # N/A for aquatic
+    eat_food: 4
+    find_shelter: -1               # N/A
+
+  reproduction:
+    care_for_offspring: -1         # No parental care
+    breed: 5
+    find_mate: 6
+
+  social:
+    group_cohesion: 7              # High priority for schooling
+    social_interaction: 8
+
+  hunting:
+    hunt_prey: -1                  # Not a predator
+
+  location:
+    location_triggered: -1
+    territory_patrol: -1
+
+  default:
+    wander: 9
+    idle: 10
+    rest: 11
+
+
+# ============================================================================
+# SYSTEM 15: UNIQUE BEHAVIOR FRAMEWORK
+# ============================================================================
+
+unique_behavior_template:
+  structure:
+    name: ""
+    description: ""
+    triggers: []
+    requirements:
+      all_of: []
+      any_of: []
+      none_of: []
+    actions: []
+    effects:
+      on_self: []
+      on_others: []
+      on_world: []
+    priority: 10
+    duration: null
+    cooldown: null
+    interruptible: true

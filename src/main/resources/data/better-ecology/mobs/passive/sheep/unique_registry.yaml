@@ -1,0 +1,727 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Mob: Sheep (Ovis aries)
+# ============================================================================
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:sheep"
+  display_name: "Sheep"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "HERD"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Ovis aries (Domestic Sheep)"
+    ecological_role: "Grazer that converts grass to wool, creates terrain variation through grazing, provides renewable wool resources"
+
+  tags: ["farmable", "dyeable", "wool_producer", "grassland", "herd_animal", "color_variant"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 8                         # 4 hearts
+  size:
+    width: 0.9
+    height: 1.3
+  biomass:
+    adult: 80
+  movement:
+    speeds:
+      walk: 0.23
+      run: 0.23
+      swim: 0.15
+      fly: null
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.015
+  thirst:
+    enabled: false
+  age:
+    baby_duration: 24000            # 20 minutes
+    max_age: null
+  social:
+    enabled: true
+
+
+# ============================================================================
+# PRODUCTION - Wool Growth System
+# ============================================================================
+production:
+  wool_growth:
+    enabled: true
+
+    # Growth rate: percent per tick (0.0278 = 100% in 3600 ticks = 3 minutes)
+    # Scientific basis: Real sheep wool takes 3-6 months, accelerated for gameplay
+    growth_rate: 0.0278
+
+    # Maximum wool drops when sheared (based on quality)
+    max_wool_drops: 4
+
+    # Quality factors - weights for calculating wool quality
+    quality_factors:
+      diet: 1.0                      # Hunger level impact on quality
+      health: 1.2                    # Condition impact on quality
+      age: 0.8                       # Age impact on quality
+      environment: 0.5               # Biome temperature impact
+
+    # Seasonal coat thickness modifiers
+    seasonal_thickness_modifier:
+      winter_thickness: 1.3          # Thicker coat in cold biomes
+      summer_thickness: 0.7          # Thinner coat in hot biomes
+      winter_growth_rate: 0.8        # Slower growth in winter (energy conservation)
+      summer_growth_rate: 1.2        # Faster growth in summer (abundant food)
+
+    # Parasite chance per tick (increases in poor conditions)
+    parasite_chance: 0.0001
+
+    # Color inheritance through breeding
+    color_inheritance_chance: 0.8    # 80% chance to inherit parent color
+    color_mutation_chance: 0.01      # 1% chance of random color mutation
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule: null                  # Use template default
+
+  weather:
+    rain: null                      # Use template default
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: ["plains", "savanna", "meadow", "forest", "taiga", "snowy_taiga"]
+      forbidden: ["pale_garden", "ice_spikes", "wooded_badlands"]
+    required_nearby:
+      - feature: "grass"
+        max_distance: 16
+        reason: "Requires grass for wool regrowth"
+
+  territory:
+    enabled: false
+    size: null
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  location_triggers:
+    enabled: false
+    triggers: []
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "BLOCK"
+        target: "minecraft:grass_block"
+        nutrition: 25
+        method: "GRAZE"
+        world_effect:
+          action: "CONVERT"
+          result: "minecraft:dirt"
+
+      - type: "BLOCK"
+        target: "minecraft:short_grass"
+        nutrition: 15
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+
+    secondary:
+      - type: "BLOCK"
+        target: "minecraft:fern"
+        nutrition: 12
+        method: "BROWSE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+
+      - type: "BLOCK"
+        target: "minecraft:tall_grass"
+        nutrition: 18
+        method: "BROWSE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 12
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:wolf"
+        threat_level: "HIGH"
+        detection_range: 24
+        response: "FLEE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: null
+    recent_food:
+      enabled: true
+    environment:
+      near_water: null
+      required_biomes: []
+    requires_shelter: false
+    season: null
+
+  density_effects:
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: false
+      behavior: ""
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: 0
+    birth:
+      offspring_count: [1, 1]
+      location_requirement: null
+
+  parental_care:
+    duration: 24000
+    behaviors:
+      protects_offspring: true
+      feeds_offspring: false
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "HERD"
+    size:
+      min: 2
+      optimal: 6
+      max: 20
+    leadership:
+      has_leader: false
+      leader_selection: ""
+
+  herd_movement:
+    enabled: true
+
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "predator_detected"
+          call: "bleating_alarm"
+          group_response: "flee_together"
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: true
+    actions:
+      - trigger: "grazing"
+        description: "Converts grass_block to dirt when grazing"
+        target: "minecraft:grass_block"
+        result: "minecraft:dirt"
+
+      - trigger: "grazing"
+        description: "Destroys short grass, ferns, and tall grass when eating"
+        target: ["minecraft:short_grass", "minecraft:fern", "minecraft:tall_grass"]
+        result: null
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 12
+    group_size: [2, 4]
+    conditions:
+      biomes: ["plains", "savanna", "meadow", "forest", "taiga", "snowy_taiga"]
+      blocks: ["minecraft:grass_block"]
+
+  carrying_capacity:
+    caps:
+      per_chunk: 10
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  taming:
+    enabled: false
+    items: []
+
+  player_breeding:
+    enabled: true
+    items: ["minecraft:wheat"]
+
+  drops:
+    on_death:
+      - item: "minecraft:wool"
+        count: [1, 1]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 0
+        condition: "has_wool"
+
+      - item: "minecraft:mutton"
+        count: [1, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+    on_interaction:
+      - action: "shear"
+        item: "minecraft:shears"
+        result: "minecraft:wool"
+        count: [1, 3]
+        description: "Shearing removes wool without killing"
+
+  interactions:
+    - action: "dye"
+      item: "#minecraft:dyes"
+      result: "colored_sheep"
+      description: "Right-click with dye to change wool color"
+
+    - action: "feed"
+      item: "minecraft:wheat"
+      result: "attract_follow"
+      description: "Holding wheat attracts sheep within 6 blocks"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "minecraft:entity.sheep.ambient"
+    hurt: "minecraft:entity.sheep.hurt"
+    death: "minecraft:entity.sheep.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "head_down_graze"
+        frequency: 200
+        trigger: "near_grass"
+
+      - behavior: "look_around"
+        frequency: 150
+        trigger: "idle"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+unique_behaviors:
+  - name: "wool_regrowth"
+    description: |
+      A sheared sheep regrows its wool after eating grass blocks. This is the
+      only way for a sheep to regain its wool after being sheared.
+
+      WHEN: After being sheared, sheep will periodically attempt to eat grass blocks
+      WHERE: Anywhere grass blocks are available within reach
+      WHAT: Sheep convert grass blocks to dirt blocks and have a chance to regrow wool
+      WHY: Provides renewable wool resource, encourages players to maintain grassy areas
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 4
+      duration: null
+      affects_others: true
+      world_modification: true
+
+  - name: "color_variants"
+    description: |
+      Sheep spawn in one of 16 different colors, with natural spawn rates favoring
+      certain colors. Colors can be changed by dyeing, and inherited through breeding.
+
+      WHEN: On spawn (natural color distribution), when dyed by player, during breeding (inheritance)
+      WHERE: Anywhere
+      WHAT: Sheep display one of 16 wool colors with specific spawn probabilities
+           Natural spawn rates: White 81.836%, Light Gray 5%, Gray 5%, Black 5%,
+           Brown 3%, Pink 0.164% (adult), Pink 0.0082% (baby - rarest)
+           Additional colors (red, orange, yellow, lime, green, cyan, light blue,
+           blue, purple, magenta) spawn naturally in recent updates
+      WHY: Provides visual variety, enables wool color breeding, creates rarity gameplay
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 1
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "color_inheritance"
+    description: |
+      When two sheep breed, their offspring can inherit a mixed color if parents'
+      colors are dye-compatible, or randomly inherit one parent's color if not.
+
+      WHEN: During breeding event between two sheep
+      WHERE: Anywhere
+      WHAT: Lamb inherits color based on dye mixing rules
+           - Compatible colors (e.g., blue + white = light blue): Lamb gets mixed color
+           - Incompatible colors: Lamb randomly inherits one parent's color
+           - Sheared parents still pass on their color
+           - Dyed color is retained after shearing and regrowth
+      WHY: Adds depth to breeding mechanics, enables targeted wool color farming
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 1
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "enhanced_grazing_baby"
+    description: |
+      Baby sheep graze much more frequently than adult sheep, allowing them to
+      regrow wool faster and mature more quickly when eating grass.
+
+      WHEN: Baby sheep are present and hungry
+      WHERE: Anywhere grass is available
+      WHAT: Baby sheep have 1/50 chance per tick to eat grass (vs 1/1000 for adults)
+           Grazing accelerates growth: Baby sheep mature 1 minute faster when grazing
+      WHY: Encourages players to let lambs graze naturally, rewards free-range farming
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 4
+      duration: null
+      affects_others: false
+      world_modification: true
+
+  - name: "rare_pink_sheep"
+    description: |
+      Pink sheep are among the rarest natural spawns in Minecraft. Adult pink sheep
+      have a 0.164% spawn rate, while baby pink sheep are extremely rare at 0.0082%.
+
+      WHEN: During world generation or natural spawning
+      WHERE: Any valid sheep spawn biome
+      WHAT: Pink sheep spawn with extremely low probability
+           Adult pink sheep: ~1 in 610 sheep
+           Baby pink sheep: ~1 in 12,200 sheep (rarest natural mob spawn)
+      WHY: Creates rare collection targets, adds excitement to sheep farming
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 1
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "jeb_rainbow_easter_egg"
+    description: |
+      Naming a sheep "jeb_" (case-sensitive, with underscore) using a name tag
+      causes its wool to continuously cycle through all 16 dye colors in a rainbow
+      pattern. This is purely visual and does not affect behavior or drops.
+
+      WHEN: When a sheep is renamed to "jeb_" using a name tag
+      WHERE: Anywhere
+      WHAT: Sheep's wool texture cycles through all 16 colors continuously
+           - Effect is purely cosmetic
+           - When sheared or killed, drops wool of original color (before naming)
+           - Cannot stack with "Dinnerbone" upside-down effect
+      WHY: Fun Easter egg honoring Jens Bergensten, adds visual novelty
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 10
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "dispenser_shearing"
+    description: |
+      Dispensers containing shears can shear sheep when activated, providing
+      automated wool collection capabilities.
+
+      WHEN: When a dispenser with shears is activated and a sheep is in front
+      WHERE: Anywhere a dispenser is placed facing a sheep
+      WHAT: Dispenser shears sheep, dropping 1-3 wool of the sheep's color
+           - Sheep takes no damage
+           - Sheep becomes sheared (must regrow wool by eating grass)
+           - Works on all sheep colors including dyed sheep
+           - jeb_ sheep drops original color wool, not rainbow
+      WHY: Enables automated wool farms, provides redstone integration
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 5
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "biome_specific_color_spawning"
+    description: |
+      In recent updates, sheep spawn with colors correlated to their biome.
+      Brown sheep spawn more often in sandy biomes, black sheep in chilly biomes,
+      and white sheep in green biomes.
+
+      WHEN: During natural spawning in different biomes
+      WHERE: Various biomes (sandy, chilly, grassland)
+      WHAT: Spawn color distribution is biome-weighted
+           - Sandy biomes: Higher brown sheep spawn rate
+           - Chilly biomes: Higher black sheep spawn rate
+           - Green/grassy biomes: Higher white sheep spawn rate
+           - New natural colors also follow biome patterns (light blue, blue, cyan, yellow, orange, red)
+      WHY: Creates more natural visual integration, encourages exploration for colors
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 1
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "grass_eating_mechanics"
+    description: |
+      Sheep can eat various grass types through specific mechanics with different
+      probabilities and effects.
+
+      WHEN: Periodically when hungry or when grass is nearby
+      WHERE: Anywhere grass blocks or plants are reachable
+      WHAT: Adult sheep: 1/1000 chance per tick to eat grass
+           Baby sheep: 1/50 chance per tick to eat grass (20x more frequent)
+           Can eat: Grass blocks (convert to dirt), short grass, short dry grass,
+                   tall dry grass, ferns (Bedrock only)
+           Cannot eat: Tall grass, large ferns
+           Can eat through blocks lower than full height (e.g., honey blocks)
+           Can eat from inside minecarts
+           Can eat at Y=255 even under single snow layer
+           More than 1 snow layer kills grass, prevents eating
+           If mobGriefing is false: Grass blocks remain unchanged but wool still regrows
+           Wool regrowth timeline: 63% likely after 50 seconds, 90%+ after 2 minutes
+      WHY: Creates renewable wool system, encourages grass management, adds depth to farming
+
+    implementation_hints:
+      trigger_type: "TIME"
+      priority: 4
+      duration: null
+      affects_others: true
+      world_modification: true
+
+  - name: "wool_color_persistence"
+    description: |
+      Dyed sheep retain their color through shearing and wool regrowth. The color
+      is stored as a property of the sheep, not just the current wool state.
+
+      WHEN: After being dyed and then sheared
+      WHERE: Anywhere
+      WHAT: Sheep remember their dyed color permanently
+           - Dyeing a sheep changes its internal color property
+           - Shearing removes wool but sheep retains color in memory
+           - When wool regrows, it grows in the dyed color
+           - Cannot be dyed while sheared (must wait for wool regrowth)
+           - jeb_ sheep drops original color, not rainbow
+      WHY: Simplifies wool farming, allows maintaining colored wool flocks
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 1
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "wheat_follow_behavior"
+    description: |
+      Sheep follow players holding wheat within a 6-block radius, enabling
+      player-directed herd movement.
+
+      WHEN: When a player holds wheat within 6 blocks
+      WHERE: Anywhere
+      WHAT: Sheep move toward player holding wheat
+           - Follow range: 6 blocks radius
+           - Stops following when player exits range or stops holding wheat
+           - Works on adult and baby sheep
+           - Does not override fleeing from danger
+      WHY: Enables herding mechanics, facilitates breeding and pen management
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 6
+      duration: null
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+relationships:
+  predators:
+    - entity: "minecraft:wolf"
+      notes: "Primary predator. Sheep flee when wolves are detected but do not actively avoid them in vanilla behavior. Better Ecology enhances this with alarm calls and group fleeing."
+
+  prey: []
+
+  competitors:
+    - entity: "minecraft:cow"
+      resource: "grass blocks and short grass"
+      interaction: "Both species graze on grass blocks, potentially competing for food in areas with high herbivore density"
+
+    - entity: "minecraft:pig"
+      resource: "short grass and plants"
+      interaction: "Minor competition for plant food sources, though pigs have broader diet including vegetables, carrots, potatoes"
+
+    - entity: "better-ecology:goat"
+      resource: "grass blocks and short grass"
+      interaction: "Direct competition for grazing resources in overlapping biomes. Both convert grass blocks to dirt."
+
+  mutualists: []
+
+  commensals: []
+
+  special:
+    - entity: "minecraft:villager"
+      relationship: "symbiotic_domestication"
+      description: "Sheep may spawn in village shepherd houses, butcher houses, and animal pens. Villagers may breed and keep sheep for wool resources."
+
+    - entity: "minecraft:fox"
+      relationship: "predator_ignores"
+      description: "Foxes do not hunt sheep despite both being in farm/grassland areas. Wolves are the primary natural predator."
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+narrative:
+  summary: |
+    The sheep is a docile, herd-dwelling grazer that forms the backbone of
+    sustainable wool production in Minecraft. As a primary consumer, it converts
+    grass blocks into renewable wool while creating terrain variation through
+    grazing. With 16 color variants, complex breeding inheritance, and unique
+    interactions like the jeb_ rainbow Easter egg, sheep offer both practical
+    resource farming and collection gameplay.
+
+  behavior_overview: |
+    Sheep spend their days wandering in loose herds of 2-4 individuals, periodically
+    stopping to graze on grass blocks. When they eat, they convert lush grass blocks
+    to dirt, gradually altering the landscape over time. Adult sheep are leisurely
+ grazers (1/1000 chance per tick), while hungry babies eat voraciously (1/50 chance
+    per tick) to fuel their rapid growth. When danger approaches in the form of
+    wolves, sheep flee briefly but don't actively avoid predation otherwise.
+
+    Their social nature drives them to cluster together, and holding wheat will
+    attract them within a 6-block radius, making herding simple for players. The
+    remarkable color system—ranging from common white (81.8%) to impossibly rare
+    baby pink (0.0082%)—combined with dye-mixing inheritance mechanics makes
+    selective breeding a rewarding endeavor. Whether it's maintaining a flock of
+    royal purple wool producers or hunting for that elusive natural rainbow jeb_
+    sheep, every flock tells a story.
+
+  ecological_importance: |
+    Sheep serve as critical landscape modifiers and renewable resource providers.
+    Their grazing creates grassland diversity by converting uniform grass blocks
+    into dirt patches, which can slowly regrow through natural spreading. This
+    terrain variation creates visual interest and affects other species' spawning
+    and movement. As the primary prey for wolves, they form the base of the
+    predator-prey dynamic in grassland biomes. Their ability to provide infinite
+    wool through simple grazing makes them essential for sustainable server
+    economies and construction projects.
+
+    Without sheep, wool would be a non-renewable resource (or require killing),
+    grassland biomes would lack their characteristic herds, wolves would lose
+    their primary food source, and the color breeding gameplay layer would vanish
+    entirely. The ecosystem would be noticeably less dynamic and player creativity
+    would be constrained.
+
+  design_notes: |
+    The wool regrowth mechanic is the cornerstone of sheep design—grass must be
+    available for wool to regrow, creating a dependency that links sheep survival
+    to environmental management. The 1/1000 adult grazing rate versus 1/50 baby
+    rate is carefully balanced: babies eat frequently to encourage free-range
+    farming, while adults are slow enough that industrial farms need significant
+    grass area.
+
+    Color inheritance based on dye mixing rules is a brilliant example of emergent
+    gameplay depth. Players can breed for specific colors (e.g., blue + white =
+    light blue) without explicit documentation by understanding Minecraft's dye
+    crafting system. The jeb_ Easter egg demonstrates Mojang's philosophy of
+    adding whimsy without breaking core mechanics—the rainbow is visual only,
+    and drops respect the original color.
+
+    For Better Ecology, key enhancement opportunities include:
+    1. Make hunger affect wool regrowth speed (malnourished sheep regrow slower)
+    2. Tie color spawn rates more strongly to biomes (white in snow, brown in desert)
+    3. Enhance wolf predation so wolves actually consume mutton (currently they just kill)
+    4. Implement carrying capacity based on available grass (too many sheep = overgrazing)
+    5. Add flock cohesion bonuses (sheep stay closer when predators are near)
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 1.0
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: 75          # Grass blocks needed per day
+    provides_to_predator: 80       # Biomass when consumed
+
+  population_target: "Common, 12-20 per plains/forest chunk cluster"
+  removal_impact: "Wool becomes non-renewable, wolves lose primary food source, grasslands become static and unvaried"

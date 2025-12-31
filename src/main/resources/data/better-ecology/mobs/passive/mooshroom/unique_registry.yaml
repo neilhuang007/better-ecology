@@ -1,0 +1,561 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# ============================================================================
+#
+# Mooshroom - A unique cow-mushroom symbiotic mob exclusive to mushroom fields
+# ============================================================================
+#
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:mooshroom"
+  display_name: "Mooshroom"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "HERD"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Fantastical cow-mushroom symbiosis (mycorrhizal mutualism)"
+    ecological_role: "Biome-exclusive fungal symbiote providing renewable mushroom resources; indicator species for rare mushroom fields ecosystem"
+
+  tags: ["fungal_symbiosis", "rare_biome_exclusive", "milkable", "shearable", "dual_variant", "lightning_transformable"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 10
+
+  size:
+    width: 0.9
+    height: 1.4
+
+  biomass:
+    adult: null
+
+  movement:
+    speeds:
+      walk: null
+      run: null
+      swim: null
+      fly: null
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: null
+
+  thirst:
+    enabled: null
+
+  age:
+    baby_duration: null
+    max_age: null
+
+  social:
+    enabled: null
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule: null
+
+  weather:
+    rain: null
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: ["mushroom_fields"]
+      preferred: ["mushroom_fields"]
+      forbidden: []
+    required_nearby:
+      - feature: "mycelium"
+        max_distance: 32
+
+  territory:
+    enabled: null
+    size: null
+
+  shelter:
+    needs_shelter: null
+    shelter_uses: []
+    valid_shelters: []
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "BLOCK"
+        target: "minecraft:mycelium"
+        nutrition: null
+        method: "GRAZE"
+        world_effect:
+          action: "CONVERT"
+          result: "minecraft:dirt"
+
+    secondary: []
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: null
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:player"
+        threat_level: "MEDIUM"
+        detection_range: null
+        response: "FLEE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: null
+    recent_food:
+      enabled: null
+    environment:
+      near_water: null
+      required_biomes: ["mushroom_fields"]
+    requires_shelter: null
+    season: null
+
+  density_effects:
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: null
+      behavior: ""
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: null
+    birth:
+      offspring_count: [1, 1]
+      location_requirement: ""
+
+  parental_care:
+    duration: null
+    behaviors:
+      protects_offspring: null
+      feeds_offspring: null
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "HERD"
+    size:
+      min: 4
+      optimal: 6
+      max: 12
+    leadership:
+      has_leader: null
+      leader_selection: ""
+
+  herd_movement:
+    enabled: null
+
+  communication:
+    alarm_calls:
+      enabled: null
+      types: []
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: null
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: null
+    pollination:
+      enabled: null
+
+  responses:
+    drinking:
+      enabled: null
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 8
+    group_size: [4, 8]
+    conditions:
+      biomes: ["mushroom_fields"]
+      blocks: ["minecraft:mycelium"]
+
+  carrying_capacity:
+    caps:
+      per_chunk: 8
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "NEUTRAL"
+
+  taming:
+    enabled: false
+    items: []
+
+  player_breeding:
+    enabled: true
+    items: ["minecraft:wheat"]
+
+  drops:
+    on_death:
+      - item: "minecraft:leather"
+        count: [0, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+      - item: "minecraft:beef"
+        count: [1, 3]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+  interactions:
+    - action: "milk_bowl"
+      item: "minecraft:bowl"
+      result: "minecraft:mushroom_stew"
+      description: "Milk with bowl to obtain mushroom stew (infinite, no cooldown)"
+
+    - action: "milk_bucket"
+      item: "minecraft:bucket"
+      result: "minecraft:milk_bucket"
+      description: "Milk with bucket to obtain milk (infinite, no cooldown)"
+
+    - action: "shear"
+      item: "minecraft:shears"
+      result: "minecraft:cow"
+      description: "Shear to drop 5 mushrooms and permanently convert to regular cow"
+      drops: ["minecraft:red_mushroom", "minecraft:brown_mushroom"]
+
+    - action: "feed_flower"
+      item: "#small_flowers"
+      result: "suspicious_stew_ready"
+      description: "Feed small flowers to brown variant only for suspicious stew production"
+      variant_restriction: "brown"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.cow.ambient"
+    hurt: "entity.cow.hurt"
+    death: "entity.cow.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "mushroom_spore_puff"
+        frequency: 800
+        trigger: "random"
+
+      - behavior: "tail_swish"
+        frequency: 100
+        trigger: "random"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+unique_behaviors:
+  - name: "dual_variant_system"
+    description: |
+      Mooshrooms exist in two color variants: red (common) and brown (rare).
+
+      WHEN: Natural spawning creates only red variant; brown created via lightning or rare breeding
+      WHERE: Mushroom fields biome exclusively
+      WHAT: Red mooshrooms spawn naturally at 100% rate. Brown mooshrooms never spawn naturally and
+            can only be created through: 1) Lightning strike within 4 blocks of red mooshroom,
+            2) Breeding two reds (1/1024 chance), or 3) Breeding red+brown (50% chance).
+      WHY: Creates rarity hierarchy and rewards exploration/experimentation; brown variant has
+           exclusive suspicious stew production capability.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 100
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "mushroom_stew_production"
+    description: |
+      All mooshrooms produce infinite mushroom stew when milked with a bowl.
+
+      WHEN: Player right-clicks with empty bowl
+      WHERE: Any location, no restrictions
+      WHAT: Instantly produces one mushroom stew item. No cooldown, no consumption of resources.
+            The mooshroom is unchanged and can be milked infinitely.
+      WHY: Provides sustainable food source in rare biome; encourages players to transport
+           and breed mooshrooms for renewable food production.
+
+    implementation_hints:
+      trigger_type: "PLAYER_INTERACTION"
+      priority: 50
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "suspicious_stew_production"
+    description: |
+      Brown mooshrooms can produce suspicious stew with various effects when fed flowers.
+
+      WHEN: 1) Feed small flower to brown mooshroom, 2) Milk with bowl within same interaction
+      WHERE: Any location
+      WHAT: When brown mooshroom is fed any small flower (not tall flowers), it stores that
+            flower's effect internally. The next bowl milking produces suspicious stew with
+            the corresponding status effect. After one suspicious stew production, returns to
+            regular mushroom stew until fed another flower.
+      WHY: Makes brown variant valuable; creates renewable effect-based food system; provides
+           accessible way to obtain specific status effects (regeneration, night vision, etc).
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 60
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "shearing_conversion"
+    description: |
+      Shearing a mooshroom permanently converts it to a regular cow.
+
+      WHEN: Player uses shears on any mooshroom (red or brown)
+      WHERE: Any location
+      WHAT: Instantly drops 5 mushrooms matching the variant's color (red mushrooms from red,
+            brown mushrooms from brown). The mooshroom transforms into a normal cow with explosion
+            particle effect. This transformation is irreversible. The new cow can breed with
+            regular cows and loses all mooshroom-specific abilities.
+      WHY: Creates strategic choice: keep for infinite stew vs. one-time mushroom harvest;
+           prevents players from having both infinite stew AND mushroom farm from same mob.
+
+    implementation_hints:
+      trigger_type: "PLAYER_INTERACTION"
+      priority: 70
+      duration: null
+      affects_others: false
+      world_modification: true
+
+  - name: "lightning_transformation"
+    description: |
+      Lightning strikes near mooshrooms transform them between red and brown variants.
+
+      WHEN: Lightning strikes within 4 blocks of a mooshroom
+      WHERE: Any location (typically mushroom fields during thunderstorms)
+      WHAT: Red mooshrooms transform to brown, brown to red. No damage taken during transformation.
+            Transformation is reversible and can happen multiple times. Can be intentionally
+            triggered using channeling tridents or lightning rods.
+      WHY: Creates method for obtaining brown variant beyond rare breeding chance; rewards
+           players who understand and utilize game mechanics; adds weather-based interaction.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 90
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "breeding_variant_genetics"
+    description: |
+      Breeding mooshrooms follows specific color inheritance patterns with rare mutations.
+
+      WHEN: Two mooshrooms breed using wheat
+      WHERE: Mushroom fields biome (breeding requirement)
+      WHAT: Color inheritance follows these rules:
+            - Red + Red = 1023/1024 red baby, 1/1024 brown baby (rare mutation)
+            - Brown + Brown = 1023/1024 brown baby, 1/1024 red baby (rare mutation)
+            - Red + Brown = 512/1024 red baby, 512/1024 brown baby (50/50 split)
+            Baby mooshrooms spawn without visible mushrooms; mushrooms appear upon reaching adulthood.
+      WHY: Creates breeding mini-game; maintains rarity of brown variant while making it
+           obtainable through patience; prevents uncontrolled brown variant proliferation.
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 65
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "biome_exclusivity"
+    description: |
+      Mooshrooms are completely exclusive to the mushroom fields biome.
+
+      WHEN: Natural spawning, breeding, and general existence
+      WHERE: Mushroom fields biome ONLY (mycelium surface blocks)
+      WHAT: Mooshrooms only spawn naturally on mycelium blocks in mushroom fields. They cannot
+            spawn in any other biome. If transported to other biomes, they survive but cannot
+            breed (breeding requires mushroom fields). They avoid leaving the biome naturally.
+      WHY: Mushroom fields are extremely rare (0.15% of world); mooshrooms serve as the iconic
+           mob for this biome; creates exploration incentive and makes finding mushroom fields
+           rewarding; represents unique symbiotic ecosystem.
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: 95
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "baby_mushroom_growth"
+    description: |
+      Baby mooshrooms develop their mushroom covering upon reaching adulthood.
+
+      WHEN: Baby mooshroom grows to adult (20 minutes real-time, can be accelerated with wheat)
+      WHERE: Any location
+      WHAT: Baby mooshrooms spawn without visible mushrooms on their back. As they grow to adult
+            size, mushrooms gradually appear and become fully visible at adulthood. Before adulthood,
+            baby mooshrooms cannot be milked or sheared.
+      WHY: Visual representation of growth; adds biological realism to the symbiosis; prevents
+           instant access to mooshroom abilities from birth.
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 40
+      duration: 24000
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+relationships:
+  predators: []
+
+  prey: []
+
+  competitors: []
+
+  mutualists:
+    - entity: "minecraft:mycelium_block"
+      benefit_given: "Nutrient cycling through grazing waste"
+      benefit_received: "Symbiotic mushroom growth and habitat requirement"
+
+  commensals: []
+
+  special:
+    - entity: "minecraft:cow"
+      relationship: "converted_form"
+      description: "Shearing a mooshroom converts it to a regular cow. Converted cows can breed with normal cows but lose all mooshroom abilities."
+
+    - entity: "minecraft:lightning_bolt"
+      relationship: "transformative_trigger"
+      description: "Lightning within 4 blocks transforms mooshroom between red and brown variants without dealing damage."
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+narrative:
+  summary: |
+    The Mooshroom is a fantastical symbiotic organism found exclusively in the rare mushroom fields biome.
+    Representing a mutualistic relationship between a cow and mushrooms, this mob provides renewable
+    mushroom stew resources and serves as the iconic inhabitant of one of Minecraft's safest biomes.
+
+  behavior_overview: |
+    Mooshrooms live in peaceful herds of 4-8 individuals roaming the mycelium-covered islands of
+    mushroom fields. They spend their days grazing on mycelium and mushrooms, occasionally pausing
+    to shake spores from their fungal covering. Like regular cows, they follow players holding wheat
+    and can be bred for population growth. Their most remarkable behaviors involve their unique
+    interactions with players: producing infinite mushroom stew when milked with a bowl, regular milk
+    when milked with a bucket, and permanently converting to a normal cow (dropping mushrooms) when
+    sheared. Brown mooshrooms, the rare variant, can be fed small flowers to produce suspicious stew
+    with various status effects. During thunderstorms, lightning strikes transform red mooshrooms to
+    brown and vice versa, creating opportunities for players to obtain the valuable brown variant.
+
+  ecological_importance: |
+    As the exclusive large passive mob of mushroom fields, mooshrooms define this rare biome's ecosystem.
+    They serve as an indicator species—their presence confirms the player has found a mushroom fields
+    island. Their grazing converts mycelium to dirt, creating soil patches in the fungal landscape.
+    Most importantly, they provide a completely renewable food source (milk, mushroom stew, suspicious
+    stew) in a biome that naturally lacks hostile mobs, making mushroom fields ideal for establishing
+    safe bases and sustainable food production. Without mooshrooms, mushroom fields would lose their
+    most distinctive feature and renewable resource capability.
+
+  design_notes: |
+    Key implementation priorities:
+    1. Enforce strict biome exclusivity—mooshrooms should not naturally exist outside mushroom fields
+    2. Maintain brown variant rarity through careful breeding mechanics (1/1024 mutation chance)
+    3. Ensure lightning transformation deals zero damage and is reversible
+    4. Implement flower feeding system exclusively for brown variant with proper state management
+    5. Make shearing conversion clearly permanent and communicated to players via particles
+    6. Balance infinite stew production against one-time mushroom harvest decision point
+    7. Baby mooshrooms must visually lack mushrooms until adulthood
+
+    Balance considerations:
+    - Extreme biome rarity (0.15% of world) justifies infinite renewable resources
+    - Brown variant's suspicious stew capability is powerful but limited by single-use per flower
+    - Shearing creates interesting strategic choice: infinite stew vs. one-time mushroom farm
+    - Cannot breed with cows maintains biome exclusivity and prevents ecosystem contamination
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 1.0
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: null
+    provides_to_predator: null
+
+  population_target: "Rare, 4-8 per mushroom fields island (biome is 0.15% of world)"
+
+  removal_impact: "Mushroom fields lose primary renewable food source and biome identity; players lose access to infinite mushroom stew and suspicious stews"

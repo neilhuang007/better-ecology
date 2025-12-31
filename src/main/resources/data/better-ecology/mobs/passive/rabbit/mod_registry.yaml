@@ -1,0 +1,872 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - RABBIT BEHAVIOR CONFIGURATION
+# Version: 2.0
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:rabbit"
+  display_name: "Rabbit"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "CREPUSCULAR"
+
+  reference:
+    real_world_analog: "European Rabbit / Cottontail Rabbit"
+    ecological_role: "Small prey animal that grazes on vegetation and crops, providing food for predators"
+
+  tags: ["small_prey", "crop_raider", "herbivore", "fast"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  health:
+    base: 1.5                    # 3 HP total
+    baby_multiplier: 0.5
+
+  size:
+    width: 0.4
+    height: 0.5
+    baby_scale: 0.5
+
+  biomass:
+    adult: 15                    # Small prey animal
+    baby: 5
+    transfer_efficiency: 0.1
+
+  movement:
+    speeds:
+      walk: 0.3
+      run: 0.55                  # Very fast when fleeing
+      swim: 0.15
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: true
+      jump_height: 1.5           # Good jumper
+      avoids_water: true
+      avoids_cliffs: true
+      cliff_threshold: 3
+
+    conditional_modifiers:
+      baby: 0.7
+      elderly: 0.8
+      injured: 0.6
+      hungry: 0.8
+      fleeing: 1.8               # Very fast when fleeing
+      hunting: 1.0
+      carrying_offspring: 0.7
+      in_water_nonaquatic: 0.4
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 80
+    decay_rate: 0.03             # Fast metabolism
+
+    thresholds:
+      satiated: 80
+      hungry: 50
+      very_hungry: 25
+      starving: 10
+
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 200
+
+  thirst:
+    enabled: false
+
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+
+    gain_when_satiated: 0.01
+    loss_when_hungry: 0.02
+    loss_when_starving: 0.1
+
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.6           # Recovers quickly
+
+    costs:
+      sprinting: 0.4
+      hunting: 0.0
+      fleeing: 0.5
+      flying: 0.0
+      swimming: 0.3
+
+  age:
+    enabled: true
+    baby_duration: 24000         # 20 minutes
+    maturity_age: 24000
+    elderly_age: null
+    max_age: null
+
+  social:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  daily_cycle:
+    # Crepuscular - active at dawn and dusk
+    schedule:
+      - time: [0, 3000]          # Dawn - highly active
+        activity: 1.0
+        label: "dawn"
+      - time: [3000, 9000]       # Mid-morning to noon - reduced
+        activity: 0.4
+        label: "morning_rest"
+      - time: [9000, 12000]      # Afternoon
+        activity: 0.3
+        label: "afternoon_rest"
+      - time: [12000, 14000]     # Dusk - highly active
+        activity: 1.0
+        label: "dusk"
+      - time: [14000, 22500]     # Night - reduced
+        activity: 0.2
+        label: "night"
+      - time: [22500, 24000]     # Pre-dawn
+        activity: 0.6
+        label: "pre_dawn"
+
+    low_activity_behavior:
+      action: "rest"
+      seek_shelter: true
+      reduced_awareness: true
+      awareness_multiplier: 0.5
+
+  weather:
+    rain:
+      activity_multiplier: 0.5
+      seek_shelter: true
+      shelter_priority: 4
+    thunder:
+      activity_multiplier: 0.2
+      seek_shelter: true
+      panic_chance: 0.3
+    snow:
+      activity_multiplier: 0.7
+      seek_shelter: true
+    clear:
+      activity_multiplier: 1.0
+
+  seasons:
+    enabled: false
+
+  lunar:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  habitat:
+    biomes:
+      allowed: []                # All biomes except ocean
+      preferred: ["plains", "flower_forest", "meadow", "forest", "birch_forest", "taiga", "snowy_plains", "desert"]
+      forbidden: ["ocean", "deep_ocean", "river", "frozen_ocean"]
+
+    altitude:
+      min: -64
+      max: 320
+      preferred: [60, 90]
+
+    required_nearby: []
+
+  territory:
+    enabled: false
+
+  home_range:
+    enabled: true
+    radius: 48
+    has_home_point: true         # Returns to burrow area
+    home_type: "BURROW"
+
+  shelter:
+    needs_shelter: true
+    shelter_uses: ["sleeping", "breeding", "baby_rearing", "hiding"]
+
+    valid_shelters:
+      - type: "vegetation"
+        description: "Dense vegetation, tall grass, or under bushes"
+        blocks: ["tall_grass", "fern", "large_fern", "leaves"]
+        min_enclosure: 0.3
+      - type: "burrow"
+        description: "Natural or player-made holes"
+        must_dig: false
+        dig_blocks: ["dirt", "grass_block"]
+      - type: "cave"
+        description: "Small cave entrances or overhangs"
+        min_enclosure: 0.5
+
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  food_sources:
+    primary:
+      - type: "BLOCK"
+        target: "minecraft:carrots"
+        nutrition: 40
+        saturation: 8000
+        consumption_time: 60
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 8
+        health_effect: 0
+
+      - type: "ITEM"
+        target: "minecraft:carrot"
+        nutrition: 40
+        saturation: 8000
+        consumption_time: 60
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: null
+        condition_gain: 8
+        health_effect: 0
+
+      - type: "BLOCK"
+        target: "minecraft:dandelion"
+        nutrition: 25
+        saturation: 5000
+        consumption_time: 40
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 5
+        health_effect: 0
+
+    secondary:
+      - type: "BLOCK"
+        target: "minecraft:grass"
+        nutrition: 15
+        saturation: 3000
+        consumption_time: 40
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 3
+        health_effect: 0
+
+      - type: "BLOCK"
+        target: "#minecraft:flowers"
+        nutrition: 20
+        saturation: 4000
+        consumption_time: 40
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 4
+        health_effect: 0
+
+    emergency:
+      - type: "BLOCK"
+        target: "minecraft:tall_grass"
+        nutrition: 10
+        saturation: 2000
+        consumption_time: 30
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition_gain: 2
+        health_effect: 0
+
+  foraging:
+    search_radius:
+      base: 16
+      when_hungry: 32
+      when_starving: 64
+    search_interval: 150         # Searches frequently
+
+    memory:
+      remembers_locations: true
+      memory_duration: 24000
+      remembers_depleted: true
+      avoids_depleted_for: 12000
+      shares_with_group: false
+
+    sustainability:
+      enabled: false             # Rabbits don't practice sustainable grazing
+      dont_deplete_fully: false
+      minimum_remaining: 0
+      patch_return_delay: 0
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:wolf"
+        threat_level: "EXTREME"
+        detection_range: 28
+        response: "FLEE"
+        flee:
+          speed_multiplier: 1.8
+          flee_distance: 64
+          flee_toward: "SHELTER"
+          zigzag: true
+
+      - entity: "minecraft:fox"
+        threat_level: "EXTREME"
+        detection_range: 24
+        response: "FLEE"
+        flee:
+          speed_multiplier: 1.8
+          flee_distance: 56
+          flee_toward: "SHELTER"
+          zigzag: true
+
+      - entity: "minecraft:ocelot"
+        threat_level: "HIGH"
+        detection_range: 20
+        response: "FLEE"
+        flee:
+          speed_multiplier: 1.6
+          flee_distance: 48
+          flee_toward: "SHELTER"
+          zigzag: true
+
+    default_response:
+      detection_range: 16
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.5
+        flee_distance: 48
+        flee_toward: "SHELTER"
+        zigzag: true
+
+      freeze:
+        duration: [40, 80]
+        break_on_approach: true
+        break_distance: 8
+
+      alarm:
+        gives_alarm: false       # Rabbits don't give vocal alarms
+        alarm_radius: 0
+        alarm_triggers_group_flee: false
+
+    all_clear:
+      predator_distance: 72
+      time_since_seen: 600
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: true
+  method: "SEXUAL"
+
+  requirements:
+    min_age: 24000
+    max_age: null
+    min_health: 0.6              # Can breed even with lower health
+    min_condition: 60
+    min_hunger: 50
+
+    recent_food:
+      enabled: true
+      time_window: 12000
+      meals_required: 2
+
+    environment:
+      near_water: false
+      water_max_distance: 32
+      required_biomes: []
+      required_blocks_nearby: []
+      min_light: 0
+      max_light: 15
+
+    requires_shelter: false
+    shelter_type: null
+
+    time_of_day: null
+    season: null
+    weather: null
+
+    mate_required: true
+    mate_max_distance: 16
+
+  density_effects:
+    enabled: true
+    check_radius: 64
+
+    density_curve:
+      - count: 2
+        multiplier: 1.5
+      - count: 4
+        multiplier: 1.2
+      - count: 8
+        multiplier: 1.0
+      - count: 16
+        multiplier: 0.6
+      - count: 24
+        multiplier: 0.2
+      - count: 32
+        multiplier: 0.0
+
+  mate_selection:
+    search_radius: 32
+    search_interval: 800
+
+    preferences:
+      prefer_healthy: true
+      prefer_good_condition: true
+      avoid_relatives: false
+      relative_recognition_duration: 0
+
+    courtship:
+      enabled: false
+      behavior: null
+      duration: 0
+      can_reject: false
+      rejection_cooldown: 0
+
+  breeding:
+    cooldown: 18000              # Breed frequently (15 minutes)
+
+    gestation:
+      type: "INSTANT"
+      duration: 0
+      behavior_during: []
+
+    birth:
+      offspring_count: [1, 3]    # Can have multiple babies
+      condition_affects_count: true
+      location_requirement: null
+
+  parental_care:
+    enabled: true
+    duration: 12000              # Babies independent quickly
+
+    behaviors:
+      protects_offspring: false  # Rabbits don't defend babies
+      protection_aggression: 0.0
+      protection_radius: 0
+
+      feeds_offspring: false
+      teaches_offspring: false
+      carries_offspring: false
+
+    offspring_behavior:
+      follows_parent: true
+      follow_distance: 3
+      max_separation: 12
+      separation_distress: false
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+
+    composition:
+      mixed_sex: true
+      mixed_age: true
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  herd_movement:
+    enabled: false
+
+  communication:
+    alarm_calls:
+      enabled: true
+      types: ["THUMP"]
+      radius: 12
+      chain_calling: true
+      thump_interval: 10
+      thump_cooldown: 60
+      max_thumps: 3
+      detection_range: 16
+      min_distance: 4
+
+    contact_calls:
+      enabled: false
+      when: []
+      radius: 0
+
+    mating_calls:
+      enabled: false
+      radius: 0
+      time: null
+
+  behaviors:
+    greeting: false
+    allogrooming: false
+    play: false
+    huddling: false
+    dominance_hierarchy: false
+
+  group_benefits:
+    predator_detection_bonus: 0.0
+    foraging_efficiency_bonus: 0.0
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  terrain:
+    enabled: true
+    actions:
+      - trigger: "foraging"
+        description: "Destroys crop blocks when eating from farms"
+        action: "DESTROY"
+        target_blocks: ["minecraft:carrots", "minecraft:wheat"]
+        result_block: null
+        frequency: 0.8
+        radius: 1
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+      seeds: []
+      method: null
+      dispersal_radius: 0
+
+    pollination:
+      enabled: false
+      flowers: []
+      radius: 0
+
+    nutrient_cycling:
+      enabled: false
+      fertilizes: false
+      fertilize_radius: 0
+
+    decomposition:
+      enabled: false
+      decomposes: []
+      result: null
+
+  responses:
+    drinking:
+      enabled: false
+      frequency: 0
+      water_blocks: []
+      duration: 0
+      congregates: false
+
+    temperature:
+      heat_seek_shade: true
+      heat_seek_water: false
+      cold_seek_shelter: true
+      cold_huddling: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  spawning:
+    weight: 10
+    group_size: [2, 3]
+
+    conditions:
+      blocks: ["grass_block", "snow", "sand"]
+      biomes: ["plains", "desert", "flower_forest", "taiga", "meadow", "forest", "birch_forest", "snowy_plains"]
+      light: [9, 15]
+      altitude: null
+      time: null
+      weather: null
+
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 12              # Can be numerous
+      regional: null
+
+    resources:
+      enabled: false
+      requirements: []
+
+    over_capacity:
+      - threshold: 1.2
+        effects: ["reduced_breeding"]
+      - threshold: 1.5
+        effects: ["starvation", "dispersal"]
+      - threshold: 2.0
+        effects: ["disease", "aggression"]
+
+  dispersal:
+    enabled: true
+    triggers: ["adulthood", "overcrowding"]
+    distance: [96, 256]
+
+  mortality:
+    old_age:
+      enabled: false
+      max_age: null
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+      base_chance: 0.0
+      crowding_multiplier: 0.0
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  distances:
+    detection: 16
+    caution: 10
+    flee: 4
+
+  habituation:
+    enabled: true
+    rate: 0.02
+    decay: 0.001
+    max_habituation: 0.5
+    habituated_flee_distance: 2
+
+  taming:
+    enabled: false
+    items: []
+    chance: 0.0
+    requires_habituation: false
+
+  player_breeding:
+    enabled: true
+    items: ["minecraft:carrot", "minecraft:golden_carrot", "minecraft:dandelion"]
+    bypasses_conditions: false
+
+  drops:
+    on_death:
+      - item: "minecraft:rabbit_hide"
+        count: [0, 1]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+      - item: "minecraft:rabbit"
+        count: [0, 1]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+      - item: "minecraft:rabbit_foot"
+        count: [0, 1]
+        chance: 0.1
+        requires_player_kill: false
+        looting_bonus: 0.03
+
+    on_interaction: []
+
+  interactions: []
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  sounds:
+    ambient: "entity.rabbit.ambient"
+    hurt: "entity.rabbit.hurt"
+    death: "entity.rabbit.death"
+    baby: "entity.rabbit.ambient"
+    alarm: null
+    mating: null
+    eating: null
+
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "nose_twitch"
+        frequency: 100
+        trigger: "random"
+
+      - behavior: "ear_rotation"
+        frequency: 80
+        trigger: "alert"
+
+      - behavior: "stand_on_hind_legs"
+        frequency: 200
+        trigger: "scanning"
+
+      - behavior: "groom"
+        frequency: 300
+        trigger: "safe"
+
+  personality_traits:
+    boldness:
+      base: 0.2                  # Very timid
+      variation: 0.15
+    activity:
+      base: 0.6
+      variation: 0.2
+    sociability:
+      base: 0.3
+      variation: 0.2
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+
+ai_priority_framework:
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  physiological:
+    critical_health: 3
+    drink_water: 4
+    eat_food: 5
+    find_shelter: 6
+
+  reproduction:
+    care_for_offspring: 7
+    breed: 8
+    find_mate: 9
+
+  social:
+    group_cohesion: 10
+    social_interaction: 11
+
+  hunting:
+    hunt_prey: 12
+
+  location:
+    location_triggered: 13
+    territory_patrol: 14
+
+  default:
+    wander: 15
+    idle: 16
+    rest: 17
+
+
+# ============================================================================
+# SYSTEM 15: UNIQUE BEHAVIOR FRAMEWORK
+# ============================================================================
+
+unique_behavior_template:
+  structure:
+    name: ""
+    description: ""
+    triggers: []
+    requirements:
+      all_of: []
+      any_of: []
+      none_of: []
+    actions: []
+    effects:
+      on_self: []
+      on_others: []
+      on_world: []
+    priority: 10
+    duration: null
+    cooldown: null
+    interruptible: true
+
+# ============================================================================
+# SYSTEM 15: ANIMAL-ANIMAL INTERACTIONS
+# ============================================================================
+# Rabbits are prey animals hunted by wolves and foxes
+# ============================================================================
+
+interaction:
+  predators:
+    - "minecraft:wolf"
+    - "minecraft:fox"
+    - "minecraft:cat"
+
+  prey: []
+  symbiotic_partners: []
+  competitors: []
+  herd_compatible: []
+
+  relationship_decay_rate: 0.002
+  trust_build_rate: 0.01
+  grudge_build_rate: 0.01
+
+  gives_warning_calls: true            # Rabbits thump to warn others
+  warning_cooldown: 60
+
+  can_mourn: false
+  can_grieve: false
+  can_play: true                       # Baby rabbits play (hop)
+  can_be_altruistic: false
+  can_teach: false
+

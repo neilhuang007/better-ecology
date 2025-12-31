@@ -1,0 +1,532 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# Mob: Ocelot
+# ============================================================================
+#
+# This file defines a specific mob by:
+# 1. Overriding defaults from the Generalized Template
+# 2. Providing natural language descriptions for unique behaviors
+# 3. Specifying relationships with other mobs
+#
+# INSTRUCTIONS FOR AI:
+# - Read the Generalized Template first to understand all systems
+# - Values here OVERRIDE template defaults
+# - Empty/null values mean "use template default"
+# - Natural language descriptions should be interpreted and implemented
+# - [UNIQUE] sections require custom implementation logic
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:ocelot"
+  display_name: "Ocelot"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "SECONDARY_CONSUMER"
+    diet_type: "CARNIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "CREPUSCULAR"
+
+  reference:
+    real_world_analog: "Ocelot (Leopardus pardalis)"
+    ecological_role: "Small jungle predator controlling chicken and baby turtle populations"
+
+  tags: ["jungle", "feline", "shy", "creeper_deterrent", "trust_based"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: null
+  size:
+    width: null
+    height: null
+  biomass:
+    adult: null
+  movement:
+    speeds:
+      walk: null
+      run: null
+      swim: null
+      fly: null
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: null
+  thirst:
+    enabled: null
+  age:
+    baby_duration: null
+    max_age: null
+  social:
+    enabled: null
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule: null
+
+  weather:
+    rain: null
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: []
+      forbidden: []
+    required_nearby: []
+
+  territory:
+    enabled: null
+    size: null
+
+  shelter:
+    needs_shelter: null
+    shelter_uses: []
+    valid_shelters: []
+
+  location_triggers:
+    enabled: false
+    triggers: []
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "ENTITY"
+        target: "minecraft:chicken"
+        nutrition: null
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: null
+
+      - type: "ENTITY"
+        target: "minecraft:turtle"
+        nutrition: null
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: null
+        condition: "only_babies"
+
+    secondary:
+      - type: "ITEM"
+        target: "minecraft:cod"
+        nutrition: null
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: null
+
+      - type: "ITEM"
+        target: "minecraft:salmon"
+        nutrition: null
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: null
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: null
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: true
+
+    prey:
+      targets: ["minecraft:chicken", "minecraft:turtle"]
+
+      selection_rules:
+        avoid_babies: false
+        sustainable_hunting:
+          enabled: null
+          min_prey_count: null
+
+    hunting:
+      method: "STALK_AND_POUNCE"
+
+  as_prey:
+    enabled: true
+
+    predators: []
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: null
+    recent_food:
+      enabled: null
+    environment:
+      near_water: null
+      required_biomes: []
+    requires_shelter: null
+    season: null
+
+  density_effects:
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: null
+      behavior: ""
+
+  breeding:
+    gestation:
+      type: null
+      duration: null
+    birth:
+      offspring_count: null
+      location_requirement: ""
+
+  parental_care:
+    duration: null
+    behaviors:
+      protects_offspring: null
+      feeds_offspring: null
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: ""
+    size:
+      min: null
+      optimal: null
+      max: null
+    leadership:
+      has_leader: null
+      leader_selection: ""
+
+  herd_movement:
+    enabled: null
+
+  communication:
+    alarm_calls:
+      enabled: null
+      types: []
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: null
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: null
+    pollination:
+      enabled: null
+
+  responses:
+    drinking:
+      enabled: null
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: null
+    group_size: null
+    conditions:
+      biomes: []
+      blocks: []
+
+  carrying_capacity:
+    caps:
+      per_chunk: null
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  taming:
+    enabled: true
+    items:
+      - item: "minecraft:cod"
+        trust_chance: 0.33
+      - item: "minecraft:salmon"
+        trust_chance: 0.33
+
+  player_breeding:
+    enabled: true
+    items:
+      - item: "minecraft:cod"
+      - item: "minecraft:salmon"
+
+  drops:
+    on_death: []
+
+  interactions: []
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.ocelot.ambient"
+    hurt: "entity.ocelot.hurt"
+    death: "entity.ocelot.death"
+
+  idle_behaviors:
+    behaviors: []
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+# Describe behaviors unique to this mob that aren't covered by standard systems.
+# Use natural language - AI should interpret and implement appropriate logic.
+# ============================================================================
+
+unique_behaviors:
+  - name: "trust_based_approach"
+    description: |
+      Ocelots have a unique trust mechanic where they approach players holding fish
+      but flee if the player moves too quickly or looks around abruptly.
+
+      WHEN: Player holds raw cod or salmon within 10 blocks
+      WHERE: Any location, during any time
+      WHAT: Ocelot enters "begging mode" and slowly approaches player within 6 blocks.
+           Will flee if player moves quickly, turns head abruptly within 6 blocks,
+           or stops holding fish. Won't re-enter begging mode for 15 seconds after fleeing.
+      WHY: Creates cautious, realistic taming mechanic that rewards patient behavior
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 5
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "sneak_attack_pounce"
+    description: |
+      Ocelots stalk prey before attacking with a sudden pounce from a distance.
+
+      WHEN: Hunting chicken or baby turtle, prey detected within 15 blocks
+      WHERE: Any jungle biome
+      WHAT: Ocelot enters sneaking mode and stalks prey until within 4 blocks,
+           then sprints to attack. Can kill prey through fences, fence gates,
+           or doors if prey is pressed against them.
+      WHY: Realistic feline hunting behavior, creates engaging predator-prey interactions
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 8
+      duration: null
+      affects_others: true
+      world_modification: false
+
+  - name: "fall_damage_immunity"
+    description: |
+      Ocelots are immune to fall damage but still actively avoid falling.
+
+      WHEN: Any fall occurs
+      WHERE: Any location
+      WHAT: Ocelot takes no fall damage regardless of height. Pathfinding AI
+           still treats falls as undesirable and avoids cliffs when possible.
+      WHY: Represents feline agility while maintaining sensible pathfinding
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 15
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "sprinting_ability"
+    description: |
+      Ocelots can sprint, making them one of the few mobs with this ability.
+
+      WHEN: Fleeing from player or chasing prey
+      WHERE: Any location
+      WHAT: Ocelot moves at 1.8x normal speed when fleeing or hunting.
+           Sprinting consumes energy and cannot be sustained indefinitely.
+      WHY: Makes ocelots elusive and difficult to catch, enhances hunting capability
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 3
+      duration: null
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+# Describe relationships with other specific mobs beyond predator/prey.
+# ============================================================================
+
+relationships:
+  predators: []
+
+  prey:
+    - entity: "minecraft:chicken"
+      notes: "Primary prey, hunted via stalk-and-pounce method"
+
+    - entity: "minecraft:turtle"
+      notes: "Only hunts baby turtles, avoids adults"
+
+  competitors: []
+
+  mutualists: []
+
+  commensals: []
+
+  special:
+    - entity: "minecraft:creeper"
+      relationship: "FEAR_INDUCTION"
+      description: |
+        Creepers actively avoid ocelots, maintaining a minimum distance of 6 blocks.
+        This is a one-sided relationship - ocelots are indifferent to creepers.
+        Creepers already in detonation sequence won't flee unless player leaves
+        blast radius. This makes ocelots effective defensive animals around structures.
+
+    - entity: "minecraft:phantom"
+      relationship: "FEAR_INDUCTION"
+      description: |
+        In Bedrock Edition, phantoms stay 16 blocks away from ocelots.
+        Java Edition does not have this mechanic. Consider implementing as an
+        optional feature for consistency across platforms.
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+# Free-form description for AI to understand this mob's "character"
+# ============================================================================
+
+narrative:
+  summary: |
+    The ocelot is a shy, elusive jungle feline that occupies a unique niche as
+    both a predator of small animals and a deterrent to creepers. Unlike domestic
+    cats, ocelots cannot be truly tamed - only trusted, remaining independent
+    wild hunters that tolerate human presence.
+
+  behavior_overview: |
+    Ocelots are crepuscular hunters most active at dawn and dusk, spending much
+    of the day resting in dense jungle vegetation. They are solitary creatures,
+    operating alone except during brief breeding encounters. When hunting, they
+    display remarkable patience, stalking prey like chickens and baby turtles
+    with slow, deliberate movements before closing the distance with a sudden
+    burst of speed. Their hunting prowess is enhanced by their ability to sprint
+    and immunity to fall damage, allowing them to navigate the vertical jungle
+    terrain with ease.
+
+    Their relationship with players is complex. Wild ocelots are extremely wary,
+    fleeing from any sudden movement or direct eye contact within 6 blocks.
+    However, they can be cautiously approached by players holding raw cod or
+    salmon. If the player remains still and patient, the ocelot may overcome its
+    fear enough to accept the food, gradually building trust through repeated
+    feedings. Even trusting ocelots remain independent - they do not follow
+    commands, sit on request, or teleport to players like tamed cats.
+
+    Perhaps their most unique ecological role is as a creeper deterrent. Creepers
+    instinctively fear ocelots and maintain a 6-block distance, making trusting
+    ocelots valuable guardians around player structures. This relationship is
+    entirely one-sided; ocelots are completely indifferent to creepers.
+
+  ecological_importance: |
+    As the primary predator of chickens and baby turtles in jungle biomes,
+    ocelots help control populations that might otherwise grow unchecked.
+    Their removal would lead to overpopulation of these prey species, which
+    could negatively impact vegetation and other wildlife. Their role as
+    creeper deterrents, while not ecologically "natural," provides an important
+    gameplay function that encourages players to protect and breed them.
+
+    Ocelots occupy the middle tier of the jungle food web - predators to small
+    animals, but prey themselves to larger predators (though Minecraft has no
+    natural ocelot predators in vanilla). Their hunting success rate of 0.9
+    prey per kilometer in the real world suggests they are highly efficient
+    hunters, a trait reflected in their Minecraft counterpart's 45% base
+    hunting success rate with significant bonuses for weak, isolated, or young
+    prey.
+
+  design_notes: |
+    Critical distinction: Ocelots are NOT tameable like cats. They can only gain
+    trust, which stops them from fleeing but grants no control. Trusting ocelots
+    still wander independently and must be confined with leads or enclosures.
+    In Java Edition, they can still despawn unless named or placed in a boat -
+    this is intentional and reflects their wild nature.
+
+    The trust mechanic should feel earned - only 33% chance per fish, with a
+    15-second cooldown if the ocelot flees. Players must be patient and still,
+    rewarding careful, slow movements over rushing.
+
+    When implementing the creeper fear mechanic, ensure the flee distance is
+    checked before the creeper's explosion priming. Once a creeper starts
+    detonating, it should not interrupt the sequence unless the player leaves
+    the blast radius.
+
+    The stalking behavior should involve a visible state change to sneaking
+    when prey is detected, creating tension before the pounce. The ability to
+    attack through fences is a unique feature that should be preserved as it
+    reflects ocelots' ability to swipe prey through barriers.
+
+    Baby ocelots spawning with adults (5% chance) and the rare occurrence of
+    two babies spawning together adds important variety to natural spawning.
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+# Quick-reference values for ecosystem balancing
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 0.6
+  breeding_rate_multiplier: 0.7
+  mortality_rate_multiplier: 1.2
+
+  energy_flow:
+    daily_requirement: 35
+    provides_to_predator: 50
+
+  population_target: "Rare, 1-2 per jungle chunk, maximum 4-6 per regional area"
+
+  removal_impact: "Chicken and baby turtle populations increase significantly, creeper defense around jungle structures eliminated"

@@ -1,0 +1,708 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - GENERALIZED BEHAVIOR TEMPLATE
+# Version: 2.0
+# Mob: TADPOLE
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:tadpole"
+  display_name: "Tadpole"
+
+  # Ecological classification
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "FILTER_FEEDER"
+    social_type: "COLONY"
+    activity_pattern: "DIURNAL"
+
+  # Reference information
+  reference:
+    real_world_analog: "Frog tadpole"
+    ecological_role: "Aquatic primary consumer, intermediate life stage of frogs, food source for aquatic predators"
+
+  # Tags for system filtering
+  tags: ["aquatic", "juvenile", "metamorphic"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  # Health
+  health:
+    base: 3                    # 6 HP = 3 hearts
+    baby_multiplier: 1.0       # Tadpoles are always "baby" stage
+
+  # Size (affects hitbox and various calculations)
+  size:
+    width: 0.4
+    height: 0.3
+    baby_scale: 1.0
+
+  # Biomass - abstract unit for food chain calculations
+  biomass:
+    adult: 5                   # Very small creature
+    baby: 5
+    transfer_efficiency: 0.1
+
+  # Movement capabilities
+  movement:
+    speeds:
+      walk: 0.0                # Cannot walk on land
+      run: 0.0
+      swim: 0.15               # Slow swimmer
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: false
+      jump_height: 0.0
+      avoids_water: false
+      avoids_cliffs: false
+      cliff_threshold: 0
+
+    # Speed modifiers applied conditionally
+    conditional_modifiers:
+      baby: 1.0
+      elderly: 1.0
+      injured: 0.8
+      hungry: 0.9
+      fleeing: 1.3
+      hunting: 1.0
+      carrying_offspring: 1.0
+      in_water_nonaquatic: 1.0
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  # Hunger system
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 80
+    decay_rate: 0.015          # Slower decay for filter feeder
+
+    # Thresholds that trigger behaviors
+    thresholds:
+      satiated: 80
+      hungry: 50
+      very_hungry: 25
+      starving: 10
+
+    # Starvation damage
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 300
+
+  # Thirst system (optional - set enabled: false to disable)
+  thirst:
+    enabled: false             # Lives in water
+
+  # Body condition (overall fitness - affects breeding, survival)
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+
+    gain_when_satiated: 0.02
+    loss_when_hungry: 0.03
+    loss_when_starving: 0.15
+
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  # Energy/Stamina (for actions like sprinting, hunting)
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.6
+
+    costs:
+      sprinting: 0.2
+      hunting: 0.0
+      fleeing: 0.3
+      flying: 0.0
+      swimming: 0.1
+
+  # Age tracking
+  age:
+    enabled: true
+    baby_duration: 24000       # Always remains tadpole visually
+    maturity_age: 24000        # Metamorphosis time
+    elderly_age: null
+    max_age: 24000             # Transforms into frog
+
+  # Social needs (for social species)
+  social:
+    enabled: true              # Colony species
+    max_value: 100
+    decay_rate: 0.005
+    recovery_rate: 0.15
+    loneliness_threshold: 40
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  # Daily cycle
+  daily_cycle:
+    # Activity levels by time of day
+    schedule:
+      - time: [0, 6000]         # Dawn to noon
+        activity: 1.0
+        label: "morning"
+      - time: [6000, 12000]     # Noon to dusk
+        activity: 1.0
+        label: "afternoon"
+      - time: [12000, 13500]    # Dusk
+        activity: 0.9
+        label: "dusk"
+      - time: [13500, 22500]    # Night
+        activity: 0.6
+        label: "night"
+      - time: [22500, 24000]    # Pre-dawn
+        activity: 0.8
+        label: "pre_dawn"
+
+    # What "low activity" means
+    low_activity_behavior:
+      action: "REST"
+      seek_shelter: false
+      reduced_awareness: true
+      awareness_multiplier: 0.6
+
+  # Weather responses
+  weather:
+    rain:
+      activity_multiplier: 1.0   # No effect, already in water
+      seek_shelter: false
+      shelter_priority: 0
+    thunder:
+      activity_multiplier: 0.8
+      seek_shelter: false
+      panic_chance: 0.1
+    snow:
+      activity_multiplier: 0.7
+      seek_shelter: false
+    clear:
+      activity_multiplier: 1.0
+
+  # Seasonal behaviors
+  seasons:
+    enabled: false
+
+  # Moon phases
+  lunar:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  # Habitat requirements
+  habitat:
+    biomes:
+      allowed: []              # Any biome with water
+      preferred: ["swamp", "mangrove_swamp"]
+      forbidden: []
+
+    altitude:
+      min: -64
+      max: 320
+      preferred: [50, 80]
+
+    required_nearby:
+      - feature: "water"
+        max_distance: 0        # Must be IN water
+        reason: "Aquatic organism"
+
+  # Territory system
+  territory:
+    enabled: false
+    size: 0
+    defends: false
+    marks: false
+    overlap_tolerance: 1.0
+    defense_against: []
+
+  # Home range (non-defended area of activity)
+  home_range:
+    enabled: true
+    radius: 8                  # Small range
+    has_home_point: false
+    home_type: null
+
+  # Shelter requirements
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  # Location-triggered behaviors
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  # Food sources categorized by preference
+  food_sources:
+    primary:
+      - type: "ITEM"
+        target: "minecraft:slime_ball"
+        nutrition: 40
+        saturation: 6000
+        consumption_time: 60
+        method: "FILTER"
+        world_effect:
+          action: "NONE"
+        condition_gain: 10
+        health_effect: 0
+
+    secondary:
+      - type: "BLOCK"
+        target: "minecraft:seagrass"
+        nutrition: 15
+        saturation: 3000
+        consumption_time: 40
+        method: "GRAZE"
+        world_effect:
+          action: "DAMAGE"
+        condition_gain: 3
+        health_effect: 0
+
+    emergency: []
+
+  # Foraging behavior
+  foraging:
+    search_radius:
+      base: 8
+      when_hungry: 12
+      when_starving: 16
+    search_interval: 300
+
+    # Memory system
+    memory:
+      remembers_locations: false
+      memory_duration: 6000
+      remembers_depleted: false
+      avoids_depleted_for: 0
+      shares_with_group: false
+
+    # Sustainable foraging
+    sustainability:
+      enabled: false
+      dont_deplete_fully: false
+      minimum_remaining: 0
+      patch_return_delay: 0
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  # === AS PREDATOR ===
+  as_predator:
+    enabled: false
+
+  # === AS PREY ===
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:axolotl"
+        threat_level: "HIGH"
+      - entity: "minecraft:cod"
+        threat_level: "MEDIUM"
+      - entity: "minecraft:salmon"
+        threat_level: "MEDIUM"
+      - entity: "minecraft:pufferfish"
+        threat_level: "MEDIUM"
+
+    # Default predator response
+    default_response:
+      detection_range: 8
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.3
+        flee_distance: 16
+        flee_toward: "RANDOM"
+        zigzag: true
+
+      freeze:
+        duration: [0, 0]
+        break_on_approach: false
+        break_distance: 0
+
+      alarm:
+        gives_alarm: false
+        alarm_radius: 0
+        alarm_triggers_group_flee: false
+
+    # All-clear conditions
+    all_clear:
+      predator_distance: 20
+      time_since_seen: 300
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: false               # Tadpoles don't breed, they metamorphose
+  method: null
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  # Group structure
+  group:
+    type: "COLONY"
+    size:
+      min: 1
+      optimal: 8
+      max: 20
+
+    composition:
+      mixed_sex: true
+      mixed_age: false         # All same age group
+      family_based: true       # From same spawn
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  # Herd/flock movement
+  herd_movement:
+    enabled: true
+    cohesion_radius: 4
+    separation_distance: 0.5
+    alignment: true
+
+  # Communication
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+      radius: 0
+      chain_calling: false
+
+    contact_calls:
+      enabled: false
+      when: []
+      radius: 0
+
+    mating_calls:
+      enabled: false
+      radius: 0
+      time: null
+
+  # Social behaviors list
+  behaviors:
+    greeting: false
+    allogrooming: false
+    play: false
+    huddling: true             # Cluster together
+    dominance_hierarchy: false
+
+  # Group benefits
+  group_benefits:
+    predator_detection_bonus: 0.05
+    foraging_efficiency_bonus: 0.0
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  # Terrain modifications
+  terrain:
+    enabled: false
+    actions: []
+
+  # Ecosystem services
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+      seeds: []
+      method: null
+      dispersal_radius: 0
+
+    pollination:
+      enabled: false
+      flowers: []
+      radius: 0
+
+    nutrient_cycling:
+      enabled: false
+      fertilizes: false
+      fertilize_radius: 0
+
+    decomposition:
+      enabled: false
+      decomposes: []
+      result: null
+
+  # Environmental responses
+  responses:
+    drinking:
+      enabled: false           # Lives in water
+
+    temperature:
+      heat_seek_shade: false
+      heat_seek_water: false
+      cold_seek_shelter: false
+      cold_huddling: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  # Spawning rules
+  spawning:
+    weight: 15                 # Common spawn
+    group_size: [2, 8]
+
+    conditions:
+      blocks: ["water"]
+      biomes: []
+      light: [0, 15]
+      altitude: null
+      time: null
+      weather: null
+
+  # Carrying capacity
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 32            # Can be numerous
+      regional: null
+
+    # Resource-based
+    resources:
+      enabled: false
+      requirements: []
+
+    # Over-capacity effects
+    over_capacity:
+      - threshold: 1.2
+        effects: ["reduced_breeding"]
+      - threshold: 1.5
+        effects: ["starvation", "dispersal"]
+      - threshold: 2.0
+        effects: ["disease", "aggression"]
+
+  # Dispersal
+  dispersal:
+    enabled: false
+    triggers: []
+    distance: [0, 0]
+
+  # Natural mortality
+  mortality:
+    old_age:
+      enabled: false           # Transforms instead
+      max_age: null
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+      base_chance: 0.0
+      crowding_multiplier: 1.0
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  # Fear/approach distances
+  distances:
+    detection: 16
+    caution: 8
+    flee: 4
+
+  # Habituation
+  habituation:
+    enabled: false
+    rate: 0.0
+    decay: 0.0
+    max_habituation: 0.0
+    habituated_flee_distance: 0
+
+  # Taming
+  taming:
+    enabled: false
+    items: []
+    chance: 0.0
+    requires_habituation: false
+
+  # Player breeding
+  player_breeding:
+    enabled: false
+    items: []
+    bypasses_conditions: false
+
+  # Drops
+  drops:
+    on_death: []
+    on_interaction: []
+
+  # Special interactions
+  interactions:
+    - action: "bucket_capture"
+      item: "minecraft:water_bucket"
+      result: "minecraft:tadpole_bucket"
+      description: "Right-click with water bucket to capture tadpole"
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  # Sounds
+  sounds:
+    ambient: "entity.tadpole.flop"
+    hurt: "entity.tadpole.hurt"
+    death: "entity.tadpole.death"
+    baby: null
+    alarm: null
+    mating: null
+    eating: null
+
+  # Idle animations
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "swim_wiggle"
+        frequency: 0.8
+        trigger: "always"
+      - behavior: "vertical_drift"
+        frequency: 0.2
+        trigger: "idle"
+
+  # Individual variation
+  personality_traits:
+    boldness:
+      base: 0.3
+      variation: 0.1
+    activity:
+      base: 0.7
+      variation: 0.2
+    sociability:
+      base: 0.8
+      variation: 0.1
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+
+ai_priority_framework:
+  # Survival (highest priority)
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  # Physiological needs
+  physiological:
+    critical_health: 3
+    drink_water: 99            # N/A for aquatic
+    eat_food: 5
+    find_shelter: 99           # N/A
+
+  # Reproduction
+  reproduction:
+    care_for_offspring: 99     # N/A
+    breed: 99                  # N/A
+    find_mate: 99              # N/A
+
+  # Social
+  social:
+    group_cohesion: 7
+    social_interaction: 10
+
+  # Hunting (for predators)
+  hunting:
+    hunt_prey: 99              # N/A
+
+  # Location behaviors
+  location:
+    location_triggered: 13
+    territory_patrol: 99       # N/A
+
+  # Default behaviors
+  default:
+    wander: 8
+    idle: 11
+    rest: 12
+
+
+# ============================================================================
+# SYSTEM 15: UNIQUE BEHAVIOR FRAMEWORK
+# ============================================================================
+
+unique_behavior_template:
+  structure:
+    name: "metamorphosis"
+    description: "Transform into frog after reaching maturity age"
+
+    triggers:
+      - type: "STATE"
+        conditions:
+          age_reached: 24000
+
+    requirements:
+      all_of: ["in_water", "age >= 24000"]
+      any_of: []
+      none_of: []
+
+    actions: ["transform_to_frog_variant"]
+
+    effects:
+      on_self: ["remove_tadpole_entity", "spawn_frog_entity"]
+      on_others: []
+      on_world: []
+
+    priority: 1
+    duration: 100
+    cooldown: null
+    interruptible: false

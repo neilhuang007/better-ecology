@@ -1,0 +1,857 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - GENERALIZED BEHAVIOR TEMPLATE
+# Version: 2.0
+# Mob: Goat (minecraft:goat)
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:goat"
+  display_name: "Goat"
+
+  # Ecological classification
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "HERD"
+    activity_pattern: "DIURNAL"
+
+  # Reference information
+  reference:
+    real_world_analog: "Mountain goat"
+    ecological_role: "Mountain herbivore, high-altitude grazer"
+
+  # Tags for system filtering
+  tags: ["mountain", "jumping", "ramming"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  # Health
+  health:
+    base: 10                    # 10 hearts (20 HP)
+    baby_multiplier: 0.5
+
+  # Size (affects hitbox and various calculations)
+  size:
+    width: 0.9
+    height: 1.3
+    baby_scale: 0.5
+
+  # Biomass - abstract unit for food chain calculations
+  biomass:
+    adult: 120
+    baby: 30
+    transfer_efficiency: 0.1    # 10% energy transfer up food chain
+
+  # Movement capabilities
+  movement:
+    speeds:
+      walk: 0.25
+      run: 0.45                  # Slightly faster than default
+      swim: 0.15
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: true
+      jump_height: 10.0          # High jump ability - 10 blocks!
+      avoids_water: false
+      avoids_cliffs: false       # Goats don't fear cliffs
+      cliff_threshold: 20        # Can handle extreme heights
+
+    # Speed modifiers applied conditionally
+    conditional_modifiers:
+      baby: 0.7
+      elderly: 0.8
+      injured: 0.6
+      hungry: 0.8
+      fleeing: 1.5
+      hunting: 1.3
+      carrying_offspring: 0.7
+      in_water_nonaquatic: 0.4
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  # Hunger system
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 80
+    decay_rate: 0.02
+
+    # Thresholds that trigger behaviors
+    thresholds:
+      satiated: 80
+      hungry: 50
+      very_hungry: 25
+      starving: 10
+
+    # Starvation damage
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 200
+
+  # Thirst system (optional - set enabled: false to disable)
+  thirst:
+    enabled: true
+    max_value: 100
+    starting_value: 100
+    decay_rate: 0.012             # Mountain goats moderate water needs
+    thresholds:
+      satisfied: 75
+      thirsty: 45
+      dehydrated: 15
+
+    max_value: 100
+    starting_value: 100
+    decay_rate: 0.01
+    thresholds:
+      satisfied: 70
+      thirsty: 40
+      dehydrated: 15
+
+  # Body condition (overall fitness - affects breeding, survival)
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+
+    gain_when_satiated: 0.01
+    loss_when_hungry: 0.02
+    loss_when_starving: 0.1
+
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  # Energy/Stamina (for actions like sprinting, hunting)
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.5
+
+    costs:
+      sprinting: 0.3
+      hunting: 0.5
+      fleeing: 0.4
+      flying: 0.6
+      swimming: 0.2
+      ramming: 0.8              # Custom - ramming is energy intensive
+
+  # Age tracking
+  age:
+    enabled: true
+    baby_duration: 24000        # 20 minutes
+    maturity_age: 24000
+    elderly_age: null
+    max_age: null
+
+  # Social needs (for social species)
+  social:
+    enabled: true               # Goats are social
+    max_value: 100
+    decay_rate: 0.01
+    recovery_rate: 0.1
+    loneliness_threshold: 30
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  # Daily cycle
+  daily_cycle:
+    schedule:
+      - time: [0, 6000]         # Dawn to noon
+        activity: 1.0           # Fully active
+        label: "morning"
+      - time: [6000, 12000]     # Noon to dusk
+        activity: 0.8
+        label: "afternoon"
+      - time: [12000, 13500]    # Dusk
+        activity: 0.6
+        label: "dusk"
+      - time: [13500, 22500]    # Night
+        activity: 0.3           # Less active at night but not sleeping
+        label: "night"
+      - time: [22500, 24000]    # Pre-dawn
+        activity: 0.5
+        label: "pre_dawn"
+
+    # What "low activity" means
+    low_activity_behavior:
+      action: "rest"
+      seek_shelter: false       # Goats don't really seek shelter
+      reduced_awareness: true
+      awareness_multiplier: 0.5
+
+  # Weather responses
+  weather:
+    rain:
+      activity_multiplier: 0.8  # Less affected by rain
+      seek_shelter: false
+      shelter_priority: 1
+    thunder:
+      activity_multiplier: 0.5
+      seek_shelter: false
+      panic_chance: 0.1
+    snow:
+      activity_multiplier: 1.0  # Mountain animals handle snow well
+      seek_shelter: false
+    clear:
+      activity_multiplier: 1.0
+
+  # Seasonal behaviors (requires season system)
+  seasons:
+    enabled: false
+    spring:
+      breeding_multiplier: 1.5
+      activity_multiplier: 1.1
+    summer:
+      breeding_multiplier: 1.0
+      activity_multiplier: 1.0
+    autumn:
+      breeding_multiplier: 0.5
+      activity_multiplier: 1.2
+      foraging_multiplier: 1.5
+    winter:
+      breeding_multiplier: 0.0
+      activity_multiplier: 0.6
+
+  # Moon phases (optional)
+  lunar:
+    enabled: false
+    full_moon:
+      activity_multiplier: 1.0
+      special_behaviors: []
+    new_moon:
+      activity_multiplier: 1.0
+      special_behaviors: []
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  # Habitat requirements
+  habitat:
+    biomes:
+      allowed: []               # Can exist anywhere but prefers mountains
+      preferred: ["jagged_peaks", "frozen_peaks", "stony_peaks", "meadow", "grove", "snowy_slopes"]
+      forbidden: []
+
+    altitude:
+      min: -64
+      max: 320
+      preferred: [100, 256]     # Prefers high altitudes
+
+    required_nearby: []
+
+  # Territory system
+  territory:
+    enabled: false
+    size: 32
+    defends: false
+    marks: false
+    overlap_tolerance: 0.0
+    defense_against: ["same_species"]
+
+  # Home range (non-defended area of activity)
+  home_range:
+    enabled: true
+    radius: 96                  # Larger range for mountain roaming
+    has_home_point: false
+    home_type: null
+
+  # Shelter requirements
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+
+    valid_shelters: []
+
+  # Location-triggered behaviors
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  # Food sources categorized by preference
+  food_sources:
+    primary:
+      - type: "ITEM"
+        target: "minecraft:wheat"
+        nutrition: 40
+        saturation: 8000
+        consumption_time: 40
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 5
+        health_effect: 0
+
+    secondary:
+      - type: "BLOCK"
+        target: "minecraft:grass"
+        nutrition: 15
+        saturation: 3000
+        consumption_time: 60
+        method: "GRAZE"
+        world_effect:
+          action: "DESTROY"
+        condition_gain: 2
+        health_effect: 0
+
+      - type: "BLOCK"
+        target: "minecraft:fern"
+        nutrition: 15
+        saturation: 3000
+        consumption_time: 60
+        method: "BROWSE"
+        world_effect:
+          action: "DESTROY"
+        condition_gain: 2
+        health_effect: 0
+
+    emergency: []
+
+  # Foraging behavior
+  foraging:
+    search_radius:
+      base: 16
+      when_hungry: 24
+      when_starving: 48
+    search_interval: 200
+
+    # Memory system
+    memory:
+      remembers_locations: true
+      memory_duration: 24000
+      remembers_depleted: true
+      avoids_depleted_for: 12000
+      shares_with_group: true
+
+    # Sustainable foraging
+    sustainability:
+      enabled: true
+      dont_deplete_fully: true
+      minimum_remaining: 2
+      patch_return_delay: 6000
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  # === AS PREDATOR ===
+  as_predator:
+    enabled: false
+
+  # === AS PREY ===
+  as_prey:
+    enabled: true
+
+    predators: []               # Will be defined in unique profile
+
+    # Default predator response
+    default_response:
+      detection_range: 24
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.5
+        flee_distance: 48
+        flee_toward: "SAFETY"
+        zigzag: true            # Agile mountain escape
+
+      freeze:
+        duration: [60, 200]
+        break_on_approach: true
+        break_distance: 6
+
+      alarm:
+        gives_alarm: true
+        alarm_radius: 32
+        alarm_triggers_group_flee: true
+
+    # All-clear conditions
+    all_clear:
+      predator_distance: 64
+      time_since_seen: 400
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: true
+  method: "SEXUAL"
+
+  # === BREEDING REQUIREMENTS ===
+  requirements:
+    min_age: 24000
+    max_age: null
+    min_health: 0.8
+    min_condition: 65
+    min_hunger: 60
+
+    # Recent feeding
+    recent_food:
+      enabled: true
+      time_window: 12000
+      meals_required: 2
+
+    # Environmental requirements
+    environment:
+      near_water: false
+      water_max_distance: 32
+      required_biomes: []
+      required_blocks_nearby: []
+      min_light: 0
+      max_light: 15
+
+    # Shelter requirement
+    requires_shelter: false
+    shelter_type: null
+
+    # Temporal requirements
+    time_of_day: null
+    season: null
+    weather: null
+
+    # Social requirements
+    mate_required: true
+    mate_max_distance: 16
+
+  # === POPULATION DENSITY EFFECTS ===
+  density_effects:
+    enabled: true
+    check_radius: 64
+
+    density_curve:
+      - count: 2
+        multiplier: 1.3
+      - count: 6
+        multiplier: 1.0
+      - count: 12
+        multiplier: 0.5
+      - count: 20
+        multiplier: 0.1
+      - count: 30
+        multiplier: 0.0
+
+  # === MATE SELECTION ===
+  mate_selection:
+    search_radius: 32
+    search_interval: 1000
+
+    preferences:
+      prefer_healthy: true
+      prefer_good_condition: true
+      avoid_relatives: true
+      relative_recognition_duration: 48000
+
+    courtship:
+      enabled: false
+      behavior: null
+      duration: 200
+      can_reject: true
+      rejection_cooldown: 2000
+
+  # === BREEDING PROCESS ===
+  breeding:
+    cooldown: 24000
+
+    gestation:
+      type: "INSTANT"
+      duration: 0
+      behavior_during: []
+
+    birth:
+      offspring_count: [1, 1]   # Usually 1 kid
+      condition_affects_count: false
+      location_requirement: null
+
+  # === PARENTAL CARE ===
+  parental_care:
+    enabled: true
+    duration: 24000
+
+    behaviors:
+      protects_offspring: true
+      protection_aggression: 2.0
+      protection_radius: 8
+
+      feeds_offspring: false
+      teaches_offspring: false
+      carries_offspring: false
+
+    offspring_behavior:
+      follows_parent: true
+      follow_distance: 4
+      max_separation: 16
+      separation_distress: true
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  # Group structure
+  group:
+    type: "HERD"
+    size:
+      min: 3
+      optimal: 6
+      max: 12
+
+    composition:
+      mixed_sex: true
+      mixed_age: true
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  # Herd/flock movement
+  herd_movement:
+    enabled: true
+    cohesion_radius: 12
+    separation_distance: 2
+    alignment: true
+
+  # Communication
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "predator_detected"
+          call: "goat_scream"
+          radius: 32
+      radius: 32
+      chain_calling: true
+
+    contact_calls:
+      enabled: true
+      when: ["separated"]
+      radius: 24
+
+    mating_calls:
+      enabled: false
+      radius: 48
+      time: null
+
+  # Social behaviors list
+  behaviors:
+    greeting: false
+    allogrooming: false
+    play: true                  # Kids play
+    huddling: false
+    dominance_hierarchy: true   # Ramming establishes dominance
+
+  # Group benefits
+  group_benefits:
+    predator_detection_bonus: 0.1
+    foraging_efficiency_bonus: 0.05
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  # Terrain modifications
+  terrain:
+    enabled: false
+    actions: []
+
+  # Ecosystem services
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+      seeds: []
+      method: null
+      dispersal_radius: 0
+
+    pollination:
+      enabled: false
+      flowers: []
+      radius: 0
+
+    nutrient_cycling:
+      enabled: false
+      fertilizes: false
+      fertilize_radius: 0
+
+    decomposition:
+      enabled: false
+      decomposes: []
+      result: null
+
+  # Environmental responses
+  responses:
+    drinking:
+      enabled: false
+      frequency: 6000
+      water_blocks: ["water"]
+      duration: 60
+      congregates: false
+
+    temperature:
+      heat_seek_shade: false
+      heat_seek_water: false
+      cold_seek_shelter: false
+      cold_huddling: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  # Spawning rules
+  spawning:
+    weight: 5                   # Less common than many passive mobs
+    group_size: [2, 4]
+
+    conditions:
+      blocks: ["stone", "snow", "powder_snow", "grass_block"]
+      biomes: ["jagged_peaks", "frozen_peaks", "stony_peaks", "meadow", "grove", "snowy_slopes"]
+      light: [7, 15]
+      altitude: [100, 320]
+      time: null
+      weather: null
+
+  # Carrying capacity
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 4              # Not too many goats per chunk
+      regional: null
+
+    # Resource-based (if method = RESOURCE_BASED)
+    resources:
+      enabled: false
+      requirements: []
+
+    # Over-capacity effects
+    over_capacity:
+      - threshold: 1.2
+        effects: ["reduced_breeding"]
+      - threshold: 1.5
+        effects: ["starvation", "dispersal"]
+      - threshold: 2.0
+        effects: ["disease", "aggression"]
+
+  # Dispersal
+  dispersal:
+    enabled: false
+    triggers: []
+    distance: [64, 256]
+
+  # Natural mortality
+  mortality:
+    old_age:
+      enabled: false
+      max_age: null
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+      base_chance: 0.0
+      crowding_multiplier: 1.0
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  # Fear/approach distances
+  distances:
+    detection: 32
+    caution: 16
+    flee: 8
+
+  # Habituation (getting used to players)
+  habituation:
+    enabled: true
+    rate: 0.01
+    decay: 0.001
+    max_habituation: 0.8
+    habituated_flee_distance: 3
+
+  # Taming
+  taming:
+    enabled: false
+    items: []
+    chance: 0.33
+    requires_habituation: false
+
+  # Player breeding
+  player_breeding:
+    enabled: true
+    items: ["minecraft:wheat"]
+    bypasses_conditions: false
+
+  # Drops
+  drops:
+    on_death: []                # Vanilla handles drops
+
+    on_interaction: []          # Horn drops handled in unique behaviors
+
+  # Special interactions
+  interactions: []
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  # Sounds
+  sounds:
+    ambient: "minecraft:entity.goat.ambient"
+    hurt: "minecraft:entity.goat.hurt"
+    death: "minecraft:entity.goat.death"
+    baby: "minecraft:entity.goat.ambient"
+    alarm: "minecraft:entity.goat.screaming.ambient"
+    mating: null
+    eating: "minecraft:entity.generic.eat"
+
+  # Idle animations
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "head_bob"
+        frequency: 0.1
+        trigger: "idle"
+      - behavior: "ear_twitch"
+        frequency: 0.15
+        trigger: "idle"
+      - behavior: "look_around"
+        frequency: 0.2
+        trigger: "idle"
+
+  # Individual variation
+  personality_traits:
+    boldness:
+      base: 0.5
+      variation: 0.3           # Goats vary in boldness
+    activity:
+      base: 0.6
+      variation: 0.2
+    sociability:
+      base: 0.7
+      variation: 0.2
+    aggression:                # Custom trait for ramming
+      base: 0.4
+      variation: 0.3
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+
+ai_priority_framework:
+  # Survival (highest priority)
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  # Physiological needs
+  physiological:
+    critical_health: 3
+    drink_water: 4
+    eat_food: 5
+    find_shelter: 6
+
+  # Reproduction
+  reproduction:
+    care_for_offspring: 7
+    breed: 8
+    find_mate: 9
+
+  # Social
+  social:
+    group_cohesion: 10
+    social_interaction: 11
+
+  # Hunting (for predators)
+  hunting:
+    hunt_prey: 12
+
+  # Location behaviors
+  location:
+    location_triggered: 13
+    territory_patrol: 14
+
+  # Default behaviors
+  default:
+    wander: 15
+    idle: 16
+    rest: 17
+
+
+# ============================================================================
+# SYSTEM 15: UNIQUE BEHAVIOR FRAMEWORK
+# ============================================================================
+
+unique_behavior_template:
+  structure:
+    name: ""
+    description: ""
+
+    triggers:
+      - type: ""
+        conditions: {}
+
+    requirements:
+      all_of: []
+      any_of: []
+      none_of: []
+
+    actions: []
+
+    effects:
+      on_self: []
+      on_others: []
+      on_world: []
+
+    priority: 10
+    duration: null
+    cooldown: null
+    interruptible: true

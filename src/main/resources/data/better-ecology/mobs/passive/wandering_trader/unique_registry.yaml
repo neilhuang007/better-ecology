@@ -1,0 +1,644 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# ============================================================================
+#
+# This file defines a specific mob by:
+# 1. Overriding defaults from the Generalized Template
+# 2. Providing natural language descriptions for unique behaviors
+# 3. Specifying relationships with other mobs
+#
+# INSTRUCTIONS FOR AI:
+# - Read the Generalized Template first to understand all systems
+# - Values here OVERRIDE template defaults
+# - Empty/null values mean "use template default"
+# - Natural language descriptions should be interpreted and implemented
+# - [UNIQUE] sections require custom implementation logic
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:wandering_trader"
+  display_name: "Wandering Trader"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "SECONDARY_CONSUMER"
+    diet_type: "NONE"
+    social_type: "SOLITARY"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Traveling Merchant / Medieval Peddler"
+    ecological_role: "Cross-biome resource distributor and economic connector"
+
+  tags: ["trader", "nomadic", "economic", "temporal", "non-breeding"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 10
+  size:
+    width: 0.6
+    height: 1.9
+  biomass:
+    adult: 100
+  movement:
+    speeds:
+      walk: 0.35
+      run: 0.525
+      swim: 0.15
+      fly: null
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    enabled: false
+  thirst:
+    enabled: false
+  age:
+    baby_duration: null
+    max_age: null
+  social:
+    enabled: false
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 12000]
+        activity: 1.0
+        label: "active_trading"
+      - time: [12000, 13500]
+        activity: 0.8
+        label: "dusk_preparation"
+      - time: [13500, 22500]
+        activity: 0.5
+        label: "night_invisible"
+      - time: [22500, 24000]
+        activity: 0.8
+        label: "dawn_reveal"
+
+  weather:
+    rain: null
+    thunder: null
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: []
+      forbidden: ["minecraft:deep_dark"]
+    required_nearby: []
+
+  territory:
+    enabled: true
+    size: 16
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  location_triggers:
+    enabled: false
+    triggers: []
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary: []
+    secondary: []
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: null
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:zombie"
+        threat_level: "HIGH"
+        detection_range: 8
+        response: "FLEE"
+      - entity: "minecraft:husk"
+        threat_level: "HIGH"
+        detection_range: 8
+        response: "FLEE"
+      - entity: "minecraft:drowned"
+        threat_level: "HIGH"
+        detection_range: 8
+        response: "FLEE"
+      - entity: "minecraft:pillager"
+        threat_level: "EXTREME"
+        detection_range: 8
+        response: "FLEE"
+      - entity: "minecraft:vindicator"
+        threat_level: "EXTREME"
+        detection_range: 8
+        response: "FLEE"
+      - entity: "minecraft:evoker"
+        threat_level: "EXTREME"
+        detection_range: 8
+        response: "FLEE"
+      - entity: "minecraft:ravager"
+        threat_level: "EXTREME"
+        detection_range: 8
+        response: "FLEE"
+      - entity: "minecraft:vex"
+        threat_level: "EXTREME"
+        detection_range: 8
+        response: "FLEE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: null
+    recent_food:
+      enabled: false
+    environment:
+      near_water: null
+      required_biomes: []
+    requires_shelter: false
+    season: null
+
+  density_effects:
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: false
+      behavior: null
+
+  breeding:
+    gestation:
+      type: null
+      duration: null
+    birth:
+      offspring_count: null
+      location_requirement: null
+
+  parental_care:
+    duration: null
+    behaviors:
+      protects_offspring: null
+      feeds_offspring: null
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+    leadership:
+      has_leader: false
+      leader_selection: null
+
+  herd_movement:
+    enabled: false
+
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: null
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: null
+    group_size: [1, 1]
+    conditions:
+      biomes: []
+      blocks: []
+
+  carrying_capacity:
+    caps:
+      per_chunk: null
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "NEUTRAL"
+
+  taming:
+    enabled: null
+    items: []
+
+  player_breeding:
+    enabled: null
+    items: []
+
+  drops:
+    on_death:
+      - item: "minecraft:lead"
+        count: [2, 2]
+        chance: 1.0
+        requires_player_kill: false
+      - item: "minecraft:potion"
+        count: [1, 1]
+        chance: 0.085
+        requires_player_kill: true
+        nbt: "{Potion:'minecraft:invisibility'}"
+
+  interactions:
+    - action: "trade"
+      item: null
+      result: "opens_trading_interface"
+      description: "Right-click to open trading menu with random biome-specific items"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.wandering_trader.ambient"
+    hurt: "entity.wandering_trader.hurt"
+    death: "entity.wandering_trader.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "look_at_player"
+        frequency: 0.1
+        trigger: "player_nearby"
+      - behavior: "hold_item"
+        frequency: 0.05
+        trigger: "random"
+      - behavior: "wander_around"
+        frequency: 0.2
+        trigger: "idle"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+# Describe behaviors unique to this mob that aren't covered by standard systems.
+# Use natural language - AI should interpret and implement appropriate logic.
+# ============================================================================
+
+unique_behaviors:
+  - name: "invisibility_cycle"
+    description: |
+      Wandering trader drinks potions of invisibility on a day/night cycle,
+      becoming invisible at night and visible during day.
+
+      WHEN: At dusk (12000-13500 ticks), drinks Potion of Invisibility.
+            At dawn (22500-24000 ticks), drinks milk to remove effect.
+
+      WHERE: Anywhere - triggered solely by time of day.
+
+      WHAT: Consumes invisibility potion when sun starts setting.
+           Renews invisibility if it wears off during night.
+           Drinks milk bucket at sunrise to become visible again.
+           Has 8.5% chance to drop potion when killed if currently drinking/holding.
+
+      WHY: Simulates "night travel" behavior - mysterious merchant who appears
+           by day and travels unseen by night. Adds ephemeral quality to encounters.
+
+    implementation_hints:
+      trigger_type: "TIME"
+      priority: 5
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "defensive_potion_use"
+    description: |
+      Wandering trader uses invisibility potion when attacked by certain mobs
+      (but NOT when attacked by players).
+
+      WHEN: When hurt by magic damage or projectiles from hostile mobs
+           (illagers, zombies, vexes, etc.).
+
+      WHERE: Anywhere combat occurs.
+
+      WHAT: Immediately drinks Potion of Invisibility if attacked by:
+           - Illagers (pillager, vindicator, evoker, illusioner)
+           - Zombies and variants
+           - Ravagers
+           - Vexes
+           Does NOT use invisibility when attacked by player.
+
+      WHY: Trader is defenseless in combat - invisibility is only escape mechanism.
+           Player attacks don't trigger this to maintain trading gameplay.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 2
+      duration: 300
+      affects_others: false
+      world_modification: false
+
+  - name: "despawn_timer"
+    description: |
+      Wandering trader despawns after 40-60 minutes of existence.
+
+      WHEN: Continuously tracks elapsed time since spawn.
+
+      WHERE: Anywhere - follows trader regardless of location.
+
+      WHAT: Counts down from 48,000 ticks (40 minutes).
+           Timer freezes when:
+           - Chunk is unloaded
+           - Player has trading UI open
+           Timer does NOT freeze with:
+           - Name tags
+           - Boats or minecarts
+           When timer reaches 0, trader despawns without dropping any items.
+
+      WHY: Creates time pressure for player interactions.
+           Ensures traders remain temporary encounters.
+           Prevents players from "stockpiling" traders.
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 1
+      duration: 48000
+      affects_others: false
+      world_modification: false
+
+  - name: "complex_spawn_system"
+    description: |
+      Wandering trader spawns through multi-stage probabilistic system near
+      players or village bells, accompanied by 2 trader llamas.
+
+      WHEN: Spawn counter reaches 0 (starts at 24,000 ticks, decreases by
+           1,200 per minute).
+
+      WHERE: Within 48 blocks of random player or nearest village bell.
+
+      WHAT: Multi-stage process:
+           1. Initial spawn attempt: 25% chance when counter hits 0
+           2. Second attempt: 50% chance
+           3. Third+ attempts: 75% chance
+           4. Player found: 10% chance to actually spawn
+           Total chance: 2.5%, 5%, or 7.5% per cycle
+
+           Makes 10 attempts to find valid spawn position in -48 to +47 block area.
+           Spawns on highest surface block in Y column.
+
+           After trader spawns:
+           - Makes 10 spawn attempts for first llama (spawns -4 to +3 blocks away)
+           - Makes 10 spawn attempts for second llama
+           - Both llamas leashed to trader
+
+      WHY: Creates organic, unpredictable encounters.
+           Bell-anchoring creates village integration.
+           Llama companions provide visual interest and defense.
+
+    implementation_hints:
+      trigger_type: "TIME"
+      priority: 1
+      duration: null
+      affects_others: true
+      world_modification: true
+
+  - name: "trading_system"
+    description: |
+      Wandering trader offers randomized selection of items from large pool
+      of biome-specific and rare materials.
+
+      WHEN: Whenever player right-clicks trader.
+
+      WHERE: Anywhere trader exists.
+
+      WHAT: Java Edition structure:
+           - 2 purchasing trades (player sells items for emeralds)
+           - 2 special trades (13% chance each from rare pool)
+           - 5 ordinary trades (7% chance each from common pool)
+
+           Trades include:
+           - Biome-specific materials (coral, blue ice, podzol, sand, cactus)
+           - Rare items (gunpowder, packed ice, enchanted pickaxe)
+           - Plants and seeds (all crop types, flowers, saplings)
+           - Dyes (all 16 colors)
+
+           All trades immediately available (no unlocking).
+           Trades lock permanently after max uses.
+           Trader never refreshes or gains new trades.
+
+      WHY: Provides cross-biome resource access without requiring travel.
+           Encourages repeated encounters to see different inventories.
+           Creates economic circulation (emerald sink).
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 10
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "wandering_anchor"
+    description: |
+      Wandering trader stays near initial spawn point rather than following
+      player indefinitely.
+
+      WHEN: After spawning, continuously throughout lifetime.
+
+      WHERE: Within 16 blocks of spawn location.
+
+      WHAT: Trader spawns 48 blocks from target player.
+           Wanders within 16 blocks of that spawn point.
+           Does NOT follow player if player moves away.
+           Does NOT relocate if nearby bell is removed.
+           Stays anchored even if player leaves chunk or dies.
+
+      WHY: Prevents trader from being "led" anywhere.
+           Creates predictable encounter locations.
+           Encourages players to explore to find traders.
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 8
+      duration: null
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+# Describe relationships with other specific mobs beyond predator/prey.
+# ============================================================================
+
+relationships:
+  # Predators (who hunts this mob)
+  predators:
+    - entity: "minecraft:zombie"
+      notes: "Flees from zombie and all variants (husk, drowned, zombie villager)"
+    - entity: "minecraft:pillager"
+      notes: "Highest threat level - actively avoids"
+    - entity: "minecraft:vindicator"
+      notes: "Highest threat level - actively avoids"
+    - entity: "minecraft:evoker"
+      notes: "Highest threat level - actively avoids"
+    - entity: "minecraft:ravager"
+      notes: "Highest threat level - actively avoids"
+    - entity: "minecraft:vex"
+      notes: "Highest threat level - actively avoids"
+
+  # Prey (what this mob hunts)
+  prey: []
+
+  # Competitors (compete for same resources)
+  competitors: []
+
+  # Mutualists (mutually beneficial)
+  mutualists:
+    - entity: "minecraft:trader_llama"
+      benefit_given: "Provides mobility and caravan formation"
+      benefit_received: "Protection from hostile mobs via spit attacks"
+
+  # Commensals (one benefits, other unaffected)
+  commensals: []
+
+  # Special relationships
+  special:
+    - entity: "minecraft:villager"
+      relationship: "neutral_no_interaction"
+      description: "Wandering trader has no interaction with villagers. Does not spawn in villages (except near bells in Bedrock). Does not trade or communicate with villagers."
+    - entity: "minecraft:iron_golem"
+      relationship: "neutral_no_protection"
+      description: "Attacking or killing wandering trader does NOT anger iron golems. Trader is outside village protection system."
+    - entity: "minecraft:player"
+      relationship: "economic_transaction"
+      description: "Primary interaction is trading. Trader is neutral to players until attacked. Flees when attacked by player but llamas defend."
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+# Free-form description for AI to understand this mob's "character"
+# ============================================================================
+
+narrative:
+  summary: |
+    The Wandering Trader is a mysterious nomadic merchant who appears temporarily
+    near players, offering rare and biome-specific items that would otherwise
+    require extensive travel to obtain. Always accompanied by two trader llamas,
+    this solitary merchant represents connectivity between distant biomes and
+    serves as a renewable source of otherwise non-renewable resources.
+
+  behavior_overview: |
+    The Wandering Trader appears unpredictably near players or village bells,
+    staying for 40 minutes before vanishing as mysteriously as it arrived. During
+    the day, it wanders within 16 blocks of its spawn point, offering trades to
+    any nearby player. At dusk, the trader drinks a Potion of Invisibility and
+    travels unseen through the night, becoming visible again at dawn by drinking
+    milk. The trader is completely defenseless, fleeing from hostile mobs while
+    its two llama companions spit at attackers. The trader never breeds, never
+    eats, and never seeks shelter - its sole purpose is economic exchange. Each
+    trader has a random selection of trades from a vast pool, making every
+    encounter unique. Once trades are depleted or 40 minutes pass, the trader
+    simply despawns, leaving only leads and possibly an invisibility potion behind.
+
+  ecological_importance: |
+    The Wandering Trader serves as the "connective tissue" of the Minecraft ecosystem,
+    distributing resources across biome boundaries. Without traders, players would
+    need to travel to every biome type to obtain materials like coral blocks, blue
+    ice, podzol, and various saplings. The trader creates a functional economic
+    system by acting as both an emerald sink (buying items) and a convenience
+    store (selling rare materials). This cross-biome resource distribution makes
+    the trader essential for players building in areas without access to certain
+    materials. The trader also provides the only renewable sources of coral blocks,
+    sand, red sand, and small dripleaves.
+
+  design_notes: |
+    The Wandering Trader is intentionally transient - everything about its design
+    emphasizes "here today, gone tomorrow." The 40-minute despawn timer creates
+    urgency for player interactions. The invisibility cycle adds mystery and
+    reinforces the nomadic theme. The lack of breeding, permanent settlements,
+    or friendship progression ensures the trader remains a wandering encounter
+    rather than a tameable commodity.
+
+    Key implementation considerations:
+    1. Spawn system must bypass passive mob cap to ensure regular appearances
+    2. Despawn timer should NOT pause for name tags, boats, or minecarts
+    3. Invisibility potion consumption is purely visual - does not affect trading
+    4. Llamas must spawn leashed and defend trader, but become neutral after trader death
+    5. Trade pools should be large enough that seeing all trades requires many encounters
+    6. Trader should NOT spawn in Deep Dark biome
+    7. Only ONE trader can exist in loaded chunks at a time
+    8. Bell attraction (Bedrock) vs bell anchoring (Java) requires edition-specific handling
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+# Quick-reference values for ecosystem balancing
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 0.0
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: 0
+    provides_to_predator: 100
+
+  population_target: "1-2 per loaded area, despawns after 40 minutes"
+
+  removal_impact: "Players lose convenient access to cross-biome resources and renewable sources of coral, sand, and podzol. Economic emerald sink removed."

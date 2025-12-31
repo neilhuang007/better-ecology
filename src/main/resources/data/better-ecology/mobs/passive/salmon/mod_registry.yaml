@@ -1,0 +1,842 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - SALMON BEHAVIOR CONFIGURATION
+# Version: 2.0
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:salmon"
+  display_name: "Salmon"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "SECONDARY_CONSUMER"
+    diet_type: "PISCIVORE"
+    social_type: "FISSION_FUSION"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Atlantic/Pacific salmon"
+    ecological_role: "Mid-level aquatic predator, anadromous fish that connects river and ocean ecosystems"
+
+  tags: ["aquatic", "fish", "schooling", "bucket_capturable", "anadromous"]
+
+
+# ============================================================================
+# BEHAVIORS - SALMON SPECIFIC
+# ============================================================================
+
+behaviors:
+  enabled: true
+  priority: 3
+
+  max_force: 0.18
+  max_speed: 0.35
+
+  # Schooling (boids) - fish school together
+  separation: 2.0
+  alignment: 1.2
+  cohesion: 1.5
+
+  # Upstream swimming - salmon swim against currents
+  upstream: 1.3
+
+  # Predation
+  evasion: 1.6
+  avoidance: 1.0
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  health:
+    base: 1.5                    # 3 HP
+    baby_multiplier: 0.5
+
+  size:
+    width: 0.7
+    height: 0.4
+    baby_scale: 0.5
+
+  biomass:
+    adult: 15
+    baby: 4
+    transfer_efficiency: 0.1
+
+  movement:
+    speeds:
+      walk: 0.0                  # Cannot walk on land
+      run: 0.0
+      swim: 0.35                 # Fast swimmer
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: true
+      jump_height: 0.5
+      avoids_water: false
+      avoids_cliffs: false
+      cliff_threshold: 0
+
+    conditional_modifiers:
+      baby: 0.8
+      elderly: 0.0               # No elderly
+      injured: 0.7
+      hungry: 0.9
+      fleeing: 1.4
+      hunting: 1.2
+      in_water_nonaquatic: 0.0   # Dies out of water
+      schooling: 1.1             # Faster in school
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+    decay_rate: 0.03             # Fish have higher metabolism
+
+    thresholds:
+      satiated: 75
+      hungry: 45
+      very_hungry: 20
+      starving: 8
+
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 150
+
+  thirst:
+    enabled: false               # Aquatic mob
+
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 65
+
+    gain_when_satiated: 0.01
+    loss_when_hungry: 0.02
+    loss_when_starving: 0.08
+
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.6
+
+    costs:
+      sprinting: 0.0
+      hunting: 0.3
+      fleeing: 0.35
+      flying: 0.0
+      swimming: 0.1
+
+  age:
+    enabled: true
+    baby_duration: 24000
+    maturity_age: 24000
+    elderly_age: null
+    max_age: null
+
+  social:
+    enabled: true                # Schooling fish
+    max_value: 100
+    decay_rate: 0.05
+    recovery_rate: 0.2
+    loneliness_threshold: 40
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 6000]
+        activity: 1.0
+        label: "morning_migration"
+      - time: [6000, 12000]
+        activity: 0.9
+        label: "afternoon"
+      - time: [12000, 13500]
+        activity: 0.7
+        label: "dusk"
+      - time: [13500, 22500]
+        activity: 0.4
+        label: "night_rest"
+      - time: [22500, 24000]
+        activity: 0.6
+        label: "pre_dawn"
+
+    low_activity_behavior:
+      action: "reduced_wander"
+      seek_shelter: false
+      reduced_awareness: true
+      awareness_multiplier: 0.6
+
+  weather:
+    rain:
+      activity_multiplier: 1.0    # Unaffected underwater
+      seek_shelter: false
+      shelter_priority: 0
+    thunder:
+      activity_multiplier: 0.9
+      seek_shelter: false
+      panic_chance: 0.1
+    snow:
+      activity_multiplier: 1.0
+      seek_shelter: false
+    clear:
+      activity_multiplier: 1.0
+
+  seasons:
+    enabled: false
+
+  lunar:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: ["river", "frozen_river", "cold_ocean", "frozen_ocean", "deep_cold_ocean", "deep_frozen_ocean"]
+      forbidden: ["warm_ocean", "deep_warm_ocean"]
+
+    altitude:
+      min: -64
+      max: 62
+      preferred: [30, 55]
+
+    required_nearby:
+      - feature: "water"
+        max_distance: 0
+        reason: "Fully aquatic mob"
+
+  territory:
+    enabled: false
+    size: 0
+    defends: false
+    marks: false
+    overlap_tolerance: 1.0
+    defense_against: []
+
+  home_range:
+    enabled: true
+    radius: 48
+    has_home_point: false
+    home_type: null
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  food_sources:
+    primary:
+      - type: "ENTITY"
+        target: "#ecosystem:small_fish"
+        nutrition: 25
+        saturation: 4000
+        consumption_time: 30
+        method: "HUNT"
+        world_effect:
+          action: "NONE"
+          result: null
+        condition_gain: 3
+        health_effect: 0
+
+    secondary:
+      - type: "ENTITY"
+        target: "#ecosystem:zooplankton"
+        nutrition: 15
+        saturation: 2000
+        consumption_time: 20
+        method: "FILTER"
+        world_effect:
+          action: "NONE"
+          result: null
+        condition_gain: 1
+        health_effect: 0
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 14
+      when_hungry: 22
+      when_starving: 36
+    search_interval: 160
+
+    memory:
+      remembers_locations: false
+      memory_duration: 0
+      remembers_depleted: false
+      avoids_depleted_for: 0
+      shares_with_group: false
+
+    sustainability:
+      enabled: false
+      dont_deplete_fully: false
+      minimum_remaining: 0
+      patch_return_delay: 0
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  as_predator:
+    enabled: true
+
+    prey:
+      targets: ["#ecosystem:small_fish", "#ecosystem:zooplankton"]
+
+      selection_rules:
+        avoid_babies: false
+        avoid_babies_exception: null
+        avoid_mothers_with_young: false
+        avoid_mothers_exception: null
+        prefer_weak: false
+        weak_preference: 1.0
+        prefer_isolated: false
+        isolated_preference: 1.0
+        sustainable_hunting:
+          enabled: false
+          monitors_population: false
+          monitor_radius: 0
+          min_prey_count: 0
+          reduced_hunting_threshold: 0
+          reduced_hunting_multiplier: 1.0
+
+    hunting:
+      method: "CHASE"
+      chase:
+        max_duration: 200
+        give_up_distance: 24
+        stamina_cost_per_tick: 0.3
+      ambush:
+        patience_duration: 0
+        requires_cover: false
+      pack:
+        min_hunters: 1
+        coordination_radius: 0
+      success_rate:
+        base: 0.5
+        modifiers:
+          prey_is_baby: 1.3
+          prey_is_elderly: 1.2
+          prey_is_injured: 1.4
+          prey_is_isolated: 1.1
+          hunter_is_hungry: 1.1
+          pack_hunt_per_member: 0.0
+
+    post_kill:
+      eating_duration: 60
+      guards_kill: false
+      guard_duration: 0
+      shares_with: []
+      caches_excess: false
+
+    triggers:
+      hunger_threshold: 55
+      opportunistic: true
+      opportunistic_hunger_min: 70
+      cooldown_after_kill: 2000
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:dolphin"
+        threat_level: "HIGH"
+        detection_range: 16
+        response: "FLEE"
+      - entity: "minecraft:drowned"
+        threat_level: "MEDIUM"
+        detection_range: 12
+        response: "FLEE"
+      - entity: "minecraft:guardian"
+        threat_level: "EXTREME"
+        detection_range: 20
+        response: "FLEE"
+      - entity: "minecraft:elder_guardian"
+        threat_level: "EXTREME"
+        detection_range: 24
+        response: "FLEE"
+
+    default_response:
+      detection_range: 16
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.6
+        flee_distance: 32
+        flee_toward: "GROUP"
+        zigzag: true
+
+      freeze:
+        duration: [0, 0]
+        break_on_approach: false
+        break_distance: 0
+
+      alarm:
+        gives_alarm: true
+        alarm_radius: 20
+        alarm_triggers_group_flee: true
+
+    all_clear:
+      predator_distance: 40
+      time_since_seen: 300
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: true
+  method: "SEXUAL"
+
+  requirements:
+    min_age: 24000
+    max_age: null
+    min_health: 0.7
+    min_condition: 60
+    min_hunger: 55
+
+    recent_food:
+      enabled: true
+      time_window: 12000
+      meals_required: 2
+
+    environment:
+      near_water: true
+      water_max_distance: 0
+      required_biomes: ["river", "cold_ocean", "frozen_ocean"]
+      required_blocks_nearby: []
+      min_light: 0
+      max_light: 15
+
+    requires_shelter: false
+    shelter_type: null
+    time_of_day: null
+    season: null
+    weather: null
+
+    mate_required: true
+    mate_max_distance: 12
+
+  density_effects:
+    enabled: true
+    check_radius: 48
+
+    density_curve:
+      - count: 3
+        multiplier: 1.5
+      - count: 6
+        multiplier: 1.0
+      - count: 10
+        multiplier: 0.6
+      - count: 15
+        multiplier: 0.3
+      - count: 20
+        multiplier: 0.0
+
+  mate_selection:
+    search_radius: 24
+    search_interval: 800
+
+    preferences:
+      prefer_healthy: true
+      prefer_good_condition: true
+      avoid_relatives: false
+      relative_recognition_duration: 0
+
+    courtship:
+      enabled: false
+      behavior: null
+      duration: 0
+      can_reject: false
+      rejection_cooldown: 0
+
+  breeding:
+    cooldown: 18000
+
+    gestation:
+      type: "INSTANT"
+      duration: 0
+      behavior_during: []
+
+    birth:
+      offspring_count: [2, 4]
+      condition_affects_count: true
+      location_requirement: null
+
+  parental_care:
+    enabled: false
+    duration: 0
+
+    behaviors:
+      protects_offspring: false
+      protection_aggression: 1.0
+      protection_radius: 0
+
+      feeds_offspring: false
+      teaches_offspring: false
+      carries_offspring: false
+
+    offspring_behavior:
+      follows_parent: false
+      follow_distance: 0
+      max_separation: 0
+      separation_distress: false
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  group:
+    type: "HERD"
+    size:
+      min: 3
+      optimal: 5
+      max: 8
+
+    composition:
+      mixed_sex: true
+      mixed_age: true
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  herd_movement:
+    enabled: true
+    cohesion_radius: 8
+    separation_distance: 1.5
+    alignment: true
+
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "predator_detected"
+          call: "rapid_swimming"
+          group_response: "tight_schooling"
+      radius: 20
+      chain_calling: true
+
+    contact_calls:
+      enabled: false
+      when: []
+      radius: 0
+
+    mating_calls:
+      enabled: false
+      radius: 0
+      time: null
+
+  behaviors:
+    greeting: false
+    allogrooming: false
+    play: false
+    huddling: true
+    dominance_hierarchy: false
+
+  group_benefits:
+    predator_detection_bonus: 0.15
+    foraging_efficiency_bonus: 0.1
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  terrain:
+    enabled: false
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+      seeds: []
+      method: null
+      dispersal_radius: 0
+
+    pollination:
+      enabled: false
+      flowers: []
+      radius: 0
+
+    nutrient_cycling:
+      enabled: true
+      fertilizes: false
+      fertilize_radius: 0
+
+    decomposition:
+      enabled: false
+      decomposes: []
+      result: null
+
+  responses:
+    drinking:
+      enabled: false
+      frequency: 0
+      water_blocks: []
+      duration: 0
+      congregates: false
+
+    temperature:
+      heat_seek_shade: false
+      heat_seek_water: false
+      cold_seek_shelter: false
+      cold_huddling: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  spawning:
+    weight: 12
+    group_size: [3, 6]
+
+    conditions:
+      blocks: []
+      biomes: ["river", "frozen_river", "cold_ocean", "frozen_ocean", "deep_cold_ocean", "deep_frozen_ocean"]
+      light: [0, 15]
+      altitude: [30, 55]
+      time: null
+      weather: null
+
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 12
+      regional: null
+
+    resources:
+      enabled: false
+      requirements: []
+
+    over_capacity:
+      - threshold: 1.2
+        effects: ["reduced_breeding"]
+      - threshold: 1.5
+        effects: ["starvation", "dispersal"]
+      - threshold: 2.0
+        effects: ["disease"]
+
+  dispersal:
+    enabled: true
+    triggers: ["overcrowding"]
+    distance: [64, 128]
+
+  mortality:
+    old_age:
+      enabled: false
+      max_age: null
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+      base_chance: 0.0
+      crowding_multiplier: 0.0
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  distances:
+    detection: 16
+    caution: 10
+    flee: 6
+
+  habituation:
+    enabled: false
+    rate: 0.0
+    decay: 0.0
+    max_habituation: 0.0
+    habituated_flee_distance: 0
+
+  taming:
+    enabled: false
+    items: []
+    chance: 0.0
+    requires_habituation: false
+
+  player_breeding:
+    enabled: false
+    items: []
+    bypasses_conditions: false
+
+  drops:
+    on_death:
+      - item: "minecraft:salmon"
+        count: [1, 1]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 0
+      - item: "minecraft:bone_meal"
+        count: [1, 1]
+        chance: 0.05
+        requires_player_kill: false
+        looting_bonus: 0
+
+    on_interaction: []
+
+  interactions:
+    - action: "bucket_capture"
+      item: "minecraft:water_bucket"
+      result: "minecraft:salmon_bucket"
+      description: "Can be captured with water bucket"
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  sounds:
+    ambient: "entity.salmon.ambient"
+    hurt: "entity.salmon.hurt"
+    death: "entity.salmon.death"
+    baby: "entity.salmon.ambient"
+    alarm: null
+    mating: null
+    eating: null
+
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "swim_in_circle"
+        frequency: 0.1
+        trigger: "random"
+      - behavior: "quick_dart"
+        frequency: 0.05
+        trigger: "random"
+
+  personality_traits:
+    boldness:
+      base: 0.3
+      variation: 0.15
+    activity:
+      base: 0.7
+      variation: 0.2
+    sociability:
+      base: 0.8
+      variation: 0.1
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+
+ai_priority_framework:
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  physiological:
+    critical_health: 3
+    drink_water: 99
+    eat_food: 5
+    find_shelter: 99
+
+  reproduction:
+    care_for_offspring: 99
+    breed: 8
+    find_mate: 9
+
+  social:
+    group_cohesion: 4
+    social_interaction: 10
+
+  hunting:
+    hunt_prey: 6
+
+  location:
+    location_triggered: 99
+    territory_patrol: 99
+
+  default:
+    wander: 12
+    idle: 13
+    rest: 14
+
+
+# ============================================================================
+# SYSTEM 15: UNIQUE BEHAVIOR FRAMEWORK
+# ============================================================================
+
+unique_behavior_template:
+  structure:
+    name: ""
+    description: ""
+
+    triggers:
+      - type: ""
+        conditions: {}
+
+    requirements:
+      all_of: []
+      any_of: []
+      none_of: []
+
+    actions: []
+
+    effects:
+      on_self: []
+      on_others: []
+      on_world: []
+
+    priority: 10
+    duration: null
+    cooldown: null
+    interruptible: true

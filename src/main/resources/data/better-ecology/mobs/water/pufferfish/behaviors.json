@@ -1,0 +1,29 @@
+{
+  "minecraft:pufferfish": {
+    "behaviors": {
+      "enabled": true,
+      "priority": 2,
+      "max_force": 0.08,
+      "max_speed": 0.15,
+      "separation": 1.5,
+      "alignment": 0.8,
+      "cohesion": 1.0,
+      "inflate": 1.5,
+      "evasion": 1.3
+    },
+    "defense": {
+      "enabled": true,
+      "inflate_threshold": 5.0,
+      "inflate_duration": 300,
+      "deflate_cooldown": 800,
+      "poison_damage": 2.0,
+      "poison_duration": 5
+    },
+    "aquatic": {
+      "enabled": true,
+      "depth_preference": "shallow",
+      "surface_seeking": 0.3,
+      "current_resistance": 0.4
+    }
+  }
+}

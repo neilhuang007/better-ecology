@@ -1,0 +1,852 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - GENERALIZED BEHAVIOR TEMPLATE
+# Version: 2.0
+# Mob: Parrot (minecraft:parrot)
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:parrot"
+  display_name: "Parrot"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "OMNIVORE"
+    social_type: "FISSION_FUSION"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Tropical parrots (Psittacidae family)"
+    ecological_role: "Seed disperser, vocal mimic, social canopy dweller that helps propagate jungle vegetation"
+
+  tags: ["flying", "tameable", "shoulder_mount", "mimic", "tropical", "vocal"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  health:
+    base: 3                         # 6 HP total (3 hearts)
+    baby_multiplier: 0.5
+
+  size:
+    width: 0.5
+    height: 0.9
+    baby_scale: 0.5
+
+  biomass:
+    adult: 15                       # Very small bird
+    baby: 5
+    transfer_efficiency: 0.1
+
+  movement:
+    speeds:
+      walk: 0.2
+      run: 0.3
+      swim: 0.1                     # Can swim but doesn't prefer it
+      fly: 0.4                      # Primary movement mode
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: true
+      jump_height: 1.5
+      avoids_water: true
+      avoids_cliffs: false          # Flying bird
+      cliff_threshold: 0
+
+    conditional_modifiers:
+      baby: 0.6
+      injured: 0.5
+      hungry: 0.7
+      fleeing: 1.6
+      in_water_nonaquatic: 0.3      # Not good swimmers
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+    decay_rate: 0.015               # Small bird, moderate metabolism
+
+    thresholds:
+      satiated: 75
+      hungry: 45
+      very_hungry: 20
+      starving: 8
+
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 200
+
+  thirst:
+    enabled: false
+
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+    gain_when_satiated: 0.01
+    loss_when_hungry: 0.02
+    loss_when_starving: 0.1
+
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.6              # Quick recovery
+
+    costs:
+      sprinting: 0.2
+      fleeing: 0.3
+      flying: 0.4
+      swimming: 0.3
+
+  age:
+    enabled: true
+    baby_duration: 24000            # 20 minutes
+    maturity_age: 24000
+    elderly_age: null
+    max_age: null
+
+  social:
+    enabled: true                   # Social but flexible grouping
+    max_value: 100
+    decay_rate: 0.005               # Mild preference for company
+    recovery_rate: 0.08
+    loneliness_threshold: 40
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 6000]             # Dawn to noon - very active
+        activity: 1.0
+        label: "morning"
+      - time: [6000, 12000]         # Noon to dusk - active
+        activity: 0.9
+        label: "afternoon"
+      - time: [12000, 13500]        # Dusk - settling down
+        activity: 0.5
+        label: "dusk"
+      - time: [13500, 22500]        # Night - roosting/sleeping
+        activity: 0.1
+        label: "night"
+      - time: [22500, 24000]        # Pre-dawn - waking up
+        activity: 0.6
+        label: "pre_dawn"
+
+    low_activity_behavior:
+      action: "rest"
+      seek_shelter: true
+      reduced_awareness: true
+      awareness_multiplier: 0.4
+
+  weather:
+    rain:
+      activity_multiplier: 0.4
+      seek_shelter: true
+      shelter_priority: 4
+    thunder:
+      activity_multiplier: 0.2
+      seek_shelter: true
+      panic_chance: 0.3
+    snow:
+      activity_multiplier: 0.3      # Tropical bird, dislikes cold
+      seek_shelter: true
+    clear:
+      activity_multiplier: 1.0
+
+  seasons:
+    enabled: false
+
+  lunar:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  habitat:
+    biomes:
+      allowed: []                   # Can live anywhere when tamed
+      preferred: ["jungle", "bamboo_jungle", "sparse_jungle"]
+      forbidden: []
+
+    altitude:
+      min: -64
+      max: 320
+      preferred: [64, 100]          # Canopy level
+
+    required_nearby:
+      - feature: "trees"
+        max_distance: 16
+        reason: "Perching and shelter"
+
+  territory:
+    enabled: false
+
+  home_range:
+    enabled: true
+    radius: 32
+    has_home_point: true
+    home_type: "SPAWN_POINT"        # Returns to favorite perch
+
+  shelter:
+    needs_shelter: true
+    shelter_uses: ["sleeping", "hiding", "weather_protection"]
+
+    valid_shelters:
+      - type: "vegetation"
+        description: "Dense jungle canopy or leaves"
+        blocks: ["leaves", "jungle_leaves", "vines"]
+        min_enclosure: 0.4
+      - type: "cave"
+        description: "Natural overhang or cave entrance"
+        min_enclosure: 0.5
+      - type: "player_structure"
+        description: "Player-built roofs or structures"
+        min_enclosure: 0.6
+
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  food_sources:
+    primary:
+      - type: "ITEM"
+        target: "minecraft:wheat_seeds"
+        nutrition: 15
+        saturation: 1200
+        consumption_time: 20
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 2
+        health_effect: 0
+
+      - type: "ITEM"
+        target: "minecraft:melon_seeds"
+        nutrition: 15
+        saturation: 1200
+        consumption_time: 20
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 2
+        health_effect: 0
+
+      - type: "ITEM"
+        target: "minecraft:pumpkin_seeds"
+        nutrition: 15
+        saturation: 1200
+        consumption_time: 20
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 2
+        health_effect: 0
+
+      - type: "ITEM"
+        target: "minecraft:beetroot_seeds"
+        nutrition: 15
+        saturation: 1200
+        consumption_time: 20
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 2
+        health_effect: 0
+
+      - type: "ITEM"
+        target: "minecraft:torchflower_seeds"
+        nutrition: 15
+        saturation: 1200
+        consumption_time: 20
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 2
+        health_effect: 0
+
+      - type: "ITEM"
+        target: "minecraft:pitcher_pod"
+        nutrition: 15
+        saturation: 1200
+        consumption_time: 20
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 2
+        health_effect: 0
+
+    secondary:
+      - type: "BLOCK"
+        target: "minecraft:sweet_berry_bush"
+        nutrition: 10
+        saturation: 800
+        consumption_time: 30
+        method: "BROWSE"
+        world_effect:
+          action: "DAMAGE"
+        condition_gain: 1
+        health_effect: 0
+
+    emergency:
+      - type: "DROPPED_ITEM"
+        target: "#minecraft:seeds"
+        nutrition: 8
+        saturation: 600
+        consumption_time: 15
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+        condition_gain: 1
+        health_effect: 0
+
+  foraging:
+    search_radius:
+      base: 12
+      when_hungry: 20
+      when_starving: 32
+    search_interval: 160
+
+    memory:
+      remembers_locations: true
+      memory_duration: 18000
+      remembers_depleted: true
+      avoids_depleted_for: 6000
+      shares_with_group: true       # Social foraging
+
+    sustainability:
+      enabled: false                # Seeds are renewable
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:ocelot"
+        threat_level: "HIGH"
+        detection_range: 20
+        response: "FLEE"
+
+      - entity: "minecraft:cat"
+        threat_level: "MEDIUM"
+        detection_range: 16
+        response: "FLEE"
+
+    default_response:
+      detection_range: 18
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.6
+        flee_distance: 32
+        flee_toward: "SAFETY"       # Fly upward to high perches
+        zigzag: true                # Evasive flying
+
+      alarm:
+        gives_alarm: true
+        alarm_radius: 24
+        alarm_triggers_group_flee: true
+
+    all_clear:
+      predator_distance: 48
+      time_since_seen: 600
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: true
+  method: "SEXUAL"
+
+  requirements:
+    min_age: 24000
+    max_age: null
+    min_health: 0.7
+    min_condition: 60
+    min_hunger: 55
+
+    recent_food:
+      enabled: true
+      time_window: 12000
+      meals_required: 2
+
+    environment:
+      near_water: false
+      required_biomes: []
+      required_blocks_nearby: []
+      min_light: 8                  # Prefer daylight breeding
+      max_light: 15
+
+    requires_shelter: false
+    time_of_day: [0, 12000]         # Daylight hours
+    season: null
+    weather: ["clear"]
+
+    mate_required: true
+    mate_max_distance: 12
+
+  density_effects:
+    enabled: true
+    check_radius: 48
+
+    density_curve:
+      - count: 2
+        multiplier: 1.4
+      - count: 4
+        multiplier: 1.0
+      - count: 8
+        multiplier: 0.6
+      - count: 12
+        multiplier: 0.2
+      - count: 16
+        multiplier: 0.0
+
+  mate_selection:
+    search_radius: 24
+    search_interval: 800
+
+    preferences:
+      prefer_healthy: true
+      prefer_good_condition: true
+      avoid_relatives: true
+      relative_recognition_duration: 48000
+
+    courtship:
+      enabled: true
+      behavior: "aerial_display"
+      duration: 160
+      can_reject: true
+      rejection_cooldown: 2400
+
+  breeding:
+    cooldown: 6000                  # 5 minutes
+
+    gestation:
+      type: "INSTANT"
+      duration: 0
+      behavior_during: []
+
+    birth:
+      offspring_count: [1, 1]
+      condition_affects_count: false
+      location_requirement: null
+
+  parental_care:
+    enabled: true
+    duration: 24000                 # Until baby grows up
+
+    behaviors:
+      protects_offspring: true
+      protection_aggression: 1.5
+      protection_radius: 6
+      feeds_offspring: true
+      teaches_offspring: false
+      carries_offspring: false
+
+    offspring_behavior:
+      follows_parent: true
+      follow_distance: 3
+      max_separation: 12
+      separation_distress: true
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  group:
+    type: "FISSION_FUSION"
+    size:
+      min: 1
+      optimal: 3
+      max: 8
+
+    composition:
+      mixed_sex: true
+      mixed_age: true
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  herd_movement:
+    enabled: true
+    cohesion_radius: 10
+    separation_distance: 2
+    alignment: true
+
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "predator_spotted"
+          call: "sharp_squawk"
+          group_response: "flee_upward"
+      radius: 24
+      chain_calling: true
+
+    contact_calls:
+      enabled: true
+      when: ["separated", "found_food"]
+      radius: 20
+
+    mating_calls:
+      enabled: true
+      radius: 32
+      time: [0, 12000]
+
+  behaviors:
+    greeting: true
+    allogrooming: true
+    play: true
+    huddling: true
+    dominance_hierarchy: false
+
+  group_benefits:
+    predator_detection_bonus: 0.15
+    foraging_efficiency_bonus: 0.1
+    thermoregulation_bonus: 0.05
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  terrain:
+    enabled: false
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: true
+      seeds: ["wheat_seeds", "melon_seeds", "pumpkin_seeds", "beetroot_seeds"]
+      method: "GUT_PASSAGE"
+      dispersal_radius: 16
+
+    pollination:
+      enabled: false
+      flowers: []
+      radius: 0
+
+    nutrient_cycling:
+      enabled: false
+      fertilizes: false
+      fertilize_radius: 0
+
+    decomposition:
+      enabled: false
+      decomposes: []
+      result: null
+
+  responses:
+    drinking:
+      enabled: false
+      frequency: 8000
+      water_blocks: ["water"]
+      duration: 40
+      congregates: false
+
+    temperature:
+      heat_seek_shade: true         # Tropical species
+      heat_seek_water: false
+      cold_seek_shelter: true
+      cold_huddling: true
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  spawning:
+    weight: 10
+    group_size: [1, 2]
+
+    conditions:
+      blocks: ["grass_block", "leaves", "jungle_leaves", "logs", "jungle_log"]
+      biomes: ["jungle", "bamboo_jungle", "sparse_jungle"]
+      light: [9, 15]
+      altitude: [64, 100]
+      time: [0, 12000]
+      weather: ["clear"]
+
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 4
+      regional: null
+
+    resources:
+      enabled: false
+      requirements: []
+
+    over_capacity:
+      - threshold: 1.3
+        effects: ["reduced_breeding"]
+      - threshold: 1.7
+        effects: ["dispersal"]
+
+  dispersal:
+    enabled: true
+    triggers: ["adulthood", "overcrowding"]
+    distance: [96, 256]
+
+  mortality:
+    old_age:
+      enabled: false
+      max_age: null
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+      base_chance: 0.0
+      crowding_multiplier: 1.0
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "NEUTRAL"
+
+  distances:
+    detection: 24
+    caution: 10
+    flee: 4                         # Will approach if player is still
+
+  habituation:
+    enabled: true
+    rate: 0.02
+    decay: 0.0005
+    max_habituation: 0.9
+    habituated_flee_distance: 0
+
+  taming:
+    enabled: true
+    items: ["wheat_seeds", "melon_seeds", "pumpkin_seeds", "beetroot_seeds", "torchflower_seeds", "pitcher_pod"]
+    chance: 0.33
+    requires_habituation: false
+
+  player_breeding:
+    enabled: true
+    items: ["wheat_seeds", "melon_seeds", "pumpkin_seeds", "beetroot_seeds", "torchflower_seeds", "pitcher_pod"]
+    bypasses_conditions: false
+
+  drops:
+    on_death:
+      - item: "minecraft:feather"
+        count: [1, 2]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+  interactions:
+    - action: "right_click"
+      item: "cookie"
+      result: "fatal_poison"
+      description: "Cookies are FATAL to parrots - instant death with poisoning effect"
+
+    - action: "right_click"
+      item: "none"
+      result: "shoulder_mount"
+      description: "Tamed parrots can perch on player shoulders"
+
+    - action: "feed_seeds"
+      item: "any_seeds"
+      result: "taming_attempt"
+      description: "Seeds can tame and breed parrots"
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  sounds:
+    ambient: "entity.parrot.ambient"
+    hurt: "entity.parrot.hurt"
+    death: "entity.parrot.death"
+    baby: "entity.parrot.ambient"
+    alarm: "entity.parrot.fly"
+    mating: "entity.parrot.ambient"
+    eating: "entity.parrot.eat"
+
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "head_tilt"
+        frequency: 0.3
+        trigger: "random"
+
+      - behavior: "wing_flutter"
+        frequency: 0.2
+        trigger: "random"
+
+      - behavior: "preen_feathers"
+        frequency: 0.15
+        trigger: "idle"
+
+      - behavior: "dance"
+        frequency: 1.0
+        trigger: "jukebox_music"
+
+      - behavior: "mimic_sounds"
+        frequency: 0.1
+        trigger: "nearby_mob"
+
+  personality_traits:
+    boldness:
+      base: 0.4
+      variation: 0.25
+    activity:
+      base: 0.7
+      variation: 0.2
+    sociability:
+      base: 0.6
+      variation: 0.2
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+
+ai_priority_framework:
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  physiological:
+    critical_health: 3
+    drink_water: 4
+    eat_food: 5
+    find_shelter: 6
+
+  reproduction:
+    care_for_offspring: 7
+    breed: 8
+    find_mate: 9
+
+  social:
+    group_cohesion: 10
+    social_interaction: 11
+
+  hunting:
+    hunt_prey: 12
+
+  location:
+    location_triggered: 13
+    territory_patrol: 14
+
+  default:
+    wander: 15
+    idle: 16
+    rest: 17
+
+
+# ============================================================================
+# SYSTEM 15: UNIQUE BEHAVIOR FRAMEWORK
+# ============================================================================
+
+unique_behavior_template:
+  structure:
+    name: "unique_behavior_placeholder"
+    description: "See unique_registry.yaml for parrot-specific unique behaviors"
+
+    triggers:
+      - type: "EVENT"
+        conditions: {}
+
+    requirements:
+      all_of: []
+      any_of: []
+      none_of: []
+
+    actions: []
+
+    effects:
+      on_self: []
+      on_others: []
+      on_world: []
+
+    priority: 10
+    duration: null
+    cooldown: null
+    interruptible: true
+
+# ============================================================================
+# SYSTEM 15: ANIMAL-ANIMAL INTERACTIONS
+# ============================================================================
+
+interaction:
+  predators:
+    - "minecraft:cat"
+    - "minecraft:ocelot"
+
+  prey: []
+  symbiotic_partners: []
+  competitors: []
+  herd_compatible: []
+
+  relationship_decay_rate: 0.002
+  trust_build_rate: 0.02
+  grudge_build_rate: 0.01
+
+  gives_warning_calls: true            # Parrots mimic danger sounds
+  warning_cooldown: 100
+
+  can_mourn: false
+  can_grieve: false
+  can_play: true
+  can_be_altruistic: false
+  can_teach: false
+

@@ -1,0 +1,442 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - WOLF BEHAVIOR EXAMPLE
+# ============================================================================
+# This example demonstrates how to configure steering behaviors for a pack
+# predator like wolves. The configuration showcases pack cohesion, hunting
+# behaviors, and territorial behaviors.
+#
+# BEHAVIOR CATEGORIES:
+# 1. Flocking - Pack cohesion (separation, alignment, cohesion for pack)
+# 2. Predation - Pursuit, attraction, and avoidance behaviors
+# 3. Territorial - Home range maintenance and territory defense
+# 4. Parental - Protection and teaching of pups
+# ============================================================================
+
+# ============================================================================
+# BASIC MOB INFO
+# ============================================================================
+identity:
+  mob_id: "minecraft:wolf"
+  display_name: "Wolf"
+  classification:
+    category: "NEUTRAL"              # Attacks when provoked
+    trophic_level: "SECONDARY_CONSUMER"
+    diet_type: "CARNIVORE"
+    social_type: "PACK"
+    activity_pattern: "CATHEMERAL"   # Active day and night
+
+# ============================================================================
+# PHYSICAL CHARACTERISTICS
+# ============================================================================
+physical:
+  health:
+    base: 8                         # 4 hearts wild (8 HP), tamed wolves have more
+    baby_multiplier: 0.5
+
+  movement:
+    speeds:
+      walk: 0.3
+      run: 0.5                      # Fast sprint for chasing prey
+      swim: 0.2
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: true
+      jump_height: 1.0
+      avoids_water: false
+      avoids_cliffs: true
+      cliff_threshold: 4
+
+# ============================================================================
+# STEERING BEHAVIORS
+# ============================================================================
+# This section configures all steering behaviors that influence the wolf's
+# movement. Each behavior has a weight (0.0-1.0+) that determines its priority.
+# Higher weights = stronger influence on movement.
+# ============================================================================
+
+steering_behaviors:
+
+  # ==========================================================================
+  # FLOCKING BEHAVIORS (PACK COHESION)
+  # ==========================================================================
+  # Wolves use flocking behaviors to maintain pack structure during movement.
+  # Unlike sheep (which flock for safety), wolves flock for coordinated hunting.
+  #
+  # Weight guidelines for pack predators:
+  # - Separation: MEDIUM (1.0-1.5) - less important than for prey
+  # - Alignment: HIGH (1.2-1.8) - coordinated movement is crucial
+  # - Cohesion: HIGH (0.8-1.5) - pack must stay together for hunting
+  # ==========================================================================
+
+  flocking:
+    enabled: true                    # Master switch for pack cohesion
+    weight: 0.9                      # Overall weight for pack behaviors
+
+    # Separation - avoid crowding packmates
+    # Less critical for wolves than prey, but still important
+    separation:
+      enabled: true
+      weight: 1.2                    # Medium priority - wolves can be closer together
+      perception_radius: 5.0         # Blocks - detect nearby pack members
+      separation_distance: 2.0       # Blocks - can be closer than prey animals
+      max_force: 0.25                # Steering force
+
+    # Alignment - match velocity with pack (CRITICAL for hunting)
+    # Coordinated movement allows wolves to flank prey and attack together
+    alignment:
+      enabled: true
+      weight: 1.5                    # HIGH - coordinated movement essential for pack hunting
+      perception_radius: 12.0        # Blocks - coordinate over longer distances
+      max_force: 0.18                # Moderate steering to match pack direction
+
+    # Cohesion - stay with pack for hunting efficiency
+    cohesion:
+      enabled: true
+      weight: 1.0                    # HIGH - pack must stay together
+      perception_radius: 15.0        # Blocks - look far for pack members
+      max_force: 0.12                # Gentle pull toward pack center
+
+    # Topological neighbor count
+    # Wolves track their pack members closely
+    topological_neighbor_count: 6    # Track nearest pack members
+    perception_angle: 2.8            # Radians (~160 degrees FOV - wolves have good vision)
+
+    # Noise - less randomness for efficient hunting
+    noise:
+      enabled: true
+      weight: 0.05                   # Minimal randomization
+      magnitude: 0.03                # Very subtle
+
+  # ==========================================================================
+  # PREDATION - PURSUIT BEHAVIOR
+  # ==========================================================================
+  # Active chasing and interception of prey. This is the core hunting behavior.
+  # Pursuit calculates interception courses to predict prey movement.
+  #
+  # Weight guidelines:
+  # - Pursuit should be VERY HIGH (2.5-4.0) when actively hunting
+  # - Works with attraction - attraction finds targets, pursuit catches them
+  # ==========================================================================
+
+  pursuit:
+    enabled: true
+    weight: 3.5                      # CRITICAL: Hunting is primary goal when hungry
+
+    # Speed and force
+    max_pursuit_speed: 1.2           # Speed multiplier when chasing (1.2x normal)
+    max_pursuit_force: 0.15          # Steering force for pursuit
+
+    # Interception prediction
+    prediction_time: 1.0             # Seconds - predict prey position this far ahead
+
+    # Chase limits
+    give_up_distance: 64.0           # Blocks - stop chasing if prey gets this far
+    max_chase_duration: 400          # Ticks (20 seconds) - maximum chase time
+
+    # Hunting states
+    stalking:
+      enabled: true
+      speed_multiplier: 0.5          # Move slowly when stalking
+      detection_range: 16.0          # Blocks - begin stalking at this distance
+
+    chasing:
+      enabled: true
+      speed_multiplier: 1.2          # Full speed when chasing
+      min_distance: 2.0              # Blocks - close enough to attack
+
+    attacking:
+      enabled: true
+      min_distance: 2.0              # Blocks - attack when this close
+
+    # Prey selection
+    prey_preferences:
+      prefer_weak: 2.5               # Strong preference for injured prey
+      prefer_isolated: 2.0           # Prefer separated targets
+      avoid_babies: true             # Avoid healthy babies (pack ethics)
+      babies_exception: "starving"   # Except when starving
+
+    # Coordinated hunting
+    pack_hunting:
+      enabled: true
+      min_hunters: 2                 # Minimum pack members for coordinated hunt
+      coordination_radius: 48.0      # Blocks - coordinate with pack members
+      success_bonus_per_member: 0.25 # Each pack member increases success chance
+
+  # ==========================================================================
+  # PREDATION - ATTRACTION BEHAVIOR
+  # ==========================================================================
+  # Draws wolves toward potential prey within detection range.
+  # This is the "searching" phase - finds targets before pursuit activates.
+  #
+  # Weight guidelines:
+  # - Attraction: 1.2-2.0 (important but not critical)
+  # - Lower than pursuit - pursuit takes over once prey is selected
+  # ==========================================================================
+
+  attraction:
+    enabled: true
+    weight: 1.5                      # HIGH - actively seek prey when hunting
+
+    attraction_radius: 16.0          # Blocks - move toward prey within this range
+    max_attraction_force: 0.15       # Steering force
+
+    detection_range: 32.0            # Blocks - scan for prey within this range
+
+    # Prey selection scoring
+    prefer_babies: 0.5               # Score multiplier (babies easier to catch)
+    prefer_injured: 0.7              # Score multiplier (injured prey easier)
+    size_limit: 1.5                  # Don't hunt prey larger than 1.5x wolf size
+
+    # Target persistence
+    target_switch_cooldown: 100      # Ticks - how long to commit to current target
+    target_validation: true          # Periodically check if target is still valid
+
+  # ==========================================================================
+  # PREDATION - AVOIDANCE BEHAVIOR
+  # ==========================================================================
+  # Proactive avoidance of threats to the pack.
+  # Wolves avoid stronger predators, players, and environmental dangers.
+  #
+  # Weight guidelines:
+  # - Avoidance: 0.8-1.2 for confident predators like wolves
+  # - Higher than prey animals but lower than hunting behaviors
+  # ==========================================================================
+
+  avoidance:
+    enabled: true
+    weight: 1.0
+
+    avoidance_radius: 8.0            # Blocks - maintain distance from threats
+    max_avoidance_force: 0.3         # Steering force
+    detection_range: 20.0            # Blocks - detect threats early
+
+    # Entities to avoid
+    avoid:
+      - "minecraft:player"           # Unless tamed
+      - "minecraft:iron_golem"       # Stronger mobs
+      - "minecraft:warden"           # Avoid wardens
+      - "minecraft:polar_bear"       # Can fight back
+
+    # Conditional avoidance
+    avoid_when_tamed: false          # Tamed wolves don't avoid (they protect)
+    avoid_when_hunting: false        # Don't avoid when actively hunting prey
+
+  # ==========================================================================
+  # PACK BEHAVIORS
+  # ==========================================================================
+  # Pack cohesion and coordination beyond basic flocking.
+  # These behaviors maintain pack structure during hunting and resting.
+  #
+  # Weight guidelines:
+  # - Pack cohesion: 0.8-1.2 (important but flexible)
+  # - Leader following: 0.6-1.0 (wolves have flexible leadership)
+  # ==========================================================================
+
+  pack_cohesion:
+    enabled: true
+    weight: 1.0
+
+    # Cohesion parameters
+    cohesion_radius: 20.0            # Blocks - larger radius for hunting packs
+    cohesion_strength: 0.5           # Pull toward pack center
+    max_speed: 0.4                   # Speed when seeking pack
+    max_force: 0.12                  # Steering force
+
+    # Separation within pack
+    separation_distance: 3.0         # Blocks - spacing from pack members
+
+    # Hunting formation (optional advanced feature)
+    hunting_formation:
+      enabled: false                 # Wolves use fluid tactics, not rigid formations
+      type: "surround"               # Would spread out to surround prey
+
+  # Leader following
+  # Wolf packs have flexible, situation-dependent leadership
+  leader_following:
+    enabled: true
+    weight: 0.7
+
+    # Leadership criteria
+    leadership_age_bonus: 1.2        # Older wolves lead
+    leadership_dominance_bonus: 1.5  # Dominance is very important for wolves
+    max_leaders: 3                   # Can follow multiple potential leaders
+
+    # Following parameters
+    follow_radius: 25.0              # Blocks - follow over long distances
+    max_speed: 0.4                   # Speed when following
+    max_force: 0.1                   # Steering force
+
+  # ==========================================================================
+  # TERRITORIAL BEHAVIORS
+  # ==========================================================================
+  # Home range maintenance and territory defense.
+  # Wolves are territorial - they patrol and defend their hunting grounds.
+  #
+  # Weight guidelines:
+  # - Home range: 0.5-1.0 (return to territory if wandering too far)
+  # - Territory patrol: 0.3-0.7 (periodic patrol movements)
+  # ==========================================================================
+
+  home_range:
+    enabled: true
+    weight: 0.8                      # MEDIUM - important to stay in territory
+
+    # Territory definition
+    center: "spawn_point"            # Could be "spawn_point", "den_location", etc.
+    radius: 96.0                     # Blocks - large territory for hunting
+    return_strength: 0.6             # How strongly to pull back when outside
+
+    # Boundary type
+    soft_boundary: true              # Gradual pull instead of hard wall
+    max_return_speed: 0.5            # Speed when returning to territory
+
+    # Visit tracking (for patrol optimization)
+    track_visits: true               # Remember areas visited
+    visit_decay: 0.01                # How quickly visit memory fades
+
+  # Territory patrol
+  # Wolves periodically patrol their territory to mark and defend
+  territory_patrol:
+    enabled: true
+    weight: 0.5
+
+    patrol_radius: 96.0              # Blocks - patrol entire territory
+    patrol_points: 8                 # Number of patrol waypoints
+    patrol_interval: 1200            # Ticks (1 minute) - between patrol points
+    patrol_speed: 0.35               # Speed when patrolling
+
+    # Marking behavior
+    mark_territory: true             # Mark territory (scent marking)
+    mark_interval: 600               # Ticks (30 seconds) - between marks
+    mark_radius: 8.0                 # Blocks - how close to be to mark
+
+  # ==========================================================================
+  # PARENTAL BEHAVIORS
+  # ==========================================================================
+  # Wolf pups require care and protection from the pack.
+  # These behaviors ensure pup survival and teaching of hunting skills.
+  #
+  # Weight guidelines:
+  # - Follow mother: 2.0-3.0 for pups (CRITICAL)
+  # - Separation distress: 2.5-3.5 for both parents and pups
+  # - Protection: 3.0-4.0 (parents defend pups aggressively)
+  # ==========================================================================
+
+  # Pup follows parents
+  follow_mother:
+    enabled: true
+    weight: 2.5                      # VERY HIGH for pups
+
+    base_follow_distance: 5.0        # Blocks - stay close to parents
+    max_follow_distance: 15.0        # Blocks - maximum distance before seeking parents
+    follow_speed: 1.2                # Pups run fast to catch up
+    slowing_radius: 3.0              # Blocks - slow when approaching
+
+    # Aging and learning
+    adulthood_age: 24000             # Ticks - become adult at 20 minutes
+    independence_progression: true    # Gradually explore farther from parents
+
+    # Learning behaviors (pups learn hunting by following)
+    learning_mode: true              # Pups observe hunting behavior
+    learning_distance: 10.0          # Blocks - stay close enough to observe
+
+  # Separation distress
+  # Pups and parents maintain contact through vocalizations
+  separation_distress:
+    enabled: true
+    weight: 3.0                      # CRITICAL - prevent losing pups
+
+    distress_threshold: 20.0         # Blocks - call when separated
+    call_cooldown: 45.0              # Seconds - between calls
+
+    # Pup behavior
+    baby:
+      enabled: true
+      response_speed: 1.3            # Run fast to parents
+      vocalize_distress: true        # Whine when separated
+
+    # Parent behavior
+    mother:
+      enabled: true
+      response_speed: 1.5            # Parents run fast to distressed pup
+      vocalize_response: true        # Howl back to locate pup
+      protection_radius: 20.0        # Blocks - how far to hear pup calls
+
+  # ==========================================================================
+  # TAMEABLE WOLF SPECIAL BEHAVIORS
+  # ==========================================================================
+  # Tamed wolves have different priorities - they follow and protect players.
+  # These override wild behaviors when the wolf is tamed.
+  # ==========================================================================
+
+  tamed_behaviors:
+    enabled: true
+
+    # Follow player
+    follow_player:
+      enabled: true
+      weight: 2.0                    # HIGH - tamed wolves prioritize their owner
+
+      follow_distance: 8.0           # Blocks - stay this close to owner
+      teleport_distance: 48.0        # Blocks - teleport if farther than this
+      follow_speed: 1.2              # Speed when following owner
+      wandering: true                # Wander nearby instead of standing still
+
+    # Protect player
+    protect_owner:
+      enabled: true
+      weight: 4.0                    # CRITICAL - defending owner is top priority
+
+      aggression_boost: 2.0          # Damage multiplier when protecting owner
+      detection_range: 16.0          # Blocks - detect threats to owner
+      protect_radius: 6.0            # Blocks - intercept threats this close
+
+      # Threats to owner
+      avenges_owner: true            # Attack anything that hurts owner
+      persistent_attacks: true       # Chase threats longer when protecting
+
+# ============================================================================
+# BEHAVIOR WEIGHT NOTES
+# ============================================================================
+# SUMMARY: How different behavior weights interact in wolves
+#
+# CRITICAL WEIGHTS (3.0+):
+# - Pursuit (3.5) - Active hunting when prey detected
+# - Protect owner (4.0) - Tamed wolves defend owner (only when tamed)
+# - Separation distress (3.0) - Parent-pup bonding
+# - Follow mother (2.5) - Pup survival
+#
+# HIGH WEIGHTS (1.5-3.0):
+# - Attraction (1.5) - Seek prey when hunting
+# - Flocking alignment (1.5) - Coordinated pack movement
+# - Home range (0.8) - Stay in territory
+#
+# MEDIUM WEIGHTS (0.7-1.5):
+# - Flocking separation (1.2) - Don't crowd packmates
+# - Pack cohesion (1.0) - Stay with pack
+# - Avoidance (1.0) - Avoid stronger threats
+# - Flocking cohesion (1.0) - Pack unity
+# - Leader following (0.7) - Flexible leadership
+# - Territory patrol (0.5) - Periodic patrol
+#
+# LOW WEIGHTS (0.0-0.7):
+# - Flocking noise (0.05) - Minimal randomness for efficiency
+#
+# TUNING TIPS:
+# 1. Increase pursuit weight if wolves give up chase too easily
+# 2. Increase alignment if pack movement looks disorganized
+# 3. Decrease cohesion if pack is too tight during hunting
+# 4. Adjust attraction radius based on prey detection distance
+# 5. Balance home_range weight to prevent wandering too far
+# 6. Tamed wolves: increase follow_player for more obedient pets
+# 7. Wild wolves: increase pack_cohesion for better hunting coordination
+#
+# HUNTING BEHAVIOR BALANCING:
+# - Attraction finds prey (weight 1.5)
+# - Pursuit catches prey (weight 3.5)
+# - When pursuit activates, it overrides attraction naturally
+# - Pack hunting bonus: multiple wolves near prey = higher success
+# ============================================================================

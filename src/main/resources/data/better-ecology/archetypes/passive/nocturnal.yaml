@@ -1,0 +1,54 @@
+# ============================================================================
+# ARCHETYPE: NOCTURNAL PASSIVE MOB
+# ============================================================================
+# For passive mobs that are primarily active at night
+# ============================================================================
+
+identity:
+  classification:
+    activity_pattern: "NOCTURNAL"
+
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 12000]
+        activity: 0.1
+        label: "day_sleep"
+      - time: [12000, 13500]
+        activity: 0.3
+        label: "dusk_wake"
+      - time: [13500, 22500]
+        activity: 1.0
+        label: "night_active"
+      - time: [22500, 24000]
+        activity: 0.6
+        label: "pre_dawn_activity"
+
+    low_activity_behavior:
+      action: "SLEEP"
+      seek_shelter: true
+      reduced_awareness: true
+      awareness_multiplier: 0.3
+
+spatial:
+  shelter:
+    needs_shelter: true
+    shelter_uses: ["sleeping", "hiding"]
+
+    valid_shelters:
+      - type: "cave"
+        description: "Natural cave or overhang"
+        min_enclosure: 0.7
+      - type: "vegetation"
+        description: "Dense leaves or tall grass"
+        blocks: ["leaves", "tall_grass"]
+        min_enclosure: 0.5
+      - type: "burrow"
+        description: "Underground tunnel"
+        must_dig: true
+        dig_blocks: ["dirt", "sand", "grass_block"]
+
+physical:
+  movement:
+    conditional_modifiers:
+      night_activity_bonus: 1.3

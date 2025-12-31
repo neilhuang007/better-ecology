@@ -1,0 +1,744 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - SALMON UNIQUE PROFILE
+# Template Version: 2.0
+# ============================================================================
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:salmon"
+  display_name: "Salmon"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "SECONDARY_CONSUMER"
+    diet_type: "PISCIVORE"
+    social_type: "FISSION_FUSION"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Atlantic/Pacific salmon"
+    ecological_role: "Mid-level aquatic predator with anadromous behavior, connecting river and ocean ecosystems through migration patterns"
+
+  tags: ["aquatic", "fish", "schooling", "bucket_capturable", "anadromous", "migratory"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 1.5                    # 3 HP
+  size:
+    width: 0.7
+    height: 0.4
+  biomass:
+    adult: 15
+  movement:
+    speeds:
+      walk: 0.0                  # Cannot move on land
+      run: 0.0
+      swim: 0.35                 # Fast, agile swimmer
+      fly: 0.0
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.03             # Higher metabolism for active predator
+  thirst:
+    enabled: false               # Aquatic species
+  age:
+    baby_duration: 20000
+    max_age: null                # No natural death from age
+  social:
+    enabled: true                # Schooling behavior important
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 12000]         # Day
+        activity: 1.0
+        label: "day_active"
+      - time: [12000, 13500]     # Dusk
+        activity: 0.8
+        label: "dusk"
+      - time: [13500, 22500]     # Night
+        activity: 0.5            # Reduced but not inactive
+        label: "night"
+      - time: [22500, 24000]     # Dawn
+        activity: 0.8
+        label: "dawn"
+
+  weather:
+    rain:
+      activity_multiplier: 1.1   # More active during rain
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: ["river", "frozen_river", "ocean", "cold_ocean", "lukewarm_ocean", "deep_ocean", "deep_cold_ocean", "deep_lukewarm_ocean"]
+      preferred: ["river", "frozen_river", "cold_ocean"]
+      forbidden: ["warm_ocean", "deep_warm_ocean"]
+    required_nearby:
+      - feature: "water"
+        max_distance: 0
+        reason: "Must remain in water to breathe"
+
+  territory:
+    enabled: false
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  # === LOCATION-TRIGGERED BEHAVIORS ===
+  location_triggers:
+    enabled: true
+    triggers:
+      - name: "river_spawning_grounds"
+        description: |
+          When in river biomes, salmon exhibit increased breeding behavior,
+          mimicking their real-world anadromous nature where they return to
+          freshwater rivers to spawn. In rivers, salmon should:
+          - Have 1.5x increased breeding desire
+          - Gather in groups of 4-8 near gravel beds
+          - Show increased activity levels (1.2x multiplier)
+          - Prefer depths of 2-4 blocks
+
+          This behavior triggers when salmon detect river biome AND are within
+          2-6 blocks of gravel/stone blocks that could represent spawning beds.
+        location:
+          blocks: []
+          biomes: ["river", "frozen_river"]
+          near_blocks:
+            types: ["gravel", "stone", "cobblestone"]
+            min_distance: 0
+            max_distance: 6
+          depth: [2, 4]
+        behavior:
+          breeding_multiplier: 1.5
+          activity_multiplier: 1.2
+          group_size: [4, 8]
+          duration: null          # Ongoing while in location
+          priority: 8
+
+      - name: "ocean_feeding_grounds"
+        description: |
+          When in ocean biomes, salmon are in their primary feeding territory.
+          They should:
+          - Have increased hunting behavior
+          - Form larger, more fluid schools (6-12 individuals)
+          - Show normal to high activity levels
+          - Range across wider areas
+
+          This represents the ocean phase of their lifecycle where they
+          primarily feed and grow.
+        location:
+          biomes: ["ocean", "cold_ocean", "lukewarm_ocean", "deep_ocean", "deep_cold_ocean", "deep_lukewarm_ocean"]
+        behavior:
+          hunting_multiplier: 1.2
+          group_size: [6, 12]
+          home_range_multiplier: 1.5
+          activity_multiplier: 1.0
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "ENTITY"
+        target: "minecraft:cod"
+        nutrition: 25
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: null
+
+      - type: "ENTITY"
+        target: "minecraft:tropical_fish"
+        nutrition: 20
+        method: "HUNT"
+        world_effect:
+          action: "DESTROY"
+          result: null
+
+      - type: "ITEM"
+        target: "#minecraft:fishes"
+        nutrition: 20
+        method: "PICKUP"
+        world_effect:
+          action: "DESTROY"
+          result: null
+
+    secondary:
+      - type: "DROPPED_ITEM"
+        target: "minecraft:kelp"
+        nutrition: 8
+        method: "PICKUP"
+        world_effect:
+          action: "DESTROY"
+          result: null
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 12
+      when_hungry: 20
+      when_starving: 32
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: true
+
+    prey:
+      targets: ["minecraft:cod", "minecraft:tropical_fish"]
+      selection_rules:
+        avoid_babies: false      # Salmon will hunt any size
+        sustainable_hunting:
+          enabled: false
+
+    hunting:
+      method: "CHASE"
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:drowned"
+        threat_level: "HIGH"
+        detection_range: 16
+        response: "FLEE"
+        notes: "Undead threat in water"
+
+      - entity: "minecraft:dolphin"
+        threat_level: "HIGH"
+        detection_range: 20
+        response: "FLEE"
+        notes: "Fast aquatic predator"
+
+      - entity: "minecraft:guardian"
+        threat_level: "EXTREME"
+        detection_range: 24
+        response: "FLEE"
+        notes: "Ranged laser attack"
+
+      - entity: "minecraft:elder_guardian"
+        threat_level: "EXTREME"
+        detection_range: 32
+        response: "FLEE"
+        notes: "Powerful ocean predator"
+
+      - entity: "minecraft:polar_bear"
+        threat_level: "EXTREME"
+        detection_range: 20
+        response: "FLEE"
+        notes: "Arctic surface predator"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: 55
+    recent_food:
+      enabled: true
+      time_window: 10000
+      meals_required: 2
+    environment:
+      near_water: true
+      water_max_distance: 0
+      required_biomes: []        # Can breed in any allowed biome
+    requires_shelter: false
+    season: null
+
+  density_effects:
+    density_curve:
+      - count: 3
+        multiplier: 1.4          # Low population encourages breeding
+      - count: 8
+        multiplier: 1.0
+      - count: 16
+        multiplier: 0.6
+      - count: 24
+        multiplier: 0.2
+      - count: 32
+        multiplier: 0.0          # Overcrowding suppresses breeding
+
+  mate_selection:
+    courtship:
+      enabled: false
+      behavior: null
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: 0
+    birth:
+      offspring_count: [1, 3]
+      location_requirement: "in_water"
+
+  parental_care:
+    duration: 0
+    behaviors:
+      protects_offspring: false
+      feeds_offspring: false
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "FISSION_FUSION"
+    size:
+      min: 3
+      optimal: 6
+      max: 12
+    leadership:
+      has_leader: false
+      leader_selection: null
+
+  herd_movement:
+    enabled: true
+
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "predator_detected"
+          call: "rapid_directional_change"
+          group_response: "scatter_then_regroup"
+          radius: 20
+        - trigger: "player_approach"
+          call: "evasive_swimming"
+          group_response: "coordinated_flee"
+          radius: 16
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: false
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false
+      congregates: false
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 12
+    group_size: [3, 6]
+    conditions:
+      biomes: ["river", "frozen_river", "ocean", "cold_ocean", "lukewarm_ocean", "deep_ocean", "deep_cold_ocean", "deep_lukewarm_ocean"]
+      blocks: ["water"]
+
+  carrying_capacity:
+    caps:
+      per_chunk: 10
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  taming:
+    enabled: false
+    items: []
+
+  player_breeding:
+    enabled: false
+    items: []
+
+  drops:
+    on_death:
+      - item: "minecraft:salmon"
+        count: [1, 1]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 0
+      - item: "minecraft:bone_meal"
+        count: [1, 1]
+        chance: 0.05
+        requires_player_kill: false
+        looting_bonus: 0.01
+
+  interactions:
+    - action: "bucket_capture"
+      item: "minecraft:water_bucket"
+      result: "minecraft:salmon_bucket"
+      description: "Right-click salmon with water bucket to capture it, creating a portable salmon bucket"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.salmon.ambient"
+    hurt: "entity.salmon.hurt"
+    death: "entity.salmon.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "surface_gulp"
+        frequency: 600
+        trigger: "random"
+      - behavior: "quick_directional_dart"
+        frequency: 400
+        trigger: "random"
+      - behavior: "synchronized_schooling_turn"
+        frequency: 200
+        trigger: "in_group"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+
+unique_behaviors:
+  - name: "anadromous_migration_instinct"
+    description: |
+      Salmon exhibit simplified anadromous behavior by showing preference
+      shifts between river and ocean biomes based on breeding readiness.
+
+      WHEN:
+      - When condition > 65 and breeding readiness increases
+      - When population density in current area is high (>12 salmon in 48 blocks)
+
+      WHERE:
+      - Salmon in ocean biomes will pathfind toward river biomes when ready to breed
+      - Salmon in river biomes will gradually move toward ocean biomes after breeding
+
+      WHAT:
+      - Set navigation goal toward nearest river biome when breeding desire > 70%
+      - Increase upstream movement tendency when in rivers near breeding condition
+      - After spawning (breeding cooldown active), gradually reduce river preference
+      - Show increased restlessness (movement speed +10%) during migration urge
+
+      WHY:
+      - Mimics real salmon lifecycle of ocean feeding and river spawning
+      - Creates dynamic population movement between biomes
+      - Provides interesting behavioral variety and ecosystem connectivity
+      - Makes salmon feel more alive and purposeful than other fish
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 8
+      duration: null             # Ongoing behavior based on state
+      affects_others: false
+      world_modification: false
+
+  - name: "schooling_dynamics"
+    description: |
+      Salmon form cohesive schools with sophisticated group behavior that
+      goes beyond simple flocking, including role specialization and
+      coordinated predator response.
+
+      WHEN:
+      - Continuously active when 3+ salmon are within 8 blocks
+      - Enhanced during predator threats or feeding opportunities
+
+      WHERE:
+      - In open water areas (depth > 3 blocks)
+      - Schools spread out in confined spaces
+
+      WHAT:
+      - Maintain consistent spacing (1.5-2 blocks between individuals)
+      - Align swimming direction with nearby school members
+      - Speed matching within school (slower individuals speed up, faster slow down)
+      - "Edge fish" have higher alertness (+30% detection range)
+      - When threatened, school performs coordinated evasive maneuvers:
+        * Flash expansion (all fish dart outward simultaneously)
+        * Stream split (school divides around predator, reforms behind)
+        * Ball formation (tight defensive cluster when cornered)
+      - Feeding behavior: school coordinates to encircle small prey
+
+      WHY:
+      - Provides predator defense through confusion effect
+      - Improves foraging efficiency
+      - Makes salmon visually impressive and realistic
+      - Creates emergent group intelligence behavior
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 7
+      duration: null
+      affects_others: true       # Influences other salmon
+      world_modification: false
+
+  - name: "counter_current_swimming"
+    description: |
+      Salmon naturally swim against water currents, especially in rivers.
+      This is instinctive behavior for maintaining position and
+      migrating upstream.
+
+      WHEN:
+      - When in flowing water (river biomes, or near water sources)
+      - Intensity increases with breeding readiness
+
+      WHERE:
+      - River biomes primarily
+      - Any area with detectable water flow
+
+      WHAT:
+      - Detect water flow direction (from block physics)
+      - Apply movement bias against flow direction
+      - Swim upstream more vigorously when breeding condition > 60
+      - Will actively seek out flowing water in rivers
+      - Occasionally rest in eddies (slower flow areas) between bursts
+
+      WHY:
+      - Signature salmon behavior from real life
+      - Creates purposeful movement patterns
+      - Helps with upstream spawning migration
+      - Makes rivers feel more dynamic
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: 9
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "depth_preference_variation"
+    description: |
+      Salmon adjust their preferred swimming depth based on time of day,
+      activity, and hunger state, creating vertical movement in water column.
+
+      WHEN:
+      - Continuously active, adjusts based on conditions
+
+      WHERE:
+      - In water deeper than 4 blocks
+
+      WHAT:
+      - Morning/afternoon: prefer mid-depth (2-3 blocks from surface)
+      - Dusk/dawn: rise toward surface (1-2 blocks from surface)
+      - Night: slightly deeper (3-4 blocks from surface)
+      - When hunting: match depth of prey
+      - When fleeing: dive deeper (4-6 blocks if available)
+      - When low on energy: rest near bottom
+      - Occasionally surface for air gulp (visual behavior)
+
+      WHY:
+      - Adds vertical dimension to movement
+      - Creates realistic fish behavior
+      - Provides tactical depth use (hiding, hunting)
+      - Makes aquatic environments feel more layered
+
+    implementation_hints:
+      trigger_type: "TIME"
+      priority: 11
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "burst_speed_escape"
+    description: |
+      When threatened, salmon can execute explosive burst-speed swimming
+      for short distances, consuming significant energy.
+
+      WHEN:
+      - Predator within 6 blocks
+      - Player approaches within flee distance
+      - Sudden loud noises (explosions, thunder)
+
+      WHERE:
+      - Any water location with room to maneuver
+
+      WHAT:
+      - Instant acceleration to 2.0x normal swim speed
+      - Lasts for 2-4 seconds (40-80 ticks)
+      - Drains energy rapidly (1.5 per tick)
+      - Can only burst when energy > 30
+      - After burst, brief slower period (0.7x speed) for 2 seconds
+      - Cooldown of 6 seconds before next burst
+
+      WHY:
+      - Realistic escape behavior
+      - Creates exciting chase dynamics
+      - Adds skill element to catching salmon
+      - Balances predator-prey interactions
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 2
+      duration: 80               # Max burst duration
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+
+relationships:
+  # Predators (who hunts this mob)
+  predators:
+    - entity: "minecraft:drowned"
+      notes: "Opportunistic undead predator in deeper waters"
+    - entity: "minecraft:dolphin"
+      notes: "Fast, intelligent aquatic hunter"
+    - entity: "minecraft:guardian"
+      notes: "Territorial ocean monument guardian with ranged attacks"
+    - entity: "minecraft:elder_guardian"
+      notes: "Powerful ocean predator"
+    - entity: "minecraft:polar_bear"
+      notes: "Surface predator in cold biomes, catches salmon in shallow water"
+
+  # Prey (what this mob hunts)
+  prey:
+    - entity: "minecraft:cod"
+      notes: "Primary prey, smaller and slower fish"
+    - entity: "minecraft:tropical_fish"
+      notes: "Secondary prey in warmer waters"
+
+  # Competitors (compete for same resources)
+  competitors:
+    - entity: "minecraft:cod"
+      resource: "small_fish"
+      interaction: "Compete for same prey items and food sources"
+    - entity: "minecraft:dolphin"
+      resource: "fish_prey"
+      interaction: "Both hunt similar fish, but dolphins are superior hunters"
+
+  # Mutualists (mutually beneficial)
+  mutualists: []
+
+  # Commensals (one benefits, other unaffected)
+  commensals:
+    - entity: "minecraft:salmon"
+      benefit: "Schooling provides safety in numbers for all members"
+      type: "intraspecific_cooperation"
+
+  # Special relationships
+  special:
+    - entity: "minecraft:player"
+      relationship: "capture_and_transport"
+      description: "Players can capture salmon in buckets, creating portable salmon storage"
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+
+narrative:
+  summary: |
+    Salmon are sleek, silvery fish that embody the restless energy of open water.
+    Unlike their lazy cousin the cod, salmon are active predators and tireless
+    swimmers, forming shimmering schools that dart through rivers and oceans with
+    purpose and grace.
+
+  behavior_overview: |
+    A salmon's life is one of constant motion and instinct-driven migration. They
+    form tight-knit schools that move as one, their synchronized swimming creating
+    mesmerizing patterns in the water. These intelligent fish hunt cooperatively,
+    surrounding smaller fish with coordinated precision. When danger threatens,
+    the school explodes into controlled chaos—fish scattering in all directions
+    before reforming moments later.
+
+    What makes salmon unique is their deep connection to both rivers and oceans.
+    They feel the pull of rivers when breeding season approaches, fighting against
+    currents with determined strength. In ocean depths they feast and grow, only
+    to return to fresh water when instinct demands. This restless wandering between
+    biomes makes them the ocean's nomads, never quite settling in one place.
+
+    Individual salmon show surprising personality variance—some are bold leaders
+    at the school's edge, alert and quick to sound alarms. Others prefer the safety
+    of the school's center, following rather than leading. All share the salmon's
+    signature burst-speed escape, that explosive acceleration that turns a lazy
+    swim into a silver streak when danger draws near.
+
+  ecological_importance: |
+    Salmon serve as crucial mid-level predators in aquatic ecosystems, controlling
+    populations of cod and tropical fish while providing food for larger predators.
+    Their anadromous-like behavior creates a living bridge between river and ocean
+    biomes, transferring energy and nutrients between these ecosystems.
+
+    Remove salmon, and cod populations would explode unchecked. Predators like
+    dolphins and guardians would have fewer food sources. The dynamic movement
+    between rivers and oceans would be lost, making aquatic biomes feel more
+    static and disconnected. Salmon are the restless heart of the water world,
+    keeping it alive through constant motion and purpose.
+
+  design_notes: |
+    Implementation priorities:
+    1. Schooling behavior is CRITICAL—salmon should feel distinctly more coordinated
+       than random fish wandering. Invest in cohesion algorithms.
+    2. The anadromous migration needs to be noticeable but not overwhelming. Players
+       should occasionally notice salmon moving purposefully toward rivers, not
+       constantly streaming upstream.
+    3. Burst speed should feel impactful. Add particle effects (bubbles, wake) to
+       make it visually clear when salmon are using this ability.
+    4. Balance salmon as prey vs predator carefully. They should feel vulnerable
+       to players and larger mobs, but competent when hunting cod.
+    5. River spawning behavior should create visible gatherings that players can
+       discover and observe—mini wildlife events.
+
+    Edge cases:
+    - What if no river biome exists within reasonable range? Fall back to normal
+      breeding behavior in ocean.
+    - Salmon in aquariums/enclosed spaces: reduce migration urges, maintain
+      schooling in smaller groups (2-3 fish minimum).
+    - Bucket-captured salmon: retain all stats and age when placed back in water.
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 1.0
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: 45        # Energy needed per day to maintain condition
+    provides_to_predator: 25     # Energy predator gains from eating salmon
+
+  population_target: "Common, 6-10 per river, 10-20 per ocean region"
+
+  removal_impact: |
+    Removing salmon would cause:
+    - Cod population explosion (loss of primary predator)
+    - Reduced food availability for dolphins, guardians, and bears
+    - Loss of biome connectivity between rivers and oceans
+    - Aquatic environments feeling less dynamic and purposeful
+    - Simplified predator-prey dynamics in water

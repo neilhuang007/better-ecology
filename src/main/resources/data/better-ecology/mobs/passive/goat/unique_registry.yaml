@@ -1,0 +1,746 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# Mob: Goat (minecraft:goat)
+# ============================================================================
+#
+# This file defines a specific mob by:
+# 1. Overriding defaults from the Generalized Template
+# 2. Providing natural language descriptions for unique behaviors
+# 3. Specifying relationships with other mobs
+#
+# INSTRUCTIONS FOR AI:
+# - Read the Generalized Template first to understand all systems
+# - Values here OVERRIDE template defaults
+# - Empty/null values mean "use template default"
+# - Natural language descriptions should be interpreted and implemented
+# - [UNIQUE] sections require custom implementation logic
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:goat"
+  display_name: "Goat"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "HERD"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Mountain goat (Oreamnos americanus)"
+    ecological_role: "High-altitude grazer, mountain herbivore that controls vegetation on steep slopes"
+
+  tags: ["mountain", "jumping", "ramming", "milkable", "screaming_variant"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: null                   # Use template default (10 hearts)
+
+  size:
+    width: null
+    height: null
+
+  biomass:
+    adult: null
+
+  movement:
+    speeds:
+      walk: null
+      run: null
+      swim: null
+      fly: null
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: null
+
+  thirst:
+    enabled: null
+
+  age:
+    baby_duration: null
+    max_age: null
+
+  social:
+    enabled: null
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule: null               # Use template default
+
+  weather:
+    rain: null
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: []
+      forbidden: []
+    required_nearby: []
+
+  territory:
+    enabled: null
+    size: null
+
+  shelter:
+    needs_shelter: null
+    shelter_uses: []
+    valid_shelters: []
+
+  # === LOCATION-TRIGGERED BEHAVIORS ===
+  location_triggers:
+    enabled: false
+    triggers: []
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "ITEM"
+        target: "minecraft:wheat"
+        nutrition: null
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+
+    secondary: []
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: null
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:wolf"
+        threat_level: "HIGH"
+        detection_range: 24
+        response: "FLEE"
+        notes: "Wolves are primary natural predators of goats"
+
+      - entity: "minecraft:axolotl"
+        threat_level: "LOW"
+        detection_range: 8
+        response: "IGNORE"
+        notes: "Axolotls pose no threat to goats on land"
+
+      - entity: "minecraft:fox"
+        threat_level: "MEDIUM"
+        detection_range: 16
+        response: "FLEE"
+        notes: "Foxes may attack baby goats"
+
+      - entity: "minecraft:warden"
+        threat_level: "EXTREME"
+        detection_range: 32
+        response: "FLEE"
+        notes: "Goats instinctively flee from Wardens, using ramming to escape if necessary"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: null
+    recent_food:
+      enabled: null
+    environment:
+      near_water: null
+      required_biomes: []
+    requires_shelter: null
+    season: null
+
+  density_effects:
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: null
+      behavior: "Goats do not have elaborate courtship - males may head-butt to establish dominance before breeding"
+
+  breeding:
+    gestation:
+      type: null
+      duration: null
+    birth:
+      offspring_count: null
+      location_requirement: null
+
+  parental_care:
+    duration: null
+    behaviors:
+      protects_offspring: null
+      feeds_offspring: null
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "HERD"
+    size:
+      min: null
+      optimal: null
+      max: null
+    leadership:
+      has_leader: null
+      leader_selection: "Dominance is established through ramming contests - the goat that wins the most ramming encounters leads the herd"
+
+  herd_movement:
+    enabled: null
+
+  communication:
+    alarm_calls:
+      enabled: null
+      types:
+        - trigger: "predator_detected"
+          call: "goat_scream"
+          group_response: "flee_to_high_ground"
+          notes: "Screaming goats have a more alarming scream that triggers faster group response"
+
+        - trigger: "ramming_charge"
+          call: "aggressive_bleat"
+          group_response: "move_away"
+          notes: "Goats about to ram make a distinctive sound to warn others"
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: null
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: null
+    pollination:
+      enabled: null
+
+  responses:
+    drinking:
+      enabled: null
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: null
+    group_size: null
+    conditions:
+      biomes: []
+      blocks: []
+
+  carrying_capacity:
+    caps:
+      per_chunk: null
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  taming:
+    enabled: false
+    items: []
+
+  player_breeding:
+    enabled: null
+    items: []
+
+  drops:
+    on_death:
+      - item: "minecraft:goat_horn"
+        count: [0, 2]
+        chance: 1.0
+        requires_player_kill: true
+        looting_bonus: true
+        notes: "Only goats that have horns (adults) can drop horns. Screaming goats always drop at least 1 horn"
+
+      - item: "minecraft:milk_bucket"
+        count: [0, 0]
+        chance: 0.0
+        requires_player_kill: false
+        notes: "Milk is obtained by using a bucket on the goat, not as a death drop"
+
+    on_milking:
+      - item: "minecraft:milk_bucket"
+        uses: "minecraft:bucket"
+        result: "milk_bucket"
+        cooldown: 12000
+        notes: "Goats can be milked with an empty bucket. Milk can be used to drink or remove potion effects"
+
+  interactions:
+    - action: "right_click_with_bucket"
+      item: "minecraft:bucket"
+      result: "milk_bucket"
+      description: "Player can milk goats with an empty bucket. Consumes bucket, returns milk bucket. Goat has a short cooldown before it can be milked again"
+
+    - action: "right_click_empty_hand"
+      item: null
+      result: "provocation"
+      description: "Goats have a chance to ram the player if provoked. Screaming goats are more likely to ram on contact"
+
+    - action: "attack_player"
+      item: null
+      result: "ramming_knockback"
+      description: "When a goat rams, it charges forward and knocks the player/entity back significantly. High knockback sends targets flying"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "minecraft:entity.goat.ambient"
+    hurt: "minecraft:entity.goat.hurt"
+    death: "minecraft:entity.goat.death"
+    screaming_ambient: "minecraft:entity.goat.screaming.ambient"
+    ram_prepare: "minecraft:entity.goat.prepared_ram"
+    ram_impact: "minecraft:entity.goat.ram_impact"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "head_bob"
+        frequency: 0.15
+        trigger: "idle"
+        notes: "Goats naturally bob their heads while standing"
+
+      - behavior: "ear_flick"
+        frequency: 0.1
+        trigger: "sound_detected"
+        notes: "Goats are alert and flick ears when hearing sounds"
+
+      - behavior: "scratch_ground"
+        frequency: 0.05
+        trigger: "idle"
+        notes: "Occasionally scrape hoof on ground"
+
+      - behavior: "look_at_player"
+        frequency: 0.2
+        trigger: "player_nearby"
+        notes: "Curious goats will watch players from a distance"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+# Describe behaviors unique to this mob that aren't covered by standard systems.
+# Use natural language - AI should interpret and implement appropriate logic.
+# ============================================================================
+
+unique_behaviors:
+  # === RAMMING ATTACK ===
+  - name: "ramming_attack"
+    description: |
+      Goats have a unique ramming attack behavior where they charge at entities and players,
+      knocking them back with significant force. This is both a defensive mechanism and a
+      way to establish dominance within the herd.
+
+      WHEN: When provoked by player interaction, when attacked, or during social dominance
+            disputes. Screaming goats have a higher chance to ram and shorter cooldown.
+            Ramming has a cooldown period between uses.
+
+      WHERE: Any location, but goats prefer to have space to charge. They will not ram
+             if too close to obstacles or walls that would block the charge.
+
+      WHAT: The goat prepares for 1-2 seconds (lowering head and making preparation sound),
+           then charges forward in a straight line for 3-5 blocks. Any entity in the path
+           takes damage (2-3 hearts) and receives massive knockback (similar to a knockback
+           II enchantment). The goat itself takes no damage from ramming.
+
+      WHY: Defense against predators, establishing dominance in herd hierarchy, and
+           responding to player provocation. Makes goats more than just passive animals.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 5
+      duration: 100              # Full ram sequence takes ~5 seconds (2s prepare + 3s charge)
+      affects_others: true
+      world_modification: false
+
+      # Screaming goats are more aggressive
+      screaming_goat_modifier:
+        ram_chance_multiplier: 2.0
+        cooldown_multiplier: 0.5
+
+      # Ramming statistics
+      ram_damage: [4, 6]         # 2-3 hearts
+      knockback_strength: 2.5    # Very high knockback
+      charge_distance: [3, 5]    # Blocks to charge
+      charge_speed: 1.2          # Speed multiplier during charge
+      prepare_duration: [30, 40] # Ticks to prepare (1.5-2 seconds)
+      cooldown: [300, 600]       # Ticks between rams (15-30 seconds)
+
+
+  # === HIGH JUMP ABILITY ===
+  - name: "extreme_jumping"
+    description: |
+      Goats are exceptional jumpers, capable of leaping up to 10 blocks high.
+      This allows them to navigate mountainous terrain with ease and escape
+      predators by climbing to inaccessible locations.
+
+      WHEN: Whenever the goat needs to navigate vertical obstacles. Automatically
+            triggered when the goat encounters a wall or cliff face. Also used
+            when fleeing from predators to escape to high ground.
+
+      WHERE: Primarily in mountain biomes but works anywhere. Goats will jump
+             up natural terrain features like cliffs, mountains, and steep hills.
+             Can also jump over fences and walls.
+
+      WHAT: The goat performs a powerful vertical jump that can clear up to 10
+           blocks height. The jump is instantaneous and can be chained. Goats
+           take no fall damage regardless of height. They can also jump while
+           running, allowing them to scale mountains quickly.
+
+      WHY: Adaptation to mountainous terrain - allows goats to reach vegetation
+           on cliffs and escape predators that cannot follow. Makes goats unique
+           among passive mobs in their mobility.
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 3
+      duration: 20               # ~1 second per jump
+      affects_others: false
+      world_modification: false
+
+      # Jump mechanics
+      max_jump_height: 10.0      # Blocks (vanilla goat behavior)
+      jump_velocity_multiplier: 1.5
+      fall_damage_immune: true   # Goats take no fall damage
+
+      # AI usage
+      jump_delay: [10, 30]       # Ticks between jumps when pathfinding
+      prefers_higher_ground: true
+
+
+  # === SCREAMING GOAT VARIANT ===
+  - name: "screaming_goat_variant"
+    description: |
+      Approximately 2% of goats are "screaming goats" - a rare variant that makes
+      distinctive screaming sounds instead of normal bleating. These goats are
+      more aggressive and more likely to ram.
+
+      WHEN: Determined at spawn time - 2% chance for any spawned goat to be a
+            screaming goat. This is a permanent trait (NBT data: IsScreaming:1b).
+            Screaming goats use different sounds for all ambient noises.
+
+      WHERE: Can spawn anywhere normal goats spawn, with the same probability
+            across all biomes. Not biome-specific.
+
+      WHAT: Screaming goats have the following differences from normal goats:
+           - All ambient sounds are screaming variants (much louder and more alarming)
+           - 2x more likely to perform ramming attacks
+           - 50% shorter cooldown between rams
+           - More skittish - flees from threats more readily
+           - Higher chance to drop at least 1 horn when killed
+
+      WHY: Adds variety and humor to the mob. Screaming goats are a memorable
+           and unique mob variant that players remember encountering. Increases
+           replayability and makes goat farming more interesting.
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 1
+      duration: null             # Permanent trait
+      affects_others: false
+      world_modification: false
+
+      # Spawn mechanics
+      spawn_chance: 0.02         # 2% chance for screaming goat
+      nbt_tag: "IsScreaming"     # NBT boolean tag
+
+      # Sound overrides
+      sound_overrides:
+        ambient: "minecraft:entity.goat.screaming.ambient"
+        hurt: "minecraft:entity.goat.screaming.hurt"      # If exists, else normal
+        death: "minecraft:entity.goat.screaming.death"    # If exists, else normal
+
+      # Behavior modifiers
+      ram_chance: 0.1            # 10% chance when provoked (vs 5% normal)
+      ram_cooldown_modifier: 0.5 # Half the cooldown
+        horn_drop_chance: 1.0    # Always drops at least 1 horn
+        flee_speed_multiplier: 1.2
+
+
+  # === HORNS AND HORN DROPS ===
+  - name: "horn mechanics"
+    description: |
+      Adult goats have horns that can drop when killed by a player. Goats use their
+      horns for ramming attacks and social dominance displays.
+
+      WHEN: When a goat (with horns) is killed by a player. Only adult goats have
+            horns - baby goats do not drop horns. Horns are used by players in
+            recipes (brewing, crafting).
+
+      WHERE: Anywhere the goat is killed.
+
+      WHAT: When a player kills an adult goat, there is a chance for it to drop
+           0-2 goat horns. Screaming goats always drop at least 1 horn.
+           Horns are consumed when used to play sounds in jukeboxes or for
+           crafting. Each horn has a unique sound.
+
+      WHY: Provides a reason for players to hunt/farm goats. Adds utility to
+           goats beyond milk. Horns are used in copper horn recipes and sound
+          -related crafting.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 1
+      duration: null
+      affects_others: false
+      world_modification: false
+
+      # Drop mechanics
+      drop_chance: 1.0           # 100% chance to drop 0-2 horns
+      drop_count: [0, 2]         # Random between 0 and 2
+      looting_bonus: true        # Looting increases max drops
+      adult_only: true           # Baby goats don't have horns
+
+      # Screaming goat bonus
+      screaming_min_horns: 1     # Always drops at least 1
+      screaming_max_horns: 2     # Can drop up to 2
+
+      # Horn types (for variety in drops)
+      horn_types:
+        - "minecraft:goat_horn"  # Regular horn
+
+
+  # === MILKING MECHANIC ===
+  - name: "milking"
+    description: |
+      Goats can be milked by players using an empty bucket. This provides a
+      renewable source of milk for potion removal or food.
+
+      WHEN: When a player right-clicks a goat with an empty bucket. Has a cooldown
+            to prevent instant re-milking. Works on both adult and baby goats.
+
+      WHERE: Anywhere the goat is located. No special conditions needed.
+
+      WHAT: Player uses empty bucket on goat -> bucket becomes milk bucket,
+           goat enters "milked" state for a short cooldown. Milk buckets can
+           be drunk to remove potion effects or used in cake crafting.
+
+      WHY: Makes goats useful for farming. Provides renewable milk source
+           alternative to cows. Fits the real-world use of goats for milk.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 8
+      duration: null             # Instant action
+      affects_others: false
+      world_modification: false
+
+      # Milking mechanics
+      required_item: "minecraft:bucket"
+      result_item: "minecraft:milk_bucket"
+      consume_item: true
+      cooldown: 12000            # 10 seconds (600 ticks) between milking
+      can_milk_baby: true        # Baby goats can also be milked
+
+      # Milk properties
+      milk_restores_hunger: 0    # Milk doesn't restore hunger (vanilla)
+      milk_saturation: 0
+      milk_clears_effects: true  # Removes all potion effects
+
+
+  # === AGGRESSION ON PROVOCATION ===
+  - name: "defensive_aggression"
+    description: |
+      Unlike most passive mobs, goats will fight back when attacked or provoked.
+      They use their ramming attack to knock back attackers.
+
+      WHEN: When a player or entity attacks the goat, or when repeatedly provoked
+            by the player (standing too close, hitting repeatedly). Screaming
+            goats have a lower threshold for provocation.
+
+      WHERE: Anywhere - no location restrictions.
+
+      WHAT: When attacked or provoked, the goat has a chance to immediately
+           perform a ramming attack targeting the provoker. This counts as
+           the goat's "fight back" response. After retaliating, the goat will
+           flee to put distance between itself and the threat.
+
+      WHY: Makes goats more interesting than passive mobs that just run away.
+           Adds risk to farming goats. Reflects real-world goat behavior where
+           they can be aggressive when threatened.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 4
+      duration: 100              # Ram sequence
+      affects_others: true
+      world_modification: false
+
+      # Provocation mechanics
+      hit_retaliation_chance: 0.5    # 50% chance to ram when hit
+      provocation_distance: 2.0      # Blocks
+      provocation_time: 40           # Ticks of close contact before ram
+
+      # Screaming goats are more aggressive
+      screaming_retaliation_chance: 0.8
+      screaming_provocation_time: 20
+
+      # Post-ram behavior
+      flees_after_ram: true
+      flee_distance: 24
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+# Describe relationships with other specific mobs beyond predator/prey.
+# ============================================================================
+
+relationships:
+  # Predators (who hunts this mob)
+  predators:
+    - entity: "minecraft:wolf"
+      notes: "Primary predator. Wolves will actively hunt goats, especially babies. Goats flee and may ram to defend themselves"
+
+    - entity: "minecraft:fox"
+      notes: "Opportunistic predator of baby goats. Adult goats may ram foxes"
+
+  # Prey (what this mob hunts)
+  prey: []                        # Goats don't hunt
+
+  # Competitors (compete for same resources)
+  competitors:
+    - entity: "minecraft:sheep"
+      resource: "grass and vegetation"
+      interaction: "ignore"
+      notes: "Goats and sheep may graze in the same areas but don't directly compete or interact"
+
+    - entity: "minecraft:cow"
+      resource: "grass and wheat"
+      interaction: "ignore"
+      notes: "Cows and goats can coexist peacefully. Both eat wheat when fed by players"
+
+  # Mutualists (mutually beneficial)
+  mutualists: []
+
+  # Commensals (one benefits, other unaffected)
+  commensals: []
+
+  # Special relationships
+  special:
+    - entity: "minecraft:player"
+      relationship: "cautious"
+      description: "Goats are naturally fearful of players and will flee. However, they can be habituated to player presence. Screaming goats are more unpredictable and may suddenly ram even habituated players"
+
+    - entity: "minecraft:axolotl"
+      relationship: "neutral"
+      description: "Axolotls pose no threat to goats on land. Goats ignore axolotls completely"
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+# Free-form description for AI to understand this mob's "character"
+# ============================================================================
+
+narrative:
+  summary: |
+    The Goat is a mountain-dwelling passive mob with a surprising aggressive streak.
+    Found primarily in mountain biomes, goats are excellent jumpers capable of leaping
+    up cliffs and scaling terrain that no other mob can navigate. While generally passive,
+    goats have a unique ramming attack that makes them dangerous when provoked, and the
+    rare screaming goat variant is even more unpredictable and aggressive.
+
+  behavior_overview: |
+    Goats spend most of their time grazing on high-altitude vegetation and navigating
+    the difficult mountain terrain with their powerful jumping ability. They live in
+    small herds and communicate through bleats and screams. When threatened, goats
+    will flee to high ground where predators cannot follow. However, if cornered or
+    repeatedly provoked, goats will lower their heads and charge forward with a powerful
+    ram that sends attackers flying. Screaming goats, making up about 2% of the population,
+    are constantly on edge and more likely to attack without warning.
+
+    Goats can be milked for milk buckets like cows, and they drop horns when killed
+    by players. The horns are used in crafting and add value to goat farming. Baby goats
+    follow their mothers and will grow into adults over time, with the herd protecting
+    vulnerable offspring from predators like wolves.
+
+  ecological_importance: |
+    Goats serve as primary consumers in mountain ecosystems, controlling vegetation
+    growth on steep slopes where other herbivores cannot reach. Their ability to graze
+    in inaccessible areas helps maintain plant diversity in mountain biomes. As prey,
+    they provide food for wolves and other predators that hunt in mountain regions.
+    Without goats, mountain vegetation would become overgrown, and predators would lose
+    an important food source in high-altitude environments.
+
+  design_notes: |
+    Key balance considerations:
+    - Ramming attack should be powerful but have a long cooldown to prevent goats
+      from being too dangerous
+    - High jump ability makes goats excellent at escaping - ensure they don't jump
+      out of farms or enclosures easily
+    - Screaming goats should remain rare (2%) to keep them special
+    - Horn drops should be valuable enough to make goat farming worthwhile
+    - Milking cooldown prevents infinite milk farming
+    - Goats should not be tamable like wolves or cats - they remain wild animals
+    - Aggression should only occur on provocation - goats are not hostile mobs
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+# Quick-reference values for ecosystem balancing
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 0.8
+  breeding_rate_multiplier: 1.0
+  mortality_rate_multiplier: 1.2
+
+  energy_flow:
+    daily_requirement: 40        # Moderate food requirement
+    provides_to_predator: 120    # Good food source for predators
+
+  population_target: "Uncommon, 4-8 goats per mountain biome cluster"
+
+  removal_impact: "Mountain predators would lose primary prey source; mountain vegetation would become overgrown; players would lose access to goat horns and milk alternative"

@@ -1,0 +1,17 @@
+# ============================================================================
+# BURROW STRUCTURE
+# Underground burrow for rabbits, foxes, etc.
+# Location: Dug into hillsides or underground
+# ============================================================================
+
+# Placeholder for burrow structure
+#
+# The structure should consist of:
+# - Air blocks creating tunnel (2 high, 1 wide)
+# - Entrance: 2 blocks high opening
+# - Chamber: 3x3x2 space at end
+# - Optional: Hay blocks for bedding
+# - Hidden entrance covered by grass/bush
+#
+# Size: Variable depth (3-10 blocks deep)
+# Multiple entrances possible for warren systems

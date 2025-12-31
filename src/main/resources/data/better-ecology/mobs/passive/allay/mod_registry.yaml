@@ -1,0 +1,590 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - ALLAY BEHAVIOR PROFILE
+# Version: 2.0
+# ============================================================================
+# Based on: mod_registry.yaml template
+# Mob: Allay - Magical Item Collector
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:allay"
+  display_name: "Allay"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "NONE"
+    diet_type: "NONE"
+    social_type: "SOLITARY"
+    activity_pattern: "CATHEMERAL"
+
+  reference:
+    real_world_analog: "Fairy - magical helper spirit"
+    ecological_role: "Item collection and transport assistant; magical creature that interacts with note blocks and music"
+
+  tags: ["flying", "magical", "helper", "music_responsive", "non_breeding"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  health:
+    base: 10                      # 20 HP in game
+    baby_multiplier: 1.0          # Allays don't have babies in traditional sense
+
+  size:
+    width: 0.35
+    height: 0.6
+    baby_scale: 1.0               # No baby state
+
+  biomass:
+    adult: 5                      # Very small, magical creature
+    baby: 5
+    transfer_efficiency: 0.0      # Not part of food chain
+
+  movement:
+    speeds:
+      walk: 0.0                   # Doesn't walk
+      run: 0.0
+      swim: 0.1
+      fly: 0.15                   # Primary movement
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: false             # Flies instead
+      jump_height: 0.0
+      avoids_water: false
+      avoids_cliffs: false        # Can fly
+      cliff_threshold: 0          # Doesn't matter, flies
+
+    conditional_modifiers:
+      baby: 1.0
+      elderly: 1.0
+      injured: 0.9
+      hungry: 1.0                 # Doesn't eat
+      fleeing: 1.3
+      hunting: 1.0
+      carrying_offspring: 1.0
+      in_water_nonaquatic: 0.6
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  hunger:
+    enabled: false                # Allays don't eat
+
+  thirst:
+    enabled: false
+
+  condition:
+    enabled: false                # Magical creature, doesn't have body condition
+
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.3            # Regenerates while resting
+
+    costs:
+      sprinting: 0.0
+      hunting: 0.0
+      fleeing: 0.3
+      flying: 0.1                 # Low cost for natural flyers
+      swimming: 0.2
+
+  age:
+    enabled: false                # Doesn't age naturally
+    baby_duration: 0
+    maturity_age: 0
+    elderly_age: null
+    max_age: null                 # Immortal (except death by damage)
+
+  social:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 24000]          # Active all day
+        activity: 1.0
+        label: "always_active"
+
+    low_activity_behavior:
+      action: "reduced_wander"
+      seek_shelter: false
+      reduced_awareness: false
+      awareness_multiplier: 1.0
+
+  weather:
+    rain:
+      activity_multiplier: 1.0    # Weather doesn't affect magical creatures
+      seek_shelter: false
+      shelter_priority: 0
+    thunder:
+      activity_multiplier: 1.0
+      seek_shelter: false
+      panic_chance: 0.0
+    snow:
+      activity_multiplier: 1.0
+      seek_shelter: false
+    clear:
+      activity_multiplier: 1.0
+
+  seasons:
+    enabled: false
+
+  lunar:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  habitat:
+    biomes:
+      allowed: []                 # Can exist in any biome
+      preferred: []
+      forbidden: []
+
+    altitude:
+      min: -64
+      max: 320
+      preferred: [0, 256]
+
+    required_nearby: []
+
+  territory:
+    enabled: false
+
+  home_range:
+    enabled: true
+    radius: 64                    # Stays within 64 blocks of player or note block
+    has_home_point: true          # Either player or note block
+    home_type: "PLAYER_BOND"      # Custom type for player-following
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  food_sources:
+    primary: []
+    secondary: []
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 0
+      when_hungry: 0
+      when_starving: 0
+    search_interval: 0
+
+    memory:
+      remembers_locations: false
+      memory_duration: 0
+      remembers_depleted: false
+      avoids_depleted_for: 0
+      shares_with_group: false
+
+    sustainability:
+      enabled: false
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators: []                 # Allays are not typically hunted
+
+    default_response:
+      detection_range: 16
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.3
+        flee_distance: 24
+        flee_toward: "PLAYER"     # Flees to bonded player
+        zigzag: true
+
+      freeze:
+        duration: [0, 0]
+        break_on_approach: false
+        break_distance: 0
+
+      alarm:
+        gives_alarm: false
+        alarm_radius: 0
+        alarm_triggers_group_flee: false
+
+    all_clear:
+      predator_distance: 32
+      time_since_seen: 200
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: false                  # Allays duplicate, don't breed traditionally
+  method: "ASEXUAL"               # Duplication via amethyst shards
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+
+    composition:
+      mixed_sex: false
+      mixed_age: false
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  herd_movement:
+    enabled: false
+
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+      radius: 0
+      chain_calling: false
+
+    contact_calls:
+      enabled: false
+      when: []
+      radius: 0
+
+    mating_calls:
+      enabled: false
+      radius: 0
+      time: null
+
+  behaviors:
+    greeting: false
+    allogrooming: false
+    play: false
+    huddling: false
+    dominance_hierarchy: false
+
+  group_benefits:
+    predator_detection_bonus: 0.0
+    foraging_efficiency_bonus: 0.0
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  terrain:
+    enabled: false
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+      seeds: []
+      method: null
+      dispersal_radius: 0
+
+    pollination:
+      enabled: false
+      flowers: []
+      radius: 0
+
+    nutrient_cycling:
+      enabled: false
+      fertilizes: false
+      fertilize_radius: 0
+
+    decomposition:
+      enabled: false
+      decomposes: []
+      result: null
+
+  responses:
+    drinking:
+      enabled: false
+      frequency: 0
+      water_blocks: []
+      duration: 0
+      congregates: false
+
+    temperature:
+      heat_seek_shade: false
+      heat_seek_water: false
+      cold_seek_shelter: false
+      cold_huddling: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  spawning:
+    weight: 0                     # Does not naturally spawn in wild
+    group_size: [0, 0]
+
+    conditions:
+      blocks: []
+      biomes: []
+      light: [0, 0]
+      altitude: null
+      time: null
+      weather: null
+
+  carrying_capacity:
+    method: "NONE"                # Not applicable
+
+    caps:
+      per_chunk: 0
+      regional: null
+
+    resources:
+      enabled: false
+      requirements: []
+
+    over_capacity: []
+
+  dispersal:
+    enabled: false
+    triggers: []
+    distance: [0, 0]
+
+  mortality:
+    old_age:
+      enabled: false
+      max_age: null
+    starvation:
+      enabled: false
+    disease:
+      enabled: false
+      base_chance: 0.0
+      crowding_multiplier: 0.0
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "PASSIVE"
+
+  distances:
+    detection: 64
+    caution: 0
+    flee: 0                       # Doesn't flee from players
+
+  habituation:
+    enabled: false                # Already friendly
+    rate: 0.0
+    decay: 0.0
+    max_habituation: 1.0
+    habituated_flee_distance: 0
+
+  taming:
+    enabled: false                # Not tamable in traditional sense
+
+  player_breeding:
+    enabled: false                # Uses duplication instead
+
+  drops:
+    on_death:
+      - item: "held_item"         # Drops whatever item it's holding
+        count: [1, 64]            # Can hold up to 64 items
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 0
+    on_interaction: []
+
+  interactions:
+    - action: "give_item"
+      item: "any"
+      result: "allay_follows_and_collects"
+      description: "Player gives allay an item, and it will seek out and collect matching items"
+    - action: "take_item"
+      item: "held_item"
+      result: "allay_stops_collecting"
+      description: "Player takes item back from allay"
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  sounds:
+    ambient: "minecraft:entity.allay.ambient_without_item"
+    hurt: "minecraft:entity.allay.hurt"
+    death: "minecraft:entity.allay.death"
+    baby: null
+    alarm: null
+    mating: null
+    eating: null
+
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "gentle_hovering"
+        frequency: 1.0
+        trigger: "always"
+      - behavior: "curious_head_tilts"
+        frequency: 0.3
+        trigger: "near_player"
+      - behavior: "item_seeking_animation"
+        frequency: 0.5
+        trigger: "holding_item"
+
+  personality_traits:
+    boldness:
+      base: 0.7                   # Friendly and curious
+      variation: 0.1
+    activity:
+      base: 0.6
+      variation: 0.2
+    sociability:
+      base: 0.8                   # Very friendly to players
+      variation: 0.1
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+
+ai_priority_framework:
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  physiological:
+    critical_health: 3
+    drink_water: -1             # Disabled
+    eat_food: -1                # Disabled
+    find_shelter: -1            # Disabled
+
+  reproduction:
+    care_for_offspring: -1      # Disabled
+    breed: -1                   # Disabled
+    find_mate: -1               # Disabled
+
+  social:
+    group_cohesion: -1          # Disabled
+    social_interaction: -1      # Disabled
+
+  hunting:
+    hunt_prey: -1               # Disabled
+
+  location:
+    location_triggered: -1      # Disabled
+    territory_patrol: -1        # Disabled
+
+  # Custom priorities for Allay
+  custom:
+    follow_player: 4            # High priority when given item
+    collect_items: 5            # Core behavior
+    deliver_to_noteblock: 6     # When note block is playing
+    dance_to_music: 7           # When jukebox is playing
+
+  default:
+    wander: 15
+    idle: 16
+    rest: 17
+
+
+# ============================================================================
+# SYSTEM 15: UNIQUE BEHAVIOR FRAMEWORK
+# ============================================================================
+# Allay-specific behaviors are defined in unique_registry.yaml
+
+# ============================================================================
+# SYSTEM 15: ANIMAL-ANIMAL INTERACTIONS
+# ============================================================================
+
+interaction:
+  predators: []
+  prey:
+    - "minecraft:chicken"
+    - "minecraft:parrot"
+
+  symbiotic_partners:
+    - "minecraft:villager"           # Allay can assist villagers
+
+  competitors: []
+  herd_compatible: []
+
+  relationship_decay_rate: 0.001
+  trust_build_rate: 0.03
+  grudge_build_rate: 0.01
+
+  gives_warning_calls: false
+  can_mourn: false
+  can_grieve: false
+  can_play: true
+  can_be_altruistic: true
+  can_teach: false
+
+# ============================================================================
+# RESOURCE PRODUCTION CONFIGURATION
+# ============================================================================
+resource_production:
+  enabled: true
+  resource_type: "item_duplication" # Allays provide item duplication bonuses
+
+  # Production settings
+  production_rate: 1.8           # Base production per cycle
+  production_interval: 2000      # Ticks between production checks
+  max_capacity: 100.0            # Maximum accumulated resource
+
+  # Quality factors
+  base_quality: 1.0              # Base quality multiplier
+  environment_bonus: 0.15        # Quality bonus near note blocks
+
+  # Dance bonus
+  dance_bonus: 1.5               # Multiplier when dancing

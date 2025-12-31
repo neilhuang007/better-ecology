@@ -1,0 +1,607 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# Mob: STRIDER
+# ============================================================================
+#
+# This file defines a specific mob by:
+# 1. Overriding defaults from the Generalized Template
+# 2. Providing natural language descriptions for unique behaviors
+# 3. Specifying relationships with other mobs
+#
+# INSTRUCTIONS FOR AI:
+# - Read the Generalized Template first to understand all systems
+# - Values here OVERRIDE template defaults
+# - Empty/null values mean "use template default"
+# - Natural language descriptions should be interpreted and implemented
+# - [UNIQUE] sections require custom implementation logic
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:strider"
+  display_name: "Strider"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "SOLITARY"
+    activity_pattern: "CATHEMERAL"
+
+  reference:
+    real_world_analog: "Water strider (Gerridae) adapted to lava environments"
+    ecological_role: "Nether's lava surface specialist - primary consumer providing transportation across lava oceans"
+
+  tags: ["nether_exclusive", "lava_walker", "thermophilic", "saddleable", "water_vulnerable"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 10
+
+  size:
+    width: 0.9
+    height: 1.7
+
+  biomass:
+    adult: 120
+
+  movement:
+    speeds:
+      walk: 0.175
+      swim: 0.08
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: 0.015
+
+  thirst:
+    enabled: false
+
+  age:
+    baby_duration: 24000
+
+  social:
+    enabled: false
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule: null
+
+  weather:
+    rain: null
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: ["nether_wastes", "crimson_forest", "warped_forest", "soul_sand_valley", "basalt_deltas"]
+      preferred: ["nether_wastes", "crimson_forest", "warped_forest"]
+      forbidden: []
+    required_nearby:
+      - feature: "lava"
+        max_distance: 8
+        reason: "Primary habitat is lava surfaces"
+
+  territory:
+    enabled: false
+
+  shelter:
+    needs_shelter: true
+    shelter_uses: ["hiding"]
+    valid_shelters:
+      - type: "cave"
+        description: "Natural cave or overhang to escape rain in Overworld"
+      - type: "nether_structure"
+        description: "Any solid block overhead for rain protection"
+
+  # === LOCATION-TRIGGERED BEHAVIORS ===
+  location_triggers:
+    enabled: true
+    triggers:
+      - name: "return_to_lava"
+        description: |
+          When a strider is on land and outside of lava, it becomes cold
+          and uncomfortable. The strider should actively seek out and return
+          to the nearest lava source within 16 blocks. The strider moves
+          slowly and shivers while cold, showing visual distress (purple color,
+          frowning expression). Once in lava, the strider returns to normal
+          (red-orange color, happy expression, full speed).
+        location:
+          blocks: ["air"]
+          not_on_blocks: ["lava"]
+          biomes: []
+          near_lava: {max: 16}
+        behavior:
+          target: "nearest_lava"
+          movement_speed: 0.5
+          activity: "seeking_heat"
+
+      - name: "lava_surface_locomotion"
+        description: |
+          When on lava surfaces, striders walk freely without sinking.
+          They gain significant movement speed bonus (1.8x multiplier)
+          and show comfortable behavior. The strider should pathfind
+          across lava surfaces efficiently, treating lava as solid ground.
+          If spawned under lava, they rise to the surface automatically.
+        location:
+          blocks: ["lava"]
+          biomes: []
+        behavior:
+          speed_multiplier: 1.8
+          buoyancy: "rise_to_surface"
+          damage_immunity: "lava"
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "ITEM"
+        target: "minecraft:warped_fungus"
+        nutrition: 40
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+
+    secondary: []
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 12
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+    predators: []
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: 50
+    recent_food:
+      enabled: false
+    environment:
+      near_water: false
+      required_biomes: []
+    requires_shelter: false
+    season: null
+
+  density_effects:
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: false
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: 0
+    birth:
+      offspring_count: 1
+      location_requirement: null
+
+  parental_care:
+    duration: 24000
+    behaviors:
+      protects_offspring: false
+      feeds_offspring: false
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+    leadership:
+      has_leader: false
+
+  herd_movement:
+    enabled: false
+
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: null
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 60
+    group_size: [2, 4]
+    conditions:
+      biomes: ["nether_wastes", "crimson_forest", "warped_forest", "soul_sand_valley", "basalt_deltas"]
+      blocks: ["lava"]
+
+  carrying_capacity:
+    caps:
+      per_chunk: 6
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "PASSIVE"
+
+  taming:
+    enabled: false
+
+  player_breeding:
+    enabled: true
+
+  drops:
+    on_death:
+      - item: "minecraft:string"
+        count: [2, 5]
+        chance: 1.0
+
+  interactions:
+    - action: "saddle"
+      item: "minecraft:saddle"
+      result: "Can be ridden by player"
+      description: "Apply saddle to enable riding"
+
+    - action: "control"
+      item: "minecraft:warped_fungus_on_a_stick"
+      result: "Controls direction and boosts speed"
+      description: "Steer saddled strider and activate speed boost"
+
+    - action: "breed"
+      item: "minecraft:warped_fungus"
+      result: "Enter love mode and produce baby"
+      description: "Feed two striders to breed"
+
+    - action: "lead"
+      item: "minecraft:warped_fungus"
+      result: "Strider follows player"
+      description: "Hold warped fungus to attract striders"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.strider.ambient"
+    hurt: "entity.strider.hurt"
+    death: "entity.strider.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "stand_still"
+        frequency: 200
+        trigger: "random"
+      - behavior: "look_around"
+        frequency: 100
+        trigger: "random"
+      - behavior: "shiver_when_cold"
+        frequency: 20
+        trigger: "off_lava"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+# Describe behaviors unique to this mob that aren't covered by standard systems.
+# Use natural language - AI should interpret and implement appropriate logic.
+# ============================================================================
+
+unique_behaviors:
+  - name: "lava_walking"
+    description: |
+      Striders can walk on lava surfaces without sinking or taking damage.
+      They treat lava as solid ground, moving freely across lava oceans.
+
+      WHEN: Always active when strider is alive
+      WHERE: On any lava block surface
+      WHAT: Strider walks on top of lava with full movement capability.
+      If spawned under lava, automatically rises to surface.
+      Completely immune to lava damage.
+      WHY: Primary adaptation allowing striders to inhabit Nether lava oceans
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: 1
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "temperature_based_physiology"
+    description: |
+      Striders undergo dramatic physiological changes based on environmental
+      temperature (lava contact). This is a core survival mechanic that
+      affects appearance, movement, and behavior.
+
+      WHEN: When strider transitions between lava and non-lava blocks
+      WHERE: Anywhere - state persists based on current block
+      WHAT: When in lava: red-orange color, normal expression, full leg
+      extension, 1.8x movement speed, active behavior.
+      When out of lava: purple-burgundy color, frowning expression,
+      shortened legs, shivering animation, 0.5x movement speed.
+      WHY: Biological requirement for extreme heat - shows Nether adaptation
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: 2
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "water_rain_vulnerability"
+    description: |
+      Striders take damage from water, rain, and splash water bottles.
+      This is unusual because damage applies even while in lava during rain.
+
+      WHEN: When in contact with water blocks or during rain weather
+      WHERE: Anywhere - even in lava during rain
+      WHAT: Takes 1 HP damage per splash water bottle or per 0.5 seconds
+      of rain/water exposure. Slowly sinks in water while taking damage.
+      Should seek shelter when raining in Overworld.
+      WHY: Creates environmental weakness balancing their lava immunity
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 3
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "saddleable_mount_with_control"
+    description: |
+      Striders can be saddled and ridden like horses, but require warped
+      fungus on a stick for control and can boost speed temporarily.
+
+      WHEN: When player right-clicks with saddle, then mounts with empty hand
+      WHERE: Anywhere strider exists
+      WHAT: Player can saddle strider (removable with shears). When mounted,
+      strider moves forward automatically. Player uses warped fungus on
+      a stick to control direction. Using the control activates a speed
+      boost (2.2x speed) for 7-49 seconds at cost of 1 durability.
+      Control item reverts to fishing rod at 0 durability.
+      WHY: Provides unique transportation method across Nether lava oceans
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 4
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "attraction_to_warped_fungus"
+    description: |
+      Striders are attracted to players holding warped fungus or warped
+      fungus on a stick, allowing players to lead and corral them.
+
+      WHEN: When player holds warped fungus or warped fungus on a stick
+      WHERE: Within strider's line of sight
+      WHAT: Strider stops current behavior and pathfinds toward player,
+      following them as long as item is held. Used for leading striders
+      to desired locations, setting up breeding pairs, or bringing them
+      back to lava.
+      WHY: Enables breeding management and transportation setup
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 5
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "baby_strider_jockey_behavior"
+    description: |
+      Baby striders naturally ride on adult striders. 10% of spawned
+      striders have a baby riding on top.
+
+      WHEN: On spawn (10% chance) or when baby strider is near adult
+      WHERE: Any lava surface with adult strider
+      WHAT: Baby strider positions itself on top of adult strider.
+      Adult is NEVER saddled when carrying baby. Baby can grow to
+      adulthood while riding. Once grown, can be ridden by player.
+      Only one baby per adult at a time.
+      WHY: Natural transport/protection behavior for offspring
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 6
+      duration: null
+      affects_others: true
+      world_modification: false
+
+  - name: "zombified_piglin_jockey_host"
+    description: |
+      Striders can spawn with zombified piglins riding them as jockeys.
+      This creates a hostile/neutral mob combination.
+
+      WHEN: On spawn (3.33% chance)
+      WHERE: Nether lava oceans
+      WHAT: Zombified piglin (baby or adult) spawns riding strider.
+      Strider spawns WITH saddle equipped. Piglin holds warped fungus
+      on stick instead of golden sword. Initially neutral toward players.
+      If attacked or rider angered, becomes hostile and attacks via melee.
+      Piglin CANNOT use fungus stick for speed boost. If rider killed,
+      strider becomes passive and can be immediately ridden by player.
+      Saddle cannot be removed with shears while piglin is riding.
+      WHY: Creates unique Nether mob variant, adds danger to lava travel
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 7
+      duration: null
+      affects_others: true
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+# Describe relationships with other specific mobs beyond predator/prey.
+# ============================================================================
+
+relationships:
+  # Predators (who hunts this mob)
+  predators: []
+
+  # Prey (what this mob hunts)
+  prey: []
+
+  # Competitors (compete for same resources)
+  competitors: []
+
+  # Mutualists (mutually beneficial)
+  mutualists: []
+
+  # Commensals (one benefits, other unaffected)
+  commensals:
+    - entity: "minecraft:zombified_piglin"
+      notes: "Zombified piglins use striders as mounts (jockey spawning). Piglin benefits from transportation, strider is unaffected when passive."
+
+  # Special relationships
+  special:
+    - entity: "minecraft:zombified_piglin"
+      relationship: "Jockey Host"
+      description: "3.33% spawn chance as zombified piglin jockey. Strider provides mount, piglin provides hostile guardian. Creates unique Nether combat encounter."
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+# Free-form description for AI to understand this mob's "character"
+# ============================================================================
+
+narrative:
+  summary: |
+    The Strider is the only passive mob native to the Nether, uniquely
+    adapted to traverse lava oceans as surface-dwelling creatures. They
+    serve as the primary transportation method across the Nether's
+    hazardous lava seas, filling the ecological niche of a lava-walking
+    herbivore that feeds exclusively on warped fungus.
+
+  behavior_overview: |
+    Striders spend their lives wandering on lava surfaces in Nether biomes,
+    showing remarkable comfort on molten rock but becoming distressed when
+    forced onto land. Outside of lava, they turn purple, shiver, and move
+    painfully slow, actively seeking to return to the heat. They're peaceful
+    creatures that flee when attacked but never retaliate. Striders live
+    solitary lives, though babies may be seen riding on adults. They're
+    attracted to players holding warped fungus, making them easy to lead
+    and breed. Their most notable feature is their ability to be saddled
+    and ridden, with players using warped fungus on a stick to steer them
+    across lava oceans at impressive speeds.
+
+  ecological_importance: |
+    As the Nether's only passive mob, striders occupy a unique position in
+    the ecosystem. They're primary consumers that depend on warped fungus
+    from Warped Forest biomes, creating a biological connection between
+    different Nether regions. Without striders, players would have no
+    renewable source of string in the Nether and would struggle to cross
+    lava oceans safely. Their ability to be ridden provides crucial
+    transportation infrastructure in the otherwise impassable Nether
+    terrain. While they have no natural predators, they serve as hosts for
+    zombified piglin jockeys, creating an interesting symbiotic/parasitic
+    relationship. If removed, the Nether would lose its sole docile creature
+    and players would lose the most efficient method of lava travel.
+
+  design_notes: |
+    Striders are fundamentally temperature-dependent creatures. All systems
+    should prioritize their heat requirements - they thrive in lava and
+    suffer without it. The shivering/purple state isn't just cosmetic;
+    it represents severe performance degradation that should trigger
+    pathfinding back to lava. Water and rain are existential threats that
+    cause active fleeing and shelter-seeking behavior.
+
+    The riding mechanics need careful implementation: saddling works like
+    horses, but the warped fungus on a stick control system is unique.
+    Speed boosts should feel rewarding but consume durability meaningfully.
+    The automatic forward movement with directional influence is different
+    from other mounts.
+
+    Baby-on-adult spawning happens naturally, but adults should NEVER spawn
+    saddled when carrying babies. Zombified piglin jockeys should spawn
+    WITH saddles and create genuinely threatening encounters that transform
+    into rideable opportunities once the rider is defeated.
+
+    Importantly: early development had striders die when cold. This was
+    removed as "too sad." The current version shows distress without death,
+    which creates emergent compassionate gameplay - players voluntarily
+    build lava pools to keep striders warm. The systems should support this
+    emotional connection.
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+# Quick-reference values for ecosystem balancing
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 1.0
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: 30
+    provides_to_predator: 120
+
+  population_target: "Common in Nether, 2-4 per lava ocean chunk"
+
+  removal_impact: "Eliminates primary Nether transportation method and only passive mob. Players lose renewable string source and efficient lava travel. No ecological cascade due to lack of predators."

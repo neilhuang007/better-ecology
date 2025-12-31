@@ -1,0 +1,604 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - GENERALIZED BEHAVIOR TEMPLATE
+# Version: 2.0
+# Mob: Bat
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:bat"
+  display_name: "Bat"
+
+  # Ecological classification
+  classification:
+    category: "PASSIVE"
+    trophic_level: "SECONDARY_CONSUMER"
+    diet_type: "INSECTIVORE"
+    social_type: "COLONY"
+    activity_pattern: "NOCTURNAL"
+
+  # Reference information
+  reference:
+    real_world_analog: "Cave-dwelling microbat (e.g., Little Brown Bat)"
+    ecological_role: "Nocturnal insectivore that provides pest control and cave ecosystem dynamics"
+
+  # Tags for system filtering
+  tags: ["flying", "nocturnal", "cave_dwelling", "ambient"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  # Health
+  health:
+    base: 3                        # 6 HP total (smallest mob)
+    baby_multiplier: 0.5
+
+  # Size (affects hitbox and various calculations)
+  size:
+    width: 0.5
+    height: 0.9
+    baby_scale: 0.5
+
+  # Biomass - abstract unit for food chain calculations
+  biomass:
+    adult: 5                       # Very small biomass
+    baby: 2
+    transfer_efficiency: 0.1
+
+  # Movement capabilities
+  movement:
+    speeds:
+      walk: 0.0                    # Bats don't walk
+      run: 0.0
+      swim: 0.0                    # Cannot swim effectively
+      fly: 0.6                     # Fast, erratic flight
+      climb: 0.0
+
+    capabilities:
+      can_swim: false
+      can_jump: false
+      jump_height: 0.0
+      avoids_water: true
+      avoids_cliffs: false         # Flying mob
+      cliff_threshold: 0
+
+    # Speed modifiers applied conditionally
+    conditional_modifiers:
+      baby: 0.7
+      elderly: 0.8
+      injured: 0.6
+      hungry: 0.9
+      fleeing: 1.3
+      hunting: 1.1
+      carrying_offspring: 0.0      # Not applicable
+      in_water_nonaquatic: 0.0     # Will die
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  # Hunger system
+  hunger:
+    enabled: false                 # Bats are ambient creatures, no hunger system
+    max_value: 100
+    starting_value: 100
+    decay_rate: 0.0
+
+    thresholds:
+      satiated: 100
+      hungry: 100
+      very_hungry: 100
+      starving: 100
+
+    starvation:
+      damage_threshold: 0
+      damage_amount: 0
+      damage_interval: 0
+
+  # Thirst system
+  thirst:
+    enabled: false
+
+  # Body condition
+  condition:
+    enabled: false                 # No breeding or condition system
+
+  # Energy/Stamina
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.3
+
+    costs:
+      sprinting: 0.0
+      hunting: 0.0
+      fleeing: 0.4
+      flying: 0.4                  # Constant energy cost while flying
+      swimming: 0.0
+
+  # Age tracking
+  age:
+    enabled: false                 # Bats don't breed or age
+    baby_duration: 0
+    maturity_age: 0
+    elderly_age: null
+    max_age: null
+
+  # Social needs
+  social:
+    enabled: false                 # While colonial, don't track social needs
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  # Daily cycle
+  daily_cycle:
+    # Nocturnal activity pattern
+    schedule:
+      - time: [0, 12000]           # Day (dawn to dusk)
+        activity: 0.0              # Completely inactive - roosting
+        label: "day"
+      - time: [12000, 13000]       # Early dusk
+        activity: 0.3              # Starting to wake
+        label: "dusk"
+      - time: [13000, 22500]       # Night
+        activity: 1.0              # Fully active
+        label: "night"
+      - time: [22500, 24000]       # Pre-dawn
+        activity: 0.5              # Returning to roost
+        label: "pre_dawn"
+
+    # What "low activity" means
+    low_activity_behavior:
+      action: "SLEEP"              # Hangs from ceiling
+      seek_shelter: true
+      reduced_awareness: true
+      awareness_multiplier: 0.1
+
+  # Weather responses
+  weather:
+    rain:
+      activity_multiplier: 0.3     # Reduced flying in rain
+      seek_shelter: true
+      shelter_priority: 5
+    thunder:
+      activity_multiplier: 0.1
+      seek_shelter: true
+      panic_chance: 0.0
+    snow:
+      activity_multiplier: 0.2
+      seek_shelter: true
+    clear:
+      activity_multiplier: 1.0
+
+  # Seasonal behaviors
+  seasons:
+    enabled: false
+
+  # Moon phases (optional)
+  lunar:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  # Habitat requirements
+  habitat:
+    biomes:
+      allowed: []                  # All biomes
+      preferred: []                # No preference
+      forbidden: []
+
+    altitude:
+      min: -64
+      max: 63                      # Spawns below Y=63
+      preferred: [-64, 40]
+
+    required_nearby:
+      - feature: "caves"
+        max_distance: 0            # Must be in caves
+        reason: "Roosting habitat"
+
+  # Territory system
+  territory:
+    enabled: false
+
+  # Home range
+  home_range:
+    enabled: true
+    radius: 32
+    has_home_point: true           # Returns to roosting spot
+    home_type: "ROOST"
+
+  # Shelter requirements
+  shelter:
+    needs_shelter: true
+    shelter_uses: ["sleeping", "hiding"]
+
+    valid_shelters:
+      - type: "cave_ceiling"
+        description: "Hangs from solid blocks with air below"
+        min_enclosure: 0.0         # Just needs a ceiling
+        requires_ceiling: true
+
+  # Location-triggered behaviors
+  location_triggers:
+    enabled: true
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  # Food sources (ambient mob - purely aesthetic)
+  food_sources:
+    primary: []
+    secondary: []
+    emergency: []
+
+  # Foraging behavior
+  foraging:
+    search_radius:
+      base: 0
+      when_hungry: 0
+      when_starving: 0
+    search_interval: 0
+
+    memory:
+      remembers_locations: false
+      memory_duration: 0
+      remembers_depleted: false
+      avoids_depleted_for: 0
+      shares_with_group: false
+
+    sustainability:
+      enabled: false
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  # === AS PREDATOR ===
+  as_predator:
+    enabled: false                 # No hunting behavior (ambient mob)
+
+  # === AS PREY ===
+  as_prey:
+    enabled: true
+
+    predators: []                  # No specific predators in vanilla
+
+    # Default predator response
+    default_response:
+      detection_range: 16
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.3
+        flee_distance: 32
+        flee_toward: "SHELTER"
+        zigzag: true               # Erratic flight pattern
+
+      freeze:
+        duration: [0, 0]
+        break_on_approach: false
+        break_distance: 0
+
+      alarm:
+        gives_alarm: false
+        alarm_radius: 0
+        alarm_triggers_group_flee: false
+
+    # All-clear conditions
+    all_clear:
+      predator_distance: 32
+      time_since_seen: 200
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: false                   # Bats do not breed in vanilla Minecraft
+  method: null
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  # Group structure
+  group:
+    type: "COLONY"
+    size:
+      min: 1
+      optimal: 8
+      max: 20
+
+    composition:
+      mixed_sex: true
+      mixed_age: true
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  # Herd/flock movement
+  herd_movement:
+    enabled: false                 # Individual flight paths
+
+  # Communication
+  communication:
+    alarm_calls:
+      enabled: false
+    contact_calls:
+      enabled: false
+    mating_calls:
+      enabled: false
+
+  # Social behaviors
+  behaviors:
+    greeting: false
+    allogrooming: false
+    play: false
+    huddling: true                 # Roost together
+    dominance_hierarchy: false
+
+  # Group benefits
+  group_benefits:
+    predator_detection_bonus: 0.0
+    foraging_efficiency_bonus: 0.0
+    thermoregulation_bonus: 0.05   # Slight benefit from roosting together
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  # Terrain modifications
+  terrain:
+    enabled: false
+
+  # Ecosystem services
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+    nutrient_cycling:
+      enabled: false
+    decomposition:
+      enabled: false
+
+  # Environmental responses
+  responses:
+    drinking:
+      enabled: false
+    temperature:
+      heat_seek_shade: false
+      heat_seek_water: false
+      cold_seek_shelter: true
+      cold_huddling: true
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  # Spawning rules
+  spawning:
+    weight: 10
+    group_size: [1, 8]
+
+    conditions:
+      blocks: ["stone", "deepslate", "andesite", "diorite", "granite"]
+      biomes: []                   # All biomes
+      light: [0, 3]                # Light level 3 or less
+      altitude: [-64, 63]          # Below Y=63
+      time: [13000, 24000]         # Night time only
+      weather: null
+
+  # Carrying capacity
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 8
+      regional: null
+
+    resources:
+      enabled: false
+
+    over_capacity:
+      - threshold: 1.2
+        effects: ["dispersal"]
+      - threshold: 1.5
+        effects: ["dispersal"]
+
+  # Dispersal
+  dispersal:
+    enabled: true
+    triggers: ["overcrowding"]
+    distance: [32, 128]
+
+  # Natural mortality
+  mortality:
+    old_age:
+      enabled: false
+    starvation:
+      enabled: false
+    disease:
+      enabled: false
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  # Fear/approach distances
+  distances:
+    detection: 16
+    caution: 8
+    flee: 4
+
+  # Habituation
+  habituation:
+    enabled: false                 # Remains skittish
+
+  # Taming
+  taming:
+    enabled: false
+
+  # Player breeding
+  player_breeding:
+    enabled: false
+
+  # Drops
+  drops:
+    on_death: []                   # No drops
+    on_interaction: []
+
+  # Special interactions
+  interactions: []
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  # Sounds
+  sounds:
+    ambient: "entity.bat.ambient"
+    hurt: "entity.bat.hurt"
+    death: "entity.bat.death"
+    baby: null
+    alarm: null
+    mating: null
+    eating: null
+
+  # Idle behaviors
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "hang_upside_down"
+        frequency: 1.0
+        trigger: "on_block_below_during_day"
+      - behavior: "erratic_flight"
+        frequency: 1.0
+        trigger: "while_flying_at_night"
+
+  # Individual variation
+  personality_traits:
+    boldness:
+      base: 0.2                    # Generally skittish
+      variation: 0.1
+    activity:
+      base: 0.5
+      variation: 0.2
+    sociability:
+      base: 0.6                    # Colonial
+      variation: 0.2
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+
+ai_priority_framework:
+  # Survival (highest priority)
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  # Physiological needs
+  physiological:
+    critical_health: 3
+    drink_water: 99              # Not applicable
+    eat_food: 99                 # Not applicable
+    find_shelter: 4              # High priority during day
+
+  # Reproduction
+  reproduction:
+    care_for_offspring: 99       # Not applicable
+    breed: 99                    # Not applicable
+    find_mate: 99                # Not applicable
+
+  # Social
+  social:
+    group_cohesion: 6            # Light roosting preference
+    social_interaction: 99
+
+  # Hunting
+  hunting:
+    hunt_prey: 99                # Not applicable
+
+  # Location behaviors
+  location:
+    location_triggered: 5
+    territory_patrol: 99
+
+  # Default behaviors
+  default:
+    wander: 7                    # Random flight
+    idle: 8
+    rest: 4                      # Roosting
+
+
+# ============================================================================
+# SYSTEM 15: UNIQUE BEHAVIOR FRAMEWORK
+# ============================================================================
+
+unique_behavior_template:
+  structure:
+    name: "roosting_behavior"
+    description: "Bats hang upside down from ceiling blocks during daytime"
+
+    triggers:
+      - type: "TIME"
+        conditions:
+          time_range: [0, 12000]
+
+    requirements:
+      all_of: ["has_block_above", "daytime"]
+      any_of: []
+      none_of: ["in_combat"]
+
+    actions: ["find_ceiling_block", "attach_to_ceiling", "hang_motionless"]
+
+    effects:
+      on_self: ["energy_recovery", "hidden_state"]
+      on_others: []
+      on_world: []
+
+    priority: 4
+    duration: null               # Until nighttime
+    cooldown: null
+    interruptible: true

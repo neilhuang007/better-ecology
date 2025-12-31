@@ -1,0 +1,33 @@
+{
+  "minecraft:dolphin": {
+    "behaviors": {
+      "enabled": true,
+      "priority": 3,
+      "max_force": 0.2,
+      "max_speed": 0.5,
+      "wave_riding": 1.3,
+      "treasure_hunt": 1.0,
+      "evasion": 1.0
+    },
+    "acrobatics": {
+      "enabled": true,
+      "leap_chance": 0.02,
+      "leap_cooldown": 100,
+      "leap_height": 1.5,
+      "boat_riding": true
+    },
+    "assistance": {
+      "enabled": true,
+      "treasure_search_radius": 64,
+      "treasure_lead_distance": 8.0,
+      "assistance_duration": 600,
+      "search_cooldown": 200
+    },
+    "aquatic": {
+      "enabled": true,
+      "depth_preference": "surface",
+      "surface_seeking": 0.8,
+      "current_resistance": 0.8
+    }
+  }
+}

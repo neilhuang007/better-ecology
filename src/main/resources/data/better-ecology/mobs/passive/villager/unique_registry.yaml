@@ -1,0 +1,886 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Mob: Villager
+# Template Version: 2.0
+# ============================================================================
+#
+# Villagers are the most complex mob in Minecraft, representing organized
+# human civilization. They have 15 professions, 7 biome variants, a
+# sophisticated trading economy, daily schedules, social behaviors, and
+# defensive alliances with iron golems.
+#
+# This profile captures their unique behaviors that differ significantly
+# from standard ecological patterns.
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:villager"
+  display_name: "Villager"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "SECONDARY_CONSUMER"
+    diet_type: "OMNIVORE"
+    social_type: "COLONY"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Human agricultural civilization members"
+    ecological_role: "Agricultural producers, civilization builders, trade economy participants"
+
+  tags: ["civilized", "sedentary", "agricultural", "trading", "village_dwelling", "professional", "social"]
+
+
+# ============================================================================
+# PHYSICAL - Villager-specific overrides
+# ============================================================================
+physical:
+  health:
+    base: 10                    # 20 HP, no natural regeneration
+
+  size:
+    width: 0.6
+    height: 1.95
+
+  biomass:
+    adult: 150
+
+  movement:
+    speeds:
+      walk: 0.25
+      run: 0.35
+      swim: 0.15
+      fly: 0.0
+
+
+# ============================================================================
+# INTERNAL STATE - Villagers don't have hunger
+# ============================================================================
+internal_state:
+  hunger:
+    enabled: false              # Villagers do NOT eat for hunger
+
+  thirst:
+    enabled: false
+
+  age:
+    baby_duration: 24000        # 20 minutes to adulthood
+    max_age: null
+
+  social:
+    enabled: true
+    max_value: 100
+    decay_rate: 0.005
+    recovery_rate: 0.15
+    loneliness_threshold: 20
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES - Complex daily schedule
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule:
+      - time: [0, 2000]
+        activity: 0.6
+        label: "waking"
+      - time: [2000, 8000]
+        activity: 1.0
+        label: "work"
+      - time: [8000, 11000]
+        activity: 0.8
+        label: "gathering"
+      - time: [11000, 12000]
+        activity: 0.7
+        label: "socializing"
+      - time: [12000, 14000]
+        activity: 0.9
+        label: "afternoon_work"
+      - time: [14000, 18000]
+        activity: 0.5
+        label: "returning_home"
+      - time: [18000, 24000]
+        activity: 0.1
+        label: "sleeping"
+
+  weather:
+    rain: null                  # Use template default
+    thunder: null
+    snow: null
+    clear: null
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: ["plains", "savanna", "taiga", "desert", "snowy_plains", "meadow"]
+      forbidden: []
+    required_nearby: []
+
+  territory:
+    enabled: true
+    size: 64                    # Village radius
+
+  shelter:
+    needs_shelter: true
+    shelter_uses: ["sleeping", "breeding", "baby_rearing", "working", "hiding", "socializing"]
+    valid_shelters:
+      - type: "village_building"
+        description: "Enclosed structure with bed"
+        min_enclosure: 0.7
+
+  # Location-triggered behaviors for village-specific locations
+  location_triggers:
+    enabled: true
+    triggers:
+      - name: "gathering_at_bell"
+        description: |
+          When at a village bell during gathering time (8000-11000 ticks),
+          villagers meet to socialize, exchange gossip, and share food.
+          They form groups of 2-6 villagers around the bell and face
+          each other while socializing.
+
+        location:
+          blocks: ["bell"]
+          biomes: []
+          near_water: null
+          time: [8000, 11000]
+
+        behavior:
+          group_size: [2, 6]
+          spacing: [1, 3]
+          duration: [3000, 3500]
+          activity: "socializing"
+
+      - name: "working_at_job_site"
+        description: |
+          When at their claimed job site block during work hours,
+          employed villagers perform profession-specific animations
+          and restock trades up to twice per day. Farmers work crops,
+          librarians inspect bookshelves, etc.
+
+        location:
+          blocks: ["blast_furnace", "smoker", "cartography_table", "brewing_stand",
+                   "composter", "barrel", "fletching_table", "cauldron", "lectern",
+                   "stonecutter", "loom", "smithing_table", "grindstone"]
+          biomes: []
+          near_water: null
+          time: [2000, 8000]
+
+        behavior:
+          group_size: [1, 1]
+          spacing: [0, 0]
+          duration: [4000, 6000]
+          activity: "working"
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "ITEM"
+        target: "minecraft:bread"
+        nutrition: 4
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: ""
+
+    secondary:
+      - type: "ITEM"
+        target: "minecraft:carrot"
+        nutrition: 1
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: ""
+
+      - type: "ITEM"
+        target: "minecraft:potato"
+        nutrition: 1
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: ""
+
+      - type: "ITEM"
+        target: "minecraft:beetroot"
+        nutrition: 1
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: ""
+
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: 8
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:zombie"
+        threat_level: "EXTREME"
+        detection_range: 32
+        response: "FLEE"
+
+      - entity: "minecraft:zombie_villager"
+        threat_level: "EXTREME"
+        detection_range: 32
+        response: "FLEE"
+
+      - entity: "minecraft:husk"
+        threat_level: "EXTREME"
+        detection_range: 32
+        response: "FLEE"
+
+      - entity: "minecraft:drowned"
+        threat_level: "EXTREME"
+        detection_range: 24
+        response: "FLEE"
+
+      - entity: "minecraft:pillager"
+        threat_level: "HIGH"
+        detection_range: 32
+        response: "FLEE"
+
+      - entity: "minecraft:vindicator"
+        threat_level: "HIGH"
+        detection_range: 32
+        response: "FLEE"
+
+      - entity: "minecraft:evoker"
+        threat_level: "HIGH"
+        detection_range: 32
+        response: "FLEE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: null
+    recent_food:
+      enabled: true
+      time_window: 12000
+    environment:
+      near_water: null
+      required_biomes: []
+    requires_shelter: true
+    season: null
+
+  density_effects:
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: null
+      behavior: ""
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: null
+    birth:
+      offspring_count: 1
+      location_requirement: "near_bed"
+
+  parental_care:
+    duration: 24000
+    behaviors:
+      protects_offspring: false
+      feeds_offspring: false
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "COLONY"
+    size:
+      min: 2
+      optimal: 10
+      max: null
+    leadership:
+      has_leader: false
+      leader_selection: ""
+
+  herd_movement:
+    enabled: false
+
+  communication:
+    alarm_calls:
+      enabled: true
+      types:
+        - trigger: "zombie_attack"
+          call: "panic_scream"
+          group_response: "flee_to_shelter"
+        - trigger: "raid_alert"
+          call: "bell_ring"
+          group_response: "flee_to_gathering_point"
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: true
+    actions:
+      - trigger: "farming"
+        description: "Farmer villagers harvest and replant crops within 9-block radius"
+        target: "wheat, carrots, potatoes, beetroots"
+        result: "replanted_crops"
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: null
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 0                   # Only spawn in villages
+    group_size: [1, 1]
+    conditions:
+      biomes: []
+      blocks: []
+
+  carrying_capacity:
+    caps:
+      per_chunk: null           # Limited by beds, not chunks
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "NEUTRAL"
+
+  taming:
+    enabled: null
+    items: []
+
+  player_breeding:
+    enabled: true
+    items:
+      - item: "minecraft:bread"
+      - item: "minecraft:carrot"
+      - item: "minecraft:potato"
+      - item: "minecraft:beetroot"
+
+  drops:
+    on_death: []
+
+  interactions:
+    - action: "trade"
+      item: null
+      result: "opens_trading_gui"
+      description: "Right-click to open trading interface"
+
+    - action: "employ"
+      item: null
+      result: "claims_job_site"
+      description: "Unemployed villagers claim nearby job site blocks"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.villager.ambient"
+    hurt: "entity.villager.hurt"
+    death: "entity.villager.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "socialize"
+        frequency: 0.02
+        trigger: "idle"
+
+      - behavior: "wander_village"
+        frequency: 0.05
+        trigger: "freetime"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+unique_behaviors:
+  - name: "profession_system"
+    description: |
+      Villagers can claim one of 15 professions by interacting with
+      specific job site blocks. Once employed, they gain unique trades
+      that can be leveled up through trading. Professions include:
+      Armorer, Butcher, Cartographer, Cleric, Farmer, Fisherman,
+      Fletcher, Leatherworker, Librarian, Mason, Shepherd, Toolsmith,
+      Weaponsmith. Nitwits cannot gain professions.
+
+      WHEN: Unemployed villager detects unclaimed job site within 16 blocks
+      WHERE: Within village boundaries
+      WHAT: Villager pathfinds to job site, claims it, gains profession
+           and badge, unlocks initial trades
+      WHY: Creates specialized economy, enables trading progression
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: 10
+      duration: 200
+      affects_others: false
+      world_modification: false
+
+  - name: "trading_system"
+    description: |
+      Villagers with professions offer trades to players using emeralds
+      as currency. Each villager has unique trades determined at first
+      trade (locked permanently). Trading grants XP, unlocking higher
+      trade tiers (Novice -> Master). Trades restock twice per day
+      when villager works at job site. Prices affected by player
+      reputation through gossip system.
+
+      WHEN: Player right-clicks employed villager
+      WHERE: Any location
+      WHAT: Opens trading GUI showing available trades for current level
+           Player can exchange items for emeralds or emeralds+items for
+           other items
+      WHY: Creates emerald-based economy, provides renewable items
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 5
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "gossip_system"
+    description: |
+      Villagers share information about players through gossip. Five types:
+      Major Positive (curing zombie villager, +100, permanent),
+      Minor Positive (trading, +1), Major Negative (killing villager, -100),
+      Minor Negative (attacking villager, -25), and Trading. Gossip spreads
+      when villagers socialize at the bell. Reputation affects trade prices
+      and iron golem hostility.
+
+      WHEN: Villagers socialize, witness player actions, or interact
+      WHERE: Within 16 blocks of event or during gathering time
+      WHAT: Store numerical gossip values about specific players,
+           share with other villagers at reduced values during socializing,
+           calculate reputation as sum of (gossip × multiplier)
+      WHY: Creates meaningful player-villager relationships,
+           encourages positive interactions
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 8
+      duration: null
+      affects_others: true
+      world_modification: false
+
+  - name: "daily_schedule"
+    description: |
+      Villagers follow strict daily routines based on time of day:
+      - Morning (2000-8000): Work at job sites
+      - Late Morning (8000-11000): Gather at village bell, socialize
+      - Afternoon (12000-14000): Work or free time
+      - Evening (14000-18000): Return home
+      - Night (18000-24000): Sleep in claimed beds
+
+      WHEN: Continuous time-based behavior
+      WHERE: Throughout village
+      WHAT: Pathfind to appropriate locations based on time,
+           perform schedule-specific activities (working, socializing, sleeping)
+      WHY: Creates lifelike village atmosphere,
+           enables player prediction of villager behavior
+
+    implementation_hints:
+      trigger_type: "TIME"
+      priority: 7
+      duration: null
+      affects_others: true
+      world_modification: false
+
+  - name: "farming_behavior"
+    description: |
+      Farmer villagers automatically tend crops within 9 blocks. They
+      harvest fully-grown crops, replant the same crop type, use bone meal
+      to fertilize crops (up to 4 times per work session if available),
+      and fill composters with excess seeds (up to 20 seeds, then extract
+      bone meal). Keep minimum stocks of food and seeds.
+
+      WHEN: During work hours at composter job site
+      WHERE: Within 9 blocks of farmland
+      WHAT: Detect and harvest fully-grown crops, replant immediately,
+           use bone meal on growing crops, deposit seeds in composter
+      WHY: Creates autonomous food production, enables farm automation
+
+    implementation_hints:
+      trigger_type: "TIME"
+      priority: 9
+      duration: 4000
+      affects_others: true
+      world_modification: true
+
+  - name: "food_sharing"
+    description: |
+      Villagers with excess food autonomously share it with other villagers.
+      In Java Edition: Farmers with excess throw food to others.
+      In Bedrock: More complex system with specific thresholds.
+      Non-farmers receive if they have less than 3 bread or 12 root veggies.
+      Farmers receive if they have less than 15 bread, 60 root veggies,
+      or 45 wheat.
+
+      WHEN: Farmer has excess food, other villager needs food
+      WHERE: Within 8 blocks of each other
+      WHAT: Farmer picks up food item, throws toward needy villager,
+           receiving villager picks it up, becomes willing to breed
+      WHY: Enables autonomous village breeding without player intervention
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 11
+      duration: 100
+      affects_others: true
+      world_modification: false
+
+  - name: "iron_golem_summoning"
+    description: |
+      Villagers can summon iron golems for village defense. In Java Edition,
+      occurs when 5+ villagers gossip about needing golem or 3+ panic.
+      Villager must have slept in last 20 minutes, not detected golem in
+      last 30 seconds. Spawn attempt in 17×13×17 volume around village
+      center (1/700 per tick). Cap of 1 golem per 10 villagers.
+
+      WHEN: Village is under threat or during raid events
+      WHERE: Within village boundaries
+      WHAT: Check spawn conditions, attempt golem spawn at valid location,
+           check golem count vs villager count
+      WHY: Provides village defense, creates golem protectors
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 2
+      duration: 100
+      affects_others: true
+      world_modification: true
+
+  - name: "zombie_villager_conversion"
+    description: |
+      When killed by zombie, villager has difficulty-based chance to convert
+      to zombie villager (0% Easy, 50% Normal, 100% Hard). Zombie villagers
+      retain profession and biome appearance. Can be cured with Weakness
+      potion + golden apple. Curing takes 2000-6000 ticks (faster near
+      iron bars/beds). After curing, villager provides permanent trade
+      discount and regains profession.
+
+      WHEN: Killed by zombie
+      WHERE: Any location
+      WHAT: Roll conversion chance based on difficulty,
+           if successful, spawn zombie villager with same profession/biome
+      WHY: Creates risk to villages, enables unique curing mechanic
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 1
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "bed_claiming"
+    description: |
+      Villagers claim unclaimed beds within 48 blocks for sleeping.
+      Each villager can claim exactly one bed, which becomes their home
+      point. Babies born in village claim nearest unclaimed bed.
+      Unemployed villagers may lose profession if bed destroyed. Villagers
+      sleep at night, staying near bed if no bed available.
+
+      WHEN: Spawning, breeding, or bed becomes available
+      WHERE: Within 48 blocks
+      WHAT: Pathfind to unclaimed bed, claim it (green particles),
+           store bed location as home point, return to bed at night
+      WHY: Determines village capacity, limits breeding,
+           creates village structure
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 6
+      duration: 200
+      affects_others: true
+      world_modification: false
+
+  - name: "biome_variants"
+    description: |
+      Villagers have 7 distinct appearances based on spawn biome:
+      Plains (brown), Desert (orange/beige), Taiga (parka outfits),
+      Savanna (bright red), Snowy (icy blue), Swamp (purple/green),
+      Jungle (tropical). Appearance is cosmetic only - doesn't affect
+      trades. Baby villagers inherit appearance from spawn location,
+      not parents. Moving to different biome doesn't change appearance.
+
+      WHEN: Villager spawns
+      WHERE: Specific biome at spawn coordinates
+      what: Set villager biome variant based on spawning biome,
+           apply appropriate skin texture
+      WHY: Adds visual variety, reflects adaptation to environment
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: 15
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "baby_villager_play"
+    description: |
+      Baby villagers engage in playful behaviors unlike adults. They play
+      tag with other baby villagers, jumping on beds and chasing each
+      other. They move faster than adults and follow players holding
+      emeralds. Takes 20 minutes to grow into adult. 10% chance to
+      become nitwit upon adulthood (Bedrock Edition).
+
+      WHEN: Baby villager exists during daytime
+      WHERE: Near other babies or beds
+      WHAT: Run toward other baby villagers, engage in tag animation,
+           jump on beds repeatedly, follow player with emerald
+      WHY: Adds liveliness to villages, creates adorable interactions
+
+    implementation_hints:
+      trigger_type: "RANDOM"
+      priority: 12
+      duration: 200
+      affects_others: true
+      world_modification: false
+
+  - name: "raid_participation"
+    description: |
+      During raids, villagers exhibit unique behaviors. They panic and
+      run indoors when bad omen effect triggers raid. Stay in buildings
+      during waves. Emit panic sounds. Iron golems aggressively defend
+      them. Player completing raid gives Hero of the Village effect,
+      granting massive trade discounts with all villagers.
+
+      WHEN: Raid event triggered
+      WHERE: Within village boundaries
+      WHAT: Detect raid start, flee to nearest building, hide indoors,
+           emit panic particles, resume normal behavior after raid ends
+      WHY: Creates dramatic raid events, provides stakes for player defense
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 0
+      duration: null
+      affects_others: true
+      world_modification: false
+
+  - name: "restocking_trades"
+    description: |
+      Villager trades have limited uses before restocking needed. Villagers
+      can restock each trade up to twice per day by working at their job
+      site during work hours. Restocking refreshes trade uses, allowing
+      more trading. Some trades may be permanently locked after trades.
+
+      WHEN: During work hours at job site
+      WHERE: At claimed job site block
+      WHAT: Check if restocks available (max 2 per day),
+           work at job site for specified duration,
+           refresh trade use counts for locked trades
+      WHY: Prevents infinite trading without limits,
+           creates rhythm to trading economy
+
+    implementation_hints:
+      trigger_type: "TIME"
+      priority: 10
+      duration: 4000
+      affects_others: false
+      world_modification: false
+
+  - name: "socializing"
+    description: |
+      Villagers periodically stop and face each other for 4-5 seconds
+      to "socialize." During this time, they exchange gossip about
+      players, share information, and stare at each other. Occurs
+      most frequently during gathering time at the bell. Critical
+      for gossip system to spread reputation information.
+
+      WHEN: Two villagers in proximity during gathering or free time
+      WHERE: Any location, most common at village bell
+      WHAT: Stop movement, face each other, emit socialize particles,
+           exchange gossip data, resume normal behavior after 4-5 seconds
+      WHY: Spreads gossip, creates village atmosphere,
+           enables reputation system to work
+
+    implementation_hints:
+      trigger_type: "RANDOM"
+      priority: 13
+      duration: 100
+      affects_others: true
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+relationships:
+  predators:
+    - entity: "minecraft:zombie"
+      notes: "Primary predator, converts villagers to zombie villagers with difficulty-based chance. Villagers flee and hide."
+
+    - entity: "minecraft:drowned"
+      notes: "Aquatic variant of zombie, same conversion mechanics. Villagers avoid water areas."
+
+    - entity: "minecraft:husk"
+      notes: "Desert variant, same conversion mechanics. Villagers flee indoors."
+
+    - entity: "minecraft:pillager"
+      notes: "Part of illager raids, actively hunt villagers during raids. Villagers panic and hide."
+
+    - entity: "minecraft:vindicator"
+      notes: "Hostile during raids, chase villagers aggressively. Villagers flee to shelter."
+
+    - entity: "minecraft:evoker"
+      notes: "Spellcasters that attack villagers during raids. Villagers flee indoors."
+
+  prey: []
+
+  competitors:
+    - entity: "minecraft:piglin"
+      resource: "trading_economy"
+      interaction: "Neutral - different trading systems (gold vs emeralds)"
+
+  mutualists:
+    - entity: "minecraft:iron_golem"
+      benefit_given: "Summoning through gossip/panic, provides purpose"
+      benefit_received: "Protection from hostile mobs, village defense"
+
+  commensals: []
+
+  special:
+    - entity: "minecraft:player"
+      relationship: "Symbiotic trading partner"
+      description: "Players provide protection and desired items. Villagers provide rare items, enchanted gear, and renewable resources through trading. Positive actions (curing, trading) build reputation, negative actions (attacking, killing) damage reputation and can make iron golems hostile."
+
+    - entity: "minecraft:wandering_trader"
+      relationship: "Traveling merchant relative"
+      description: "Appears periodically near villages. Offers different trades than regular villagers. May share some gossip or village connection."
+
+    - entity: "minecraft:cat"
+      relationship: "Village pet"
+      description: "Cats naturally spawn in villages. Both are passive mobs that seek shelter during threats. Cats scare away creepers, providing indirect protection."
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+narrative:
+  summary: |
+    Villagers are civilized, sedentary humanoids that form the foundation of
+    Minecraft's only organized society. They live in villages, practice
+    agriculture, develop specialized professions, and conduct trade using
+    emeralds as currency. Unlike wild creatures, villagers follow structured
+    daily schedules, maintain social relationships through gossip, and build
+    defensive alliances with iron golems.
+
+  behavior_overview: |
+    A typical villager's day revolves around their profession and village
+    schedule. At dawn, employed villagers head to their job sites - farmers
+    tend crops, librarians study at lecterns, armorers work at blast furnaces.
+    In late morning, the entire village gathers at the bell to socialize and
+    exchange gossip. Afternoon brings more work or free time for wandering.
+    As evening approaches, villagers return to their claimed beds and sleep
+    through the night, protected from the dangers of the outside world.
+
+    Farmers are uniquely productive, automatically harvesting and replanting
+    crops within range. They share excess food with other villagers, enabling
+    autonomous village breeding. When threats appear, villagers flee indoors
+    and can summon iron golems for defense. Their gossip system means they
+    remember player actions - helpful players get better trade prices, while
+    aggressors face higher costs and potentially hostile iron golems.
+
+  ecological_importance: |
+    Villagers are unique in Minecraft as the only mob that represents
+    civilization and organized society. Their removal would eliminate:
+    - The only renewable source of many rare items (enchanted books, explorer maps)
+    - Emerald-based trading economy
+    - Automatic farming systems through farmer behavior
+    - Iron golem spawning mechanics
+    - Village structures as safe zones for players
+    - Complex social behaviors and gossip system
+
+    They bridge the gap between wild survival mechanics and civilization,
+    providing late-game progression through trading halls and specialized
+    item acquisition. Their agricultural practices make them the only mob
+    that actively manages and produces food rather than just consuming it.
+
+  design_notes: |
+    Villagers are intentionally complex, with multiple interconnected systems:
+    - 15 professions with unique workstation requirements
+    - 7 biome variants (cosmetic but important for worldbuilding)
+    - 5-tier trading progression system
+    - Gossip/reputation system affecting prices
+    - Bed-based population limiting
+    - Daily schedule with 6 distinct phases
+    - Zombie conversion mechanics
+    - Iron golem summoning
+
+    Key balance considerations:
+    - Breeding limited by bed count prevents infinite villager farms without structure
+    - Trading restocking (2x/day) prevents infinite resource generation
+    - Profession locking after first trade encourages deliberation
+    - Gossip decay prevents permanent reputation (except curing)
+    - Iron golem cap (1 per 10 villagers) prevents golem spam
+
+    The nitwit mechanic (10% of babies) adds variety - they can breed and
+    socialize but cannot work, representing neurodiversity in the population.
+
+    For ecology mod purposes, villagers should maintain their vanilla complexity
+    while integrating with ecosystem-wide systems like predator detection and
+    population dynamics. Their unique behaviors should take precedence over
+    generalized animal systems.
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+balance:
+  spawn_rate_multiplier: 0.0    # Handled by village generation, not natural spawning
+  breeding_rate_multiplier: 1.0
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: null     # No hunger system
+    provides_to_predator: 150   # High biomass value
+
+  population_target: "Limited by beds in village structures, typically 5-30 per natural village"
+
+  removal_impact: "Eliminates trading economy, rare item sources, iron golem spawning, automatic farming, and safe village zones. Devastating to late-game progression."

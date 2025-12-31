@@ -1,0 +1,295 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - SHEEP BEHAVIOR EXAMPLE
+# ============================================================================
+# This example demonstrates how to configure steering behaviors for a herd animal
+# like sheep. The configuration showcases flocking, evasion, and parental behaviors.
+#
+# BEHAVIOR CATEGORIES:
+# 1. Flocking - Classic boids algorithm (separation, alignment, cohesion)
+# 2. Predation - Evasion from predators like wolves
+# 3. Herd - Leader following and herd cohesion
+# 4. Parental - Mother-offspring bonding behaviors
+# ============================================================================
+
+# ============================================================================
+# BASIC MOB INFO
+# ============================================================================
+identity:
+  mob_id: "minecraft:sheep"
+  display_name: "Sheep"
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "HERBIVORE"
+    social_type: "HERD"
+    activity_pattern: "DIURNAL"
+
+# ============================================================================
+# PHYSICAL CHARACTERISTICS
+# ============================================================================
+physical:
+  health:
+    base: 8                         # 8 hearts (16 HP)
+    baby_multiplier: 0.5
+
+  movement:
+    speeds:
+      walk: 0.23
+      run: 0.23
+      swim: 0.15
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: true
+      jump_height: 1.0
+      avoids_water: false
+      avoids_cliffs: true
+      cliff_threshold: 4
+
+# ============================================================================
+# STEERING BEHAVIORS
+# ============================================================================
+# This section configures all steering behaviors that influence the sheep's
+# movement. Each behavior has a weight (0.0-1.0+) that determines its priority.
+# Higher weights = stronger influence on movement.
+# ============================================================================
+
+steering_behaviors:
+
+  # ==========================================================================
+  # FLOCKING BEHAVIORS
+  # ==========================================================================
+  # Implements the classic boids algorithm for natural herd movement.
+  # - Separation: Avoid crowding neighbors (short-range repulsion)
+  # - Alignment: Steer towards average heading of neighbors
+  # - Cohesion: Move toward average position of neighbors (long-range attraction)
+  #
+  # Weight guidelines:
+  # - Separation should be HIGHEST (1.5-2.5) to prevent overlapping
+  # - Alignment should be MEDIUM (0.8-1.5) for coordinated movement
+  # - Cohesion should be MEDIUM-LOW (0.5-1.2) to keep group together
+  # ==========================================================================
+
+  flocking:
+    enabled: true                    # Master switch for flocking
+    weight: 1.0                      # Overall weight for all flocking behaviors
+
+    # Separation - avoid crowding flockmates
+    # IMPORTANT: This should have the highest weight to prevent overlapping
+    separation:
+      enabled: true
+      weight: 2.0                    # High priority to maintain spacing
+      perception_radius: 6.0         # Blocks - detect neighbors within this radius
+      separation_distance: 2.5       # Blocks - minimum space to maintain from neighbors
+      max_force: 0.3                 # Maximum steering force
+
+    # Alignment - match velocity with neighbors
+    alignment:
+      enabled: true
+      weight: 1.2                    # Medium priority for coordinated movement
+      perception_radius: 10.0        # Blocks - look further than separation
+      max_force: 0.15                # Gentle steering to match direction
+
+    # Cohesion - stay close to flock center
+    cohesion:
+      enabled: true
+      weight: 0.8                    # Lower priority, don't crowd too tightly
+      perception_radius: 12.0        # Blocks - look even further for group center
+      max_force: 0.1                 # Gentle pull toward group
+
+    # Topological neighbor count (advanced)
+    # Instead of all neighbors within radius, track N nearest neighbors
+    # This creates more natural, scale-invariant flocking
+    topological_neighbor_count: 7    # Track 6-8 nearest neighbors (research-backed)
+    perception_angle: 2.5            # Radians (~143 degrees FOV)
+
+    # Noise - small random movements for natural variation
+    noise:
+      enabled: true
+      weight: 0.1                    # Very subtle randomization
+      magnitude: 0.05                # Small random force
+
+  # ==========================================================================
+  # PREDATION - EVASION BEHAVIOR
+  # ==========================================================================
+  # Reactive fleeing from detected predators (wolves, foxes, etc.)
+  # Unlike avoidance (proactive), evasion is reactive - only triggers when
+  # a threat is detected and actively fleeing.
+  #
+  # Weight guidelines:
+  # - EVASION should be VERY HIGH (2.0-4.0) when active
+  # - Survival always takes priority over other behaviors
+  # ==========================================================================
+
+  evasion:
+    enabled: true
+    weight: 3.0                      # CRITICAL: Survival overrides everything else
+
+    detection_range: 24.0            # Blocks - how far to detect predators
+    evasion_speed: 1.5               # Speed multiplier when fleeing (1.5x normal)
+    evasion_force: 0.2               # Steering force strength
+    safety_distance: 48.0            # Blocks - run this far before stopping
+
+    # Zigzag pattern (makes sheep harder to catch)
+    zigzag:
+      enabled: true
+      interval: 15                   # Ticks between direction changes
+      intensity: 0.3                 # How sharply to zigzag (0.0-1.0)
+
+    # Predator types to flee from
+    predators:
+      - "minecraft:wolf"
+      - "minecraft:fox"
+      - "minecraft:cat"
+      - "minecraft:ocelot"
+
+  # ==========================================================================
+  # HERD BEHAVIORS
+  # ==========================================================================
+  # Herd cohesion and leader following for coordinated group movement.
+  # Herd behaviors differ from flocking - they're more about staying together
+  # as a social unit rather than local collision avoidance.
+  #
+  # Weight guidelines:
+  # - Herd cohesion: 0.8-1.5 (important for social animals)
+  # - Leader following: 0.6-1.2 (follow confident adults)
+  # ==========================================================================
+
+  herd_cohesion:
+    enabled: true
+    weight: 1.0
+
+    # Cohesion parameters
+    cohesion_radius: 16.0            # Blocks - how far to consider herd members
+    cohesion_strength: 0.6           # How strongly to pull toward herd center
+    max_speed: 0.25                  # Maximum speed when seeking herd
+    max_force: 0.15                  # Steering force limit
+
+    # Separation within herd (prevent crowding)
+    separation_distance: 3.0         # Blocks - minimum spacing from herd members
+
+    # Selfish herd theory (optional)
+    # Vulnerable animals (babies, weak) seek center positions for safety
+    selfish_herd:
+      enabled: true
+      strength: 0.5                  # How much vulnerable animals avoid edges
+
+  # Leader following
+  # Sheep follow older, more confident adults to find food and avoid danger
+  leader_following:
+    enabled: true
+    weight: 0.8
+
+    # Leader selection criteria
+    leadership_age_bonus: 1.5        # Older animals are more likely to lead
+    leadership_dominance_bonus: 1.0  # Dominant animals more likely to lead
+    max_leaders: 2                   # Number of potential leaders to track
+
+    # Following parameters
+    follow_radius: 20.0              # Blocks - how far to follow leader
+    max_speed: 0.25                  # Speed when following
+    max_force: 0.12                  # Steering force
+
+  # ==========================================================================
+  # PARENTAL BEHAVIORS
+  # ==========================================================================
+  # Mother-offspring bonding behaviors for lamb survival.
+  # These behaviors are most important for babies but also affect mothers.
+  #
+  # Weight guidelines:
+  # - Follow mother: 1.5-2.5 for babies (CRITICAL for young)
+  # - Separation distress: 2.0-3.0 for both mom and baby
+  # ==========================================================================
+
+  # Baby follows mother
+  follow_mother:
+    enabled: true
+    weight: 2.0                      # High priority for babies
+
+    base_follow_distance: 4.0        # Blocks - stay this close when newborn
+    max_follow_distance: 12.0        # Blocks - maximum distance before seeking mother
+    follow_speed: 1.0                # Speed multiplier when seeking mother
+    slowing_radius: 2.0              # Blocks - slow down when approaching mother
+
+    # Aging behavior - gradually become independent
+    adulthood_age: 24000             # Ticks - age at which behavior stops (20 minutes)
+    independence_progression: true    # Increase distance as baby ages
+
+  # Separation distress - baby calls when separated, mother responds
+  separation_distress:
+    enabled: true
+    weight: 2.5                      # VERY HIGH - prevents losing babies
+
+    distress_threshold: 16.0         # Blocks - call when farther than this from mother
+    call_cooldown: 60.0              # Seconds - minimum time between calls
+
+    # Baby behavior
+    baby:
+      enabled: true
+      response_speed: 1.2            # Speed when seeking mother
+      vocalize_distress: true        # Play distress sounds
+
+    # Mother behavior
+    mother:
+      enabled: true
+      response_speed: 1.3            # Speed when seeking distressed baby
+      vocalize_response: true        # Respond to baby calls
+      protection_radius: 12.0        # Blocks - how far to hear baby calls
+
+  # ==========================================================================
+  # AVOIDANCE BEHAVIOR
+  # ==========================================================================
+  # Proactive threat avoidance - maintain safe distance from potential dangers.
+  # Unlike evasion (reactive), avoidance maintains a buffer zone at all times.
+  #
+  # Weight guidelines:
+  # - Avoidance: 0.8-1.5 (important but not critical)
+  # ==========================================================================
+
+  avoidance:
+    enabled: true
+    weight: 1.0
+
+    avoidance_radius: 8.0            # Blocks - maintain this minimum distance
+    max_avoidance_force: 0.3         # Steering strength
+    detection_range: 16.0            # Blocks - detect threats to avoid
+
+    # Entities to avoid
+    avoid:
+      - "minecraft:player"           # Unless sneaking
+      - "minecraft:wolf"
+      - "minecraft:fox"
+      - "minecraft:cat"
+
+# ============================================================================
+# BEHAVIOR WEIGHT NOTES
+# ============================================================================
+# SUMMARY: How different behavior weights interact in sheep
+#
+# CRITICAL WEIGHTS (2.0+):
+# - Evasion (3.0) - Survival when predators detected
+# - Separation distress (2.5) - Mother-baby bonding
+# - Follow mother (2.0) - Baby survival
+# - Flocking separation (2.0) - Prevent crowding
+#
+# HIGH WEIGHTS (1.0-2.0):
+# - Flocking alignment (1.2) - Coordinated movement
+# - Herd cohesion (1.0) - Social bonding
+# - Avoidance (1.0) - Proactive safety
+#
+# MEDIUM WEIGHTS (0.5-1.0):
+# - Flocking cohesion (0.8) - Stay with group
+# - Leader following (0.8) - Follow confident adults
+#
+# LOW WEIGHTS (0.0-0.5):
+# - Flocking noise (0.1) - Natural variation
+#
+# TUNING TIPS:
+# 1. Increase evasion/separation if sheep clump together dangerously
+# 2. Decrease cohesion if herd is too tight
+# 3. Increase leader following if herd wanders aimlessly
+# 4. Adjust follow_mother weight based on baby survival rate
+# 5. Balance selfish_herd to prevent babies always being on edge
+# ============================================================================

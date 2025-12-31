@@ -1,0 +1,32 @@
+{
+  "minecraft:axolotl": {
+    "behaviors": {
+      "enabled": true,
+      "priority": 3,
+      "max_force": 0.2,
+      "max_speed": 0.4,
+      "hunting": 1.5,
+      "play_dead": 1.0,
+      "evasion": 1.2
+    },
+    "hunting": {
+      "enabled": true,
+      "detection_range": 16.0,
+      "attack_cooldown": 20,
+      "prey_types": ["tropical_fish", "cod", "salmon", "pufferfish", "squid", "glow_squid", "tadpole"]
+    },
+    "defense": {
+      "enabled": true,
+      "play_dead_threshold": 0.3,
+      "play_dead_duration": 200,
+      "play_dead_cooldown": 1200,
+      "regeneration_rate": 0.5
+    },
+    "aquatic": {
+      "enabled": true,
+      "depth_preference": "shallow",
+      "surface_seeking": 0.2,
+      "current_resistance": 0.7
+    }
+  }
+}

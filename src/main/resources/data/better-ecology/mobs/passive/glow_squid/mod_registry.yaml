@@ -1,0 +1,692 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOD - GENERALIZED BEHAVIOR PROFILE
+# Mob: Glow Squid
+# Version: 2.0
+# ============================================================================
+
+# ============================================================================
+# SYSTEM 1: IDENTITY & CLASSIFICATION
+# ============================================================================
+
+identity:
+  mob_id: "minecraft:glow_squid"
+  display_name: "Glow Squid"
+
+  # Ecological classification
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "FILTER_FEEDER"
+    social_type: "SOLITARY"
+    activity_pattern: "CATHEMERAL"
+
+  # Reference information
+  reference:
+    real_world_analog: "Deep-sea bioluminescent squid"
+    ecological_role: "Bioluminescent deep-water filter feeder, provides light source in dark underground waters"
+
+  # Tags for system filtering
+  tags: ["aquatic", "bioluminescent", "underground", "passive_light_source"]
+
+
+# ============================================================================
+# SYSTEM 2: PHYSICAL ATTRIBUTES
+# ============================================================================
+
+physical:
+  # Health
+  health:
+    base: 10
+    baby_multiplier: 0.5
+
+  # Size (affects hitbox and various calculations)
+  size:
+    width: 0.8
+    height: 0.8
+    baby_scale: 0.5
+
+  # Biomass - abstract unit for food chain calculations
+  biomass:
+    adult: 80
+    baby: 20
+    transfer_efficiency: 0.1
+
+  # Movement capabilities
+  movement:
+    speeds:
+      walk: 0.0                 # Cannot walk on land
+      run: 0.0
+      swim: 0.2
+      fly: 0.0
+      climb: 0.0
+
+    capabilities:
+      can_swim: true
+      can_jump: false
+      jump_height: 0.0
+      avoids_water: false
+      avoids_cliffs: false
+      cliff_threshold: 0
+
+    # Speed modifiers applied conditionally
+    conditional_modifiers:
+      baby: 0.7
+      elderly: 0.8
+      injured: 0.6
+      hungry: 0.8
+      fleeing: 1.4
+      hunting: 1.0
+      carrying_offspring: 0.7
+      in_water_nonaquatic: 1.0
+
+
+# ============================================================================
+# SYSTEM 3: INTERNAL STATE TRACKING
+# ============================================================================
+
+internal_state:
+  # Hunger system
+  hunger:
+    enabled: true
+    max_value: 100
+    starting_value: 80
+    decay_rate: 0.015           # Slower decay - filter feeder
+
+    # Thresholds that trigger behaviors
+    thresholds:
+      satiated: 80
+      hungry: 50
+      very_hungry: 25
+      starving: 10
+
+    # Starvation damage
+    starvation:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 200
+
+  # Thirst system (disabled - aquatic)
+  thirst:
+    enabled: false
+
+  # Body condition
+  condition:
+    enabled: true
+    max_value: 100
+    starting_value: 70
+
+    gain_when_satiated: 0.01
+    loss_when_hungry: 0.02
+    loss_when_starving: 0.1
+
+    thresholds:
+      excellent: 85
+      good: 65
+      fair: 45
+      poor: 25
+      critical: 10
+
+  # Energy/Stamina
+  energy:
+    enabled: true
+    max_value: 100
+    recovery_rate: 0.5
+
+    costs:
+      sprinting: 0.3
+      hunting: 0.0
+      fleeing: 0.4
+      flying: 0.0
+      swimming: 0.15
+
+  # Age tracking
+  age:
+    enabled: true
+    baby_duration: 24000
+    maturity_age: 24000
+    elderly_age: null
+    max_age: null
+
+  # Social needs (disabled - solitary)
+  social:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 4: TEMPORAL BEHAVIOR RULES
+# ============================================================================
+
+temporal:
+  # Daily cycle - cathemeral (active day and night underground)
+  daily_cycle:
+    schedule:
+      - time: [0, 6000]
+        activity: 1.0
+        label: "morning"
+      - time: [6000, 12000]
+        activity: 1.0
+        label: "afternoon"
+      - time: [12000, 13500]
+        activity: 1.0
+        label: "dusk"
+      - time: [13500, 22500]
+        activity: 1.0
+        label: "night"
+      - time: [22500, 24000]
+        activity: 1.0
+        label: "pre_dawn"
+
+    low_activity_behavior:
+      action: "REDUCED_WANDER"
+      seek_shelter: false
+      reduced_awareness: false
+      awareness_multiplier: 1.0
+
+  # Weather responses (minimal - underground)
+  weather:
+    rain:
+      activity_multiplier: 1.0
+      seek_shelter: false
+      shelter_priority: 0
+    thunder:
+      activity_multiplier: 1.0
+      seek_shelter: false
+      panic_chance: 0.0
+    snow:
+      activity_multiplier: 1.0
+      seek_shelter: false
+    clear:
+      activity_multiplier: 1.0
+
+  # Seasonal behaviors
+  seasons:
+    enabled: false
+
+  # Moon phases
+  lunar:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 5: SPATIAL BEHAVIOR RULES
+# ============================================================================
+
+spatial:
+  # Habitat requirements
+  habitat:
+    biomes:
+      allowed: []               # All biomes with underground water
+      preferred: ["deep_dark", "dripstone_caves", "lush_caves"]
+      forbidden: []
+
+    altitude:
+      min: -64
+      max: 30                   # Spawns below Y=30
+      preferred: [-64, 0]
+
+    required_nearby:
+      - feature: "water"
+        max_distance: 0
+        reason: "Must be in water to survive"
+      - feature: "darkness"
+        max_distance: 0
+        reason: "Requires total darkness (light level 0)"
+
+  # Territory system
+  territory:
+    enabled: false
+
+  # Home range
+  home_range:
+    enabled: true
+    radius: 32
+    has_home_point: false
+    home_type: null
+
+  # Shelter requirements
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  # Location-triggered behaviors
+  location_triggers:
+    enabled: false
+
+
+# ============================================================================
+# SYSTEM 6: DIET & FORAGING
+# ============================================================================
+
+diet:
+  # Food sources categorized by preference
+  food_sources:
+    primary:
+      - type: "BLOCK"
+        target: "water"
+        nutrition: 5
+        saturation: 1200
+        consumption_time: 100
+        method: "FILTER"
+        world_effect:
+          action: "NONE"
+        condition_gain: 1
+        health_effect: 0
+
+    secondary: []
+    emergency: []
+
+  # Foraging behavior
+  foraging:
+    search_radius:
+      base: 8
+      when_hungry: 12
+      when_starving: 16
+    search_interval: 400        # Filter feeds constantly
+
+    # Memory system
+    memory:
+      remembers_locations: false
+      memory_duration: 0
+      remembers_depleted: false
+      avoids_depleted_for: 0
+      shares_with_group: false
+
+    # Sustainable foraging
+    sustainability:
+      enabled: false
+      dont_deplete_fully: false
+      minimum_remaining: 0
+      patch_return_delay: 0
+
+
+# ============================================================================
+# SYSTEM 7: PREDATION
+# ============================================================================
+
+predation:
+  # === AS PREDATOR ===
+  as_predator:
+    enabled: false
+
+  # === AS PREY ===
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:axolotl"
+        threat_level: "HIGH"
+        detection_range: 16
+        response_type: "FLEE"
+        flee:
+          speed_multiplier: 1.4
+          flee_distance: 24
+          flee_toward: "RANDOM"
+          zigzag: true
+
+      - entity: "minecraft:drowned"
+        threat_level: "MEDIUM"
+        detection_range: 12
+        response_type: "FLEE"
+        flee:
+          speed_multiplier: 1.3
+          flee_distance: 20
+          flee_toward: "RANDOM"
+          zigzag: false
+
+    # Default predator response
+    default_response:
+      detection_range: 16
+      response_type: "FLEE"
+
+      flee:
+        speed_multiplier: 1.4
+        flee_distance: 24
+        flee_toward: "RANDOM"
+        zigzag: true
+
+      freeze:
+        duration: [60, 120]
+        break_on_approach: true
+        break_distance: 4
+
+      alarm:
+        gives_alarm: false
+        alarm_radius: 0
+        alarm_triggers_group_flee: false
+
+    # All-clear conditions
+    all_clear:
+      predator_distance: 32
+      time_since_seen: 400
+
+
+# ============================================================================
+# SYSTEM 8: REPRODUCTION
+# ============================================================================
+
+reproduction:
+  enabled: false                # Glow squids cannot breed
+  method: "SEXUAL"
+
+
+# ============================================================================
+# SYSTEM 9: SOCIAL BEHAVIOR
+# ============================================================================
+
+social:
+  # Group structure
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+
+    composition:
+      mixed_sex: false
+      mixed_age: false
+      family_based: false
+
+    leadership:
+      has_leader: false
+      leader_selection: null
+      follow_leader: false
+
+  # Herd/flock movement
+  herd_movement:
+    enabled: false
+
+  # Communication
+  communication:
+    alarm_calls:
+      enabled: false
+
+    contact_calls:
+      enabled: false
+
+    mating_calls:
+      enabled: false
+
+  # Social behaviors list
+  behaviors:
+    greeting: false
+    allogrooming: false
+    play: false
+    huddling: false
+    dominance_hierarchy: false
+
+  # Group benefits
+  group_benefits:
+    predator_detection_bonus: 0.0
+    foraging_efficiency_bonus: 0.0
+    thermoregulation_bonus: 0.0
+
+
+# ============================================================================
+# SYSTEM 10: ENVIRONMENTAL IMPACT
+# ============================================================================
+
+environmental_impact:
+  # Terrain modifications
+  terrain:
+    enabled: false
+
+  # Ecosystem services
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+
+    pollination:
+      enabled: false
+
+    nutrient_cycling:
+      enabled: false
+
+    decomposition:
+      enabled: false
+
+  # Environmental responses
+  responses:
+    drinking:
+      enabled: false            # Aquatic - always in water
+
+    temperature:
+      heat_seek_shade: false
+      heat_seek_water: false
+      cold_seek_shelter: false
+      cold_huddling: false
+
+
+# ============================================================================
+# SYSTEM 11: POPULATION DYNAMICS
+# ============================================================================
+
+population:
+  # Spawning rules
+  spawning:
+    weight: 8
+    group_size: [2, 4]
+
+    conditions:
+      blocks: ["water"]
+      biomes: []                # Any biome with underground water
+      light: [0, 0]             # Total darkness only
+      altitude: [-64, 30]
+      time: null
+      weather: null
+
+  # Carrying capacity
+  carrying_capacity:
+    method: "SOFT_CAP"
+
+    caps:
+      per_chunk: 4
+      regional: null
+
+    # Resource-based
+    resources:
+      enabled: false
+
+    # Over-capacity effects
+    over_capacity:
+      - threshold: 1.2
+        effects: ["reduced_breeding"]
+      - threshold: 1.5
+        effects: ["dispersal"]
+
+  # Dispersal
+  dispersal:
+    enabled: true
+    triggers: ["overcrowding"]
+    distance: [32, 128]
+
+  # Natural mortality
+  mortality:
+    old_age:
+      enabled: false
+    starvation:
+      enabled: true
+    disease:
+      enabled: false
+
+
+# ============================================================================
+# SYSTEM 12: PLAYER INTERACTION
+# ============================================================================
+
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  # Fear/approach distances
+  distances:
+    detection: 24
+    caution: 12
+    flee: 6
+
+  # Habituation
+  habituation:
+    enabled: true
+    rate: 0.005               # Very slow habituation
+    decay: 0.001
+    max_habituation: 0.5      # Never fully comfortable
+    habituated_flee_distance: 4
+
+  # Taming
+  taming:
+    enabled: false
+
+  # Player breeding
+  player_breeding:
+    enabled: false
+
+  # Drops
+  drops:
+    on_death:
+      - item: "minecraft:glow_ink_sac"
+        count: [1, 3]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+    on_interaction: []
+
+  # Special interactions
+  interactions: []
+
+
+# ============================================================================
+# SYSTEM 13: AESTHETICS & PERSONALITY
+# ============================================================================
+
+aesthetics:
+  # Sounds
+  sounds:
+    ambient: "minecraft:entity.glow_squid.ambient"
+    hurt: "minecraft:entity.glow_squid.hurt"
+    death: "minecraft:entity.glow_squid.death"
+    baby: "minecraft:entity.glow_squid.ambient"
+    alarm: null
+    mating: null
+    eating: null
+
+  # Idle animations
+  idle_behaviors:
+    enabled: true
+    behaviors:
+      - behavior: "gentle_floating"
+        frequency: 1.0
+        trigger: "always"
+      - behavior: "tentacle_waving"
+        frequency: 0.8
+        trigger: "idle"
+      - behavior: "slow_rotation"
+        frequency: 0.5
+        trigger: "idle"
+
+  # Individual variation
+  personality_traits:
+    boldness:
+      base: 0.3               # Generally timid
+      variation: 0.2
+    activity:
+      base: 0.5
+      variation: 0.2
+    sociability:
+      base: 0.2               # Solitary
+      variation: 0.1
+
+
+# ============================================================================
+# SYSTEM 14: AI GOAL PRIORITY FRAMEWORK
+# ============================================================================
+
+ai_priority_framework:
+  # Survival (highest priority)
+  survival:
+    breathe: 0
+    escape_danger: 1
+    flee_predator: 2
+
+  # Physiological needs
+  physiological:
+    critical_health: 3
+    drink_water: 999          # Not needed - aquatic
+    eat_food: 5
+    find_shelter: 999         # Not needed
+
+  # Reproduction
+  reproduction:
+    care_for_offspring: 999   # Cannot breed
+    breed: 999                # Cannot breed
+    find_mate: 999            # Cannot breed
+
+  # Social
+  social:
+    group_cohesion: 999       # Solitary
+    social_interaction: 999   # Solitary
+
+  # Hunting (for predators)
+  hunting:
+    hunt_prey: 999            # Not a predator
+
+  # Location behaviors
+  location:
+    location_triggered: 13
+    territory_patrol: 999
+
+  # Default behaviors
+  default:
+    wander: 15
+    idle: 16
+    rest: 17
+
+
+# ============================================================================
+# SYSTEM 15: UNIQUE BEHAVIOR FRAMEWORK
+# ============================================================================
+
+unique_behavior_template:
+  structure:
+    name: "bioluminescent_glow"
+    description: "Constantly emits bioluminescent glow providing ambient light"
+
+    triggers:
+      - type: "STATE"
+        conditions:
+          alive: true
+
+    requirements:
+      all_of: ["alive"]
+      any_of: []
+      none_of: []
+
+    actions:
+      - "Emit light level 12 particles constantly"
+      - "Increase particle emission when damaged (glowing defense)"
+
+    effects:
+      on_self: []
+      on_others: []
+      on_world:
+        - "Provides light source in dark underground waters"
+
+    priority: 5
+    duration: null
+    cooldown: null
+    interruptible: false
+# ============================================================================
+# RESOURCE PRODUCTION CONFIGURATION
+# ============================================================================
+resource_production:
+  enabled: true
+  resource_type: "glow_ink"      # Glow squids produce glow ink sacs
+
+  # Production settings
+  production_rate: 2.0           # Slightly lower than regular squid
+  production_interval: 3000      # Ticks between production checks
+  max_capacity: 80.0             # Maximum accumulated resource
+
+  # Quality factors
+  base_quality: 1.1              # Glow ink has slightly higher quality
+  environment_bonus: 0.1         # Quality bonus in dark conditions

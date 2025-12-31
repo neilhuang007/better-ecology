@@ -1,0 +1,15 @@
+# ============================================================================
+# BIRD NEST STRUCTURE
+# Small nest for chickens and similar ground birds
+# Location: Placed on hay bales or grass blocks
+# ============================================================================
+
+# This is a placeholder. Actual NBT structure files should be created
+# using Minecraft's structure block or generated programmatically.
+#
+# The structure should consist of:
+# - Bottom layer: Hay block (representing nest material)
+# - Optional: Carpet or similar decorative block on top
+#
+# Size: 1x1x1 (single block nest)
+# Can be expanded to 2x2 for larger bird species

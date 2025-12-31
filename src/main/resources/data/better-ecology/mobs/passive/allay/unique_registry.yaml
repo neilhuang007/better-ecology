@@ -1,0 +1,583 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# ============================================================================
+#
+# Mob: Allay - Magical Item Collector
+# This file defines unique behaviors that aren't covered by standard systems
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:allay"
+  display_name: "Allay"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "NONE"
+    diet_type: "NONE"
+    social_type: "SOLITARY"
+    activity_pattern: "CATHEMERAL"
+
+  reference:
+    real_world_analog: "Fairy - magical helper spirit from folklore"
+    ecological_role: "Item collection and redistribution assistant; magical helper species that forms symbiotic bonds with players"
+
+  tags: ["flying", "magical", "helper", "music_responsive", "non_breeding", "captive_spawn"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: 10
+  size:
+    width: 0.35
+    height: 0.6
+  biomass:
+    adult: 5
+  movement:
+    speeds:
+      walk: null
+      run: null
+      swim: null
+      fly: 0.15
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: null
+  thirst:
+    enabled: false
+  age:
+    baby_duration: null
+    max_age: null
+  social:
+    enabled: false
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule: null
+
+  weather:
+    rain: null
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: []
+      forbidden: []
+    required_nearby: []
+
+  territory:
+    enabled: false
+    size: null
+
+  shelter:
+    needs_shelter: false
+    shelter_uses: []
+    valid_shelters: []
+
+  location_triggers:
+    enabled: false
+    triggers: []
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary: []
+    secondary: []
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: null
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+
+    predators:
+      - entity: "minecraft:wolf"
+        threat_level: "MEDIUM"
+        detection_range: 16
+        response: "FLEE"
+      - entity: "minecraft:cat"
+        threat_level: "LOW"
+        detection_range: 12
+        response: "FLEE"
+      - entity: "minecraft:ocelot"
+        threat_level: "LOW"
+        detection_range: 12
+        response: "FLEE"
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: null
+    recent_food:
+      enabled: false
+    environment:
+      near_water: null
+      required_biomes: []
+    requires_shelter: null
+    season: null
+
+  density_effects:
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: false
+      behavior: ""
+
+  breeding:
+    gestation:
+      type: "NONE"
+      duration: null
+    birth:
+      offspring_count: null
+      location_requirement: ""
+
+  parental_care:
+    duration: null
+    behaviors:
+      protects_offspring: null
+      feeds_offspring: null
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "SOLITARY"
+    size:
+      min: 1
+      optimal: 1
+      max: 1
+    leadership:
+      has_leader: false
+      leader_selection: ""
+
+  herd_movement:
+    enabled: false
+
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: false
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: false
+    pollination:
+      enabled: false
+
+  responses:
+    drinking:
+      enabled: false
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: 0
+    group_size: [0, 0]
+    conditions:
+      biomes: []
+      blocks: []
+
+  carrying_capacity:
+    caps:
+      per_chunk: 0
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "FRIENDLY"
+
+  taming:
+    enabled: false
+    items: []
+
+  player_breeding:
+    enabled: false
+    items: []
+
+  drops:
+    on_death:
+      - item: "held_item"
+        count: [1, 64]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 0
+
+  interactions:
+    - action: "give_item"
+      item: "any"
+      result: "allay_follows_and_collects"
+      description: "Player gives allay an item to collect. Allay follows player and seeks matching dropped items within 32 blocks."
+    - action: "take_item"
+      item: "held_item"
+      result: "allay_stops_collecting"
+      description: "Player takes back the held item. Allay stops following and returns to wandering."
+    - action: "give_amethyst_shard"
+      item: "minecraft:amethyst_shard"
+      result: "duplicate_allay"
+      description: "When allay is dancing to jukebox music, giving an amethyst shard causes it to duplicate into two allays."
+    - action: "note_block_played"
+      item: "none"
+      result: "switch_delivery_target"
+      description: "When a note block plays within 16 blocks, allay switches to delivering items to that note block for 30 seconds."
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "minecraft:entity.allay.ambient_without_item"
+    hurt: "minecraft:entity.allay.hurt"
+    death: "minecraft:entity.allay.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "gentle_hovering"
+        frequency: 1.0
+        trigger: "always"
+      - behavior: "curious_head_tilts"
+        frequency: 0.3
+        trigger: "near_player"
+      - behavior: "item_seeking_animation"
+        frequency: 0.5
+        trigger: "holding_item"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+unique_behaviors:
+  - name: "item_collection_system"
+    description: |
+      The allay can be given any item by a player, which it will hold as a reference.
+      Once given an item, the allay follows the player within a 64-block cubic area.
+      It actively seeks dropped items matching the reference item within 32 blocks of the player.
+      When a matching item is found, the allay flies to it, picks it up (must be within 1.3 blocks),
+      and returns to deliver it to the player or note block.
+
+      WHEN: Player gives an item to the allay
+      WHERE: Any location within 64 blocks of player
+      WHAT: Seeks and collects matching dropped items, delivers to player/note block
+      WHY: Provides automated item collection assistance
+
+      Additional mechanics:
+      - Can hold up to a full stack (64 items)
+      - Has a 3-second cooldown after delivering before seeking again
+      - Delivers items within 3 blocks of target
+      - Treats enchanted/renamed items as distinct types
+      - Cannot access containers (chests, barrels) - only ground items
+      - Immune to damage from the player who gave it an item
+      - Regenerates 2 HP/second when damaged
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 5
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "note_block_affinity"
+    description: |
+      When an allay is actively collecting items and hears a note block play within
+      16 blocks, it switches its delivery target from the player to that note block.
+      The allay remains loyal to the note block for 30 seconds, delivering all
+      collected items within 3 blocks of the note block. After 30 seconds of no
+      note block activation, it returns to following the player.
+
+      WHEN: Note block plays while allay is collecting items
+      WHERE: Within 16 blocks of note block
+      WHAT: Switches delivery target to note block location
+      WHY: Enables automated item sorting and redstone contraptions
+
+      Additional mechanics:
+      - Any note block pitch/instrument works
+      - Uses vibration particles for detection
+      - Wool blocks can prevent the interaction (blocks vibration transmission)
+      - Multiple allays can be assigned to different note blocks for sorting
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 6
+      duration: 600
+      affects_others: false
+      world_modification: false
+
+  - name: "dancing_behavior"
+    description: |
+      When a jukebox within 10 blocks plays any music disc, nearby allays begin
+      dancing with a distinctive head-bobbing side-to-side animation. The dancing
+      continues as long as the music plays and the allay remains within range.
+      This behavior is purely aesthetic but serves as the trigger for duplication.
+
+      WHEN: Jukebox plays music disc within 10 blocks
+      WHERE: Within 10-block radius of active jukebox
+      WHAT: Performs head-bobbing dance animation
+      WHY: Adds visual life to musical builds; enables duplication mechanic
+
+      Additional mechanics:
+      - Works with any music disc (including "music disc 5")
+      - Only triggers from jukebox, not note blocks
+      - No music preference - all discs equally loved
+      - Required state for duplication to work
+
+    implementation_hints:
+      trigger_type: "LOCATION"
+      priority: 7
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "music_based_duplication"
+    description: |
+      Allays don't breed traditionally. Instead, they duplicate when given an
+      amethyst shard while dancing to jukebox music. When the shard is given,
+      the allay plays an amethyst chime sound, shows heart particles, and splits
+      into two allays. Both the original and new allay have a 5-minute cooldown
+      before they can duplicate again.
+
+      WHEN: Player gives amethyst shard while allay is dancing
+      WHERE: Within 10 blocks of active jukebox
+      WHAT: Splits into two allays with 5-minute cooldown each
+      WHY: Provides renewable population without traditional breeding
+
+      Additional mechanics:
+      - Only requires 1 allay (no pair needed)
+      - No baby variant - creates full-sized allay
+      - Uses renewable resource (amethyst shards)
+      - Amethyst has musical sound, fitting thematically
+      - Both allays get independent cooldowns
+      - Timing critical - must give shard WHILE dancing
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 8
+      duration: 6000
+      affects_others: true
+      world_modification: true
+
+  - name: "flying_regeneration"
+    description: |
+      When damaged, allays rapidly regenerate health at 2 HP per second.
+      This passive ability helps them survive hostile encounters despite being
+      completely unable to attack or defend themselves. Combined with their
+      evasive fleeing behavior, this allows them to persist in dangerous environments.
+
+      WHEN: Health is below maximum
+      WHERE: Always active when damaged
+      WHAT: Regenerates 2 HP every second (1 heart per second)
+      WHY: Compensates for complete lack of defensive abilities
+
+      Additional mechanics:
+      - Works continuously until fully healed
+      - No food or rest required
+      - Magical in nature - not biological regeneration
+      - Allows survival after brief hostile encounters
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 3
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "portal_travel_companion"
+    description: |
+      Allays teleport with players through portals, allowing them to accompany
+      players across dimensions. For nether portals, they teleport even without
+      entering the portal themselves. For end portals, they only teleport if they
+      were given an item by the player and are nearby during teleportation.
+
+      WHEN: Player travels through nether or end portal
+      WHERE: Within range of player during teleport
+      WHAT: Teleports to destination dimension with player
+      WHY: Maintains companion bond across dimensions
+
+      Additional mechanics:
+      - Nether: Always teleports with nearby player
+      - End: Only if carrying player's item and nearby
+      - Doesn't need to enter portal itself
+      - Maintains item collection duty across dimensions
+      - Creates stronger sense of companionship
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 4
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "totem_of_undying_interaction"
+    description: |
+      If an allay is holding a totem of undying when killed, the totem activates
+      just like it would for a player. The allay is resurrected to full health,
+      and the totem is consumed in the process. This allows allays to survive
+      otherwise fatal damage, but requires sacrificing a valuable item.
+
+      WHEN: Allay takes fatal damage while holding totem of undying
+      WHERE: Any location
+      WHAT: Resurrects to full health, consumes totem
+      WHY: Provides emergency survival option for valuable helper
+
+      Additional mechanics:
+      - Must be holding totem in inventory when killed
+      - Works identically to player totem mechanic
+      - Totem is destroyed (consumed)
+      - Restores full health immediately
+      - Doesn't prevent item drops from inventory
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 2
+      duration: null
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+relationships:
+  predators:
+    - entity: "minecraft:wolf"
+      notes: "Will attack allays if wild or ordered to by owner. Allays flee from wolves."
+    - entity: "minecraft:cat"
+      notes: "May chase and attack allays. Allays flee from cats."
+    - entity: "minecraft:ocelot"
+      notes: "May chase allays similarly to cats. Allays flee from ocelots."
+
+  prey: []
+
+  competitors: []
+
+  mutualists:
+    - entity: "minecraft:player"
+      benefit_given: "Item collection and sorting assistance; automated resource gathering; decorative ambiance"
+      benefit_received: "Freedom from captivity; protection; companionship; amethyst shards for duplication"
+
+  commensals: []
+
+  special:
+    - entity: "minecraft:note_block"
+      relationship: "WORKPLACE_ASSOCIATION"
+      description: "Allays can be redirected to deliver items to note blocks instead of players, enabling automated item sorting systems."
+    - entity: "minecraft:jukebox"
+      relationship: "ENTERTAINMENT_SOURCE"
+      description: "Allays dance to jukebox music, which is also required for their duplication mechanic."
+    - entity: "minecraft:illager"
+      relationship: "CAPTIVE_ASSOCIATION"
+      description: "Allays spawn imprisoned in pillager outpost cages and woodland mansion jail cells, having been captured by illagers. Players rescue them to gain their assistance."
+    - entity: "minecraft:amethyst_cluster"
+      relationship: "REPRODUCTION_RESOURCE"
+      description: "Amethyst shards are required for allay duplication, creating a connection between allays and amethyst geodes."
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+narrative:
+  summary: |
+    The Allay is a magical, fairy-like creature that forms symbiotic bonds with players
+    after being rescued from captivity. While not part of the natural food chain, allays
+    serve as valuable helper companions that specialize in item collection and sorting.
+    Found imprisoned in pillager outposts and woodland mansions, these benevolent spirits
+    reward players who free them with loyal assistance.
+
+  behavior_overview: |
+    When not given a task, allays wander aimlessly, hovering gently through the air.
+    However, their true nature shines when a player offers them an item - they become
+    devoted helpers, following the player and seeking matching items within a 32-block
+    radius. Allays are deeply connected to music and sound: they dance joyfully to jukebox
+    music, can be redirected to note blocks for automated sorting, and even duplicate
+    when given amethyst shards while dancing. Despite being completely passive, they
+    survive through fast regeneration and evasive flight when threatened.
+
+  ecological_importance: |
+    Allays occupy a unique niche as magical helper species rather than biological organisms.
+    They don't participate in standard ecosystem dynamics like predation, decomposition,
+    or resource competition. Instead, they provide a service role: item redistribution and
+    organization. Their inability to naturally spawn after world generation makes them
+    limited but renewable through player-assisted duplication, preventing overpopulation
+    while ensuring they don't go extinct from accidents. Their captivity in illager
+    structures creates an emotional rescue dynamic, strengthening the player-allay bond.
+
+  design_notes: |
+    Key implementation considerations:
+    - Item collection must handle enchanted/renamed items as distinct types
+    - Note block redirection should be blockable by wool (vibration mechanics)
+    - Duplication requires exact timing: shard must be given WHILE dancing
+    - Fast regeneration (2 HP/sec) compensates for complete lack of combat ability
+    - Portal travel logic differs between nether (always) and end (with item only)
+    - Immunity to damage from item-giving player prevents accidental friendly fire
+    - 5-minute duplication cooldown applies per allay, not globally
+    - Cannot access containers - this is intentional balance for automation
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+balance:
+  spawn_rate_multiplier: 0.0
+  breeding_rate_multiplier: 0.0
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: null
+    provides_to_predator: 5
+
+  population_target: "Very rare, 0-3 per pillager outpost cage, 0-6 per woodland mansion"
+
+  removal_impact: "No ecological impact, but loss of valuable utility automation helper and aesthetic companion"

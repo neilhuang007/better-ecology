@@ -1,0 +1,677 @@
+# ============================================================================
+# MINECRAFT ECOSYSTEM MOB - UNIQUE PROFILE
+# Template Version: 2.0
+# Mob: Pig (minecraft:pig)
+# ============================================================================
+#
+# This file defines a specific mob by:
+# 1. Overriding defaults from the Generalized Template
+# 2. Providing natural language descriptions for unique behaviors
+# 3. Specifying relationships with other mobs
+#
+# INSTRUCTIONS FOR AI:
+# - Read the Generalized Template first to understand all systems
+# - Values here OVERRIDE template defaults
+# - Empty/null values mean "use template default"
+# - Natural language descriptions should be interpreted and implemented
+# - [UNIQUE] sections require custom implementation logic
+# ============================================================================
+
+
+# ============================================================================
+# IDENTITY
+# ============================================================================
+identity:
+  mob_id: "minecraft:pig"
+  display_name: "Pig"
+
+  classification:
+    category: "PASSIVE"
+    trophic_level: "PRIMARY_CONSUMER"
+    diet_type: "OMNIVORE"
+    social_type: "HERD"
+    activity_pattern: "DIURNAL"
+
+  reference:
+    real_world_analog: "Domestic pig (Sus scrofa domesticus)"
+    ecological_role: "Primary consumer that converts plant matter into biomass for predators; helps with soil turnover through rooting behavior"
+
+  tags: ["farmable", "rideable", "saddleable", "lightning_transformable", "first_mount"]
+
+
+# ============================================================================
+# PHYSICAL - Only specify overrides
+# ============================================================================
+physical:
+  health:
+    base: null
+  size:
+    width: null
+    height: null
+  biomass:
+    adult: null
+  movement:
+    speeds:
+      walk: null
+      run: null
+      swim: null
+      fly: null
+
+
+# ============================================================================
+# INTERNAL STATE - Only specify overrides
+# ============================================================================
+internal_state:
+  hunger:
+    decay_rate: null
+  thirst:
+    enabled: null
+  age:
+    baby_duration: null
+    max_age: null
+  social:
+    enabled: null
+
+
+# ============================================================================
+# TEMPORAL OVERRIDES
+# ============================================================================
+temporal:
+  daily_cycle:
+    schedule: null
+
+  weather:
+    rain: null
+
+
+# ============================================================================
+# SPATIAL CONFIGURATION
+# ============================================================================
+spatial:
+  habitat:
+    biomes:
+      allowed: []
+      preferred: []
+      forbidden: []
+    required_nearby: []
+
+  territory:
+    enabled: null
+    size: null
+
+  shelter:
+    needs_shelter: null
+    shelter_uses: []
+    valid_shelters: []
+
+  location_triggers:
+    enabled: false
+    triggers: []
+
+
+# ============================================================================
+# DIET CONFIGURATION
+# ============================================================================
+diet:
+  food_sources:
+    primary:
+      - type: "ITEM"
+        target: "minecraft:carrot"
+        nutrition: null
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: null
+
+      - type: "ITEM"
+        target: "minecraft:potato"
+        nutrition: null
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: null
+
+      - type: "ITEM"
+        target: "minecraft:beetroot"
+        nutrition: null
+        method: "PICKUP"
+        world_effect:
+          action: "NONE"
+          result: null
+
+    secondary: []
+    emergency: []
+
+  foraging:
+    search_radius:
+      base: null
+
+
+# ============================================================================
+# PREDATION CONFIGURATION
+# ============================================================================
+predation:
+  as_predator:
+    enabled: false
+
+  as_prey:
+    enabled: true
+    predators: []
+
+
+# ============================================================================
+# REPRODUCTION CONFIGURATION
+# ============================================================================
+reproduction:
+  requirements:
+    min_condition: null
+    recent_food:
+      enabled: null
+    environment:
+      near_water: null
+      required_biomes: []
+    requires_shelter: null
+    season: null
+
+  density_effects:
+    density_curve: null
+
+  mate_selection:
+    courtship:
+      enabled: null
+      behavior: "Pigs enter love mode when fed by player, showing heart particles and moving toward each other"
+
+  breeding:
+    gestation:
+      type: "INSTANT"
+      duration: null
+    birth:
+      offspring_count: null
+      location_requirement: null
+
+  parental_care:
+    duration: null
+    behaviors:
+      protects_offspring: null
+      feeds_offspring: null
+
+
+# ============================================================================
+# SOCIAL CONFIGURATION
+# ============================================================================
+social:
+  group:
+    type: "HERD"
+    size:
+      min: null
+      optimal: null
+      max: null
+    leadership:
+      has_leader: null
+      leader_selection: "No designated leader - pigs move as loose groups without coordinated direction"
+
+  herd_movement:
+    enabled: null
+
+  communication:
+    alarm_calls:
+      enabled: false
+      types: []
+
+
+# ============================================================================
+# ENVIRONMENTAL IMPACT
+# ============================================================================
+environmental_impact:
+  terrain:
+    enabled: null
+    actions: []
+
+  ecosystem_services:
+    seed_dispersal:
+      enabled: null
+    pollination:
+      enabled: null
+
+  responses:
+    drinking:
+      enabled: null
+      congregates: null
+
+
+# ============================================================================
+# POPULATION CONFIGURATION
+# ============================================================================
+population:
+  spawning:
+    weight: null
+    group_size: null
+    conditions:
+      biomes: []
+      blocks: []
+
+  carrying_capacity:
+    caps:
+      per_chunk: null
+
+
+# ============================================================================
+# PLAYER INTERACTION
+# ============================================================================
+player_interaction:
+  base_attitude: "FEARFUL"
+
+  taming:
+    enabled: false
+    items: []
+
+  player_breeding:
+    enabled: true
+    items: ["minecraft:carrot", "minecraft:potato", "minecraft:beetroot"]
+
+  drops:
+    on_death:
+      - item: "minecraft:porkchop"
+        count: [1, 3]
+        chance: 1.0
+        requires_player_kill: false
+        looting_bonus: 1
+
+      - item: "minecraft:cooked_porkchop"
+        count: [1, 3]
+        chance: 1.0
+        requires_player_kill: false
+        requires_fire_death: true
+        looting_bonus: 1
+
+      - item: "minecraft:saddle"
+        count: [1, 1]
+        chance: 1.0
+        requires_equipped: true
+        requires_player_kill: false
+        looting_bonus: 0
+
+  interactions:
+    - action: "saddle"
+      item: "minecraft:saddle"
+      result: "saddled"
+      description: "Right-click with saddle to equip. Pig becomes rideable. First mountable mob in Minecraft history."
+
+    - action: "mount"
+      item: null
+      result: "mounted"
+      description: "Right-click saddled pig to mount. Player sits on pig's back."
+
+    - action: "dismount"
+      item: null
+      result: "unsaddled"
+      description: "Press sneak key (default: Left Shift) to dismount. Pig retains saddle."
+
+    - action: "remove_saddle"
+      item: "minecraft:shears"
+      result: "saddle_dropped"
+      description: "Right-click saddled pig with shears to remove and retrieve saddle"
+
+    - action: "steer_with_carrot_stick"
+      item: "minecraft:carrot_on_a_stick"
+      result: "controlled_movement"
+      description: "While mounted, holding carrot on stick directs pig's movement. Pig follows direction player is facing."
+
+    - action: "boost_speed"
+      item: "minecraft:carrot_on_a_stick"
+      result: "speed_boost"
+      description: "Press use key while mounted and holding carrot on stick to boost speed to 5.2 m/s for 7-49 seconds. Costs 7 durability per boost."
+
+    - action: "attract"
+      item: "minecraft:carrot"
+      result: "follow_player"
+      description: "Pigs follow players holding breeding foods within 6 blocks"
+
+    - action: "attract"
+      item: "minecraft:potato"
+      result: "follow_player"
+      description: "Pigs follow players holding breeding foods within 6 blocks"
+
+    - action: "attract"
+      item: "minecraft:beetroot"
+      result: "follow_player"
+      description: "Pigs follow players holding breeding foods within 6 blocks"
+
+    - action: "attract"
+      item: "minecraft:carrot_on_a_stick"
+      result: "follow_player"
+      description: "Pigs follow players holding carrot on stick within 6 blocks"
+
+
+# ============================================================================
+# AESTHETICS
+# ============================================================================
+aesthetics:
+  sounds:
+    ambient: "entity.pig.ambient"
+    hurt: "entity.pig.hurt"
+    death: "entity.pig.death"
+
+  idle_behaviors:
+    behaviors:
+      - behavior: "sniff_ground"
+        frequency: 400
+        trigger: "random"
+
+      - behavior: "look_around"
+        frequency: 300
+        trigger: "random"
+
+
+# ============================================================================
+# [UNIQUE] SPECIAL BEHAVIORS
+# ============================================================================
+# Describe behaviors unique to this mob that aren't covered by standard systems.
+# Use natural language - AI should interpret and implement appropriate logic.
+# ============================================================================
+
+unique_behaviors:
+  - name: "saddle_riding_system"
+    description: |
+      Pigs are the first rideable mob in Minecraft. When equipped with a saddle,
+      players can mount and control the pig's movement.
+
+      WHEN: Player right-clicks a saddled pig or uses a saddle on an unsaddled pig
+      WHERE: Anywhere the pig exists
+      WHAT:
+        - Equipping saddle makes pig permanently rideable (until removed with shears)
+        - Mounting causes player to sit on pig's back in third-person view
+        - Mounted pig moves at base speed of 2.42 m/s (0.25 blocks/tick)
+        - Player can see from pig's perspective with slight downward offset
+        - Mounting does not override pig's AI - pig still avoids hazards
+        - Can ride through 1-block-high spaces (unlike player walking)
+        - Can cross 1-block-deep water without dismounting
+        - Deeper water (2+ blocks) forces immediate dismount
+        - Pig does not float or swim while mounted - sinks in water/lava
+        - Fall damage applies to pig, not player (pig has 10 HP)
+        - Taking fall damage does not cause knockback or speed reduction
+
+      WHY: Provides early-game transportation before horses are available.
+           Historically significant as Minecraft's first mountable mob.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 5
+      duration: null
+      affects_others: true
+      world_modification: false
+
+  - name: "carrot_on_stick_control"
+    description: |
+      Carrot on a stick provides directional control and temporary speed boost
+      while riding pigs.
+
+      WHEN: Player is mounted on pig and holding carrot on a stick
+      WHERE: Anywhere while mounted
+      WHAT:
+        - Base behavior: Pig moves in direction player is facing (or holding carrot)
+        - Player controls direction by looking/moving mouse
+        - Pig continuously moves forward in player's looking direction
+        - Speed boost: Right-click/press use key while mounted
+          - Speed increases from 2.42 m/s to maximum 5.20 m/s
+          - Speed ramps up gradually (not instant)
+          - Boost duration: randomly chosen between 140-980 ticks (7-49 seconds)
+          - At end of boost, speed gradually returns to base
+          - Each boost costs 7 durability from carrot on stick
+          - Carrot on stick has 25 durability maximum
+          - Maximum ~3 full boosts before tool breaks
+          - When durability reaches 0, converts to fishing rod
+          - Player must recraft carrot on stick to continue control
+
+      WHY: Provides incentive-based control system. The carrot represents
+           positive reinforcement training. Limited durability creates
+           resource cost for mounted transportation.
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 6
+      duration: null
+      affects_others: false
+      world_modification: false
+
+  - name: "lightning_transformation"
+    description: |
+      When struck by lightning, pigs transform into zombified piglins.
+      This is the only non-piglin mob that can become a piglin variant.
+
+      WHEN: Lightning strikes within 4 blocks of pig
+      WHERE: Anywhere during thunderstorm or via Channeling trident
+      WHAT:
+        - Lightning strikes pig (or nearby block within 4-block radius)
+        - Immediate transformation:
+          - Adult pig -> Adult Zombified Piglin
+          - Baby pig -> Baby Zombified Piglin (rare variant)
+        - Visual transformation with lightning flash effect
+        - Zombified piglin is neutral toward player (unless attacked)
+        - Zombified piglin retains no memory of previous pig state
+        - Any equipped saddle is dropped as item
+        - If player was riding, immediate dismount occurs
+        - Player is not damaged by transformation lightning
+        - Lightning may start fires in surrounding area (standard lightning behavior)
+        - Golden sword is equipped (zombified piglin default equipment)
+
+      WHY: Creates connection between overworld passive mobs and nether mobs.
+           Provides unexpected danger/thunderstorm consequence.
+           Players can intentionally use Channeling trident to farm zombified piglins.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 100
+      duration: null
+      affects_others: true
+      world_modification: true
+
+  - name: "piglin_breeding_interaction"
+    description: |
+      Piglins can breed pigs, representing their unique relationship with this mob.
+      This is the only case where a hostile/neutral mob breeds passive mobs.
+
+      WHEN: Adult piglin holding breeding food (carrot/potato/beetroot) encounters pig
+      WHERE: In Nether fortresses, bastion remnants, or anywhere piglins and pigs meet
+      WHAT:
+        - Adult piglins can feed pigs breeding foods when naturally available
+        - Breeding food must be in piglin's hand (picked up from player drops or chests)
+        - When fed, pig enters love mode (heart particles)
+        - Piglin may feed multiple pigs, attempting to breed them
+        - Baby pigs born from piglin-breeding have normal pig behavior
+        - This behavior is rare in vanilla due to food scarcity in Nether
+        - Cross-dimensional breeding demonstrates piglin's cultural connection to pigs
+
+      WHY: Establishes ecological connection between piglins and pigs.
+           Reflects piglin civilization's domestication of pigs.
+           Adds depth to Nether ecosystem - piglins aren't just fighters.
+
+    implementation_hints:
+      trigger_type: "STATE"
+      priority: 8
+      duration: null
+      affects_others: true
+      world_modification: false
+
+  - name: "variant_visual_inheritance"
+    description: |
+      Pigs have three biome variants (Warm, Cold, Temperate) with purely
+      cosmetic differences. Variant inheritance follows specific rules.
+
+      WHEN: Baby pig is born through breeding
+      WHERE: Anywhere pig breeding occurs
+      WHAT:
+        - Three variant types:
+          1. Warm Pig (rusty brown, dark brown ears/nose/legs)
+             Spawns in: Savanna, Jungle, Badlands
+          2. Cold Pig (furry beige texture, brown nose/feet)
+             Spawns in: Taiga variants, Windswept hills
+          3. Temperate Pig (classic pink)
+             Spawns in: All other grassy biomes (default)
+
+        - Breeding mechanics:
+          - Baby variant randomly inherited from ONE parent (not current biome)
+          - 50% chance from parent A, 50% chance from parent B
+          - Biome where baby is born does NOT affect variant
+          - Spawn eggs always produce Temperate (default) variant
+          - Variants are purely cosmetic - no stat differences
+          - Lightning transformation preserves variant visually in zombified piglin
+
+      WHY: Adds visual diversity to Minecraft world. Reflects real-world
+           animal adaptation to climates. Provides collectibility for players.
+
+    implementation_hints:
+      trigger_type: "EVENT"
+      priority: 3
+      duration: null
+      affects_others: false
+      world_modification: false
+
+
+# ============================================================================
+# [UNIQUE] INTER-MOB RELATIONSHIPS
+# ============================================================================
+# Describe relationships with other specific mobs beyond predator/prey.
+# ============================================================================
+
+relationships:
+  predators: []
+
+  prey: []
+
+  competitors:
+    - entity: "minecraft:sheep"
+      resource: "player attention and breeding food"
+      interaction: "Both are common early-game farm animals. Players typically choose one or the other for livestock management."
+
+    - entity: "minecraft:cow"
+      resource: "farmland space and player attention"
+      interaction: "Similar niche as passive farm animals. Cows provide leather and steak, pigs provide porkchops. Players may favor cows for additional drops."
+
+    - entity: "minecraft:chicken"
+      resource: "breeding priority"
+      interaction: "Chickens provide eggs (renewable without breeding) and feathers. Pigs require dedicated breeding. Players may prefer chickens for automated farming."
+
+  mutualists:
+    - entity: "minecraft:piglin"
+      benefit_given: "Pigs provide food source and domesticated companionship for piglins"
+      benefit_received: "Piglins can breed and protect pigs in Nether settlements"
+
+  commensals: []
+
+  special:
+    - entity: "minecraft:zombified_piglin"
+      relationship: "TRANSFORMATION_TARGET"
+      description: "When struck by lightning, pigs transform into zombified piglins. This creates a one-way relationship where pigs become hostile/neutral mobs. The transformation is permanent and irreversible."
+
+    - entity: "minecraft:player"
+      relationship: "DOMESTICATION_PARTNER"
+      description: "Players can breed, ride, and control pigs. Pigs were the first mountable mob, historically significant to Minecraft's development. Unlike horses, pigs cannot be tamed (hearts from breeding don't create permanent ownership)."
+
+    - entity: "minecraft:hoglin"
+      relationship: "NETHER_ANALOG"
+      description: "Hoglins are the Nether's equivalent of pigs - both are pig-like, breedable, and food sources. Piglins breed hoglins in the Nether, showing parallel domestication practices across dimensions."
+
+
+# ============================================================================
+# [UNIQUE] NARRATIVE DESCRIPTION
+# ============================================================================
+# Free-form description for AI to understand this mob's "character"
+# ============================================================================
+
+narrative:
+  summary: |
+    The pig is Minecraft's original farm animal and first rideable mob. These passive,
+    pink creatures roam grassy biomes in small groups, serving as a reliable early-game
+    food source. With three climate-adapted variants and a unique lightning transformation,
+    pigs occupy a special place in both gameplay and Minecraft history.
+
+  behavior_overview: |
+    Pigs are simple, peaceful animals that spend their days wandering through grasslands,
+    snuffling at the ground in search of food. They form loose herds without complex
+    social hierarchy - more like a gathering of individuals than a coordinated group.
+    When harmed, they flee briefly but never retaliate, embodying true passivity.
+
+    Their most famous behavior is mountability. Pigs were the very first mob players
+    could ride, long before horses were added to the game. This requires a saddle (a
+    rare dungeon/chest find) and a carrot on a stick for control. The riding experience
+    is quirky - pigs don't have the speed or grace of horses, but they can squeeze
+    through one-block gaps and cross shallow water. The carrot on a stick's limited
+    durability creates a charming resource-management mechanic where your steering wheel
+    literally withers away.
+
+    Pigs have a hidden connection to thunderstorms. When lightning strikes, they undergo
+    a dramatic transformation into zombified piglins - gold sword-wielding neutral mobs
+    from the Nether. This creates sudden, unexpected danger during storms and provides
+    creative players a way to farm zombified piglins using Channeling tridents.
+
+    Three variants - Warm, Cold, and Temperate - show environmental adaptation without
+    gameplay differences. A baby born in a snowy taiga might inherit its parent's
+    warm savanna colors, carrying genetic memory across biomes.
+
+  ecological_importance: |
+    Pigs are a foundational food source in Minecraft's early game. They convert
+    abundant plant matter (carrots, potatoes, beetroots) into portable, high-value
+    protein (porkchops). This makes them crucial for player survival and establishment
+    of sustainable food production.
+
+    Their relationship with piglins reveals Nether ecosystem depth. The fact that
+    piglins breed pigs (and hoglins) suggests a culture of domestication paralleling
+    human-animal relationships. When pigs transform via lightning, they become piglins'
+    undead counterparts - an eerie bridge between dimensions.
+
+    As the first rideable mob, pigs enabled exploration before horses existed. They
+    represent Minecraft's evolution - a simple, sometimes awkward mechanic that paved
+    the way for more complex systems. Removing pigs would lose this historical connection
+    and reduce early-game transportation options for new players.
+
+  design_notes: |
+    IMPLEMENTATION PRIORITY:
+    1. Lightning transformation is the most unique behavior - must work perfectly
+       with proper saddle dropping and player dismounting
+    2. Carrot on stick control needs smooth steering and predictable boost mechanics
+    3. Variant inheritance should be clear to players (maybe visual indicator in breeding)
+
+    EDGE CASES TO HANDLE:
+    - Pig struck by lightning while player is riding -> dismount immediately, don't
+      damage player with transformation lightning
+    - Carrot on stick breaks at 0 durability -> convert to fishing rod, player falls
+      off but can still remount (pig keeps saddle)
+    - Pig ridden into deep water -> forced dismount, pig sinks (drowning possible)
+    - Pig struck by lightning in Nether (impossible naturally, but via commands?) ->
+      should still work, creating zombified piglin in Nether
+    - Baby pigs from lightning -> very rare but valid, should be baby zombified piglin
+
+    BALANCE CONSIDERATIONS:
+    - Pigs are intentionally slower than horses (2.42 m/s vs ~10 m/s) - this is
+      historical design, not a bug
+    - Carrot on stick limited durability (25 uses = ~3 boosts) creates meaningful
+      resource cost for mounted transport
+    - 10 HP is low for a mount - pig riding is riskier than horse riding
+    - No natural predators means pig populations can grow unchecked unless culled by players
+
+    EXPANSION OPPORTUNITIES:
+    - Could add actual "rooting" behavior (converting grass to dirt, finding items)
+    - Mud wallowing for cooling (especially with 1.19+ mud blocks)
+    - Temperature discomfort for variants in wrong biome (warm pigs shivering in snow)
+    - Piglin breeding behavior could be expanded for Nether ecosystem depth
+
+
+# ============================================================================
+# BALANCE TUNING
+# ============================================================================
+# Quick-reference values for ecosystem balancing
+# ============================================================================
+
+balance:
+  spawn_rate_multiplier: 1.0
+  breeding_rate_multiplier: 1.0
+  mortality_rate_multiplier: 1.0
+
+  energy_flow:
+    daily_requirement: 12         # Moderate food needs
+    provides_to_predator: 120     # Medium biomass reward
+
+  population_target: "Common, 15-25 per plains biome"
+
+  removal_impact: "Reduces early-game food options, removes first mountable mob experience, breaks piglin-pig ecosystem connection"
