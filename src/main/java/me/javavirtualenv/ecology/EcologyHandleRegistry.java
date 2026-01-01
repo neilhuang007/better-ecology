@@ -1,5 +1,7 @@
 package me.javavirtualenv.ecology;
 
+import me.javavirtualenv.debug.BehaviorLogger;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +17,7 @@ public final class EcologyHandleRegistry {
 
 	public static void register(EcologyHandle handle) {
 		HANDLES.add(handle);
+		BehaviorLogger.logHandleRegistration(handle.id());
 	}
 
 	public static List<EcologyHandle> handles() {

@@ -1,7 +1,9 @@
 package me.javavirtualenv.ecology.spawning;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 import me.javavirtualenv.BetterEcology;
 import me.javavirtualenv.ecology.EcologyProfile;
@@ -18,26 +20,73 @@ import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.biome.v1.ModificationPhase;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectionContext;
 
+/**
+ * Manages biome spawn modifications for Better Ecology profiles.
+ *
+ * IMPORTANT: Fabric's BiomeModifications API does not support removal of modifiers
+ * after they are registered. This class uses a generation-based approach as a workaround:
+ *
+ * 1. Each modifier stores the generation number it was registered with
+ * 2. The modifier's predicate checks if its generation matches the current active generation
+ * 3. When profiles are reloaded, the generation increments
+ * 4. Old modifiers become no-ops because their generation check fails
+ * 5. New modifiers are registered with the new generation
+ *
+ * This means old modifiers remain in memory but are effectively disabled.
+ */
 public final class BiomeSpawnModifier {
     private static final List<ResourceLocation> registeredModifierIds = new ArrayList<>();
-    private static int generation = 0;
+
+    /**
+     * Maps modifier IDs to the generation they were registered with.
+     * Used to validate if a modifier should be active.
+     */
+    private static final Map<ResourceLocation, Integer> modifierGenerations = new HashMap<>();
+
+    /**
+     * The current active generation. Modifiers only execute if their
+     * registered generation matches this value.
+     */
+    private static int currentActiveGeneration = 0;
+
+    /**
+     * Tracks the last registry generation we processed to avoid redundant registration.
+     */
+    private static int lastProcessedRegistryGeneration = -1;
 
     private BiomeSpawnModifier() {
     }
 
     public static void registerAll() {
-        int currentGeneration = EcologyProfileRegistry.generation();
-        if (generation == currentGeneration && !registeredModifierIds.isEmpty()) {
+        int registryGeneration = EcologyProfileRegistry.generation();
+
+        // Skip if we already processed this registry generation
+        if (lastProcessedRegistryGeneration == registryGeneration && !registeredModifierIds.isEmpty()) {
             return;
         }
-        generation = currentGeneration;
+
+        // Increment our active generation to invalidate all previous modifiers.
+        // Old modifiers will fail their generation check and become no-ops.
+        currentActiveGeneration++;
+        lastProcessedRegistryGeneration = registryGeneration;
+
+        BetterEcology.LOGGER.debug("Registering spawn modifiers for generation {} (registry gen {})",
+            currentActiveGeneration, registryGeneration);
 
         for (EcologyProfile profile : EcologyProfileRegistry.getAllProfiles()) {
-            registerProfile(profile);
+            registerProfile(profile, currentActiveGeneration);
         }
     }
 
-    private static void registerProfile(EcologyProfile profile) {
+    /**
+     * Registers a spawn modifier for a profile with the given generation number.
+     * The modifier's predicate includes a generation check that ensures it only
+     * executes when its generation matches the current active generation.
+     *
+     * @param profile The ecology profile to register spawns for
+     * @param registrationGeneration The generation number this modifier belongs to
+     */
+    private static void registerProfile(EcologyProfile profile, int registrationGeneration) {
         // Check if spawning is enabled for this profile
         boolean spawningEnabled = profile.getBool("population.spawning.enabled", false);
         if (!spawningEnabled) {
@@ -92,20 +141,40 @@ public final class BiomeSpawnModifier {
             maxCount = 4;
         }
 
-        ResourceLocation modifierId = ResourceLocation.fromNamespaceAndPath(BetterEcology.MOD_ID, entityTypeKey.getPath() + "_spawn_" + generation);
+        // Include generation in the modifier ID to ensure uniqueness across reloads
+        ResourceLocation modifierId = ResourceLocation.fromNamespaceAndPath(
+            BetterEcology.MOD_ID,
+            entityTypeKey.getPath() + "_spawn_gen" + registrationGeneration
+        );
 
-        Predicate<BiomeSelectionContext> selector = buildBiomeSelector(biomeTags);
+        // Build the biome selector predicate
+        Predicate<BiomeSelectionContext> biomeSelector = buildBiomeSelector(biomeTags);
+
+        // Wrap the biome selector with a generation check.
+        // This is the key to the reload workaround: when a new generation is registered,
+        // old modifiers will fail this check and become no-ops.
+        Predicate<BiomeSelectionContext> generationAwareSelector = context -> {
+            // Only apply this modifier if it belongs to the current active generation
+            if (registrationGeneration != currentActiveGeneration) {
+                return false;
+            }
+            return biomeSelector.test(context);
+        };
 
         BiomeModifications.create(modifierId)
-            .add(ModificationPhase.ADDITIONS, selector, context -> {
+            .add(ModificationPhase.ADDITIONS, generationAwareSelector, context -> {
                 context.getSpawnSettings().addSpawn(
                     spawnGroup,
                     new SpawnerData(entityType, weight, minCount, maxCount)
                 );
             });
 
+        // Track this modifier and its generation
         registeredModifierIds.add(modifierId);
-        BetterEcology.LOGGER.debug("Registered spawn modifier {} for {} in {} biomes", modifierId, entityTypeKey, biomeTags.size());
+        modifierGenerations.put(modifierId, registrationGeneration);
+
+        BetterEcology.LOGGER.debug("Registered spawn modifier {} (gen {}) for {} in {} biomes",
+            modifierId, registrationGeneration, entityTypeKey, biomeTags.size());
     }
 
     private static Predicate<BiomeSelectionContext> buildBiomeSelector(List<String> biomeTags) {
@@ -121,9 +190,49 @@ public final class BiomeSpawnModifier {
         return selector;
     }
 
+    /**
+     * Invalidates all current spawn modifiers by incrementing the generation.
+     *
+     * Note: This does not actually remove the BiomeModifications from Fabric's registry
+     * (which is not supported by the API). Instead, it increments the generation counter
+     * so that existing modifiers will fail their generation check and become no-ops.
+     *
+     * The tracking lists are cleared for bookkeeping purposes, but the actual
+     * invalidation happens through the generation mismatch in the predicates.
+     */
     public static void clearAll() {
-        BetterEcology.LOGGER.debug("Spawn modifiers will be cleared on next reload ({} registered)", registeredModifierIds.size());
+        BetterEcology.LOGGER.debug(
+            "Invalidating {} spawn modifiers (generation {} -> {})",
+            registeredModifierIds.size(),
+            currentActiveGeneration,
+            currentActiveGeneration + 1
+        );
+
+        // Increment generation to invalidate all existing modifiers.
+        // Their predicates will now return false because registrationGeneration != currentActiveGeneration.
+        currentActiveGeneration++;
+
+        // Clear tracking lists for bookkeeping (modifiers remain in Fabric but are now no-ops)
         registeredModifierIds.clear();
-        generation = 0;
+        modifierGenerations.clear();
+
+        // Reset the processed generation so registerAll() will re-register on next call
+        lastProcessedRegistryGeneration = -1;
+    }
+
+    /**
+     * Returns the current active generation number.
+     * Useful for debugging and testing.
+     */
+    public static int getCurrentGeneration() {
+        return currentActiveGeneration;
+    }
+
+    /**
+     * Returns the number of currently tracked (active) modifiers.
+     * Useful for debugging and testing.
+     */
+    public static int getActiveModifierCount() {
+        return registeredModifierIds.size();
     }
 }

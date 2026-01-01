@@ -77,7 +77,6 @@ public class AlignmentBehavior extends SteeringBehavior {
             steer.limit(maxForce);
         }
 
-        steer.mult(weight);
         return steer;
     }
 

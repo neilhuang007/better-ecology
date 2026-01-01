@@ -26,12 +26,10 @@ public class NoiseBehavior extends SteeringBehavior {
 
     @Override
     public Vec3d calculate(BehaviorContext context) {
-        Vec3d steer = new Vec3d(
+        return new Vec3d(
             random.nextDouble() * 2.0 - 1.0,
             random.nextDouble() * 2.0 - 1.0,
             random.nextDouble() * 2.0 - 1.0
         );
-        steer.mult(weight);
-        return steer;
     }
 }

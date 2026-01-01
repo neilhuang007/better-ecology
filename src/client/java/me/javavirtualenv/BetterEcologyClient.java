@@ -1,5 +1,7 @@
 package me.javavirtualenv;
 
+import me.javavirtualenv.client.debug.DebugKeyHandler;
+import me.javavirtualenv.client.debug.EcologyDebugRenderer;
 import me.javavirtualenv.client.pig.PigRenderFeature;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
@@ -11,6 +13,7 @@ public class BetterEcologyClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		registerEntityRenderers();
+		registerDebugSystem();
 	}
 
 	private void registerEntityRenderers() {
@@ -20,5 +23,10 @@ public class BetterEcologyClient implements ClientModInitializer {
 			// For now, we keep the feature class for potential use
 			return renderer;
 		});
+	}
+
+	private void registerDebugSystem() {
+		DebugKeyHandler.register();
+		EcologyDebugRenderer.register();
 	}
 }

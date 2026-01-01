@@ -3,6 +3,7 @@ package me.javavirtualenv.behavior.flocking;
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.SteeringBehavior;
 import me.javavirtualenv.behavior.core.Vec3d;
+import me.javavirtualenv.debug.BehaviorLogger;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -68,13 +69,25 @@ public class FlockingBehavior extends SteeringBehavior {
         List<Entity> neighbors = findTopologicalNeighbors(context);
 
         if (neighbors.isEmpty()) {
-            return noise.calculate(context);
+            Vec3d noiseOnly = noise.calculateWeighted(context);
+            logForceIfVerbose(context.getEntity(), "noise_only", noiseOnly);
+            return noiseOnly;
         }
 
-        Vec3d separationForce = separation.calculateSeparation(context, neighbors);
-        Vec3d alignmentForce = alignment.calculateAlignment(context, neighbors);
-        Vec3d cohesionForce = cohesion.calculateCohesion(context, neighbors);
-        Vec3d noiseForce = noise.calculate(context);
+        // Store neighbors in context for sub-behaviors to use
+        context.setNeighbors(neighbors);
+
+        // Use calculateWeighted to apply weights once via the base class method
+        Vec3d separationForce = separation.calculateWeighted(context);
+        Vec3d alignmentForce = alignment.calculateWeighted(context);
+        Vec3d cohesionForce = cohesion.calculateWeighted(context);
+        Vec3d noiseForce = noise.calculateWeighted(context);
+
+        // Log individual forces when VERBOSE logging is enabled
+        logForceIfVerbose(context.getEntity(), "separation", separationForce);
+        logForceIfVerbose(context.getEntity(), "alignment", alignmentForce);
+        logForceIfVerbose(context.getEntity(), "cohesion", cohesionForce);
+        logForceIfVerbose(context.getEntity(), "noise", noiseForce);
 
         Vec3d totalForce = new Vec3d();
         totalForce.add(separationForce);
@@ -82,7 +95,19 @@ public class FlockingBehavior extends SteeringBehavior {
         totalForce.add(cohesionForce);
         totalForce.add(noiseForce);
 
+        logForceIfVerbose(context.getEntity(), "total", totalForce);
+
         return totalForce;
+    }
+
+    /**
+     * Logs a flocking force vector if verbose logging is enabled.
+     * Uses lazy evaluation to avoid string formatting overhead when disabled.
+     */
+    private void logForceIfVerbose(Entity entity, String forceType, Vec3d force) {
+        if (BehaviorLogger.isVerbose()) {
+            BehaviorLogger.logFlockingForce(entity, forceType, force);
+        }
     }
 
     /**

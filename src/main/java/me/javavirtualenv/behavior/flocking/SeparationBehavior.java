@@ -78,7 +78,6 @@ public class SeparationBehavior extends SteeringBehavior {
             steer.limit(maxForce);
         }
 
-        steer.mult(weight);
         return steer;
     }
 

@@ -76,7 +76,6 @@ public class CohesionBehavior extends SteeringBehavior {
         steer.sub(velocity);
         steer.limit(maxForce);
 
-        steer.mult(weight);
         return steer;
     }
 

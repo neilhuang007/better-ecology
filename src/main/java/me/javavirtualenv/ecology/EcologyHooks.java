@@ -1,5 +1,6 @@
 package me.javavirtualenv.ecology;
 
+import me.javavirtualenv.debug.BehaviorLogger;
 import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.spatial.SpatialIndex;
 import me.javavirtualenv.ecology.state.SimulatedTime;
@@ -112,6 +113,7 @@ public final class EcologyHooks {
 		EcologyProfile profile = component.profile();
 		for (EcologyHandle handle : component.handles()) {
 			handle.registerGoals(mob, component, profile);
+			BehaviorLogger.logHandleGoalsRegistered(mob, handle.id());
 		}
 	}
 
@@ -166,6 +168,8 @@ public final class EcologyHooks {
 				continue;
 			}
 			handle.tick(mob, component, profile);
+			BehaviorLogger.logBehaviorTick(mob, handle.id(),
+					() -> "tick (mode=" + mode + ", elapsed=" + component.elapsedTicks() + ")");
 		}
 
 		// Mark as updated
