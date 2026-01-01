@@ -49,10 +49,10 @@ public class SteeringBehaviorAdapter implements BehaviorRule {
                 .build();
 
         // Delegate to wrapped behavior
+        // Note: We call calculate() (not calculateWeighted()) to get the unweighted result.
+        // The weight will be applied externally by BehaviorRegistry.addWeightedForce()
+        // to avoid double weight application (weight²).
         Vec3d result = wrappedBehavior.calculate(steeringContext);
-
-        // Apply weight from wrapped behavior
-        result.mult(wrappedBehavior.getWeight());
 
         return result;
     }

@@ -62,6 +62,9 @@ public class CowCudChewGoal extends Goal {
         // Stop moving
         mob.getNavigation().stop();
 
+        // Broadcast eating animation event to clients (event ID 10 = eating)
+        level.broadcastEntityEvent(mob, (byte) 10);
+
         // Play start sound (use COW_AMBIENT since COW_EAT doesn't exist in 1.21.1)
         level.playSound(null, mob.blockPosition(),
                 SoundEvents.COW_AMBIENT,

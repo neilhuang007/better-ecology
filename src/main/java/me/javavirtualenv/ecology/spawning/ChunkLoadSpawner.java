@@ -11,7 +11,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.SpawnPlacements;
-import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.chunk.LevelChunk;
 
 /**
@@ -81,6 +80,7 @@ public final class ChunkLoadSpawner {
     /**
      * Spawn mobs from pre-computed spawn data.
      * Validates each position before spawning and removes used positions.
+     * Cleans up spawn data storage when all spawns are complete.
      */
     private static void spawnMobsFromData(
         ServerLevel level,
@@ -93,6 +93,11 @@ public final class ChunkLoadSpawner {
                     spawnMob(level, type, pos, spawnData);
                 }
             }
+        }
+
+        // Clean up storage if all spawns are complete
+        if (!spawnData.hasAnySpawns()) {
+            ChunkSpawnDataStorage.remove(chunk);
         }
     }
 
@@ -144,6 +149,7 @@ public final class ChunkLoadSpawner {
     /**
      * Check light level conditions from profile configuration.
      * Uses profile's population.spawning.conditions.light range.
+     * Uses combined light (block + sky) to match vanilla spawn behavior.
      */
     private static boolean checkLightLevel(ServerLevel level, BlockPos pos, EntityType<?> type) {
         EcologyProfile profile = getProfileForType(type);
@@ -166,7 +172,7 @@ public final class ChunkLoadSpawner {
 
         int minLight = ((Number) lightList.get(0)).intValue();
         int maxLight = ((Number) lightList.get(1)).intValue();
-        int actualLight = level.getBrightness(LightLayer.BLOCK, pos);
+        int actualLight = level.getRawBrightness(pos, 0);
 
         return actualLight >= minLight && actualLight <= maxLight;
     }

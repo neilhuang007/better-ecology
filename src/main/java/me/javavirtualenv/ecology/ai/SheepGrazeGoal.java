@@ -20,7 +20,10 @@ import java.util.EnumSet;
  * Triggers the vanilla eating animation when eating grass.
  */
 public class SheepGrazeGoal extends Goal {
+    // Animation duration matches vanilla sheep eating animation (40 ticks = 2 seconds)
     private static final int EAT_ANIMATION_TICKS = 40;
+    // Grass consumption happens at this tick during the animation (midpoint for visual sync)
+    private static final int CONSUME_AT_TICK = 20;
     private final PathfinderMob mob;
     private final Level level;
     private final double searchRadius;
@@ -97,8 +100,9 @@ public class SheepGrazeGoal extends Goal {
         if (isEating) {
             eatAnimationTick = Math.max(0, eatAnimationTick - 1);
 
-            // Near the end of animation (at tick 4), actually eat the grass
-            if (eatAnimationTick == 4) {
+            // Consume grass at the midpoint of animation for visual synchronization
+            // This ensures the block breaks when the head-down animation is most visible
+            if (eatAnimationTick == CONSUME_AT_TICK) {
                 finishEating();
             }
 

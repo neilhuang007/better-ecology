@@ -109,10 +109,15 @@ public class SteeringBehaviorGoal extends Goal {
             Vec3 currentMovement = mob.getDeltaMovement();
             Vec3 newMovement = currentMovement.add(mcSteering);
 
-            // Clamp to max speed
-            double speed = newMovement.length();
-            if (speed > maxSpeed) {
-                newMovement = newMovement.normalize().multiply(maxSpeed, maxSpeed, maxSpeed);
+            // Clamp horizontal speed while preserving vertical (gravity) component
+            double horizontalSpeed = Math.sqrt(newMovement.x * newMovement.x + newMovement.z * newMovement.z);
+            if (horizontalSpeed > maxSpeed) {
+                double scale = maxSpeed / horizontalSpeed;
+                newMovement = new Vec3(
+                    newMovement.x * scale,
+                    newMovement.y,  // Preserve Y component (gravity)
+                    newMovement.z * scale
+                );
             }
 
             mob.setDeltaMovement(newMovement);

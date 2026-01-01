@@ -25,6 +25,10 @@ public final class SpawnBootstrap {
 
     private static boolean initialized = false;
 
+    // Cleanup every 20 seconds (400 ticks at 20 tps)
+    private static final int CLEANUP_INTERVAL_TICKS = 400;
+    private static int tickCounter = 0;
+
     private SpawnBootstrap() {
     }
 
@@ -39,6 +43,7 @@ public final class SpawnBootstrap {
 
         ServerChunkEvents.CHUNK_GENERATE.register(SpawnBootstrap::onChunkGenerate);
         ServerChunkEvents.CHUNK_LOAD.register(SpawnBootstrap::onChunkLoad);
+        ServerChunkEvents.CHUNK_UNLOAD.register(SpawnBootstrap::onChunkUnload);
         ServerTickEvents.END_SERVER_TICK.register(SpawnBootstrap::onEndServerTick);
         ServerLifecycleEvents.SERVER_STOPPED.register(SpawnBootstrap::onServerStopped);
     }
@@ -82,11 +87,26 @@ public final class SpawnBootstrap {
     }
 
     /**
+     * Called when a chunk is unloaded.
+     * Cleans up spawn data to prevent memory leaks.
+     */
+    private static void onChunkUnload(ServerLevel level, net.minecraft.world.level.chunk.ChunkAccess chunk) {
+        ChunkSpawnDataStorage.onChunkUnload(chunk.getPos());
+    }
+
+    /**
      * Called at end of server tick.
-     * Updates regional entity density counts.
+     * Updates regional entity density counts and performs periodic cleanup.
      */
     private static void onEndServerTick(MinecraftServer server) {
         server.getAllLevels().forEach(REGIONAL_TRACKER::updateCounts);
+
+        // Periodically clean up expired spawn data
+        tickCounter++;
+        if (tickCounter >= CLEANUP_INTERVAL_TICKS) {
+            tickCounter = 0;
+            ChunkSpawnDataStorage.cleanupExpired();
+        }
     }
 
     /**

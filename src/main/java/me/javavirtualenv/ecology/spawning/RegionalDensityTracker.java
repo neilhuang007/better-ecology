@@ -61,18 +61,25 @@ public final class RegionalDensityTracker {
     // Last update timestamp
     private long lastUpdateTick;
 
+    // Track if cache has been initialized
+    private boolean initialized;
+
     public RegionalDensityTracker() {
         this.chunkEntityCounts = new Long2ObjectOpenHashMap<>();
         this.regionCounts = new Long2IntOpenHashMap();
         this.entityMobilityCache = new Int2IntOpenHashMap();
         this.lastUpdateTick = 0;
+        this.initialized = false;
     }
 
     /**
      * Get the mob count for a given entity type in a region.
      * Accounts for mobility - flying mobs affect larger area.
+     * Forces immediate update if cache is stale.
      */
     public int getCountInRegion(ServerLevel level, BlockPos center, EntityType<?> type) {
+        ensureFreshCache(level);
+
         long regionKey = getRegionKey(center);
 
         MobilityCategory mobility = getMobilityCategory(type);
@@ -92,8 +99,11 @@ public final class RegionalDensityTracker {
 
     /**
      * Get the mob count specifically within a chunk.
+     * Forces immediate update if cache is stale.
      */
     public int getCountInChunk(ServerLevel level, BlockPos pos, EntityType<?> type) {
+        ensureFreshCache(level);
+
         long chunkKey = getChunkKey(pos);
         Int2IntMap typeCounts = chunkEntityCounts.get(chunkKey);
         if (typeCounts == null) {
@@ -104,8 +114,11 @@ public final class RegionalDensityTracker {
 
     /**
      * Check if spawning is allowed at a position based on regional density.
+     * Forces immediate update if cache is stale.
      */
     public boolean canSpawnAt(ServerLevel level, BlockPos pos, EntityType<?> type, int maxPerRegion) {
+        ensureFreshCache(level);
+
         int currentCount = getCountInRegion(level, pos, type);
         return currentCount < maxPerRegion;
     }
@@ -116,10 +129,36 @@ public final class RegionalDensityTracker {
      */
     public void updateCounts(ServerLevel level) {
         long currentTick = level.getGameTime();
-        if (currentTick - lastUpdateTick < UPDATE_INTERVAL_TICKS) {
+        if (initialized && currentTick - lastUpdateTick < UPDATE_INTERVAL_TICKS) {
             return;
         }
+        performUpdate(level, currentTick);
+    }
+
+    /**
+     * Force an immediate update of entity counts.
+     * Used when cache is stale and immediate accuracy is needed.
+     */
+    public void forceUpdate(ServerLevel level) {
+        performUpdate(level, level.getGameTime());
+    }
+
+    /**
+     * Ensure cache is fresh before use.
+     * Forces immediate update if never initialized or too stale.
+     */
+    private void ensureFreshCache(ServerLevel level) {
+        if (!initialized) {
+            forceUpdate(level);
+        }
+    }
+
+    /**
+     * Perform the actual update of entity counts.
+     */
+    private void performUpdate(ServerLevel level, long currentTick) {
         lastUpdateTick = currentTick;
+        initialized = true;
 
         // Clear old data
         chunkEntityCounts.clear();
@@ -356,6 +395,8 @@ public final class RegionalDensityTracker {
         chunkEntityCounts.clear();
         regionCounts.clear();
         entityMobilityCache.clear();
+        initialized = false;
+        lastUpdateTick = 0;
     }
 
     /**

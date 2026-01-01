@@ -61,6 +61,9 @@ public final class SpawnConditionChecker {
 
     /**
      * Check if light level is within required range.
+     * Uses combined light (block + sky) to match vanilla spawn behavior.
+     * getRawBrightness returns max(blockLight, skyLight) which ensures mobs
+     * can spawn correctly during daytime when appropriate.
      */
     private static boolean checkLight(ServerLevel level, BlockPos pos, SpawnConditions config) {
         int[] lightRange = config.light();
