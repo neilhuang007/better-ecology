@@ -8,11 +8,10 @@ import net.minecraft.world.entity.EntityType;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Data structure for storing pre-computed spawn positions in a chunk.
@@ -28,14 +27,14 @@ public final class ChunkSpawnData {
      * Map of entity type to list of spawn positions.
      * Uses HashMap for O(1) lookups during spawn operations.
      */
-    private final Map<EntityType<?>, Set<BlockPos>> spawnPositions = new HashMap<>();
+    private final Map<EntityType<?>, Set<BlockPos>> spawnPositions = new ConcurrentHashMap<>();
 
     /**
      * Add a spawn position for an entity type.
      * Uses Set to prevent duplicate positions.
      */
     public void addSpawnPosition(EntityType<?> type, BlockPos pos) {
-        spawnPositions.computeIfAbsent(type, k -> new HashSet<>()).add(pos);
+        spawnPositions.computeIfAbsent(type, k -> ConcurrentHashMap.newKeySet()).add(pos);
     }
 
     /**

@@ -53,11 +53,11 @@ public final class PredationHandle implements EcologyHandle {
 		boolean asPrey = profile.getBool("predation.as_prey.enabled", false);
 		boolean asPredator = profile.getBool("predation.as_predator.enabled", false);
 
-		List<EntityTarget> predatorTargets = buildEntityTargets(profile, "predation.as_prey.default_response.predators");
-		List<EntityTarget> preyTargets = buildEntityTargets(profile, "predation.as_predator.targets");
+		List<EntityTarget> predatorTargets = buildEntityTargets(profile, "predation.predators");
+		List<EntityTarget> preyTargets = buildEntityTargets(profile, "predation.prey");
 
-		double fleeDistance = profile.getDouble("predation.as_prey.default_response.flee.flee_distance", 10.0);
-		double detectionRange = profile.getDouble("predation.as_prey.default_response.detection_range", 16.0);
+		double fleeDistance = profile.getDouble("predation.flee_distance", 10.0);
+		double detectionRange = profile.getDouble("predation.detection_range", 16.0);
 
 		return new PredationCache(asPrey, asPredator, predatorTargets, preyTargets, fleeDistance, detectionRange);
 	}

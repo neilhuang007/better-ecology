@@ -51,7 +51,7 @@ public final class WolfBehaviorHandle extends CodeBasedHandle {
         // Create goal with wolf-specific weights
         BehaviorWeights weights = createWolfWeights();
 
-        int priority = 3; // Run before vanilla goals
+        int priority = 6; // Run after water avoidance (priority 5)
         SteeringBehaviorGoal goal = new SteeringBehaviorGoal(
             mob,
             () -> registry,

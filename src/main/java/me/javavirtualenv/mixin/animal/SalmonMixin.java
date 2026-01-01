@@ -50,4 +50,5 @@ public abstract class SalmonMixin {
         AnimalBehaviorRegistry.register(SALMON_ID.toString(), config);
         behaviorsRegistered = true;
     }
+
 }

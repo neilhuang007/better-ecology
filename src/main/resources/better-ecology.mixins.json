@@ -8,6 +8,7 @@
 		"AnimalEcologyMixin",
 		"NaturalSpawnerMixin",
 		"EntityRemovalMixin",
+		"FishHurtMixin",
 		"ChunkSerializerMixin",
 		"animal.AllayMixin",
 		"animal.ArmadilloMixin",

@@ -1,5 +1,6 @@
 package me.javavirtualenv.ecology.handles;
 
+import java.util.UUID;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyHandle;
 import me.javavirtualenv.ecology.EcologyProfile;
@@ -48,16 +49,19 @@ public final class AgeHandle implements EcologyHandle {
 
         EntityState state = component.state();
 
-        // Handle baby → adult transition
         if (mob instanceof AgeableMob ageable) {
             boolean wasBaby = ageable.isBaby();
             boolean shouldBeBaby = ageTicks < cache.babyDuration;
+            UUID motherUuid = ParentChildHandle.getMotherUuid(component);
+            boolean hasParents = motherUuid != null;
 
             if (wasBaby && !shouldBeBaby) {
-                // Force grow up
                 ageable.setAge(0);
-            } else if (!wasBaby && shouldBeBaby) {
+            } else if (!wasBaby && shouldBeBaby && hasParents) {
                 ageable.setBaby(true);
+            } else if (!wasBaby && !hasParents && ageTicks == 0) {
+                setAgeTicks(tag, cache.babyDuration);
+                ageTicks = cache.babyDuration;
             }
         }
 
@@ -80,11 +84,7 @@ public final class AgeHandle implements EcologyHandle {
     @Override
     public void writeNbt(Mob mob, EcologyComponent component, EcologyProfile profile, CompoundTag tag) {
         CompoundTag handleTag = component.getHandleTag(id());
-        tag.put(id(), handleHandleTag());
-    }
-
-    private CompoundTag handleHandleTag() {
-        return new CompoundTag();
+        tag.put(id(), handleTag.copy());
     }
 
     private AgeCache buildCache(EcologyProfile profile) {

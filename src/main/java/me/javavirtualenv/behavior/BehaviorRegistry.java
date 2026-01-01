@@ -203,6 +203,24 @@ public class BehaviorRegistry {
         addWeightedForce(totalForce, "waggle_dance", context, weights.getWaggleDance());
         addWeightedForce(totalForce, "hive_defense", context, weights.getHiveDefense());
 
+        // Aquatic behaviors
+        addWeightedForce(totalForce, "schooling", context, weights.getSchooling());
+        addWeightedForce(totalForce, "current_riding", context, weights.getCurrentRiding());
+        addWeightedForce(totalForce, "escape", context, weights.getEscape());
+        addWeightedForce(totalForce, "panic", context, weights.getPanic());
+        addWeightedForce(totalForce, "upstream", context, weights.getUpstream());
+        addWeightedForce(totalForce, "ink_cloud", context, weights.getInkCloud());
+        addWeightedForce(totalForce, "vertical_migration", context, weights.getVerticalMigration());
+        addWeightedForce(totalForce, "prey_attraction", context, weights.getPreyAttraction());
+        addWeightedForce(totalForce, "inflate", context, weights.getInflate());
+        addWeightedForce(totalForce, "hunting", context, weights.getHunting());
+        addWeightedForce(totalForce, "play_dead", context, weights.getPlayDead());
+        addWeightedForce(totalForce, "wave_riding", context, weights.getWaveRiding());
+        addWeightedForce(totalForce, "treasure_hunt", context, weights.getTreasureHunt());
+        addWeightedForce(totalForce, "metamorphosis", context, weights.getMetamorphosis());
+        addWeightedForce(totalForce, "home_range", context, weights.getHomeRange());
+        addWeightedForce(totalForce, "roosting", context, weights.getRoosting());
+
         return totalForce;
     }
 

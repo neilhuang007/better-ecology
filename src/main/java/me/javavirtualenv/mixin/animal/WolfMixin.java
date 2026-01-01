@@ -20,6 +20,7 @@ import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.pathfinder.PathType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -463,6 +464,8 @@ public abstract class WolfMixin {
             if (!(mob instanceof Wolf wolf)) {
                 return;
             }
+
+            wolf.setPathfindingMalus(PathType.WATER, 8.0F);
 
             me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
             accessor.betterEcology$getGoalSelector().addGoal(0, new FloatGoal(wolf));

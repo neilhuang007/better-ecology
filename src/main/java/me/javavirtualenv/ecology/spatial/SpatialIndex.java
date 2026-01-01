@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -41,7 +42,7 @@ public final class SpatialIndex {
 	 */
 	public static void register(Mob mob) {
 		ChunkKey key = getKey(mob);
-		List<Mob> chunk = index.computeIfAbsent(key, k -> new ArrayList<>());
+		List<Mob> chunk = index.computeIfAbsent(key, k -> new CopyOnWriteArrayList<>());
 
 		// Only add if not already present (idempotent)
 		if (!chunk.contains(mob)) {

@@ -86,6 +86,11 @@ public class SteeringBehaviorGoal extends Goal {
             return;
         }
 
+        // Don't apply steering when in water or when pathfinding is active
+        if (shouldDeferToPathfinding()) {
+            return;
+        }
+
         BehaviorContext context = new BehaviorContext(mob);
 
         // Query nearby same-type entities for flocking behaviors
@@ -112,6 +117,24 @@ public class SteeringBehaviorGoal extends Goal {
 
             mob.setDeltaMovement(newMovement);
         }
+    }
+
+    /**
+     * Checks if steering should defer to pathfinding/water avoidance.
+     * Returns true when the mob is in water or has an active path.
+     */
+    private boolean shouldDeferToPathfinding() {
+        // Don't interfere with water navigation
+        if (mob.isInWater() || mob.isInWaterOrBubble()) {
+            return true;
+        }
+
+        // Don't interfere with active pathfinding
+        if (mob.getNavigation() != null && mob.getNavigation().isInProgress()) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

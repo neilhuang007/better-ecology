@@ -50,4 +50,5 @@ public abstract class CodMixin {
         AnimalBehaviorRegistry.register(COD_ID.toString(), config);
         behaviorsRegistered = true;
     }
+
 }

@@ -50,4 +50,5 @@ public abstract class TropicalFishMixin {
         AnimalBehaviorRegistry.register(TROPICAL_FISH_ID.toString(), config);
         behaviorsRegistered = true;
     }
+
 }

@@ -75,6 +75,8 @@ public class PigRootingGoal extends MoveToBlockGoal {
             return;
         }
 
+        pig.getLookControl().setLookAt(blockPos.getX() + 0.5, blockPos.getY(), blockPos.getZ() + 0.5);
+
         if (this.rootingTimer % 10 == 0) {
             playRootingEffects();
         }

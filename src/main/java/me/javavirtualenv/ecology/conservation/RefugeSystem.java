@@ -164,7 +164,7 @@ public final class RefugeSystem {
     public static Refuge getRefugeAt(ServerLevel level, BlockPos pos) {
         ChunkPos chunkPos = new ChunkPos(pos);
 
-        for (Refuge refuge : REFUGES.values()) {
+        for (Refuge refuge : new java.util.ArrayList<>(REFUGES.values())) {
             if (refuge.bounds().isInside(pos)) {
                 return refuge;
             }
@@ -194,7 +194,7 @@ public final class RefugeSystem {
      * Check if a chunk is covered by any refuge other than the one being removed.
      */
     private static boolean isChunkCoveredByOtherRefuge(ChunkPos chunkPos) {
-        for (Refuge refuge : REFUGES.values()) {
+        for (Refuge refuge : new java.util.ArrayList<>(REFUGES.values())) {
             BoundingBox bounds = refuge.bounds();
             ChunkPos minChunk = new ChunkPos(bounds.minX(), bounds.minZ());
             ChunkPos maxChunk = new ChunkPos(bounds.maxX(), bounds.maxZ());

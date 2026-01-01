@@ -114,6 +114,8 @@ public class PigFeedingGoal extends MoveToBlockGoal {
             return;
         }
 
+        pig.getLookControl().setLookAt(pig.getX(), pig.getY() - 1.0, pig.getZ());
+
         this.eatingTimer++;
 
         if (this.eatingTimer >= EATING_DURATION) {

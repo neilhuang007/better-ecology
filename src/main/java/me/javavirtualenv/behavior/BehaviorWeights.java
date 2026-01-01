@@ -123,6 +123,24 @@ public class BehaviorWeights {
     // Armadillo behavior weights
     private double predatorAvoidance = 2.5;
 
+    // Aquatic behavior weights
+    private double schooling = 1.5;
+    private double currentRiding = 0.8;
+    private double escape = 2.0;
+    private double panic = 2.5;
+    private double upstream = 1.0;
+    private double inkCloud = 1.5;
+    private double verticalMigration = 0.8;
+    private double preyAttraction = 1.0;
+    private double inflate = 2.0;
+    private double hunting = 1.5;
+    private double playDead = 2.0;
+    private double waveRiding = 1.2;
+    private double treasureHunt = 1.0;
+    private double metamorphosis = 0.5;
+    private double homeRange = 1.0;
+    private double roosting = 1.0;
+
     /**
      * Creates a new BehaviorWeights instance with default values.
      */
@@ -159,6 +177,22 @@ public class BehaviorWeights {
         copy.digging = this.digging;
         copy.snifferSocial = this.snifferSocial;
         copy.predatorAvoidance = this.predatorAvoidance;
+        copy.schooling = this.schooling;
+        copy.currentRiding = this.currentRiding;
+        copy.escape = this.escape;
+        copy.panic = this.panic;
+        copy.upstream = this.upstream;
+        copy.inkCloud = this.inkCloud;
+        copy.verticalMigration = this.verticalMigration;
+        copy.preyAttraction = this.preyAttraction;
+        copy.inflate = this.inflate;
+        copy.hunting = this.hunting;
+        copy.playDead = this.playDead;
+        copy.waveRiding = this.waveRiding;
+        copy.treasureHunt = this.treasureHunt;
+        copy.metamorphosis = this.metamorphosis;
+        copy.homeRange = this.homeRange;
+        copy.roosting = this.roosting;
         return copy;
     }
 
@@ -362,5 +396,133 @@ public class BehaviorWeights {
 
     public void setPredatorAvoidance(double predatorAvoidance) {
         this.predatorAvoidance = predatorAvoidance;
+    }
+
+    public double getSchooling() {
+        return schooling;
+    }
+
+    public void setSchooling(double schooling) {
+        this.schooling = schooling;
+    }
+
+    public double getCurrentRiding() {
+        return currentRiding;
+    }
+
+    public void setCurrentRiding(double currentRiding) {
+        this.currentRiding = currentRiding;
+    }
+
+    public double getEscape() {
+        return escape;
+    }
+
+    public void setEscape(double escape) {
+        this.escape = escape;
+    }
+
+    public double getPanic() {
+        return panic;
+    }
+
+    public void setPanic(double panic) {
+        this.panic = panic;
+    }
+
+    public double getUpstream() {
+        return upstream;
+    }
+
+    public void setUpstream(double upstream) {
+        this.upstream = upstream;
+    }
+
+    public double getInkCloud() {
+        return inkCloud;
+    }
+
+    public void setInkCloud(double inkCloud) {
+        this.inkCloud = inkCloud;
+    }
+
+    public double getVerticalMigration() {
+        return verticalMigration;
+    }
+
+    public void setVerticalMigration(double verticalMigration) {
+        this.verticalMigration = verticalMigration;
+    }
+
+    public double getPreyAttraction() {
+        return preyAttraction;
+    }
+
+    public void setPreyAttraction(double preyAttraction) {
+        this.preyAttraction = preyAttraction;
+    }
+
+    public double getInflate() {
+        return inflate;
+    }
+
+    public void setInflate(double inflate) {
+        this.inflate = inflate;
+    }
+
+    public double getHunting() {
+        return hunting;
+    }
+
+    public void setHunting(double hunting) {
+        this.hunting = hunting;
+    }
+
+    public double getPlayDead() {
+        return playDead;
+    }
+
+    public void setPlayDead(double playDead) {
+        this.playDead = playDead;
+    }
+
+    public double getWaveRiding() {
+        return waveRiding;
+    }
+
+    public void setWaveRiding(double waveRiding) {
+        this.waveRiding = waveRiding;
+    }
+
+    public double getTreasureHunt() {
+        return treasureHunt;
+    }
+
+    public void setTreasureHunt(double treasureHunt) {
+        this.treasureHunt = treasureHunt;
+    }
+
+    public double getMetamorphosis() {
+        return metamorphosis;
+    }
+
+    public void setMetamorphosis(double metamorphosis) {
+        this.metamorphosis = metamorphosis;
+    }
+
+    public double getHomeRange() {
+        return homeRange;
+    }
+
+    public void setHomeRange(double homeRange) {
+        this.homeRange = homeRange;
+    }
+
+    public double getRoosting() {
+        return roosting;
+    }
+
+    public void setRoosting(double roosting) {
+        this.roosting = roosting;
     }
 }

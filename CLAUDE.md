@@ -71,6 +71,8 @@ Vanilla entity modifications use Fabric mixins:
 - **Scientific basis**: Behaviors reference research in `docs/behaviours/README.md`
 - **Naming**: Classes use PascalCase, methods camelCase, constants UPPER_SNAKE_CASE
 
+FOR TESTING: you HAVE to use run client to try and test, NOT just building
+
 ## Configuration Parameters
 
 Common behavior parameters (from research docs):

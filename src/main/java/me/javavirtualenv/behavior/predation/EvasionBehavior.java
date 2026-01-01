@@ -154,6 +154,10 @@ public class EvasionBehavior extends SteeringBehavior {
                typeName.contains("ocelot") ||
                typeName.contains("spider") ||
                typeName.contains("phantom") ||
+               typeName.contains("dolphin") ||
+               typeName.contains("guardian") ||
+               typeName.contains("drowned") ||
+               typeName.contains("axolotl") ||
                (entity instanceof Mob && ((Mob) entity).isAggressive());
     }
 
