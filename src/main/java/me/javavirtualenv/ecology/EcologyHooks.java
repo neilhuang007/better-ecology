@@ -89,6 +89,9 @@ import net.minecraft.world.item.ItemStack;
  */
 public final class EcologyHooks {
 
+	// Debug flag for testing catch-up system
+	public static boolean DEBUG_CATCHUP = false;
+
 	private static final double ACTIVE_UPDATE_DISTANCE = 64.0;
 	private static final int DISTANT_UPDATE_INTERVAL = 20; // 1 second
 	private static final int MAX_SLEEP_TICKS = 40; // 2 seconds - bounds prediction error
@@ -155,7 +158,12 @@ public final class EcologyHooks {
 		}
 
 		// Bound elapsed ticks for safety
+		long uncappedElapsed = elapsedTicks;
 		elapsedTicks = Math.min(elapsedTicks, MAX_SLEEP_TICKS);
+
+		if (DEBUG_CATCHUP && uncappedElapsed > 1) {
+			System.out.println("[BetterEcology] Catch-up: entity=" + mob + " elapsed=" + uncappedElapsed + " capped=" + elapsedTicks);
+		}
 
 		component.setElapsedTicks(elapsedTicks);
 		component.setUpdateMode(mode);
@@ -238,6 +246,10 @@ public final class EcologyHooks {
 			(currentTick - lastUpdate) > MAX_REASONABLE_ELAPSED; // Too much time passed
 
 		if (invalidTimestamp) {
+			if (DEBUG_CATCHUP) {
+				long oldElapsed = lastUpdate >= 0 ? currentTick - lastUpdate : -1;
+				System.out.println("[BetterEcology] Reset timestamp: entity=" + mob + " oldElapsed=" + oldElapsed);
+			}
 			SimulatedTime.markUpdated(timeTag, currentTick);
 		}
 
