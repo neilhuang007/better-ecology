@@ -47,6 +47,14 @@ From: [01-herd-movement-leadership](01-herd-movement-leadership.md), [07-fleeing
 - Pair bonding and mate fidelity
 - Parental protection of offspring
 
+#### Wolf-Specific Behaviors
+
+- **Food Sharing**: Wolves carry meat and share with hungry pack members
+- **Social Priority**: Mate > Alpha > other pack members for food distribution
+- **Pack Identification**: Wolves identify pack members via UUID-based pack IDs
+- **Hierarchy System**: Alpha/beta/omega ranks influence social interactions
+- **Scavenging**: Wolves pick up and carry meat items for later sharing
+
 ### Bats
 
 From: [04-bat-crepuscular-emergence](04-bat-crepuscular-emergence.md)

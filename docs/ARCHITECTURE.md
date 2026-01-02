@@ -58,6 +58,7 @@ If `identity.mob_id` is missing or invalid, the profile is skipped with a warnin
 - `EcologyResourceReloader`: Fabric resource reload listener
 - `EcologyBootstrap`: registers handles and reload listener
 - `EcologyAccess`: mixin-access interface for component access
+- `AnimalItemStorage`: shared component for animals that carry items (wolves, foxes)
 
 ## Mixins
 ### MobEcologyMixin

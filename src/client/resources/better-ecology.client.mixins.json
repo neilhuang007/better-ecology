@@ -4,8 +4,7 @@
 	"compatibilityLevel": "JAVA_21",
 	"client": [
 		"ExampleClientMixin",
-		"PigRendererMixin",
-		"WolfRendererMixin"
+		"PigRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
