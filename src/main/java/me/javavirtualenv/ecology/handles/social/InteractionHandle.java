@@ -34,6 +34,7 @@ public final class InteractionHandle implements EcologyHandle {
     private static final String CACHE_KEY = "better-ecology:interaction-cache";
     private static final int INTERACTION_TICK_INTERVAL = 40;
     private static final int RELATIONSHIP_DECAY_INTERVAL = 600;
+    private static final long MAX_CATCH_UP_TICKS = 24000L;
 
     private static final String NBT_RELATIONSHIPS = "relationships";
     private static final String NBT_PACK_MEMBERS = "pack_members";
@@ -72,9 +73,10 @@ public final class InteractionHandle implements EcologyHandle {
         CompoundTag tag = component.getHandleTag(id());
         int currentTick = mob.tickCount;
         long elapsedTicks = component.elapsedTicks();
+        long effectiveTicks = Math.min(elapsedTicks, MAX_CATCH_UP_TICKS);
 
         // Decay relationships periodically
-        decayRelationships(tag, currentTick, elapsedTicks, cache);
+        decayRelationships(tag, currentTick, effectiveTicks, cache);
 
         // Process dynamic relationship building
         processRelationshipBuilding(mob, tag, cache);

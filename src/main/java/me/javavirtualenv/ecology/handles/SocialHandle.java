@@ -16,6 +16,7 @@ public final class SocialHandle implements EcologyHandle {
     private static final String CACHE_KEY = "better-ecology:social-cache";
     private static final String NBT_SOCIAL = "social";
     private static final String NBT_LAST_GROUP_CHECK = "lastGroupCheck";
+    private static final long MAX_CATCH_UP_TICKS = 24000L;
 
     @Override
     public String id() {
@@ -63,9 +64,16 @@ public final class SocialHandle implements EcologyHandle {
         // Apply social change
         double change = hasGroupNearby ? cache.recoveryRate : -cache.decayRate;
         long elapsed = component.elapsedTicks();
-        change *= elapsed;
+        long effectiveTicks = Math.min(elapsed, MAX_CATCH_UP_TICKS);
+        change *= effectiveTicks;
 
         int newSocial = (int) Math.round(Math.min(cache.maxValue, Math.max(0, currentSocial + change)));
+
+        // During catch-up, keep social above loneliness threshold to prevent instant distress
+        boolean isCatchUp = elapsed > 1;
+        if (isCatchUp && newSocial < cache.lonelinessThreshold) {
+            newSocial = cache.lonelinessThreshold;
+        }
 
         // Only write if value changed to reduce NBT operations
         if (newSocial != currentSocial) {
