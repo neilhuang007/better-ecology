@@ -625,6 +625,10 @@ public abstract class SheepMixin {
 
             me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
 
+            // Flee when health is low (priority 1 - very high priority)
+            accessor.betterEcology$getGoalSelector().addGoal(1,
+                new me.javavirtualenv.ecology.ai.LowHealthFleeGoal(pathfinderMob, 0.70, 1.3));
+
             // Flee from wolves
             accessor.betterEcology$getGoalSelector().addGoal(2,
                 new AvoidEntityGoal<>(pathfinderMob, net.minecraft.world.entity.animal.Wolf.class,

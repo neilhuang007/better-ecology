@@ -481,6 +481,8 @@ public abstract class PigMixin {
             me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
 
             accessor.betterEcology$getGoalSelector().addGoal(0, new FloatGoal(pig));
+            accessor.betterEcology$getGoalSelector().addGoal(1,
+                new me.javavirtualenv.ecology.ai.LowHealthFleeGoal(pig, 0.65, 1.2));
             accessor.betterEcology$getGoalSelector().addGoal(3, new PigTruffleSeekGoal(pig));
             accessor.betterEcology$getGoalSelector().addGoal(4, new WaterAvoidingRandomStrollGoal(pig, 0.3));
             accessor.betterEcology$getGoalSelector().addGoal(5, new PigRootingGoal(pig, 0.6));

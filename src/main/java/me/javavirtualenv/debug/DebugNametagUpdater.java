@@ -134,5 +134,7 @@ public final class DebugNametagUpdater {
         if (state.isBaby()) sb.append("[Baby]");
         if (state.isElderly()) sb.append("[Old]");
         if (state.isLonely()) sb.append("[Lon]");
+        if (state.isInCombat()) sb.append("[Cbt]");
+        if (state.isRetreating()) sb.append("[Ret]");
     }
 }

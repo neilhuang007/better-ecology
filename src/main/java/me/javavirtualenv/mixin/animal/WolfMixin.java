@@ -533,6 +533,10 @@ public abstract class WolfMixin {
 
             me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
 
+            // Register low health flee goal (high priority)
+            accessor.betterEcology$getGoalSelector().addGoal(1,
+                new me.javavirtualenv.ecology.ai.LowHealthFleeGoal(wolf, 0.45, 1.5));
+
             // Register wolf food sharing goals
             accessor.betterEcology$getGoalSelector().addGoal(3,
                 new me.javavirtualenv.behavior.wolf.WolfPickupItemGoal(wolf));

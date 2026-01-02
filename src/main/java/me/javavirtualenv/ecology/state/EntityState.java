@@ -32,6 +32,8 @@ public final class EntityState {
     private Boolean isTamed;
     private Boolean isLonely;
     private Boolean isPanicking;
+    private Boolean isInCombat;
+    private Boolean isRetreating;
     private Float healthPercent;
     private Double cachedSpeed;
 
@@ -90,6 +92,8 @@ public final class EntityState {
         isTamed = null;
         isLonely = null;
         isPanicking = null;
+        isInCombat = null;
+        isRetreating = null;
         healthPercent = null;
         cachedSpeed = null;
 
@@ -270,6 +274,26 @@ public final class EntityState {
     public void setIsPanicking(boolean panicking) {
         if (isPanicking == null || isPanicking != panicking) {
             isPanicking = panicking;
+            stateChanged = true;
+        }
+    }
+
+    /** Is in combat (recently hurt by another mob) */
+    public boolean isInCombat() {
+        if (isInCombat == null) {
+            isInCombat = mob.getLastHurtByMob() != null && mob.tickCount - mob.getLastHurtByMobTimestamp() < 200;
+        }
+        return isInCombat;
+    }
+
+    /** Is retreating (fleeing due to low health) */
+    public boolean isRetreating() {
+        return isRetreating != null && isRetreating;
+    }
+
+    public void setIsRetreating(boolean retreating) {
+        if (isRetreating == null || isRetreating != retreating) {
+            isRetreating = retreating;
             stateChanged = true;
         }
     }

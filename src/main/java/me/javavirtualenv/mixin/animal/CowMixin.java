@@ -14,6 +14,7 @@ import me.javavirtualenv.ecology.ai.CowCudChewGoal;
 import me.javavirtualenv.ecology.ai.CowGrazeGoal;
 import me.javavirtualenv.ecology.ai.CowProtectCalfGoal;
 import me.javavirtualenv.ecology.ai.HerdCohesionGoal;
+import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
 import me.javavirtualenv.ecology.handles.AgeHandle;
 import me.javavirtualenv.ecology.handles.BreedingHandle;
 import me.javavirtualenv.ecology.handles.ConditionHandle;
@@ -139,32 +140,35 @@ public abstract class CowMixin {
         // Priority 0: Float
         accessor.betterEcology$getGoalSelector().addGoal(0, new FloatGoal(cow));
 
-        // Priority 1: Protect calf (highest after floating)
-        accessor.betterEcology$getGoalSelector().addGoal(1, new CowProtectCalfGoal(cow, 16.0, 24.0));
+        // Priority 1: Low health flee (critical survival)
+        accessor.betterEcology$getGoalSelector().addGoal(1, new LowHealthFleeGoal(cow, 0.60, 1.2));
 
-        // Priority 2: Bull competition (for adults)
+        // Priority 2: Protect calf (highest after floating)
+        accessor.betterEcology$getGoalSelector().addGoal(2, new CowProtectCalfGoal(cow, 16.0, 24.0));
+
+        // Priority 3: Bull competition (for adults)
         if (!cow.isBaby()) {
-            accessor.betterEcology$getGoalSelector().addGoal(2, new BullCompetitionGoal(cow, 20.0));
+            accessor.betterEcology$getGoalSelector().addGoal(3, new BullCompetitionGoal(cow, 20.0));
         }
 
-        // Priority 3: Breed (using vanilla breeding goal with our constraints)
-        accessor.betterEcology$getGoalSelector().addGoal(3, new BreedGoal(cow, 1.0));
+        // Priority 4: Breed (using vanilla breeding goal with our constraints)
+        accessor.betterEcology$getGoalSelector().addGoal(4, new BreedGoal(cow, 1.0));
 
-        // Priority 4: Grazing
-        accessor.betterEcology$getGoalSelector().addGoal(4, new CowGrazeGoal(cow, 16.0, 0.8));
+        // Priority 5: Grazing
+        accessor.betterEcology$getGoalSelector().addGoal(5, new CowGrazeGoal(cow, 16.0, 0.8));
 
-        // Priority 5: Herd cohesion (adults) or follow mother (calves)
+        // Priority 6: Herd cohesion (adults) or follow mother (calves)
         if (cow.isBaby()) {
-            accessor.betterEcology$getGoalSelector().addGoal(5, new CalfFollowMotherGoal(cow, 24.0, 1.0));
+            accessor.betterEcology$getGoalSelector().addGoal(6, new CalfFollowMotherGoal(cow, 24.0, 1.0));
         } else {
-            accessor.betterEcology$getGoalSelector().addGoal(5, new HerdCohesionGoal(cow, 24.0, 0.8));
+            accessor.betterEcology$getGoalSelector().addGoal(6, new HerdCohesionGoal(cow, 24.0, 0.8));
         }
 
-        // Priority 6: Cud chewing (idle behavior)
-        accessor.betterEcology$getGoalSelector().addGoal(6, new CowCudChewGoal(cow));
+        // Priority 7: Cud chewing (idle behavior)
+        accessor.betterEcology$getGoalSelector().addGoal(7, new CowCudChewGoal(cow));
 
-        // Priority 7: Random stroll (fallback)
-        accessor.betterEcology$getGoalSelector().addGoal(7, new WaterAvoidingRandomStrollGoal(cow, 0.6));
+        // Priority 8: Random stroll (fallback)
+        accessor.betterEcology$getGoalSelector().addGoal(8, new WaterAvoidingRandomStrollGoal(cow, 0.6));
     }
 
     // ============================================================================
