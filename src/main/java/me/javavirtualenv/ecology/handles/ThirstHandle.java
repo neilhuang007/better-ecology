@@ -15,6 +15,8 @@ public final class ThirstHandle implements EcologyHandle {
     private static final String CACHE_KEY = "better-ecology:thirst-cache";
     private static final String NBT_THIRST = "thirst";
     private static final String NBT_LAST_DRINK_TICK = "lastDrinkTick";
+    // Maximum ticks to simulate during catch-up (1 Minecraft day)
+    private static final long MAX_CATCH_UP_TICKS = 24000L;
 
     @Override
     public String id() {
@@ -49,19 +51,22 @@ public final class ThirstHandle implements EcologyHandle {
                 state, cache.isAquatic);
         double decayRate = cache.baseDecayRate * decayModifier;
 
-        // Scale by elapsed ticks - if 100 ticks passed, decay 100x
+        // Scale by elapsed ticks - cap catch-up to prevent infinite decay from long offline periods
         long elapsedTicks = component.elapsedTicks();
-        long effectiveTicks = Math.max(1, elapsedTicks);
+        long effectiveTicks = Math.min(Math.max(1, elapsedTicks), MAX_CATCH_UP_TICKS);
         double scaledDecay = decayRate * effectiveTicks;
 
         int newThirst = (int) Math.floor(currentThirst - scaledDecay);
 
         // Prevent jarring death: clamp to safe minimum during catch-up
         // During active updates, allow thirst to reach 0 and trigger damage
-        if (elapsedTicks > 1) {
+        // Catch-up should only drain resources, not kill entities
+        boolean isCatchUp = elapsedTicks > 1;
+        int safeMinimum = cache.dehydratedThreshold + 1;
+
+        if (isCatchUp) {
             // Catch-up: keep thirst above dehydrated threshold
             // Entity won't die suddenly when player approaches
-            int safeMinimum = cache.dehydratedThreshold + 1;
             newThirst = Math.max(safeMinimum, newThirst);
         } else {
             // Active update: allow normal decay to 0

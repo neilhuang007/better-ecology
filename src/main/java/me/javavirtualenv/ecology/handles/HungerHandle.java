@@ -30,6 +30,9 @@ public final class HungerHandle implements EcologyHandle {
 		return 20; // Update hunger once per second
 	}
 
+	// Maximum ticks to simulate during catch-up (1 Minecraft day)
+	private static final long MAX_CATCH_UP_TICKS = 24000L;
+
 	@Override
 	public void tick(Mob mob, EcologyComponent component, EcologyProfile profile) {
 		HungerCache cache = profile.cached(CACHE_KEY, () -> buildCache(profile));
@@ -41,9 +44,9 @@ public final class HungerHandle implements EcologyHandle {
 		int currentHunger = getCurrentHunger(handleTag, cache);
 
 		// Apply decay scaled by elapsed ticks (catch-up simulation)
-		// If 100 ticks have passed since last update, decay 100x
+		// Cap catch-up to prevent infinite decay from long offline periods
 		long elapsedTicks = component.elapsedTicks();
-		long effectiveTicks = Math.max(1, elapsedTicks); // At least 1 tick of decay
+		long effectiveTicks = Math.min(Math.max(1, elapsedTicks), MAX_CATCH_UP_TICKS);
 		long baseDecay = cache.decayRate() * effectiveTicks;
 
 		// Apply seasonal modifier to hunger burn rate
@@ -54,10 +57,13 @@ public final class HungerHandle implements EcologyHandle {
 
 		// Prevent jarring death: clamp to safe minimum during catch-up
 		// During active updates, allow hunger to reach 0 and trigger damage
-		if (elapsedTicks > 1) {
+		// Catch-up should only drain resources, not kill entities
+		boolean isCatchUp = elapsedTicks > 1;
+		int safeMinimum = cache.damageThreshold() + 1;
+
+		if (isCatchUp) {
 			// Catch-up: keep hunger above damage threshold
 			// Entity won't die suddenly when player approaches
-			int safeMinimum = cache.damageThreshold() + 1;
 			newHunger = Math.max(safeMinimum, newHunger);
 		} else {
 			// Active update: allow normal decay to 0

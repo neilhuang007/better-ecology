@@ -47,8 +47,9 @@ public class PanicBehavior extends SteeringBehavior {
 
     // Cooldowns
     private int panicCooldown = 0;
-    private static final int PANIC_DURATION = 200; // ticks
-    private static final int PANIC_COOLDOWN_TIME = 600; // ticks
+    private static final int PANIC_DURATION = 200; // ticks (10 seconds)
+    private static final int PANIC_COOLDOWN_TIME = 600; // ticks (30 seconds)
+    private static final int MINIMUM_FLEE_DURATION = 80; // ticks (4 seconds) - minimum time to continue fleeing after threat clears
 
     public PanicBehavior(FleeingConfig config) {
         this.config = config;
@@ -134,9 +135,10 @@ public class PanicBehavior extends SteeringBehavior {
 
         if (shouldPanic && !isInPanic) {
             triggerPanic(context);
-        } else if (!shouldPanic && isInPanic && panicTimer < 50) {
-            // Early end if threats have cleared
-            panicTimer = Math.min(panicTimer, 10);
+        } else if (!shouldPanic && isInPanic && panicTimer > MINIMUM_FLEE_DURATION) {
+            // Gradual wind-down if threats have cleared
+            // Maintains at least MINIMUM_FLEE_DURATION ticks of continued fleeing
+            panicTimer = Math.max(panicTimer - 2, MINIMUM_FLEE_DURATION);
         }
 
         // Update panic intensity based on threat density
@@ -146,6 +148,8 @@ public class PanicBehavior extends SteeringBehavior {
     /**
      * Calculates the force vector for stampede movement.
      * Combines threat avoidance with herd cohesion during panic.
+     * Each entity calculates its own flee direction based on visible threats,
+     * falling back to cached stampede direction only during blind panic.
      *
      * @param context Behavior context
      * @return Stampede force vector
@@ -153,17 +157,8 @@ public class PanicBehavior extends SteeringBehavior {
     private Vec3d calculateStampedeForce(BehaviorContext context) {
         Vec3d position = context.getPosition();
 
-        // If we have a stampede direction, follow it
-        if (stampedeDirection.magnitude() > 0.1) {
-            // Add some noise for natural variation
-            Vec3d noise = generateStampedeNoise();
-            Vec3d force = stampedeDirection.copy();
-            force.add(noise);
-            force.normalize();
-            return force;
-        }
-
-        // Calculate direction away from nearest threat
+        // Priority 1: Always recalculate direction based on visible threat
+        // This ensures each entity flees away from the threat relative to its own position
         LivingEntity primaryThreat = findPrimaryThreat(context);
         if (primaryThreat != null) {
             Vec3d threatPos = new Vec3d(
@@ -175,13 +170,28 @@ public class PanicBehavior extends SteeringBehavior {
             Vec3d awayFromThreat = Vec3d.sub(position, threatPos);
             awayFromThreat.normalize();
 
-            // Set as stampede direction for consistency
+            // Update stampede direction for this entity
             stampedeDirection = awayFromThreat;
 
-            return awayFromThreat;
+            // Add some noise for natural variation
+            Vec3d noise = generateStampedeNoise();
+            Vec3d force = awayFromThreat.copy();
+            force.add(noise);
+            force.normalize();
+            return force;
         }
 
-        // No clear threat, continue in current direction
+        // Priority 2: No visible threat - use cached stampede direction (blind panic)
+        if (stampedeDirection.magnitude() > 0.1) {
+            // Add some noise for natural variation
+            Vec3d noise = generateStampedeNoise();
+            Vec3d force = stampedeDirection.copy();
+            force.add(noise);
+            force.normalize();
+            return force;
+        }
+
+        // Priority 3: No cached direction - continue in current movement direction
         Vec3d currentDir = context.getVelocity().copy();
         if (currentDir.magnitude() > 0.1) {
             currentDir.normalize();

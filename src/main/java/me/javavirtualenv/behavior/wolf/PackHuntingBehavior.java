@@ -16,6 +16,7 @@ import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.entity.animal.Rabbit;
 import net.minecraft.world.entity.animal.Fox;
+import net.minecraft.world.entity.animal.Chicken;
 import net.minecraft.nbt.CompoundTag;
 
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class PackHuntingBehavior extends SteeringBehavior {
     // Sustainability parameters
     private static final int ENERGY_COST_PER_HUNT = 30; // 30% of energy bar
     private static final int HANDLING_TIME_TICKS = 600; // 30 seconds after kill
-    private static final int HUNGER_TRIGGER_THRESHOLD = 50; // Hunt when hunger < 50%
+    private static final int HUNGER_TRIGGER_THRESHOLD = 80; // Hunt when hunger < 80%
     private static final int SATIATION_THRESHOLD = 80; // Stop when hunger > 80%
 
     private Entity currentPrey;
@@ -286,8 +287,8 @@ public class PackHuntingBehavior extends SteeringBehavior {
             return false;
         }
 
-        // Valid prey: sheep, rabbits, foxes
-        return entity instanceof Sheep || entity instanceof Rabbit || entity instanceof Fox;
+        // Valid prey: sheep, rabbits, foxes, chickens
+        return entity instanceof Sheep || entity instanceof Rabbit || entity instanceof Fox || entity instanceof Chicken;
     }
 
     /**
