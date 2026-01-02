@@ -422,6 +422,7 @@ public abstract class DonkeyMixin {
         private static final String NBT_IS_ELDERLY = "isElderly";
 
         // Configuration from YAML
+        private static final long MAX_CATCH_UP_TICKS = 24000L; // 1 Minecraft day
         private static final int BABY_DURATION = 24000;
         private static final int MATURITY_AGE = 24000;
 
@@ -440,7 +441,8 @@ public abstract class DonkeyMixin {
             CompoundTag tag = component.getHandleTag(id());
             int ageTicks = getAgeTicks(tag);
             long elapsed = component.elapsedTicks();
-            ageTicks += elapsed;
+            long effectiveTicks = Math.min(elapsed, MAX_CATCH_UP_TICKS);
+            ageTicks += effectiveTicks;
             setAgeTicks(tag, ageTicks);
 
             if (mob instanceof net.minecraft.world.entity.AgeableMob ageable) {

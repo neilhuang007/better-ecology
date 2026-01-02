@@ -14,6 +14,7 @@ import net.minecraft.world.entity.Mob;
 public final class ConditionHandle implements EcologyHandle {
     private static final String CACHE_KEY = "better-ecology:condition-cache";
     private static final String NBT_CONDITION = "condition";
+    private static final long MAX_CATCH_UP_TICKS = 24000L;
 
     @Override
     public String id() {
@@ -57,9 +58,16 @@ public final class ConditionHandle implements EcologyHandle {
         }
 
         long elapsed = component.elapsedTicks();
-        change *= elapsed;
+        long effectiveTicks = Math.min(elapsed, MAX_CATCH_UP_TICKS);
+        boolean isCatchUp = elapsed > 1;
+        change *= effectiveTicks;
 
         int newCondition = (int) Math.round(Math.min(cache.maxValue, Math.max(0, currentCondition + change)));
+
+        // During catch-up, keep above critical threshold
+        if (isCatchUp && newCondition < cache.criticalThreshold) {
+            newCondition = cache.criticalThreshold;
+        }
         setCondition(tag, newCondition);
 
         // Update state flags based on condition thresholds

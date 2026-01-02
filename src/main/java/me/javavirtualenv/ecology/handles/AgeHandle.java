@@ -17,6 +17,8 @@ public final class AgeHandle implements EcologyHandle {
     private static final String CACHE_KEY = "better-ecology:age-cache";
     private static final String NBT_AGE_TICKS = "ageTicks";
     private static final String NBT_IS_ELDERLY = "isElderly";
+    // Maximum ticks to simulate during catch-up (1 Minecraft day)
+    private static final long MAX_CATCH_UP_TICKS = 24000L;
 
     @Override
     public String id() {
@@ -44,7 +46,10 @@ public final class AgeHandle implements EcologyHandle {
         CompoundTag tag = component.getHandleTag(id());
         int ageTicks = getAgeTicks(tag);
         long elapsed = component.elapsedTicks();
-        ageTicks += elapsed;
+        // Cap catch-up to prevent instant aging death
+        long effectiveTicks = Math.min(elapsed, MAX_CATCH_UP_TICKS);
+        boolean isCatchUp = elapsed > 1;
+        ageTicks += effectiveTicks;
         setAgeTicks(tag, ageTicks);
 
         EntityState state = component.state();
@@ -70,8 +75,8 @@ public final class AgeHandle implements EcologyHandle {
         tag.putBoolean(NBT_IS_ELDERLY, isElderly);
         state.setIsElderly(isElderly);
 
-        // Handle natural death from old age
-        if (cache.maxAge > 0 && ageTicks >= cache.maxAge) {
+        // Handle natural death from old age (only during active updates, not catch-up)
+        if (!isCatchUp && cache.maxAge > 0 && ageTicks >= cache.maxAge) {
             mob.discard();
         }
     }

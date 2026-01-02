@@ -333,6 +333,7 @@ public abstract class PigMixin {
         private static final String NBT_AGE = "age";
         private static final String NBT_IS_BABY = "isBaby";
 
+        private static final long MAX_CATCH_UP_TICKS = 24000L; // 1 Minecraft day
         private static final int BABY_DURATION = 24000;
         private static final int MATURITY_AGE = 24000;
 
@@ -352,7 +353,8 @@ public abstract class PigMixin {
             int currentAge = getCurrentAge(tag);
 
             long elapsed = component.elapsedTicks();
-            int newAge = currentAge + (int) elapsed;
+            long effectiveTicks = Math.min(elapsed, MAX_CATCH_UP_TICKS);
+            int newAge = currentAge + (int) effectiveTicks;
             setAge(tag, newAge);
 
             boolean isBaby = newAge < BABY_DURATION;

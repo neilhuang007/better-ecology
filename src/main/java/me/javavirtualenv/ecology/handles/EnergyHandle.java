@@ -16,6 +16,7 @@ public final class EnergyHandle implements EcologyHandle {
     private static final String CACHE_KEY = "better-ecology:energy-cache";
     private static final String NBT_ENERGY = "energy";
     private static final String NBT_IS_EXHAUSTED = "isExhausted";
+    private static final long MAX_CATCH_UP_TICKS = 24000L;
 
     @Override
     public String id() {
@@ -49,13 +50,19 @@ public final class EnergyHandle implements EcologyHandle {
         double recovery = cache.recoveryRate;
 
         long elapsed = component.elapsedTicks();
+        long effectiveTicks = Math.min(elapsed, MAX_CATCH_UP_TICKS);
+        boolean isCatchUp = elapsed > 1;
 
         // Apply energy change (cost or recovery)
         int newEnergy;
         if (cost > 0) {
-            newEnergy = Math.max(0, (int) Math.floor(currentEnergy - cost * elapsed));
+            newEnergy = Math.max(0, (int) Math.floor(currentEnergy - cost * effectiveTicks));
+            // During catch-up, keep above exhaustion threshold
+            if (isCatchUp) {
+                newEnergy = Math.max(cache.exhaustionThreshold + 1, newEnergy);
+            }
         } else {
-            newEnergy = Math.min(cache.maxValue, (int) Math.ceil(currentEnergy + recovery * elapsed));
+            newEnergy = Math.min(cache.maxValue, (int) Math.ceil(currentEnergy + recovery * effectiveTicks));
         }
         setEnergy(tag, newEnergy);
 

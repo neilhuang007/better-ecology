@@ -92,6 +92,8 @@ public final class EcologyHooks {
 	private static final double ACTIVE_UPDATE_DISTANCE = 64.0;
 	private static final int DISTANT_UPDATE_INTERVAL = 20; // 1 second
 	private static final int MAX_SLEEP_TICKS = 40; // 2 seconds - bounds prediction error
+	// Maximum reasonable elapsed ticks before resetting (handles world reload, dimension change)
+	private static final long MAX_REASONABLE_ELAPSED = 24000L; // 1 Minecraft day
 
 	private EcologyHooks() {
 	}
@@ -225,7 +227,19 @@ public final class EcologyHooks {
 		// Chunk load edge case: Mark last update as current tick
 		// This prevents large catch-up on newly loaded chunks
 		CompoundTag timeTag = component.getHandleTag("time");
-		SimulatedTime.markUpdated(timeTag, mob.tickCount);
+
+		// Validate timestamp against current tick to handle external interference
+		// (e.g. world reload, dimension change, time jump)
+		long lastUpdate = SimulatedTime.getLastUpdateTick(timeTag);
+		long currentTick = mob.tickCount;
+
+		boolean invalidTimestamp = lastUpdate < 0 ||
+			lastUpdate > currentTick || // Timestamp in future
+			(currentTick - lastUpdate) > MAX_REASONABLE_ELAPSED; // Too much time passed
+
+		if (invalidTimestamp) {
+			SimulatedTime.markUpdated(timeTag, currentTick);
+		}
 
 		// Register mob in spatial index on load
 		SpatialIndex.register(mob);

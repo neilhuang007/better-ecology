@@ -360,6 +360,7 @@ public abstract class ArmadilloMixin extends Mob {
     private static final class ArmadilloAgeHandle extends CodeBasedHandle {
         private static final String NBT_AGE_TICKS = "ageTicks";
 
+        private static final long MAX_CATCH_UP_TICKS = 24000L; // 1 Minecraft day
         private static final int BABY_DURATION = 24000;
 
         @Override
@@ -377,7 +378,8 @@ public abstract class ArmadilloMixin extends Mob {
             CompoundTag tag = component.getHandleTag(id());
             int ageTicks = getAgeTicks(tag);
             long elapsed = component.elapsedTicks();
-            ageTicks += elapsed;
+            long effectiveTicks = Math.min(elapsed, MAX_CATCH_UP_TICKS);
+            ageTicks += effectiveTicks;
             setAgeTicks(tag, ageTicks);
         }
 
