@@ -1,5 +1,6 @@
 package me.javavirtualenv.mixin.animal;
 
+import me.javavirtualenv.behavior.predation.PredatorFeedingGoal;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.CodeBasedHandle;
@@ -10,6 +11,7 @@ import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.animal.Cat;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
@@ -100,12 +102,20 @@ public abstract class CatMixin {
                 return;
             }
 
+            if (!(mob instanceof PathfinderMob pathfinderMob)) {
+                return;
+            }
+
             MobAccessor accessor = (MobAccessor) mob;
 
             // Register low health flee goal (highest priority)
             // Cats flee at 55% health with 1.5 speed multiplier (cats are agile)
             accessor.betterEcology$getGoalSelector().addGoal(1,
                 new LowHealthFleeGoal(cat, 0.55, 1.5));
+
+            // Feed on meat items: priority after fleeing
+            accessor.betterEcology$getGoalSelector().addGoal(3,
+                new PredatorFeedingGoal(pathfinderMob, 1.3));
         }
     }
 }

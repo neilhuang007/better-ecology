@@ -136,5 +136,8 @@ public final class DebugNametagUpdater {
         if (state.isLonely()) sb.append("[Lon]");
         if (state.isInCombat()) sb.append("[Cbt]");
         if (state.isRetreating()) sb.append("[Ret]");
+        if (state.isCarryingOffspring()) sb.append("[Carry]");
+        if (state.isInWater()) sb.append("[Water]");
+        if (state.isTamed()) sb.append("[Tamed]");
     }
 }

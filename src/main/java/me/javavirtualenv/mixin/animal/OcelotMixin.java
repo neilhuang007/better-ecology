@@ -1,5 +1,6 @@
 package me.javavirtualenv.mixin.animal;
 
+import me.javavirtualenv.behavior.predation.PredatorFeedingGoal;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
@@ -114,5 +115,8 @@ public abstract class OcelotMixin {
 
         // Low health flee: highest priority - retreat when hurt
         goalSelector.addGoal(1, new LowHealthFleeGoal(ocelot, 0.55, 1.5));
+
+        // Feed on meat items: priority after fleeing
+        goalSelector.addGoal(3, new PredatorFeedingGoal(pathfinderMob, 1.3));
     }
 }

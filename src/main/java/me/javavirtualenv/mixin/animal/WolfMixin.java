@@ -162,11 +162,16 @@ public abstract class WolfMixin {
      */
     private static final class WolfThirstHandle extends CodeBasedHandle {
         private static final String NBT_THIRST = "thirst";
+        private static final String NBT_LAST_DAMAGE_TICK = "lastThirstDamageTick";
 
+        private static final long MAX_CATCH_UP_TICKS = 24000L; // 1 Minecraft day
         private static final int MAX_THIRST = 100;
         private static final int STARTING_THIRST = 80;
         private static final double DECAY_RATE = 0.02;
         private static final int THIRST_THRESHOLD = 20;
+        private static final int DEHYDRATION_THRESHOLD = 5;
+        private static final float DEHYDRATION_DAMAGE = 1.0f;
+        private static final int DAMAGE_INTERVAL = 200;
 
         @Override
         public String id() {
@@ -184,12 +189,36 @@ public abstract class WolfMixin {
             int currentThirst = getCurrentThirst(tag);
 
             long elapsed = component.elapsedTicks();
-            double decay = DECAY_RATE * elapsed;
-            int newThirst = (int) Math.max(0, currentThirst - decay);
+            // Cap elapsed ticks to prevent instant dehydration
+            long effectiveTicks = Math.min(elapsed, MAX_CATCH_UP_TICKS);
+            boolean isCatchUp = elapsed > 1;
+
+            double decay = DECAY_RATE * effectiveTicks;
+            int newThirst;
+
+            if (isCatchUp) {
+                // During catch-up, keep thirst above dehydration threshold
+                int safeMinimum = DEHYDRATION_THRESHOLD + 1;
+                newThirst = Math.max(safeMinimum, (int) (currentThirst - decay));
+            } else {
+                newThirst = (int) Math.max(0, currentThirst - decay);
+            }
             setThirst(tag, newThirst);
 
             boolean isThirsty = newThirst < THIRST_THRESHOLD;
             component.state().setIsThirsty(isThirsty);
+
+            // Only apply dehydration damage during active updates
+            if (!isCatchUp && newThirst <= DEHYDRATION_THRESHOLD) {
+                int currentTick = mob.tickCount;
+                int lastDamageTick = tag.getInt(NBT_LAST_DAMAGE_TICK);
+                if (currentTick - lastDamageTick >= DAMAGE_INTERVAL) {
+                    if (mob.level().getDifficulty() != Difficulty.PEACEFUL) {
+                        mob.hurt(mob.level().damageSources().starve(), DEHYDRATION_DAMAGE);
+                        tag.putInt(NBT_LAST_DAMAGE_TICK, currentTick);
+                    }
+                }
+            }
         }
 
         private int getCurrentThirst(CompoundTag tag) {

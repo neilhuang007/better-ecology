@@ -1,5 +1,6 @@
 package me.javavirtualenv.mixin.animal;
 
+import me.javavirtualenv.behavior.predation.PredatorFeedingGoal;
 import me.javavirtualenv.behavior.production.AxolotlProductionGoal;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
@@ -7,6 +8,8 @@ import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.production.ResourceProductionHandle;
 import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.goal.GoalSelector;
 import net.minecraft.world.entity.animal.axolotl.Axolotl;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -83,7 +86,7 @@ public abstract class AxolotlMixin {
     }
 
     /**
-     * Registers the slime production goal.
+     * Registers the slime production goal and predator feeding goal.
      */
     private void registerProductionGoal() {
         Axolotl axolotl = (Axolotl) (Object) this;
@@ -92,7 +95,16 @@ public abstract class AxolotlMixin {
             productionGoal = new AxolotlProductionGoal(axolotl);
 
             int goalPriority = 4;
-            ((MobAccessor) axolotl).betterEcology$getGoalSelector().addGoal(goalPriority, productionGoal);
+            GoalSelector goalSelector = ((MobAccessor) axolotl).betterEcology$getGoalSelector();
+
+            // Register slime production goal
+            goalSelector.addGoal(goalPriority, productionGoal);
+
+            // Register predator feeding goal for aquatic meat consumption
+            // Axolotls can eat meat items that sink to the water floor
+            if (axolotl instanceof PathfinderMob pathfinderMob) {
+                goalSelector.addGoal(5, new PredatorFeedingGoal(pathfinderMob, 1.0));
+            }
         }
     }
 }

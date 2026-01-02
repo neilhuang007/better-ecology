@@ -112,6 +112,7 @@ public abstract class DonkeyMixin {
         private static final int DAMAGE_THRESHOLD = 5;
         private static final float DAMAGE_AMOUNT = 1.0f;
         private static final int DAMAGE_INTERVAL = 200;
+        private static final long MAX_CATCH_UP_TICKS = 24000L; // 1 Minecraft day
 
         @Override
         public String id() {
@@ -129,7 +130,7 @@ public abstract class DonkeyMixin {
             int currentHunger = getCurrentHunger(handleTag);
 
             long elapsedTicks = component.elapsedTicks();
-            long effectiveTicks = Math.max(1, elapsedTicks);
+            long effectiveTicks = Math.min(Math.max(1, elapsedTicks), MAX_CATCH_UP_TICKS);
             long scaledDecay = (long) (DECAY_RATE * effectiveTicks);
             int newHunger = (int) (currentHunger - scaledDecay);
 

@@ -20,6 +20,7 @@ import net.minecraft.world.level.Level;
  */
 public final class WoolGrowthHandle implements EcologyHandle {
     private static final String CACHE_KEY = "better-ecology:wool-growth-cache";
+    private static final long MAX_CATCH_UP_TICKS = 24000L; // 1 Minecraft day
 
     // NBT keys
     private static final String NBT_WOOL_LENGTH = "woolLength";
@@ -152,9 +153,10 @@ public final class WoolGrowthHandle implements EcologyHandle {
         // Calculate growth rate based on factors
         double growthRate = calculateGrowthRate(component, config);
 
-        // Apply growth
+        // Apply growth with catch-up cap
         long elapsed = component.elapsedTicks();
-        float growth = (float) (growthRate * elapsed);
+        long effectiveTicks = Math.min(elapsed, MAX_CATCH_UP_TICKS);
+        float growth = (float) (growthRate * effectiveTicks);
         float newLength = Math.min(100.0f, currentLength + growth);
 
         tag.putFloat(NBT_WOOL_LENGTH, newLength);

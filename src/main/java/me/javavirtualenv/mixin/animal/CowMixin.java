@@ -188,6 +188,7 @@ public abstract class CowMixin {
         private static final int DAMAGE_THRESHOLD = 10;
         private static final float DAMAGE_AMOUNT = 1.0f;
         private static final int DAMAGE_INTERVAL = 200;
+        private static final long MAX_CATCH_UP_TICKS = 24000L; // 1 Minecraft day
 
         @Override
         public String id() {
@@ -204,7 +205,7 @@ public abstract class CowMixin {
             CompoundTag tag = component.getHandleTag(id());
             int currentHunger = getCurrentHunger(tag);
             long elapsed = component.elapsedTicks();
-            long effectiveTicks = Math.max(1, elapsed);
+            long effectiveTicks = Math.min(Math.max(1, elapsed), MAX_CATCH_UP_TICKS);
             long scaledDecay = (long) (DECAY_RATE * effectiveTicks);
 
             int newHunger = currentHunger - (int) scaledDecay;

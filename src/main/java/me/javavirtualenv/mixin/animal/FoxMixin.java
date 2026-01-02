@@ -1,6 +1,7 @@
 package me.javavirtualenv.mixin.animal;
 
 import me.javavirtualenv.behavior.fox.*;
+import me.javavirtualenv.behavior.predation.PredatorFeedingGoal;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
@@ -137,6 +138,9 @@ public abstract class FoxMixin {
 
         // Hunt: high priority when hungry or at night
         goalSelector.addGoal(3, new FoxHuntGoal(pathfinderMob, pursuitBehavior, 1.2));
+
+        // Feed on meat items: priority after hunting
+        goalSelector.addGoal(4, new PredatorFeedingGoal(pathfinderMob, 1.2));
 
         // Forage: medium priority
         goalSelector.addGoal(5, new FoxForageGoal(pathfinderMob, berryForagingBehavior, 5));
