@@ -477,8 +477,8 @@ unique_behaviors:
       (within 32 blocks) immediately become hostile to the attacker and
       coordinate a group attack. This includes wild wolves defending each
       other and tamed wolves defending their pack (if multiple wolves share
-      the same owner). Neutral status is only restored if the wolf is killed
-      or the attacker leaves the area and sufficient time passes.
+      same owner). Neutral status is only restored if wolf is killed
+      or to attacker leaves area and sufficient time passes.
 
       WHEN: Triggered immediately when a pack member takes damage from any
       entity capable of being attacked (players, mobs, etc.).
@@ -492,6 +492,39 @@ unique_behaviors:
     implementation_hints:
       trigger_type: "EVENT"
       priority: 2
+      duration: null
+      affects_others: true
+      world_modification: false
+
+  - name: "winter_village_siege"
+    description: |
+      WHAT: During winter, when pack hunger levels exceed 60% (on a scale of 0-100),
+      wolf packs may coordinate attacks on nearby villages. This is NOT a random
+      event but a hunger-driven survival behavior. Sieges only occur during winter,
+      with higher probability during blizzards and at night. The pack uses
+      coordinated tactics: Commander (Alpha) observes and coordinates from distance,
+      Scouts (Beta) hunt targets (livestock first, then villagers), and
+      Guards (Gamma) block exits and protect the Commander. Target prioritization
+      follows realistic predation: livestock (high-value, low-risk) → isolated
+      villagers/children → armed adults → iron golems (avoided unless pack ≥8).
+      Siege retreats when: 50% pack casualties, alpha death, hunger satisfied (<30),
+      or village lockdown (additional iron golems spawn).
+
+      WHEN: Triggered daily during winter season when: 1) Pack hunger ≥60, 2) Village
+      within 128 blocks, 3) Pack size ≤12, 4) Chunk wolf count ≤20, 5) Siege chance
+      (5% base, doubled at night, 2x during blizzard) exceeds random roll.
+
+      WHERE: Near villages (≥3 beds + ≥2 villagers + ≥1 bell) in cold biomes
+      (forest, taiga, snowy_taiga). Wolves can detect villages even through blocks.
+
+      WHY: Simulates realistic winter survival behavior. Predators increase hunting
+      pressure when natural prey becomes scarce in winter. Creates emergent winter
+      gameplay challenges and rewards players for preparing defenses. Differentiates
+      winter from other seasons, making seasons matter beyond cosmetic changes.
+
+    implementation_hints:
+      trigger_type: "SEASONAL"
+      priority: 13
       duration: null
       affects_others: true
       world_modification: false

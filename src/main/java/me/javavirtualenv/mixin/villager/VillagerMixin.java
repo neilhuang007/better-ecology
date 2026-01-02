@@ -1,17 +1,22 @@
 package me.javavirtualenv.mixin.villager;
 
-import me.javavirtualenv.behavior.villager.*;
-import me.javavirtualenv.ecology.api.EcologyAccess;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.npc.Villager;
-import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import me.javavirtualenv.behavior.villager.DailyRoutine;
+import me.javavirtualenv.behavior.villager.EnhancedFarming;
+import me.javavirtualenv.behavior.villager.GossipSystem;
+import me.javavirtualenv.behavior.villager.TradingReputation;
+import me.javavirtualenv.behavior.villager.VillagerThreatResponse;
+import me.javavirtualenv.behavior.villager.WorkStationAI;
+import me.javavirtualenv.ecology.api.EcologyAccess;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.level.Level;
 
 /**
  * Mixin for Villager entity to add enhanced behaviors.
@@ -37,22 +42,38 @@ public class VillagerMixin implements EcologyAccess {
     @Unique
     private VillagerThreatResponse betterEcology$threatResponse;
 
-    @Unique
-    private boolean betterEcology$behaviorsInitialized = false;
-
     @Inject(method = "<init>", at = @At("TAIL"))
     private void onConstruct(EntityType<? extends Villager> entityType, Level level, CallbackInfo ci) {
+        betterEcology$ensureInitialized();
+    }
+
+    @Unique
+    private void betterEcology$ensureInitialized() {
         Villager villager = (Villager) (Object) this;
-        betterEcology$tradingReputation = new TradingReputation(villager);
-        betterEcology$gossipSystem = new GossipSystem(villager);
-        betterEcology$workStationAI = new WorkStationAI(villager);
-        betterEcology$dailyRoutine = new DailyRoutine(villager);
-        betterEcology$enhancedFarming = new EnhancedFarming(villager);
-        betterEcology$threatResponse = new VillagerThreatResponse(villager);
+        if (betterEcology$tradingReputation == null) {
+            betterEcology$tradingReputation = new TradingReputation(villager);
+        }
+        if (betterEcology$gossipSystem == null) {
+            betterEcology$gossipSystem = new GossipSystem(villager);
+        }
+        if (betterEcology$workStationAI == null) {
+            betterEcology$workStationAI = new WorkStationAI(villager);
+        }
+        if (betterEcology$dailyRoutine == null) {
+            betterEcology$dailyRoutine = new DailyRoutine(villager);
+        }
+        if (betterEcology$enhancedFarming == null) {
+            betterEcology$enhancedFarming = new EnhancedFarming(villager);
+        }
+        if (betterEcology$threatResponse == null) {
+            betterEcology$threatResponse = new VillagerThreatResponse(villager);
+        }
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
     private void onSave(CompoundTag tag, CallbackInfo ci) {
+        betterEcology$ensureInitialized();
+
         CompoundTag ecologyTag = new CompoundTag();
 
         ecologyTag.put("TradingReputation", betterEcology$tradingReputation.save());
@@ -66,6 +87,8 @@ public class VillagerMixin implements EcologyAccess {
 
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
     private void onLoad(CompoundTag tag, CallbackInfo ci) {
+        betterEcology$ensureInitialized();
+
         if (tag.contains("BetterEcology")) {
             CompoundTag ecologyTag = tag.getCompound("BetterEcology");
 
@@ -91,11 +114,8 @@ public class VillagerMixin implements EcologyAccess {
     private void onTick(CallbackInfo ci) {
         Villager villager = (Villager) (Object) this;
 
-        // Initialize behaviors if not done
-        if (!betterEcology$behaviorsInitialized) {
-            initializeBehaviors();
-            betterEcology$behaviorsInitialized = true;
-        }
+        // Ensure behaviors are initialized
+        betterEcology$ensureInitialized();
 
         // Tick behavior systems
         betterEcology$dailyRoutine.tick();
@@ -112,14 +132,6 @@ public class VillagerMixin implements EcologyAccess {
         if (villager.level().getGameTime() % 600 == 0) {
             betterEcology$tradingReputation.updateSupplyDemand();
         }
-    }
-
-    @Unique
-    private void initializeBehaviors() {
-        Villager villager = (Villager) (Object) this;
-
-        // Goals will be registered through the goal selector system
-        // This is handled by the separate goal registration system
     }
 
     // Getter methods for behavior systems - override interface defaults

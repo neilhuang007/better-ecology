@@ -35,55 +35,55 @@ import net.minecraft.world.item.ItemStack;
  * ===============================================================================
  *
  * 1. TELEPORTING DEATH:
- *    Problem: Animal at hunger=20, sleeps 1000 ticks, player approaches,
- *            we fast-forward to hunger=0, animal suddenly dies.
- *    Solution: Don't fast-forward critical thresholds. Only apply decay
- *             that keeps animal in "safe" state. If wake would cause death,
- *             clamp to safe minimum and mark for next update.
+ * Problem: Animal at hunger=20, sleeps 1000 ticks, player approaches,
+ * we fast-forward to hunger=0, animal suddenly dies.
+ * Solution: Don't fast-forward critical thresholds. Only apply decay
+ * that keeps animal in "safe" state. If wake would cause death,
+ * clamp to safe minimum and mark for next update.
  *
  * 2. BREEDING WINDOWS:
- *    Problem: Animal ready to breed at tick 500, sleeping until tick 1000,
- *            misses breeding window.
- *    Solution: Breeding is AI-goal based, must be real-time near players.
- *             Distant animals can miss windows (acceptable - no one sees).
+ * Problem: Animal ready to breed at tick 500, sleeping until tick 1000,
+ * misses breeding window.
+ * Solution: Breeding is AI-goal based, must be real-time near players.
+ * Distant animals can miss windows (acceptable - no one sees).
  *
  * 3. AGE TRANSITIONS:
- *    Problem: Baby should become adult at tick 24000, sleeping until 25000.
- *    Solution: Age is a tick counter, can fast-forward. At wake, if age > 24000,
- *             trigger adult transition immediately.
+ * Problem: Baby should become adult at tick 24000, sleeping until 25000.
+ * Solution: Age is a tick counter, can fast-forward. At wake, if age > 24000,
+ * trigger adult transition immediately.
  *
  * 4. CHUNK LOADING:
- *    Problem: Chunk loads with sleeping entities, they're in unknown state.
- *    Solution: On chunk load, wake all entities once to initialize state.
+ * Problem: Chunk loads with sleeping entities, they're in unknown state.
+ * Solution: On chunk load, wake all entities once to initialize state.
  *
  * 5. MULTIPLE PLAYERS:
- *    Problem: Entity far from all players, then one approaches.
- *    Solution: Each entity tracks nearest player. When distance < 64, wake up.
+ * Problem: Entity far from all players, then one approaches.
+ * Solution: Each entity tracks nearest player. When distance < 64, wake up.
  *
  * 6. STATE TRANSITIONS DURING SLEEP:
- *    Problem: Healthy → injured during sleep, decay rate changes.
- *    Solution: On wake, re-calculate everything with CURRENT modifiers.
- *             Since max sleep is 20 ticks, error is bounded.
+ * Problem: Healthy → injured during sleep, decay rate changes.
+ * Solution: On wake, re-calculate everything with CURRENT modifiers.
+ * Since max sleep is 20 ticks, error is bounded.
  *
  * 7. SOCIAL CHANGES:
- *    Problem: Group member leaves/arrives during sleep.
- *    Solution: Social check is infrequent (20 ticks). Acceptable delay.
+ * Problem: Group member leaves/arrives during sleep.
+ * Solution: Social check is infrequent (20 ticks). Acceptable delay.
  *
  * ===============================================================================
  * SCHEDULING STRATEGY
  * ===============================================================================
  *
- * Player nearby (< 64 blocks):  Update every tick
- *   - All systems run normally
- *   - AI goals update every tick
- *   - No time dilation
+ * Player nearby (< 64 blocks): Update every tick
+ * - All systems run normally
+ * - AI goals update every tick
+ * - No time dilation
  *
- * Distant (> 64 blocks):      Update every 20 ticks (staggered)
- *   - Hunger/thirst: fast-forward with CURRENT modifiers
- *   - Age: fast-forward tick counter
- *   - Breeding: check cooldown timestamp
- *   - Social: check with spatial index
- *   - AI goals: DON'T update (not relevant, no players nearby)
+ * Distant (> 64 blocks): Update every 20 ticks (staggered)
+ * - Hunger/thirst: fast-forward with CURRENT modifiers
+ * - Age: fast-forward tick counter
+ * - Breeding: check cooldown timestamp
+ * - Social: check with spatial index
+ * - AI goals: DON'T update (not relevant, no players nearby)
  *
  * ===============================================================================
  */
@@ -291,7 +291,10 @@ public final class EcologyHooks {
 
 	private static EcologyComponent component(Mob mob) {
 		if (mob instanceof EcologyAccess access) {
-			return access.betterEcology$getEcologyComponent();
+			EcologyComponent component = access.betterEcology$getEcologyComponent();
+			if (component != null) {
+				return component;
+			}
 		}
 		return new EcologyComponent(mob);
 	}

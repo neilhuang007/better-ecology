@@ -1,5 +1,9 @@
 package me.javavirtualenv.ecology.handles;
 
+import java.util.List;
+
+import org.jetbrains.annotations.Nullable;
+
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyHandle;
 import me.javavirtualenv.ecology.EcologyProfile;
@@ -7,9 +11,6 @@ import me.javavirtualenv.ecology.seasonal.SeasonalContext;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Mob;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
 
 /**
  * Handle for seasonal and time-of-day behavior variations.
@@ -78,13 +79,15 @@ public final class SeasonalHandle implements EcologyHandle {
         // Try to get cached season from component
         if (mob instanceof me.javavirtualenv.ecology.api.EcologyAccess access) {
             EcologyComponent component = access.betterEcology$getEcologyComponent();
-            CompoundTag handleTag = component.getHandleTag("seasonal");
-            String seasonName = handleTag.getString(NBT_CURRENT_SEASON);
-            if (!seasonName.isEmpty()) {
-                try {
-                    return SeasonalContext.Season.valueOf(seasonName);
-                } catch (IllegalArgumentException e) {
-                    // Invalid season name, fall through to recalculation
+            if (component != null) {
+                CompoundTag handleTag = component.getHandleTag("seasonal");
+                String seasonName = handleTag.getString(NBT_CURRENT_SEASON);
+                if (!seasonName.isEmpty()) {
+                    try {
+                        return SeasonalContext.Season.valueOf(seasonName);
+                    } catch (IllegalArgumentException e) {
+                        // Invalid season name, fall through to recalculation
+                    }
                 }
             }
         }
@@ -111,9 +114,10 @@ public final class SeasonalHandle implements EcologyHandle {
      * Get activity multiplier based on season and time of day.
      * Combines seasonal and time-of-day multipliers.
      *
-     * @param mob The entity
+     * @param mob             The entity
      * @param activityPattern The entity's activity pattern
-     * @return Combined activity multiplier (0.0 = inactive, 1.0 = normal, >1.0 = extra active)
+     * @return Combined activity multiplier (0.0 = inactive, 1.0 = normal, >1.0 =
+     *         extra active)
      */
     public static double getActivityMultiplier(Mob mob, SeasonalContext.ActivityPattern activityPattern) {
         SeasonalContext.Season season = getSeason(mob);
@@ -141,7 +145,7 @@ public final class SeasonalHandle implements EcologyHandle {
         }
 
         EcologyComponent component = access.betterEcology$getEcologyComponent();
-        if (component.profile() == null) {
+        if (component == null || component.profile() == null) {
             return false;
         }
 
@@ -166,7 +170,7 @@ public final class SeasonalHandle implements EcologyHandle {
         }
 
         EcologyComponent component = access.betterEcology$getEcologyComponent();
-        if (component.profile() == null) {
+        if (component == null || component.profile() == null) {
             return true;
         }
 
@@ -182,7 +186,8 @@ public final class SeasonalHandle implements EcologyHandle {
      * Get breeding multiplier for current season.
      *
      * @param mob The entity
-     * @return Breeding multiplier (1.0 = normal, higher = increased breeding chance)
+     * @return Breeding multiplier (1.0 = normal, higher = increased breeding
+     *         chance)
      */
     public static double getBreedingMultiplier(Mob mob) {
         if (!isSeasonalBreedingEnabled(mob)) {
@@ -218,16 +223,16 @@ public final class SeasonalHandle implements EcologyHandle {
         }
 
         return seasonList.stream()
-            .map(String::toUpperCase)
-            .map(seasonStr -> {
-                try {
-                    return SeasonalContext.Season.valueOf(seasonStr);
-                } catch (IllegalArgumentException e) {
-                    return null;
-                }
-            })
-            .filter(season -> season != null)
-            .toList();
+                .map(String::toUpperCase)
+                .map(seasonStr -> {
+                    try {
+                        return SeasonalContext.Season.valueOf(seasonStr);
+                    } catch (IllegalArgumentException e) {
+                        return null;
+                    }
+                })
+                .filter(season -> season != null)
+                .toList();
     }
 
     private SeasonalContext.ActivityPattern parseActivityPattern(String patternStr) {
@@ -243,10 +248,10 @@ public final class SeasonalHandle implements EcologyHandle {
     }
 
     private record SeasonalConfig(
-        boolean enabled,
-        boolean seasonalBreeding,
-        boolean winterDormancy,
-        List<SeasonalContext.Season> breedingSeasons,
-        SeasonalContext.ActivityPattern activityPattern
-    ) {}
+            boolean enabled,
+            boolean seasonalBreeding,
+            boolean winterDormancy,
+            List<SeasonalContext.Season> breedingSeasons,
+            SeasonalContext.ActivityPattern activityPattern) {
+    }
 }

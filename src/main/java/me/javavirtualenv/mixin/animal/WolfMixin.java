@@ -1,11 +1,16 @@
 package me.javavirtualenv.mixin.animal;
 
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.CodeBasedHandle;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyProfile;
-import me.javavirtualenv.ecology.handles.*;
+import me.javavirtualenv.ecology.handles.WolfBehaviorHandle;
 import me.javavirtualenv.ecology.state.EntityState;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Difficulty;
@@ -13,28 +18,26 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
-import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.pathfinder.PathType;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Mixin for Wolf entity behavior registration.
  * Wolves are pack hunters with complex social behaviors, territorial instincts,
- * and taming capabilities. This mixin implements comprehensive wolf behaviors including:
+ * and taming capabilities. This mixin implements comprehensive wolf behaviors
+ * including:
  * <p>
- * - Pack Hunting: Coordinate hunting with pack members, flanking behavior, alpha leadership
+ * - Pack Hunting: Coordinate hunting with pack members, flanking behavior,
+ * alpha leadership
  * - Territorial Behavior: Mark and defend territory from intruder packs
- * - Social Hierarchy: Alpha/beta/omega hierarchy, dominance displays, pack bonding
- * - Predator Interactions: Hunt sheep, rabbits, foxes; avoid bears and stronger predators
+ * - Social Hierarchy: Alpha/beta/omega hierarchy, dominance displays, pack
+ * bonding
+ * - Predator Interactions: Hunt sheep, rabbits, foxes; avoid bears and stronger
+ * predators
  * <p>
  * Behaviors are based on scientific research into wolf pack dynamics.
  */
@@ -54,23 +57,23 @@ public abstract class WolfMixin {
 
     private void registerWolfBehaviors() {
         AnimalConfig config = AnimalConfig.builder(
-            net.minecraft.resources.ResourceLocation.parse(WOLF_ID))
-            // Basic survival handles
-            .addHandle(new WolfHungerHandle())
-            .addHandle(new WolfThirstHandle())
-            .addHandle(new WolfConditionHandle())
-            .addHandle(new WolfEnergyHandle())
-            .addHandle(new WolfAgeHandle())
-            .addHandle(new WolfSocialHandle())
-            .addHandle(new WolfHealthHandle())
-            .addHandle(new WolfMovementHandle())
-            .addHandle(new WolfTemporalHandle())
-            .addHandle(new WolfDietHandle())
-            .addHandle(new WolfPredationHandle())
-            .addHandle(new WolfBreedingHandle())
-            // Wolf-specific behavior handle
-            .addHandle(new WolfBehaviorHandle())
-            .build();
+                net.minecraft.resources.ResourceLocation.parse(WOLF_ID))
+                // Basic survival handles
+                .addHandle(new WolfHungerHandle())
+                .addHandle(new WolfThirstHandle())
+                .addHandle(new WolfConditionHandle())
+                .addHandle(new WolfEnergyHandle())
+                .addHandle(new WolfAgeHandle())
+                .addHandle(new WolfSocialHandle())
+                .addHandle(new WolfHealthHandle())
+                .addHandle(new WolfMovementHandle())
+                .addHandle(new WolfTemporalHandle())
+                .addHandle(new WolfDietHandle())
+                .addHandle(new WolfPredationHandle())
+                .addHandle(new WolfBreedingHandle())
+                // Wolf-specific behavior handle
+                .addHandle(new WolfBehaviorHandle())
+                .build();
 
         AnimalBehaviorRegistry.register(WOLF_ID, config);
     }
@@ -509,7 +512,7 @@ public abstract class WolfMixin {
 
         @Override
         public boolean overrideIsFood(Mob mob, EcologyComponent component, EcologyProfile profile,
-                                     net.minecraft.world.item.ItemStack stack, boolean original) {
+                net.minecraft.world.item.ItemStack stack, boolean original) {
             // Wolves eat all meat (vanilla behavior is fine)
             return original;
         }
@@ -517,6 +520,7 @@ public abstract class WolfMixin {
 
     /**
      * Predation handle - wolves hunt sheep, rabbits, foxes.
+     * Also adds siege targeting for winter village attacks.
      */
     private static final class WolfPredationHandle extends CodeBasedHandle {
 
@@ -533,6 +537,9 @@ public abstract class WolfMixin {
 
             me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
 
+<<<<<<< HEAD
+            // Hunt prey animals (normal hunting)
+=======
             // Register low health flee goal (high priority)
             accessor.betterEcology$getGoalSelector().addGoal(1,
                 new me.javavirtualenv.ecology.ai.LowHealthFleeGoal(wolf, 0.45, 1.5));
@@ -549,14 +556,35 @@ public abstract class WolfMixin {
                 new me.javavirtualenv.behavior.predation.PredatorFeedingGoal(wolf));
 
             // Hunt prey animals
+>>>>>>> 7ebd39c79bb6a2cc04217abbfe4c27e593b11dc6
             accessor.betterEcology$getTargetSelector().addGoal(3,
-                new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Sheep.class, false));
+                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Sheep.class, false));
 
             accessor.betterEcology$getTargetSelector().addGoal(3,
-                new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Rabbit.class, false));
+                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Rabbit.class, false));
 
             accessor.betterEcology$getTargetSelector().addGoal(3,
-                new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Fox.class, false));
+                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Fox.class, false));
+
+            // Siege targeting - higher priority (goal 2)
+            // These targets are only targeted when wolf is in siege mode
+            // The validation is done in WolfSiegeAttackGoal
+            accessor.betterEcology$getTargetSelector().addGoal(2,
+                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Pig.class, false));
+
+            accessor.betterEcology$getTargetSelector().addGoal(2,
+                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Chicken.class, false));
+
+            accessor.betterEcology$getTargetSelector().addGoal(2,
+                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Cow.class, false));
+
+            // Villagers and golems are only targeted during full assault
+            // Validated in WolfSiegeAttackGoal
+            accessor.betterEcology$getTargetSelector().addGoal(1,
+                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.npc.Villager.class, false));
+
+            accessor.betterEcology$getTargetSelector().addGoal(1,
+                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.IronGolem.class, false));
         }
     }
 

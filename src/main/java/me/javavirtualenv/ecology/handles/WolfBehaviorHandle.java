@@ -10,10 +10,13 @@ import me.javavirtualenv.behavior.predation.AttractionBehavior;
 import me.javavirtualenv.behavior.predation.AvoidanceBehavior;
 import me.javavirtualenv.behavior.predation.EvasionBehavior;
 import me.javavirtualenv.behavior.predation.PursuitBehavior;
-import me.javavirtualenv.behavior.wolf.*;
+import me.javavirtualenv.behavior.wolf.PackHierarchyBehavior;
+import me.javavirtualenv.behavior.wolf.PackHuntingBehavior;
+import me.javavirtualenv.behavior.wolf.PackTerritoryBehavior;
+import me.javavirtualenv.behavior.wolf.WolfPackAttackGoal;
+import me.javavirtualenv.behavior.wolf.WolfSiegeAttackGoal;
 import me.javavirtualenv.ecology.CodeBasedHandle;
 import me.javavirtualenv.ecology.EcologyComponent;
-import me.javavirtualenv.ecology.EcologyHandle;
 import me.javavirtualenv.ecology.EcologyProfile;
 import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.mixin.MobAccessor;
@@ -43,7 +46,7 @@ public final class WolfBehaviorHandle extends CodeBasedHandle {
 
     @Override
     public void registerGoals(Mob mob, EcologyComponent component, EcologyProfile profile) {
-        if (!(mob instanceof Wolf)) {
+        if (!(mob instanceof Wolf wolf)) {
             return;
         }
 
@@ -53,17 +56,27 @@ public final class WolfBehaviorHandle extends CodeBasedHandle {
         // Create goal with wolf-specific weights
         BehaviorWeights weights = createWolfWeights();
 
-        int priority = 6; // Run after water avoidance (priority 5)
-        SteeringBehaviorGoal goal = new SteeringBehaviorGoal(
-            mob,
-            () -> registry,
-            () -> weights,
-            0.18, // maxForce
-            1.3   // maxSpeed
+        int steeringPriority = 6; // Run after water avoidance (priority 5)
+        SteeringBehaviorGoal steeringGoal = new SteeringBehaviorGoal(
+                mob,
+                () -> registry,
+                () -> weights,
+                0.18, // maxForce
+                1.3 // maxSpeed
         );
 
         MobAccessor accessor = (MobAccessor) mob;
-        accessor.betterEcology$getGoalSelector().addGoal(priority, goal);
+
+        // Register siege attack goal (higher priority than steering)
+        accessor.betterEcology$getGoalSelector().addGoal(2,
+                new WolfSiegeAttackGoal(wolf, 1.2, false));
+
+        // Register pack hunting attack goal
+        accessor.betterEcology$getGoalSelector().addGoal(3,
+                new WolfPackAttackGoal(wolf, 1.0, false));
+
+        // Register steering behavior goal (lowest priority)
+        accessor.betterEcology$getGoalSelector().addGoal(steeringPriority, steeringGoal);
     }
 
     @Override
@@ -165,9 +178,8 @@ public final class WolfBehaviorHandle extends CodeBasedHandle {
      */
     private Wolf findNearbyPack(Wolf wolf) {
         var nearbyWolves = wolf.level().getEntitiesOfClass(
-            Wolf.class,
-            wolf.getBoundingBox().inflate(32.0)
-        );
+                Wolf.class,
+                wolf.getBoundingBox().inflate(32.0));
 
         for (Wolf other : nearbyWolves) {
             if (other.isTame() || other.equals(wolf)) {
