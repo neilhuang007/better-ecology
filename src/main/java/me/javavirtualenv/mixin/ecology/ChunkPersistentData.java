@@ -1,7 +1,6 @@
-package me.javavirtualenv.ecology.mixin;
+package me.javavirtualenv.mixin.ecology;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.chunk.LevelChunk;
 
 /**
  * Interface for accessing persistent data on chunks.
