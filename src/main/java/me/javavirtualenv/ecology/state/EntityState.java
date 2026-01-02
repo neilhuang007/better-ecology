@@ -197,7 +197,7 @@ public final class EntityState {
 
     /** Critical hunger - near starvation */
     public boolean isStarving() {
-        return isStarving;
+        return isStarving != null && isStarving;
     }
 
     public void setIsStarving(boolean starving) {
@@ -209,7 +209,7 @@ public final class EntityState {
 
     /** Critical thirst - near dehydration */
     public boolean isDehydrated() {
-        return isDehydrated;
+        return isDehydrated != null && isDehydrated;
     }
 
     public void setIsDehydrated(boolean dehydrated) {
@@ -283,7 +283,10 @@ public final class EntityState {
         return cachedSpeed;
     }
 
-    /** Reset cached states (call at start of tick) - DEPRECATED: Use prepareForTick() */
+    /**
+     * Reset cached states (call at start of tick) - DEPRECATED: Use
+     * prepareForTick()
+     */
     public void reset() {
         prepareForTick();
     }

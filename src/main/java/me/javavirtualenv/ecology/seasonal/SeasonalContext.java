@@ -25,7 +25,8 @@ public final class SeasonalContext {
 
     /**
      * Time periods during a day.
-     * Based on Minecraft's day/night cycle (0 = dawn, 6000 = noon, 12000 = dusk, 18000 = midnight)
+     * Based on Minecraft's day/night cycle (0 = dawn, 6000 = noon, 12000 = dusk,
+     * 18000 = midnight)
      */
     public enum TimePeriod {
         DAWN(0, 2000),
@@ -54,10 +55,10 @@ public final class SeasonalContext {
      * Activity pattern types for different animals.
      */
     public enum ActivityPattern {
-        DIURNAL,     // Active during day
-        NOCTURNAL,   // Active during night
+        DIURNAL, // Active during day
+        NOCTURNAL, // Active during night
         CREPUSCULAR, // Active at dawn and dusk
-        CATHEMERAL   // Active throughout day and night
+        CATHEMERAL // Active throughout day and night
     }
 
     /**
@@ -73,6 +74,17 @@ public final class SeasonalContext {
 
         int seasonIndex = (int) (yearDay / 20L);
         return Season.values()[seasonIndex];
+    }
+
+    /**
+     * Get the current season.
+     * Uses SeasonManager if available, otherwise calculates from world time.
+     *
+     * @param level The server level
+     * @return Current season
+     */
+    public static Season getCurrentSeason(ServerLevel level) {
+        return SeasonManager.getCurrentSeason(level);
     }
 
     /**
@@ -173,7 +185,7 @@ public final class SeasonalContext {
      * Check if an entity is active based on its activity pattern and current time.
      *
      * @param pattern The entity's activity pattern
-     * @param period The current time period
+     * @param period  The current time period
      * @return true if the entity should be active
      */
     public static boolean isActive(ActivityPattern pattern, TimePeriod period) {
@@ -190,7 +202,7 @@ public final class SeasonalContext {
      * Returns values between 0.0 (inactive) and 1.0 (fully active).
      *
      * @param pattern The entity's activity pattern
-     * @param period The current time period
+     * @param period  The current time period
      * @return Activity multiplier
      */
     public static double getActivityMultiplier(ActivityPattern pattern, TimePeriod period) {

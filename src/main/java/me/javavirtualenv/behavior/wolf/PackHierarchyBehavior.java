@@ -1,19 +1,18 @@
 package me.javavirtualenv.behavior.wolf;
 
-import me.javavirtualenv.behavior.steering.BehaviorContext;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
-import me.javavirtualenv.behavior.core.Vec3d;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.animal.Wolf;
-import net.minecraft.world.level.Level;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+
+import me.javavirtualenv.behavior.core.Vec3d;
+import me.javavirtualenv.behavior.steering.BehaviorContext;
+import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.animal.Wolf;
+import net.minecraft.world.level.Level;
 
 /**
  * Pack hierarchy behavior for wolves.
@@ -38,7 +37,7 @@ public class PackHierarchyBehavior extends SteeringBehavior {
     private int lastSocialCheckTick;
 
     public PackHierarchyBehavior(double cohesionDistance, double followStrength,
-                                 double careStrength) {
+            double careStrength) {
         this.cohesionDistance = cohesionDistance;
         this.followStrength = followStrength;
         this.careStrength = careStrength;
@@ -100,7 +99,7 @@ public class PackHierarchyBehavior extends SteeringBehavior {
      * Calculates force to maintain pack cohesion (for alpha).
      */
     private Vec3d calculatePackCohesion(Wolf self, List<Wolf> packMembers,
-                                       BehaviorContext context) {
+            BehaviorContext context) {
         if (packMembers.isEmpty()) {
             return new Vec3d();
         }
@@ -337,7 +336,7 @@ public class PackHierarchyBehavior extends SteeringBehavior {
         if (!level.isClientSide && rank == HierarchyRank.ALPHA) {
             // Alpha initiates group howl
             level.playSound(null, wolf.blockPosition(), SoundEvents.WOLF_HOWL,
-                SoundSource.NEUTRAL, 0.8f, 1.0f);
+                    SoundSource.NEUTRAL, 0.8f, 1.0f);
 
             // Other pack members respond (in full implementation)
         }
@@ -359,20 +358,78 @@ public class PackHierarchyBehavior extends SteeringBehavior {
         return packId;
     }
 
-
     /**
      * Hierarchy ranks in wolf pack.
      */
     public enum HierarchyRank {
-        ALPHA,  // Pack leader
-        BETA,   // Second in command
-        MID,    // Regular pack members
-        OMEGA,  // Lowest ranking
+        ALPHA, // Pack leader
+        BETA, // Second in command
+        MID, // Regular pack members
+        OMEGA, // Lowest ranking
         UNKNOWN // Not yet determined
+    }
+
+    /**
+     * Siege roles during village attacks.
+     * Mapped from hierarchy rank during winter sieges.
+     */
+    public enum SiegeRole {
+        COMMANDER, // Alpha - coordinates siege, maintains overview
+        SCOUT, // Beta - identifies targets, attacks livestock/villagers
+        GUARD // Mid/Omega - blocks exits, protects commander
+    }
+
+    /**
+     * Gets the siege role for this wolf based on hierarchy.
+     * During winter sieges, hierarchy ranks map to specific siege roles.
+     *
+     * @return The siege role for this wolf
+     */
+    public SiegeRole getSiegeRole() {
+        switch (rank) {
+            case ALPHA:
+                return SiegeRole.COMMANDER;
+            case BETA:
+                return SiegeRole.SCOUT;
+            case MID:
+            case OMEGA:
+                return SiegeRole.GUARD;
+            case UNKNOWN:
+            default:
+                return SiegeRole.GUARD; // Default to guard
+        }
+    }
+
+    /**
+     * Checks if this wolf is the commander of a siege.
+     *
+     * @return true if this wolf is alpha and can command sieges
+     */
+    public boolean isSiegeCommander() {
+        return rank == HierarchyRank.ALPHA;
+    }
+
+    /**
+     * Checks if this wolf is a scout during sieges.
+     *
+     * @return true if this wolf is beta and acts as scout
+     */
+    public boolean isSiegeScout() {
+        return rank == HierarchyRank.BETA;
+    }
+
+    /**
+     * Checks if this wolf is a guard during sieges.
+     *
+     * @return true if this wolf is mid or omega rank
+     */
+    public boolean isSiegeGuard() {
+        return rank == HierarchyRank.MID || rank == HierarchyRank.OMEGA;
     }
 
     /**
      * Record for tracking wolf strength.
      */
-    private record WolfStrength(Wolf wolf, double strength) {}
+    private record WolfStrength(Wolf wolf, double strength) {
+    }
 }
