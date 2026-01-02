@@ -537,9 +537,6 @@ public abstract class WolfMixin {
 
             me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
 
-<<<<<<< HEAD
-            // Hunt prey animals (normal hunting)
-=======
             // Register low health flee goal (high priority)
             accessor.betterEcology$getGoalSelector().addGoal(1,
                 new me.javavirtualenv.ecology.ai.LowHealthFleeGoal(wolf, 0.45, 1.5));
@@ -556,7 +553,6 @@ public abstract class WolfMixin {
                 new me.javavirtualenv.behavior.predation.PredatorFeedingGoal(wolf));
 
             // Hunt prey animals
->>>>>>> 7ebd39c79bb6a2cc04217abbfe4c27e593b11dc6
             accessor.betterEcology$getTargetSelector().addGoal(3,
                     new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Sheep.class, false));
 

@@ -3,6 +3,7 @@ package me.javavirtualenv.mixin.animal;
 import me.javavirtualenv.behavior.fox.*;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
+import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.reproduction.NestBuildingHandle;
 import me.javavirtualenv.mixin.MobAccessor;
@@ -128,8 +129,11 @@ public abstract class FoxMixin {
         GoalSelector goalSelector = accessor.betterEcology$getGoalSelector();
 
         // Fox goal priorities (higher number = lower priority)
-        // Sleep: highest priority during day
-        goalSelector.addGoal(1, new FoxSleepGoal(pathfinderMob, sleepingBehavior));
+        // Low health flee: highest priority - retreat when hurt
+        goalSelector.addGoal(1, new LowHealthFleeGoal(fox, 0.50, 1.5));
+
+        // Sleep: high priority during day
+        goalSelector.addGoal(2, new FoxSleepGoal(pathfinderMob, sleepingBehavior));
 
         // Hunt: high priority when hungry or at night
         goalSelector.addGoal(3, new FoxHuntGoal(pathfinderMob, pursuitBehavior, 1.2));

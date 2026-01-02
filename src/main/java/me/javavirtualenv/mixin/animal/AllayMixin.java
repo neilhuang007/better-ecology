@@ -3,6 +3,7 @@ package me.javavirtualenv.mixin.animal;
 import me.javavirtualenv.behavior.production.AllayCollectionGoal;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
+import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.production.ResourceProductionHandle;
 import me.javavirtualenv.mixin.MobAccessor;
@@ -119,6 +120,10 @@ public abstract class AllayMixin {
 
             int goalPriority = 3;
             ((MobAccessor) allay).betterEcology$getGoalSelector().addGoal(goalPriority, collectionGoal);
+
+            // Add low health flee goal at priority 1 (higher priority than collection)
+            // Allays flee at 70% health threshold with 1.5x speed multiplier
+            ((MobAccessor) allay).betterEcology$getGoalSelector().addGoal(1, new LowHealthFleeGoal(allay, 0.70, 1.5));
         }
     }
 }

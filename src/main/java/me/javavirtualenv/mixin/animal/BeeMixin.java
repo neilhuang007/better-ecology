@@ -7,12 +7,18 @@ import me.javavirtualenv.behavior.bee.PollinationBehavior;
 import me.javavirtualenv.behavior.bee.WaggleDanceBehavior;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
+import me.javavirtualenv.ecology.CodeBasedHandle;
 import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.EcologyProfile;
+import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
 import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.production.ResourceProductionHandle;
+import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.animal.Bee;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -103,8 +109,8 @@ public abstract class BeeMixin {
             // Temporal behaviors
             .addHandle(new TemporalHandle())
 
-            // Predation - disabled for bees
-            .addHandle(new PredationHandle())
+            // Predation - bees have low health flee behavior only
+            .addHandle(new BeePredationHandle())
 
             // Diet - pollination-based
             .addHandle(new DietHandle())
@@ -218,5 +224,29 @@ public abstract class BeeMixin {
         }
 
         return new BeeComponent();
+    }
+
+    /**
+     * Predation handle with bee-specific low health flee behavior.
+     * Bees will flee when their health drops below 60% during combat.
+     */
+    private static final class BeePredationHandle extends CodeBasedHandle {
+        @Override
+        public String id() {
+            return "predation";
+        }
+
+        @Override
+        public void registerGoals(Mob mob, EcologyComponent component, EcologyProfile profile) {
+            if (!(mob instanceof PathfinderMob pathfinderMob)) {
+                return;
+            }
+
+            MobAccessor accessor = (MobAccessor) mob;
+
+            // Flee when health is low (priority 1 - highest priority)
+            accessor.betterEcology$getGoalSelector().addGoal(1,
+                new LowHealthFleeGoal(pathfinderMob, 0.60, 1.4));
+        }
     }
 }

@@ -8,6 +8,7 @@ import me.javavirtualenv.ecology.ai.CowCudChewGoal;
 import me.javavirtualenv.ecology.ai.CowGrazeGoal;
 import me.javavirtualenv.ecology.ai.CowProtectCalfGoal;
 import me.javavirtualenv.ecology.ai.HerdCohesionGoal;
+import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.CodeBasedHandle;
@@ -48,6 +49,7 @@ import net.minecraft.world.level.pathfinder.PathType;
  * - CalfCareBehavior: Mothers protect calves in mushroom fields
  * - NursingBehavior: Calves seek mothers for nursing
  * - CowGrazeGoal: Active mycelium seeking and eating
+ * - LowHealthFleeGoal: Flee when health drops below 60% during combat
  * - CowProtectCalfGoal: Maternal protection from predators
  * - BullCompetitionGoal: Dominance displays and competition
  * - CalfFollowMotherGoal: Calves follow their mothers
@@ -127,32 +129,35 @@ public abstract class MooshroomMixin {
         // Priority 0: Float
         accessor.betterEcology$getGoalSelector().addGoal(0, new FloatGoal(mooshroom));
 
-        // Priority 1: Protect calf (highest after floating)
-        accessor.betterEcology$getGoalSelector().addGoal(1, new CowProtectCalfGoal(mooshroom, 16.0, 24.0));
+        // Priority 1: Low health flee (flee when health drops below 60%)
+        accessor.betterEcology$getGoalSelector().addGoal(1, new LowHealthFleeGoal(mooshroom, 0.60, 1.2));
 
-        // Priority 2: Bull competition (for adults)
+        // Priority 2: Protect calf (highest after floating)
+        accessor.betterEcology$getGoalSelector().addGoal(2, new CowProtectCalfGoal(mooshroom, 16.0, 24.0));
+
+        // Priority 3: Bull competition (for adults)
         if (!mooshroom.isBaby()) {
-            accessor.betterEcology$getGoalSelector().addGoal(2, new BullCompetitionGoal(mooshroom, 20.0));
+            accessor.betterEcology$getGoalSelector().addGoal(3, new BullCompetitionGoal(mooshroom, 20.0));
         }
 
-        // Priority 3: Breed (using vanilla breeding goal with our constraints)
-        accessor.betterEcology$getGoalSelector().addGoal(3, new BreedGoal(mooshroom, 1.0));
+        // Priority 4: Breed (using vanilla breeding goal with our constraints)
+        accessor.betterEcology$getGoalSelector().addGoal(4, new BreedGoal(mooshroom, 1.0));
 
-        // Priority 4: Grazing (modified for mooshrooms - mycelium instead of grass)
-        accessor.betterEcology$getGoalSelector().addGoal(4, new CowGrazeGoal(mooshroom, 16.0, 0.8));
+        // Priority 5: Grazing (modified for mooshrooms - mycelium instead of grass)
+        accessor.betterEcology$getGoalSelector().addGoal(5, new CowGrazeGoal(mooshroom, 16.0, 0.8));
 
-        // Priority 5: Herd cohesion (adults) or follow mother (calves)
+        // Priority 6: Herd cohesion (adults) or follow mother (calves)
         if (mooshroom.isBaby()) {
-            accessor.betterEcology$getGoalSelector().addGoal(5, new CalfFollowMotherGoal(mooshroom, 24.0, 1.0));
+            accessor.betterEcology$getGoalSelector().addGoal(6, new CalfFollowMotherGoal(mooshroom, 24.0, 1.0));
         } else {
-            accessor.betterEcology$getGoalSelector().addGoal(5, new HerdCohesionGoal(mooshroom, 24.0, 0.8));
+            accessor.betterEcology$getGoalSelector().addGoal(6, new HerdCohesionGoal(mooshroom, 24.0, 0.8));
         }
 
-        // Priority 6: Cud chewing (idle behavior)
-        accessor.betterEcology$getGoalSelector().addGoal(6, new CowCudChewGoal(mooshroom));
+        // Priority 7: Cud chewing (idle behavior)
+        accessor.betterEcology$getGoalSelector().addGoal(7, new CowCudChewGoal(mooshroom));
 
-        // Priority 7: Random stroll (fallback)
-        accessor.betterEcology$getGoalSelector().addGoal(7, new WaterAvoidingRandomStrollGoal(mooshroom, 0.6));
+        // Priority 8: Random stroll (fallback)
+        accessor.betterEcology$getGoalSelector().addGoal(8, new WaterAvoidingRandomStrollGoal(mooshroom, 0.6));
     }
 
     // ============================================================================

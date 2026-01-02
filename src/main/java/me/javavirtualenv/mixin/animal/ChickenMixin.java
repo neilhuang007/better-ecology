@@ -2,8 +2,11 @@ package me.javavirtualenv.mixin.animal;
 
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
+import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.reproduction.NestBuildingHandle;
+import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.Chicken;
 import org.spongepowered.asm.mixin.Mixin;
@@ -124,6 +127,12 @@ public abstract class ChickenMixin {
      */
     @Inject(method = "<init>", at = @At("TAIL"))
     private void onInit(CallbackInfo ci) {
+        Chicken chicken = (Chicken) (Object) this;
+
         registerBehaviors();
+
+        // Add low health flee goal - chickens flee early when damaged
+        MobAccessor accessor = (MobAccessor) chicken;
+        accessor.betterEcology$getGoalSelector().addGoal(1, new LowHealthFleeGoal(chicken, 0.80, 1.4));
     }
 }

@@ -7,8 +7,10 @@ import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.CodeBasedHandle;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyProfile;
+import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.state.EntityState;
+import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.damagesource.DamageSource;
@@ -406,6 +408,12 @@ public abstract class ArmadilloMixin extends Mob {
             if (healthAttribute != null) {
                 healthAttribute.setBaseValue(BASE_HEALTH);
             }
+
+            MobAccessor accessor = (MobAccessor) mob;
+            Armadillo armadillo = (Armadillo) mob;
+
+            // Priority 1: Low health flee (armadillos curl up but also flee when damaged)
+            accessor.betterEcology$getGoalSelector().addGoal(1, new LowHealthFleeGoal(armadillo, 0.50, 1.2));
         }
     }
 

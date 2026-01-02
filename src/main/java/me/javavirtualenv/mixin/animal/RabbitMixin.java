@@ -6,6 +6,7 @@ import me.javavirtualenv.behavior.rabbit.RabbitEvasionConfig;
 import me.javavirtualenv.behavior.rabbit.RabbitForagingConfig;
 import me.javavirtualenv.behavior.rabbit.RabbitThumpConfig;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
+import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.api.EcologyAccess;
@@ -74,9 +75,12 @@ public abstract class RabbitMixin {
         EcologyComponent component = ((EcologyAccess) rabbit).betterEcology$getEcologyComponent();
         MobAccessor accessor = (MobAccessor) rabbit;
 
-        // Primary behavior goal - highest priority for escape behaviors
+        // Low health flee goal - highest priority, triggers at 85% health
+        accessor.betterEcology$getGoalSelector().addGoal(1, new LowHealthFleeGoal(rabbit, 0.85, 1.6));
+
+        // Primary behavior goal - second highest priority for escape behaviors
         RabbitBehaviorGoal rabbitGoal = new RabbitBehaviorGoal(rabbit, component);
-        accessor.betterEcology$getGoalSelector().addGoal(1, rabbitGoal);
+        accessor.betterEcology$getGoalSelector().addGoal(2, rabbitGoal);
 
         // Food caching goal - lower priority, runs when safe
         RabbitBurrowCachingGoal cachingGoal = new RabbitBurrowCachingGoal(rabbit, component);

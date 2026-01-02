@@ -4,6 +4,7 @@ import me.javavirtualenv.behavior.production.SnifferDiggingGoal;
 import me.javavirtualenv.behavior.sniffer.*;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
+import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.production.ResourceProductionHandle;
 import me.javavirtualenv.mixin.MobAccessor;
@@ -40,6 +41,8 @@ public abstract class SnifferMixin {
     private SniffingGoal sniffingGoal;
     @Unique
     private SnifferSocialGoal socialGoal;
+    @Unique
+    private LowHealthFleeGoal fleeGoal;
 
     @Unique
     protected void registerBehaviors() {
@@ -111,6 +114,7 @@ public abstract class SnifferMixin {
         registerDiggingGoal();
         registerSniffingGoal();
         registerSocialGoal();
+        registerFleeGoal();
     }
 
     /**
@@ -152,6 +156,20 @@ public abstract class SnifferMixin {
 
             int goalPriority = 6;
             ((MobAccessor) sniffer).betterEcology$getGoalSelector().addGoal(goalPriority, socialGoal);
+        }
+    }
+
+    /**
+     * Registers the flee goal for low health situations.
+     */
+    private void registerFleeGoal() {
+        Sniffer sniffer = (Sniffer) (Object) this;
+
+        if (fleeGoal == null) {
+            fleeGoal = new LowHealthFleeGoal(sniffer, 0.50, 1.0);
+
+            int goalPriority = 1;
+            ((MobAccessor) sniffer).betterEcology$getGoalSelector().addGoal(goalPriority, fleeGoal);
         }
     }
 }

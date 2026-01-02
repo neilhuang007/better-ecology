@@ -16,6 +16,7 @@ import me.javavirtualenv.ecology.handles.SocialHandle;
 import me.javavirtualenv.ecology.handles.SpawnHandle;
 import me.javavirtualenv.ecology.handles.TemporalHandle;
 import me.javavirtualenv.behavior.horse.HorseBehaviorHandle;
+import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Animal;
@@ -120,5 +121,19 @@ public abstract class HorseMixin {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(EntityType<? extends Horse> entityType, Level level, CallbackInfo ci) {
         registerBehaviors();
+
+        // Register AI goals for this specific horse
+        Horse horse = (Horse) (Object) this;
+        registerHorseGoals(horse);
+    }
+
+    /**
+     * Register horse-specific AI goals.
+     */
+    private void registerHorseGoals(Horse horse) {
+        me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) horse;
+
+        // Priority 1: Low health flee (critical survival - horses are flight animals)
+        accessor.betterEcology$getGoalSelector().addGoal(1, new LowHealthFleeGoal(horse, 0.55, 1.8));
     }
 }

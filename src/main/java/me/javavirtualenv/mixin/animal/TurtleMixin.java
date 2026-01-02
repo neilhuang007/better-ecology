@@ -3,6 +3,7 @@ package me.javavirtualenv.mixin.animal;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
 import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.reproduction.NestBuildingHandle;
@@ -133,5 +134,11 @@ public abstract class TurtleMixin {
         EcologyComponent component = ((EcologyAccess) turtle).betterEcology$getEcologyComponent();
         // Nest building goals are registered by NestBuildingHandle
         // Turtle-specific homing and beach migration can be added here
+
+        // Add low health flee goal - turtles flee when health drops below 40%
+        // Turtles have shells so they fight longer (40% threshold vs 30% default)
+        // Turtles are slow, so flee speed is 0.8
+        MobAccessor accessor = (MobAccessor) pathfinderMob;
+        accessor.betterEcology$getGoalSelector().addGoal(1, new LowHealthFleeGoal(turtle, 0.40, 0.8));
     }
 }

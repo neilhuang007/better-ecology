@@ -7,6 +7,9 @@ import me.javavirtualenv.behavior.frog.FrogSwimmingBehavior;
 import me.javavirtualenv.behavior.frog.TongueAttackBehavior;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
+import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.handles.AgeHandle;
 import me.javavirtualenv.ecology.handles.BehaviorHandle;
 import me.javavirtualenv.ecology.handles.BreedingHandle;
@@ -18,6 +21,7 @@ import me.javavirtualenv.ecology.handles.HungerHandle;
 import me.javavirtualenv.ecology.handles.MovementHandle;
 import me.javavirtualenv.ecology.handles.SocialHandle;
 import me.javavirtualenv.ecology.handles.TemporalHandle;
+import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Animal;
@@ -100,6 +104,19 @@ public abstract class FrogMixin {
      */
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(EntityType<? extends Animal> entityType, Level level, CallbackInfo ci) {
-        registerBehaviors();
+        Frog frog = (Frog) (Object) this;
+
+        // Register custom behaviors
+        if (!behaviorsRegistered) {
+            registerBehaviors();
+            behaviorsRegistered = true;
+        }
+
+        // Add frog-specific goals
+        EcologyComponent component = ((EcologyAccess) frog).betterEcology$getEcologyComponent();
+        MobAccessor accessor = (MobAccessor) frog;
+
+        // Low health flee goal - highest priority, triggers at 70% health
+        accessor.betterEcology$getGoalSelector().addGoal(1, new LowHealthFleeGoal(frog, 0.70, 1.4));
     }
 }

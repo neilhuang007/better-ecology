@@ -3,8 +3,10 @@ package me.javavirtualenv.mixin.animal;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.reproduction.NestBuildingHandle;
+import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.Parrot;
 import org.jetbrains.annotations.Nullable;
@@ -172,6 +174,12 @@ public abstract class ParrotMixin {
     @Inject(method = "<init>", at = @At("TAIL"))
     private void onInit(CallbackInfo ci) {
         registerBehaviors();
+
+        Parrot parrot = (Parrot) (Object) this;
+        MobAccessor accessor = (MobAccessor) parrot;
+
+        // Priority 1: Low health flee (parrots are fragile and flee early)
+        accessor.betterEcology$getGoalSelector().addGoal(1, new LowHealthFleeGoal(parrot, 0.75, 1.6));
 
         // All parrot-specific goals are registered by ParrotBehaviorHandle
         // - MimicGoal: Handles mimicking sounds and warning mimics

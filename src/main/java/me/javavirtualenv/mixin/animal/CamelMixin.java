@@ -5,6 +5,7 @@ import me.javavirtualenv.behavior.camel.DesertEnduranceHandle;
 import me.javavirtualenv.behavior.camel.SandMovementBehavior;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
+import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.camel.Camel;
@@ -45,6 +46,20 @@ public abstract class CamelMixin {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onConstruct(EntityType<? extends Camel> entityType, Level level, CallbackInfo ci) {
         registerBehaviors();
+
+        // Register AI goals for this specific camel
+        Camel camel = (Camel) (Object) this;
+        registerCamelGoals(camel);
+    }
+
+    /**
+     * Register camel-specific AI goals.
+     */
+    private void registerCamelGoals(Camel camel) {
+        me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) camel;
+
+        // Priority 1: Low health flee (critical survival - camels are tough but will flee when hurt)
+        accessor.betterEcology$getGoalSelector().addGoal(1, new LowHealthFleeGoal(camel, 0.45, 1.4));
     }
 
     /**

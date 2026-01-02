@@ -5,7 +5,9 @@ import me.javavirtualenv.behavior.strider.RidingBehavior;
 import me.javavirtualenv.behavior.strider.TemperatureSeekingBehavior;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
+import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
 import me.javavirtualenv.ecology.handles.*;
+import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Strider;
@@ -72,11 +74,22 @@ public abstract class StriderMixin {
     }
 
     /**
+     * Register strider-specific AI goals.
+     */
+    private void registerStriderGoals(Strider strider) {
+        MobAccessor accessor = (MobAccessor) strider;
+
+        // Priority 1: Low health flee - striders flee when health drops below 55%
+        accessor.betterEcology$getGoalSelector().addGoal(1, new LowHealthFleeGoal(strider, 0.55, 1.2));
+    }
+
+    /**
      * Injection point after Strider constructor.
      * Registers strider behaviors once when the first Strider entity is created.
      */
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(EntityType<? extends Strider> entityType, Level level, CallbackInfo ci) {
         registerBehaviors();
+        registerStriderGoals((Strider) (Object) this);
     }
 }

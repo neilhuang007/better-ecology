@@ -5,6 +5,7 @@ import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.CodeBasedHandle;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyProfile;
+import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
 import me.javavirtualenv.ecology.state.EntityState;
 import me.javavirtualenv.behavior.horse.HorseBehaviorHandle;
 import net.minecraft.nbt.CompoundTag;
@@ -806,12 +807,19 @@ public abstract class DonkeyMixin {
 
         @Override
         public void registerGoals(Mob mob, EcologyComponent component, EcologyProfile profile) {
+            me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
+
             // AI priority framework configured via goal priorities
             // Survival: breathe(0), escape_danger(1), flee_predator(2)
             // Physiological: critical_health(3), drink_water(4), eat_food(5)
             // Reproduction: care_for_offspring(7), breed(8)
             // Social: group_cohesion(10)
             // Default: wander(15), idle(16), rest(17)
+
+            // Add low health flee goal at priority 1 (highest priority)
+            if (mob instanceof net.minecraft.world.entity.PathfinderMob pathfinder) {
+                accessor.betterEcology$getGoalSelector().addGoal(1, new LowHealthFleeGoal(pathfinder, 0.50, 1.5));
+            }
         }
 
         @Override

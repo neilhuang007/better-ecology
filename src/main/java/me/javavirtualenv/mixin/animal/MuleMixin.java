@@ -4,6 +4,7 @@ import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.CodeBasedHandle;
 import me.javavirtualenv.ecology.EcologyHandle;
+import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.behavior.horse.HorseBehaviorHandle;
 import net.minecraft.world.entity.PathfinderMob;
@@ -218,6 +219,8 @@ public abstract class MuleMixin {
                     new WaterAvoidingRandomStrollGoal(pathfinder, runSpeed));
                 // Register float goal
                 accessor.betterEcology$getGoalSelector().addGoal(0, new FloatGoal(mob));
+                // Register low health flee goal
+                accessor.betterEcology$getGoalSelector().addGoal(1, new LowHealthFleeGoal(pathfinder, 0.50, 1.5));
             }
         };
     }

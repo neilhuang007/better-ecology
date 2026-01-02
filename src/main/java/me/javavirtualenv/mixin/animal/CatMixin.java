@@ -2,8 +2,14 @@ package me.javavirtualenv.mixin.animal;
 
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
+import me.javavirtualenv.ecology.CodeBasedHandle;
+import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.EcologyProfile;
+import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
 import me.javavirtualenv.ecology.handles.*;
+import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Cat;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
@@ -60,7 +66,7 @@ public abstract class CatMixin {
                 .addHandle(new MovementHandle())
                 .addHandle(new TemporalHandle())
                 .addHandle(new DietHandle())
-                .addHandle(new PredationHandle())
+                .addHandle(new CatPredationHandle())
                 .addHandle(new BreedingHandle())
                 .addHandle(new FelineBehaviorHandle())
                 .build();
@@ -75,5 +81,31 @@ public abstract class CatMixin {
 
     protected void markBehaviorsRegistered() {
         catBehaviorsRegistered = true;
+    }
+
+    /**
+     * Predation handle for cats with low health flee behavior.
+     * Cats are agile predators that will flee when injured.
+     */
+    private static final class CatPredationHandle extends CodeBasedHandle {
+
+        @Override
+        public String id() {
+            return "predation";
+        }
+
+        @Override
+        public void registerGoals(Mob mob, EcologyComponent component, EcologyProfile profile) {
+            if (!(mob instanceof Cat cat)) {
+                return;
+            }
+
+            MobAccessor accessor = (MobAccessor) mob;
+
+            // Register low health flee goal (highest priority)
+            // Cats flee at 55% health with 1.5 speed multiplier (cats are agile)
+            accessor.betterEcology$getGoalSelector().addGoal(1,
+                new LowHealthFleeGoal(cat, 0.55, 1.5));
+        }
     }
 }
