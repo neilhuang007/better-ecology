@@ -27,4 +27,8 @@ replay_pid*
 /.minecraft-sources/
 /.idea/
 /run/
+<<<<<<< HEAD
 /out/
+=======
+nul
+>>>>>>> 7ebd39c79bb6a2cc04217abbfe4c27e593b11dc6

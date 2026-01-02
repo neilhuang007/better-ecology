@@ -18,8 +18,9 @@ import org.joml.Matrix4f;
 import java.util.List;
 
 /**
- * Renders ecology debug information (hunger, energy, condition, social) above mobs
- * when debug mode is enabled. Values are color-coded based on thresholds.
+ * Renders ecology debug information (hunger, energy, condition, social, combat/retreat state)
+ * above mobs when debug mode is enabled. Values are color-coded based on thresholds.
+ * Combat state shown as [CBT], retreat state shown as [RET].
  */
 public final class EcologyDebugRenderer {
 
@@ -187,6 +188,14 @@ public final class EcologyDebugRenderer {
             builder.append("S:").append(social);
         }
 
+        // Add combat/retreat state indicators
+        if (component.state().isInCombat()) {
+            builder.append(" [CBT]");
+        }
+        if (component.state().isRetreating()) {
+            builder.append(" [RET]");
+        }
+
         return builder.toString();
     }
 
@@ -277,6 +286,20 @@ public final class EcologyDebugRenderer {
             String socialText = "S:" + social;
             int color = getColorForValue(social);
             font.drawInBatch(socialText, currentX, 0, color, false, matrix, bufferSource,
+                    Font.DisplayMode.NORMAL, 0, 15728880);
+            currentX += font.width(socialText + " ");
+        }
+
+        // Render combat/retreat state indicators
+        if (component.state().isInCombat()) {
+            String combatText = "[CBT]";
+            font.drawInBatch(combatText, currentX, 0, COLOR_RED, false, matrix, bufferSource,
+                    Font.DisplayMode.NORMAL, 0, 15728880);
+            currentX += font.width(combatText);
+        }
+        if (component.state().isRetreating()) {
+            String retreatText = "[RET]";
+            font.drawInBatch(retreatText, currentX, 0, COLOR_YELLOW, false, matrix, bufferSource,
                     Font.DisplayMode.NORMAL, 0, 15728880);
         }
     }

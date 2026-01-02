@@ -24,6 +24,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Wolf;
 
+import java.util.UUID;
+
 /**
  * Wolf-specific behavior handle.
  * Registers all wolf behaviors including pack hunting, territorial behavior,
@@ -201,6 +203,60 @@ public final class WolfBehaviorHandle extends CodeBasedHandle {
         }
 
         return new CompoundTag();
+    }
+
+    /**
+     * Check if a wolf is hungry.
+     *
+     * @param wolf The wolf to check
+     * @return true if hunger is below threshold
+     */
+    public static boolean isHungry(Wolf wolf) {
+        EcologyComponent component = ((EcologyAccess) wolf).betterEcology$getEcologyComponent();
+        CompoundTag hungerTag = component.getHandleTag("hunger");
+        int hunger = hungerTag.getInt("hunger");
+        return hunger < 40;
+    }
+
+    /**
+     * Check if another wolf is in the same pack.
+     *
+     * @param wolf First wolf
+     * @param other Second wolf
+     * @return true if both wolves are in the same pack
+     */
+    public static boolean isSamePack(Wolf wolf, Wolf other) {
+        EcologyComponent myComponent = ((EcologyAccess) wolf).betterEcology$getEcologyComponent();
+        EcologyComponent otherComponent = ((EcologyAccess) other).betterEcology$getEcologyComponent();
+
+        CompoundTag myTag = myComponent.getHandleTag("behavior");
+        CompoundTag otherTag = otherComponent.getHandleTag("behavior");
+
+        if (!myTag.hasUUID(NBT_PACK_ID) || !otherTag.hasUUID(NBT_PACK_ID)) {
+            return false;
+        }
+
+        UUID myPackId = myTag.getUUID(NBT_PACK_ID);
+        UUID otherPackId = otherTag.getUUID(NBT_PACK_ID);
+
+        return myPackId.equals(otherPackId);
+    }
+
+    /**
+     * Get hierarchy rank of a wolf.
+     *
+     * @param wolf The wolf to check
+     * @return Hierarchy rank (1=alpha, 2=beta, 3=omega)
+     */
+    public static int getHierarchyRank(Wolf wolf) {
+        EcologyComponent component = ((EcologyAccess) wolf).betterEcology$getEcologyComponent();
+        CompoundTag tag = component.getHandleTag("behavior");
+
+        if (!tag.contains(NBT_HIERARCHY_RANK)) {
+            return 3;
+        }
+
+        return tag.getInt(NBT_HIERARCHY_RANK);
     }
 
     @Override
