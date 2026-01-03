@@ -55,12 +55,14 @@ public class PigFeedingGoal extends MoveToBlockGoal {
 
     private final Pig pig;
     private int eatingTimer;
+    private boolean isEating;
     private final Random random = new Random();
 
     public PigFeedingGoal(Pig pig, double speedModifier) {
         super(pig, speedModifier, SEARCH_RANGE, SEARCH_VERTICAL_RANGE);
         this.pig = pig;
         this.eatingTimer = 0;
+        this.isEating = false;
         this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
     }
 
@@ -92,12 +94,14 @@ public class PigFeedingGoal extends MoveToBlockGoal {
     public void start() {
         super.start();
         this.eatingTimer = 0;
+        this.isEating = false;
     }
 
     @Override
     public void stop() {
         super.stop();
         this.eatingTimer = 0;
+        this.isEating = false;
     }
 
     @Override
@@ -115,6 +119,11 @@ public class PigFeedingGoal extends MoveToBlockGoal {
         }
 
         pig.getLookControl().setLookAt(pig.getX(), pig.getY() - 1.0, pig.getZ());
+
+        if (!isEating) {
+            isEating = true;
+            pig.level().broadcastEntityEvent(pig, (byte) 10);
+        }
 
         this.eatingTimer++;
 
@@ -148,6 +157,10 @@ public class PigFeedingGoal extends MoveToBlockGoal {
 
         if (nearestCrop != null) {
             if (nearestDistance < 2.5) {
+                if (!isEating) {
+                    isEating = true;
+                    pig.level().broadcastEntityEvent(pig, (byte) 10);
+                }
                 eatDroppedCrop(nearestCrop);
                 stop();
             } else {

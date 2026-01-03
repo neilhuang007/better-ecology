@@ -6,6 +6,7 @@ import me.javavirtualenv.ecology.EcologyHandle;
 import me.javavirtualenv.ecology.EcologyProfile;
 import me.javavirtualenv.ecology.state.EntityState;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Mob;
 
@@ -136,6 +137,28 @@ public final class AgeHandle implements EcologyHandle {
             return 0;
         }
         return tag.getInt(NBT_AGE_TICKS);
+    }
+
+    /**
+     * Sets a random age for egg-spawned entities (0-100% of maturity age).
+     * This ensures spawn eggs produce entities at various life stages.
+     *
+     * @param component The entity's ecology component
+     * @param random Random source for age determination
+     * @return The random age ticks that were set
+     */
+    public static int setRandomAgeForEggSpawn(EcologyComponent component, RandomSource random) {
+        EcologyProfile profile = component.profile();
+        int maturityAge = 24000; // Default fallback
+
+        if (profile != null) {
+            maturityAge = profile.getIntFast("age", "maturity_age", 24000);
+        }
+
+        CompoundTag tag = component.getHandleTag("age");
+        int randomAge = random.nextInt(maturityAge + 1);
+        tag.putInt(NBT_AGE_TICKS, randomAge);
+        return randomAge;
     }
 
     private record AgeCache(

@@ -9,10 +9,13 @@ import me.javavirtualenv.behavior.flocking.SeparationBehavior;
 import me.javavirtualenv.behavior.predation.AttractionBehavior;
 import me.javavirtualenv.behavior.predation.AvoidanceBehavior;
 import me.javavirtualenv.behavior.predation.EvasionBehavior;
+import me.javavirtualenv.behavior.predation.PredatorFeedingGoal;
 import me.javavirtualenv.behavior.predation.PursuitBehavior;
 import me.javavirtualenv.behavior.wolf.PackHierarchyBehavior;
 import me.javavirtualenv.behavior.wolf.PackHuntingBehavior;
 import me.javavirtualenv.behavior.wolf.PackTerritoryBehavior;
+import me.javavirtualenv.behavior.wolf.WolfPickupItemGoal;
+import me.javavirtualenv.behavior.wolf.WolfShareFoodGoal;
 import me.javavirtualenv.behavior.wolf.WolfPackAttackGoal;
 import me.javavirtualenv.behavior.wolf.WolfSiegeAttackGoal;
 import me.javavirtualenv.ecology.CodeBasedHandle;
@@ -29,7 +32,7 @@ import java.util.UUID;
 /**
  * Wolf-specific behavior handle.
  * Registers all wolf behaviors including pack hunting, territorial behavior,
- * and pack hierarchy management.
+ * and pack hierarchy management, and feeding behaviors.
  */
 public final class WolfBehaviorHandle extends CodeBasedHandle {
 
@@ -74,6 +77,17 @@ public final class WolfBehaviorHandle extends CodeBasedHandle {
         // Register pack hunting attack goal
         accessor.betterEcology$getGoalSelector().addGoal(3,
                 new WolfPackAttackGoal(wolf, 1.0, false));
+        // Register predator feeding goal (priority 4 - below attacks but above steering)
+        accessor.betterEcology$getGoalSelector().addGoal(4,
+                new PredatorFeedingGoal(wolf, 1.2));
+
+        // Register wolf pickup item goal (priority 5 - for gathering food)
+        accessor.betterEcology$getGoalSelector().addGoal(5,
+                new WolfPickupItemGoal(wolf));
+
+        // Register wolf share food goal (priority 5 - can run alongside pickup)
+        accessor.betterEcology$getGoalSelector().addGoal(5,
+                new WolfShareFoodGoal(wolf));
 
         // Register steering behavior goal (lowest priority)
         accessor.betterEcology$getGoalSelector().addGoal(steeringPriority, steeringGoal);

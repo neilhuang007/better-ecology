@@ -35,6 +35,8 @@ public class CowGrazeGoal extends Goal {
     private BlockPos targetGrassPos;
     private int grazeCooldown;
     private int ticksEating;
+    private boolean isEating;
+    private static final int EAT_ANIMATION_TICKS = 40;
 
     public CowGrazeGoal(PathfinderMob mob, double searchRadius, double speedModifier) {
         this(mob, searchRadius, speedModifier, 60);
@@ -49,6 +51,7 @@ public class CowGrazeGoal extends Goal {
         this.setFlags(EnumSet.of(Flag.MOVE));
         this.grazeCooldown = 0;
         this.ticksEating = 0;
+        this.isEating = false;
     }
 
     @Override
@@ -70,6 +73,10 @@ public class CowGrazeGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
+        if (isEating && ticksEating > 0) {
+            return true;
+        }
+
         if (targetGrassPos == null) {
             return false;
         }
@@ -97,11 +104,24 @@ public class CowGrazeGoal extends Goal {
     public void stop() {
         targetGrassPos = null;
         ticksEating = 0;
+        isEating = false;
         mob.getNavigation().stop();
     }
 
     @Override
     public void tick() {
+        if (isEating) {
+            ticksEating--;
+
+            if (ticksEating <= 0) {
+                eatGrass();
+                isEating = false;
+                targetGrassPos = null;
+                grazeCooldown = 400 + mob.getRandom().nextInt(600);
+            }
+            return;
+        }
+
         if (targetGrassPos == null) {
             return;
         }
@@ -110,19 +130,24 @@ public class CowGrazeGoal extends Goal {
 
         // If close enough to grass, start eating
         if (distance < 2.5) {
-            ticksEating++;
-
-            // Eat after 40 ticks (2 seconds)
-            if (ticksEating >= 40) {
-                eatGrass();
-                targetGrassPos = null;
-                ticksEating = 0;
-                grazeCooldown = 400 + mob.getRandom().nextInt(600); // 20-50 second cooldown
-            }
+            startEating();
         } else if (!mob.getNavigation().isDone()) {
             // Not close yet, make sure we're still moving
             mob.getNavigation().moveTo(targetGrassPos.getX(), targetGrassPos.getY(), targetGrassPos.getZ(), speedModifier);
         }
+    }
+
+    private void startEating() {
+        if (targetGrassPos == null || !isGrassBlock(level.getBlockState(targetGrassPos))) {
+            return;
+        }
+
+        isEating = true;
+        ticksEating = EAT_ANIMATION_TICKS;
+
+        level.broadcastEntityEvent(mob, (byte) 10);
+
+        mob.getNavigation().stop();
     }
 
     /**

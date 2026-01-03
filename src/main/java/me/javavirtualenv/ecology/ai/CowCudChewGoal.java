@@ -90,8 +90,12 @@ public class CowCudChewGoal extends Goal {
     public void tick() {
         chewingTicks++;
 
-        // Periodic chewing sounds (use COW_AMBIENT since COW_EAT doesn't exist in 1.21.1)
+        // Re-broadcast animation every 40 ticks to keep it visible
+        // Vanilla eating animation lasts 40 ticks, so we refresh it
         if (chewingTicks % 40 == 0) {
+            level.broadcastEntityEvent(mob, (byte) 10);
+
+            // Play periodic chewing sounds
             level.playSound(null, mob.blockPosition(),
                     SoundEvents.COW_AMBIENT,
                     SoundSource.NEUTRAL,

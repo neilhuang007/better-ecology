@@ -5,6 +5,7 @@ import me.javavirtualenv.ecology.EcologyHandle;
 import me.javavirtualenv.ecology.EcologyProfile;
 import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.seasonal.SeasonalContext;
+import me.javavirtualenv.ecology.state.EntityState;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.Mob;
@@ -40,6 +41,7 @@ public final class HungerHandle implements EcologyHandle {
 			return;
 		}
 
+		EntityState state = component.state();
 		CompoundTag handleTag = component.getHandleTag(id());
 		int currentHunger = getCurrentHunger(handleTag, cache);
 
@@ -70,6 +72,13 @@ public final class HungerHandle implements EcologyHandle {
 			newHunger = Math.max(0, newHunger);
 		}
 		setHunger(handleTag, newHunger);
+
+		// Update state flags for other handlers (e.g., ConditionHandle)
+		// Use 50% of max value as hungry threshold, damageThreshold as starving threshold
+		boolean isHungry = newHunger < (cache.maxValue() / 2);
+		boolean isStarving = newHunger <= cache.damageThreshold();
+		state.setIsHungry(isHungry || isStarving);
+		state.setIsStarving(isStarving);
 
 		// Check for starvation damage (only during active updates, not catch-up)
 		if (elapsedTicks <= 1 && shouldApplyStarvation(mob, newHunger, cache)) {
@@ -211,6 +220,13 @@ public final class HungerHandle implements EcologyHandle {
 
 		// Update hunger value
 		handleTag.putInt(NBT_HUNGER, newHunger);
+
+		// Update state flags after restoration
+		EntityState state = component.state();
+		boolean isHungry = newHunger < (cache.maxValue() / 2);
+		boolean isStarving = newHunger <= cache.damageThreshold;
+		state.setIsHungry(isHungry || isStarving);
+		state.setIsStarving(isStarving);
 	}
 
 	private static final class HungerCache {

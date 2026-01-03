@@ -6,6 +6,7 @@ import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.production.MilkProductionHandle;
 import me.javavirtualenv.ecology.handles.production.ResourceProductionHandle;
 import me.javavirtualenv.ecology.handles.reproduction.NestBuildingHandle;
+import me.javavirtualenv.ecology.spatial.SpatialIndex;
 import me.javavirtualenv.ecology.spawning.BiomeSpawnModifier;
 import me.javavirtualenv.ecology.spawning.SpawnBootstrap;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -74,6 +75,7 @@ public final class EcologyBootstrap {
 		// Reset conservation tracking on server shutdown
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			PopulationRegistry.reset();
+			SpatialIndex.clear();
 		});
 
 		// Initialize spawn density tracker

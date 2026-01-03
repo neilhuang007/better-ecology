@@ -160,6 +160,13 @@ diet:
         world_effect:
           action: "NONE"
 
+      - type: "ENTITY"
+        target: "minecraft:chicken"
+        nutrition: 15
+        method: "HUNT"
+        world_effect:
+          action: "NONE"
+
     secondary:
       # GAMEPLAY EXCEPTION: Wolves hunting skeletons is a Minecraft-specific behavior,
       # not realistic ecology. In real ecosystems, wolves do not hunt undead creatures.
@@ -194,7 +201,7 @@ predation:
     enabled: true
 
     prey:
-      targets: ["minecraft:sheep", "minecraft:rabbit", "minecraft:fox", "minecraft:skeleton"]
+      targets: ["minecraft:sheep", "minecraft:rabbit", "minecraft:fox", "minecraft:chicken", "minecraft:skeleton"]
       selection_rules:
         avoid_babies: true
         avoid_babies_exception: "starving"
@@ -546,6 +553,8 @@ relationships:
       notes: "Secondary prey, hunted opportunistically"
     - entity: "minecraft:fox"
       notes: "Territorial conflict and food source"
+    - entity: "minecraft:chicken"
+      notes: "Small prey, hunted opportunistically"
     - entity: "minecraft:skeleton"
       notes: "GAMEPLAY EXCEPTION: Wolves naturally attack skeletons in Minecraft (vanilla mechanic), not realistic ecology"
 
