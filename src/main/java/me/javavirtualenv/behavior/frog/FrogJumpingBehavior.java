@@ -1,8 +1,8 @@
 package me.javavirtualenv.behavior.frog;
 
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.BehaviorContext;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.frog.Frog;
@@ -198,7 +198,12 @@ public class FrogJumpingBehavior extends SteeringBehavior {
      * Scores a lily pad as a jump target.
      */
     private double scoreLilyPadTarget(Frog frog, BlockPos pos) {
-        double distance = frog.position().distanceTo(Vec3.atCenterOf(pos));
+        Vec3d centerPos = new Vec3d(
+                pos.getX() + 0.5,
+                pos.getY(),
+                pos.getZ() + 0.5
+        );
+        double distance = new Vec3d(frog.position()).distanceTo(centerPos);
 
         // Too close or too far
         if (distance < MIN_JUMP_DISTANCE || distance > MAX_JUMP_DISTANCE) {
@@ -237,7 +242,12 @@ public class FrogJumpingBehavior extends SteeringBehavior {
                     BlockState state = frog.level().getBlockState(checkPos);
 
                     if (state.is(Blocks.WATER)) {
-                        double distance = frog.position().distanceTo(Vec3.atCenterOf(checkPos));
+                        Vec3d centerPos = new Vec3d(
+                                checkPos.getX() + 0.5,
+                                checkPos.getY(),
+                                checkPos.getZ() + 0.5
+                        );
+                        double distance = new Vec3d(frog.position()).distanceTo(centerPos);
                         if (distance < nearestDistance) {
                             nearestDistance = distance;
                             nearest = checkPos;

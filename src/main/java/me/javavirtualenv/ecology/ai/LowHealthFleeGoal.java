@@ -8,6 +8,8 @@ import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.util.DefaultRandomPos;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.EnumSet;
+
 /**
  * AI goal that makes animals flee when their health drops below a threshold while in combat.
  *
@@ -33,6 +35,8 @@ public class LowHealthFleeGoal extends Goal {
         this.healthThresholdPercent = healthThresholdPercent;
         this.fleeSpeed = fleeSpeed;
         this.recentCombatWindowTicks = 200;
+        // Set goal flags to allow proper goal scheduling
+        this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
     }
 
     @Override
@@ -110,6 +114,11 @@ public class LowHealthFleeGoal extends Goal {
         }
 
         mob.getLookControl().setLookAt(attacker);
+    }
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
     }
 
     /**

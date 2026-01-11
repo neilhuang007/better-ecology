@@ -1,8 +1,8 @@
 package me.javavirtualenv.behavior.bee;
 
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.BehaviorContext;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import me.javavirtualenv.mixin.animal.BeeAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -34,8 +34,8 @@ public class HiveReturnBehavior extends SteeringBehavior {
     }
 
     public HiveReturnBehavior(double weight) {
-        super(weight);
         this.hivePos = null;
+        setWeight(weight);
         this.isReturning = false;
     }
 

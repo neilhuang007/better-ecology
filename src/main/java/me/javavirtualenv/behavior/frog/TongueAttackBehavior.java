@@ -1,8 +1,8 @@
 package me.javavirtualenv.behavior.frog;
 
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.BehaviorContext;
-import me.javavirtualenv.behavior.steering.SeekBehavior;
+import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.behavior.core.SeekBehavior;
 import me.javavirtualenv.behavior.predation.PreySelector;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;

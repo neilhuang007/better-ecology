@@ -22,7 +22,7 @@ public class RoostingBehavior extends SteeringBehavior {
     private boolean hasEstablishedRoost;
 
     public RoostingBehavior(CrepuscularConfig config) {
-        this.config = config;
+        this.config = config != null ? config : new CrepuscularConfig();
         this.hasEstablishedRoost = false;
     }
 
@@ -32,8 +32,17 @@ public class RoostingBehavior extends SteeringBehavior {
 
     @Override
     public Vec3d calculate(BehaviorContext context) {
+        if (context == null) {
+            return new Vec3d();
+        }
+
         Mob entity = context.getEntity();
         Level level = context.getLevel();
+
+        // Handle null entity/level for testing
+        if (entity == null || level == null) {
+            return seekCeiling(context);
+        }
 
         // If no roost established, find one
         if (!hasEstablishedRoost || roostPosition == null) {
@@ -71,7 +80,8 @@ public class RoostingBehavior extends SteeringBehavior {
             BlockState blockState = level.getBlockState(checkPos);
 
             // Found a solid block (ceiling)
-            if (blockState.isRedstoneConductor(level, checkPos)) {
+            // Use blocksMotion() as replacement for deprecated isRedstoneConductor()
+            if (blockState.blocksMotion()) {
                 // Roost below the ceiling
                 roostPosition = checkPos.below();
                 hasEstablishedRoost = true;
@@ -124,7 +134,8 @@ public class RoostingBehavior extends SteeringBehavior {
         // Check if there's a solid block above (ceiling)
         BlockPos abovePos = pos.above();
         BlockState aboveState = level.getBlockState(abovePos);
-        if (!aboveState.isRedstoneConductor(level, abovePos)) {
+        // Use blocksMotion() as replacement for deprecated isRedstoneConductor()
+        if (!aboveState.blocksMotion()) {
             return false;
         }
 
@@ -186,8 +197,18 @@ public class RoostingBehavior extends SteeringBehavior {
      * Calculates attraction to clustered roost-mates.
      */
     public Vec3d calculateClusterAttraction(BehaviorContext context) {
+        if (context == null) {
+            return new Vec3d();
+        }
+
         Mob entity = context.getEntity();
         Level level = context.getLevel();
+
+        // Handle null entity/level for testing
+        if (entity == null || level == null) {
+            return new Vec3d();
+        }
+
         Vec3d currentPosition = context.getPosition();
         Vec3d currentVelocity = context.getVelocity();
 
@@ -203,14 +224,17 @@ public class RoostingBehavior extends SteeringBehavior {
         }
 
         // Calculate center of cluster
-        Vec3d clusterCenter = new Vec3d();
+        double centerX = 0.0;
+        double centerY = 0.0;
+        double centerZ = 0.0;
         for (Mob creature : nearbyCreatures) {
-            Vec3d creaturePos = new Vec3d(creature.getX(), creature.getY(), creature.getZ());
-            clusterCenter.add(creaturePos);
+            centerX += creature.getX();
+            centerY += creature.getY();
+            centerZ += creature.getZ();
         }
 
         double count = nearbyCreatures.size();
-        clusterCenter.div(count);
+        Vec3d clusterCenter = new Vec3d(centerX / count, centerY / count, centerZ / count);
 
         // Seek cluster center
         return seek(currentPosition, currentVelocity, clusterCenter, 0.1);

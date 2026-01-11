@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "better-ecology-gametest",
+  "version": "1.0.0",
+  "name": "Better Ecology Game Tests",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-gametest": [
+      "me.javavirtualenv.gametest.BetterEcologyGameTests",
+      "me.javavirtualenv.gametest.CowBehaviorGameTests",
+      "me.javavirtualenv.gametest.SheepBehaviorGameTests",
+      "me.javavirtualenv.gametest.WolfBehaviorGameTests",
+      "me.javavirtualenv.gametest.PigBehaviorGameTests",
+      "me.javavirtualenv.gametest.ChickenBehaviorGameTests",
+      "me.javavirtualenv.gametest.RabbitBehaviorGameTests",
+      "me.javavirtualenv.gametest.FoxBehaviorGameTests"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.4",
+    "minecraft": "~1.21.1",
+    "fabric": "*",
+    "fabric-gametest-api-v1": "*",
+    "better-ecology": "*"
+  }
+}

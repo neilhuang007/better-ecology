@@ -1,8 +1,8 @@
 package me.javavirtualenv.behavior.strider;
 
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.BehaviorContext;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.Strider;
 import net.minecraft.world.entity.player.Player;
@@ -36,8 +36,8 @@ public class RidingBehavior extends SteeringBehavior {
     }
 
     public RidingBehavior(double weight) {
-        super(weight);
         this.isBeingRidden = false;
+        setWeight(weight);
         this.rider = null;
         this.breedingCooldown = 0;
         this.rideComfort = 1.0;

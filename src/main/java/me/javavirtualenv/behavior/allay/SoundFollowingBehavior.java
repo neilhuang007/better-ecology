@@ -1,8 +1,8 @@
 package me.javavirtualenv.behavior.allay;
 
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.BehaviorContext;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.allay.Allay;
@@ -41,8 +41,8 @@ public class SoundFollowingBehavior extends SteeringBehavior {
     }
 
     public SoundFollowingBehavior(double weight) {
-        super(weight);
         this.soundSource = null;
+        setWeight(weight);
         this.isJukebox = false;
         this.isDancing = false;
         this.danceTicks = 0;

@@ -95,6 +95,7 @@ public abstract class PigMixin {
     protected void registerBehaviors() {
         AnimalConfig config = AnimalConfig.builder(ResourceLocation.withDefaultNamespace("pig"))
                 .addHandle(new PigHungerHandle())
+                .addHandle(new PigThirstHandle())
                 .addHandle(new PigConditionHandle())
                 .addHandle(new PigEnergyHandle())
                 .addHandle(new PigAgeHandle())
@@ -201,6 +202,92 @@ public abstract class PigMixin {
 
         private boolean shouldApplyStarvation(Mob mob, int hunger) {
             return hunger <= DAMAGE_THRESHOLD && mob.level().getDifficulty() != Difficulty.PEACEFUL;
+        }
+    }
+
+    /**
+     * Thirst system for pigs.
+     * Pigs need regular water access and will seek water when thirsty.
+     */
+    private static final class PigThirstHandle extends CodeBasedHandle {
+        private static final String NBT_THIRST = "thirst";
+        private static final String NBT_LAST_DAMAGE_TICK = "lastThirstDamageTick";
+
+        private static final long MAX_CATCH_UP_TICKS = 24000L; // 1 Minecraft day
+        private static final int MAX_THIRST = 100;
+        private static final int STARTING_THIRST = 100;
+        private static final double DECAY_RATE = 0.015;
+        private static final int THIRST_THRESHOLD = 20;
+        private static final int DEHYDRATION_THRESHOLD = 5;
+        private static final float DEHYDRATION_DAMAGE = 1.0f;
+        private static final int DAMAGE_INTERVAL = 200;
+
+        @Override
+        public String id() {
+            return "thirst";
+        }
+
+        @Override
+        public int tickInterval() {
+            return 20;
+        }
+
+        @Override
+        public void tick(Mob mob, EcologyComponent component, EcologyProfile profile) {
+            CompoundTag tag = component.getHandleTag(id());
+            int currentThirst = getCurrentThirst(tag);
+
+            long elapsed = component.elapsedTicks();
+            // Cap elapsed ticks to prevent instant dehydration
+            long effectiveTicks = Math.min(elapsed, MAX_CATCH_UP_TICKS);
+
+            // Scale decay rate by elapsed ticks (for catch-up)
+            long scaledDecay = (long) (DECAY_RATE * effectiveTicks);
+
+            int newThirst = currentThirst - (int) scaledDecay;
+            if (elapsed > 1) {
+                // Prevent dehydration damage on chunk load
+                newThirst = Math.max(DEHYDRATION_THRESHOLD + 1, newThirst);
+            } else {
+                newThirst = Math.max(0, newThirst);
+            }
+
+            setThirst(tag, newThirst);
+
+            // Apply dehydration damage if critically thirsty
+            if (elapsed <= 1 && shouldApplyDehydration(mob, newThirst)) {
+                int currentTick = mob.tickCount;
+                int lastDamageTick = getLastDamageTick(tag);
+                if (currentTick - lastDamageTick >= DAMAGE_INTERVAL) {
+                    mob.hurt(mob.level().damageSources().dryOut(), DEHYDRATION_DAMAGE);
+                    setLastDamageTick(tag, currentTick);
+                }
+            }
+        }
+
+        @Override
+        public void writeNbt(Mob mob, EcologyComponent component, EcologyProfile profile, CompoundTag tag) {
+            tag.put(id(), component.getHandleTag(id()).copy());
+        }
+
+        private int getCurrentThirst(CompoundTag tag) {
+            return tag.contains(NBT_THIRST) ? tag.getInt(NBT_THIRST) : STARTING_THIRST;
+        }
+
+        private void setThirst(CompoundTag tag, int value) {
+            tag.putInt(NBT_THIRST, value);
+        }
+
+        private int getLastDamageTick(CompoundTag tag) {
+            return tag.getInt(NBT_LAST_DAMAGE_TICK);
+        }
+
+        private void setLastDamageTick(CompoundTag tag, int tick) {
+            tag.putInt(NBT_LAST_DAMAGE_TICK, tick);
+        }
+
+        private boolean shouldApplyDehydration(Mob mob, int thirst) {
+            return thirst <= DEHYDRATION_THRESHOLD && mob.level().getDifficulty() != Difficulty.PEACEFUL;
         }
     }
 
@@ -492,6 +579,8 @@ public abstract class PigMixin {
             accessor.betterEcology$getGoalSelector().addGoal(0, new FloatGoal(pig));
             accessor.betterEcology$getGoalSelector().addGoal(1,
                 new me.javavirtualenv.ecology.ai.LowHealthFleeGoal(pig, 0.65, 1.2));
+            accessor.betterEcology$getGoalSelector().addGoal(2,
+                new me.javavirtualenv.ecology.ai.SeekWaterGoal(pig, 1.0, 16));
             accessor.betterEcology$getGoalSelector().addGoal(3, new PigTruffleSeekGoal(pig));
             accessor.betterEcology$getGoalSelector().addGoal(4, new WaterAvoidingRandomStrollGoal(pig, 0.3));
             accessor.betterEcology$getGoalSelector().addGoal(5, new PigRootingGoal(pig, 0.6));

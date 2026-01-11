@@ -1,8 +1,8 @@
 package me.javavirtualenv.behavior.strider;
 
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.BehaviorContext;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.Strider;
@@ -40,8 +40,8 @@ public class TemperatureSeekingBehavior extends SteeringBehavior {
     }
 
     public TemperatureSeekingBehavior(double weight) {
-        super(weight);
         this.currentTemperature = 0.5;
+        setWeight(weight);
         this.isFreezing = false;
         this.isPanicking = false;
         this.coldTicks = 0;

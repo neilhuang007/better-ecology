@@ -1,0 +1,12 @@
+{
+  "structures": [
+    {
+      "structure": "better-ecology-gametest:empty_platform",
+      "placement": {
+        "rotation": "NONE",
+        "mirror": "NONE",
+        "position": [0, 0, 0]
+      }
+    }
+  ]
+}

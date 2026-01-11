@@ -1,8 +1,8 @@
 package me.javavirtualenv.behavior.bee;
 
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.BehaviorContext;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.Bee;
@@ -39,8 +39,8 @@ public class WaggleDanceBehavior extends SteeringBehavior {
     }
 
     public WaggleDanceBehavior(double weight) {
-        super(weight);
         this.danceTimer = 0;
+        setWeight(weight);
         this.foodLocation = null;
         this.isDancing = false;
         this.danceCenter = null;

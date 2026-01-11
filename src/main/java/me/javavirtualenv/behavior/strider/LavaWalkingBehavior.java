@@ -1,8 +1,8 @@
 package me.javavirtualenv.behavior.strider;
 
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.BehaviorContext;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.Strider;
@@ -38,8 +38,8 @@ public class LavaWalkingBehavior extends SteeringBehavior {
     }
 
     public LavaWalkingBehavior(double weight) {
-        super(weight);
         this.isInLava = false;
+        setWeight(weight);
         this.isFreezing = false;
         this.heatResistance = 1.0;
         this.freezingTicks = 0;

@@ -2,17 +2,17 @@ package me.javavirtualenv.ecology.handles;
 
 import me.javavirtualenv.behavior.BehaviorRule;
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 
 /**
- * Adapter that wraps a steering.SteeringBehavior to implement BehaviorRule.
+ * Adapter that wraps a SteeringBehavior to implement BehaviorRule.
  * <p>
- * This adapter bridges the incompatibility between two different behavior hierarchies:
- * - me.javavirtualenv.behavior.core.SteeringBehavior (implements BehaviorRule)
- * - me.javavirtualenv.behavior.steering.SteeringBehavior (does not implement BehaviorRule)
+ * This adapter bridges the compatibility between the behavior system:
+ * - Uses me.javavirtualenv.behavior.core.SteeringBehavior from the core package
+ * - Implements the BehaviorRule interface for integration with the behavior registry
  * <p>
- * The adapter converts between different BehaviorContext types and delegates
- * the calculate call to the wrapped steering behavior.
+ * The adapter configures behavior context with appropriate speed/force parameters
+ * and delegates the calculate call to the wrapped steering behavior.
  */
 public class SteeringBehaviorAdapter implements BehaviorRule {
 
@@ -36,9 +36,9 @@ public class SteeringBehaviorAdapter implements BehaviorRule {
             return new Vec3d();
         }
 
-        // Convert from core.BehaviorContext to steering.BehaviorContext
-        me.javavirtualenv.behavior.steering.BehaviorContext steeringContext =
-            new me.javavirtualenv.behavior.steering.BehaviorContext.Builder()
+        // Create behavior context with configured parameters
+        me.javavirtualenv.behavior.core.BehaviorContext steeringContext =
+            new me.javavirtualenv.behavior.core.BehaviorContext.Builder()
                 .self(context.getEntity())
                 .position(context.getPosition())
                 .velocity(context.getVelocity())

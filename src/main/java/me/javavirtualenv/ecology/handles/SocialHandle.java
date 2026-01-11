@@ -7,6 +7,7 @@ import me.javavirtualenv.ecology.spatial.SpatialIndex;
 import me.javavirtualenv.ecology.state.EntityState;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Mob;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Handles social needs for pack/herd animals.
@@ -16,6 +17,7 @@ public final class SocialHandle implements EcologyHandle {
     private static final String CACHE_KEY = "better-ecology:social-cache";
     private static final String NBT_SOCIAL = "social";
     private static final String NBT_LAST_GROUP_CHECK = "lastGroupCheck";
+    private static final String NBT_LONELINESS_THRESHOLD = "lonelinessThreshold";
     private static final long MAX_CATCH_UP_TICKS = 24000L;
 
     @Override
@@ -42,6 +44,12 @@ public final class SocialHandle implements EcologyHandle {
         }
 
         CompoundTag tag = component.getHandleTag(id());
+
+        // Initialize loneliness threshold in NBT if not present
+        if (!tag.contains(NBT_LONELINESS_THRESHOLD)) {
+            tag.putInt(NBT_LONELINESS_THRESHOLD, cache.lonelinessThreshold);
+        }
+
         int currentSocial = getCurrentSocial(tag, cache);
         boolean currentlyLonely = currentSocial < cache.lonelinessThreshold;
 
@@ -147,13 +155,35 @@ public final class SocialHandle implements EcologyHandle {
         return SpatialIndex.hasNearbySameType(mob, cache.groupRadius);
     }
 
+    /**
+     * Checks if an entity is currently lonely based on social value vs threshold.
+     * Initializes loneliness threshold from cache if not present in NBT.
+     */
     public static boolean isLonely(EcologyComponent component) {
+        return isLonely(component, null);
+    }
+
+    /**
+     * Checks if an entity is currently lonely based on social value vs threshold.
+     * Uses provided cache to initialize threshold if not in NBT.
+     */
+    public static boolean isLonely(EcologyComponent component, @Nullable SocialCache cache) {
         CompoundTag tag = component.getHandleTag("social");
         if (!tag.contains(NBT_SOCIAL)) {
             return false; // No social system = not lonely
         }
         int socialValue = tag.getInt(NBT_SOCIAL);
-        int threshold = tag.getInt("lonelinessThreshold");
+
+        // Initialize threshold from cache if not present in NBT
+        if (!tag.contains(NBT_LONELINESS_THRESHOLD)) {
+            if (cache != null) {
+                tag.putInt(NBT_LONELINESS_THRESHOLD, cache.lonelinessThreshold);
+            } else {
+                tag.putInt(NBT_LONELINESS_THRESHOLD, 30); // Default fallback
+            }
+        }
+
+        int threshold = tag.getInt(NBT_LONELINESS_THRESHOLD);
         return socialValue < threshold;
     }
 

@@ -57,7 +57,7 @@ internal_state:
   hunger:
     decay_rate: 0.025           # Moderate hunger decay for active predator
   thirst:
-    enabled: false
+    enabled: true
   age:
     baby_duration: 24000        # 20 minutes as pup
     max_age: null               # No natural death
@@ -147,6 +147,13 @@ diet:
           action: "NONE"
 
       - type: "ENTITY"
+        target: "minecraft:pig"
+        nutrition: 40
+        method: "HUNT"
+        world_effect:
+          action: "NONE"
+
+      - type: "ENTITY"
         target: "minecraft:rabbit"
         nutrition: 25
         method: "HUNT"
@@ -201,7 +208,7 @@ predation:
     enabled: true
 
     prey:
-      targets: ["minecraft:sheep", "minecraft:rabbit", "minecraft:fox", "minecraft:chicken", "minecraft:skeleton"]
+      targets: ["minecraft:sheep", "minecraft:pig", "minecraft:rabbit", "minecraft:fox", "minecraft:chicken", "minecraft:skeleton"]
       selection_rules:
         avoid_babies: true
         avoid_babies_exception: "starving"

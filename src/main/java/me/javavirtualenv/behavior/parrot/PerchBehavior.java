@@ -1,6 +1,6 @@
 package me.javavirtualenv.behavior.parrot;
 
-import me.javavirtualenv.behavior.steering.SeekBehavior;
+import me.javavirtualenv.behavior.core.SeekBehavior;
 import me.javavirtualenv.ecology.EcologyComponent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -90,14 +90,15 @@ public class PerchBehavior {
 
         // Check if the block is solid
         BlockState blockState = parrot.level().getBlockState(pos);
-        if (!blockState.isSolidRender(parrot.level(), pos)) {
+        // Use blocksMotion() and isSolid() as replacement for deprecated isSolidRender()
+        if (!blockState.blocksMotion() && !blockState.isSolid()) {
             return false;
         }
 
         // Check if there's space above
         BlockPos abovePos = pos.above();
         BlockState aboveState = parrot.level().getBlockState(abovePos);
-        if (aboveState.isSolidRender(parrot.level(), abovePos)) {
+        if (aboveState.blocksMotion() && aboveState.isSolid()) {
             return false;
         }
 
@@ -413,7 +414,8 @@ public class PerchBehavior {
             BlockPos checkPos = new BlockPos(currentPos.getX(), y, currentPos.getZ());
             BlockState blockState = parrot.level().getBlockState(checkPos);
 
-            if (blockState.isSolidRender(parrot.level(), checkPos)) {
+            // Use blocksMotion() and isSolid() as replacement for deprecated isSolidRender()
+            if (blockState.blocksMotion() || blockState.isSolid()) {
                 // Found ground, return position above it
                 return checkPos.above();
             }

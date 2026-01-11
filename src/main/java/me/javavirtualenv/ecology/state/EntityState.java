@@ -205,7 +205,7 @@ public final class EntityState {
     }
 
     public void setIsStarving(boolean starving) {
-        if (isStarving != starving) {
+        if (isStarving == null || isStarving != starving) {
             isStarving = starving;
             stateChanged = true;
         }
@@ -217,7 +217,7 @@ public final class EntityState {
     }
 
     public void setIsDehydrated(boolean dehydrated) {
-        if (isDehydrated != dehydrated) {
+        if (isDehydrated == null || isDehydrated != dehydrated) {
             isDehydrated = dehydrated;
             stateChanged = true;
         }

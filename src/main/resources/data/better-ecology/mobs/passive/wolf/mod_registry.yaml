@@ -128,7 +128,21 @@ internal_state:
 
   # Thirst system
   thirst:
-    enabled: false
+    enabled: true
+    max_value: 100
+    starting_value: 10
+    decay_rate: 0.02
+
+    thresholds:
+      satiated: 80
+      thirsty: 50
+      very_thirsty: 25
+      dehydrated: 10
+
+    dehydration:
+      damage_threshold: 5
+      damage_amount: 1
+      damage_interval: 200
 
   # Body condition
   condition:
@@ -312,6 +326,17 @@ diet:
         health_effect: 0
 
       - type: "ENTITY"
+        target: "minecraft:pig"
+        nutrition: 40
+        saturation: 8000
+        consumption_time: 100
+        method: "HUNT"
+        world_effect:
+          action: "NONE"
+        condition_gain: 8
+        health_effect: 0
+
+      - type: "ENTITY"
         target: "minecraft:rabbit"
         nutrition: 25
         saturation: 5000
@@ -320,6 +345,17 @@ diet:
         world_effect:
           action: "NONE"
         condition_gain: 5
+        health_effect: 0
+
+      - type: "ENTITY"
+        target: "minecraft:chicken"
+        nutrition: 15
+        saturation: 3000
+        consumption_time: 60
+        method: "HUNT"
+        world_effect:
+          action: "NONE"
+        condition_gain: 3
         health_effect: 0
 
       - type: "ENTITY"
@@ -390,7 +426,7 @@ predation:
 
     # Prey selection
     prey:
-      targets: ["minecraft:sheep", "minecraft:rabbit", "minecraft:fox", "minecraft:skeleton"]
+      targets: ["minecraft:sheep", "minecraft:pig", "minecraft:rabbit", "minecraft:chicken", "minecraft:fox", "minecraft:skeleton"]
 
       selection_rules:
         avoid_babies: true

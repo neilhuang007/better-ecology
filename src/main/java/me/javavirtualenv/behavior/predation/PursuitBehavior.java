@@ -88,23 +88,48 @@ public class PursuitBehavior extends SteeringBehavior {
     }
 
     /**
-     * Calculates pursuit force with interception prediction.
+     * Calculates pursuit force with interception prediction using constant bearing strategy.
+     * Based on research: predators use interception course rather than direct pursuit.
+     * The constant bearing strategy predicts where prey will be based on relative velocities.
      */
     private Vec3d calculatePursuit(Vec3d predatorPos, Vec3d predatorVelocity,
                                     Entity prey, Vec3d preyPos) {
-        // Predict where prey will be
+        // Get prey velocity
         Vec3d preyVelocity = new Vec3d(
             prey.getDeltaMovement().x,
             prey.getDeltaMovement().y,
             prey.getDeltaMovement().z
         );
 
+        // Calculate relative velocity (prey relative to predator)
+        Vec3d relativeVelocity = Vec3d.sub(preyVelocity, predatorVelocity);
+
+        // Calculate current distance to prey
+        Vec3d toPrey = Vec3d.sub(preyPos, predatorPos);
+        double distance = toPrey.magnitude();
+
+        // Calculate time to intercept using constant bearing strategy
+        // t = distance / closing_speed where closing_speed is speed along the line of sight
+        double closingSpeed = 0.0;
+        if (distance > 0.001) {
+            Vec3d toPreyNormalized = toPrey.copy();
+            toPreyNormalized.normalize();
+            closingSpeed = -relativeVelocity.dot(toPreyNormalized);
+        }
+
+        // Only predict if we're closing in
+        double interceptTime = predictionTime;
+        if (closingSpeed > 0.01) {
+            interceptTime = Math.min(distance / closingSpeed, predictionTime * 2.0);
+        }
+
+        // Predict where prey will be at intercept time
         Vec3d predictedPreyPos = preyPos.copy();
         Vec3d prediction = preyVelocity.copy();
-        prediction.mult(predictionTime);
+        prediction.mult(interceptTime);
         predictedPreyPos.add(prediction);
 
-        // Seek predicted position
+        // Seek predicted position (constant bearing interception)
         Vec3d steer = seek(predatorPos, predatorVelocity, predictedPreyPos, maxPursuitSpeed);
         steer.limit(maxPursuitForce);
         return steer;

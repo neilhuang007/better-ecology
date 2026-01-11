@@ -1,0 +1,51 @@
+package me.javavirtualenv.behavior.flocking;
+
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.Level;
+
+/**
+ * Simple test entity implementation for unit testing flocking behaviors.
+ * Uses the PIG entity type as a placeholder since we can't use TEST_ENTITY directly.
+ * The entity type doesn't matter for testing since we only use position and velocity.
+ */
+public class SimpleTestEntity extends Mob {
+    private final int customId;
+
+    public SimpleTestEntity(double x, double y, double z) {
+        this(x, y, z, 0, 0, 0);
+    }
+
+    public SimpleTestEntity(double x, double y, double z, double vx, double vy, double vz) {
+        this(x, y, z, vx, vy, vz, (int) (x * 1000 + y * 100 + z));
+    }
+
+    public SimpleTestEntity(double x, double y, double z, double vx, double vy, double vz, int id) {
+        super(EntityType.PIG, (Level) null);
+        this.customId = id;
+        this.setPos(x, y, z);
+        this.setDeltaMovement(vx, vy, vz);
+    }
+
+    @Override
+    public int getId() {
+        return customId;
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        // No synched data needed for tests
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag compoundTag) {
+        // No save data needed for tests
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag compoundTag) {
+        // No save data needed for tests
+    }
+}

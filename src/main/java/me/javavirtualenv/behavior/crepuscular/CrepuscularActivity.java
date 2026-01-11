@@ -21,7 +21,7 @@ public class CrepuscularActivity {
     private static final int NIGHT_START = 14000;
 
     public CrepuscularActivity(CrepuscularConfig config) {
-        this.config = config;
+        this.config = config != null ? config : new CrepuscularConfig();
     }
 
     public CrepuscularActivity() {
@@ -57,7 +57,7 @@ public class CrepuscularActivity {
      * Checks if it is currently nighttime (beyond twilight).
      */
     public boolean isNighttime(long dayTime) {
-        return dayTime > SUNSET_END && dayTime < SUNRISE_START;
+        return dayTime > SUNSET_END || dayTime < SUNRISE_END;
     }
 
     /**

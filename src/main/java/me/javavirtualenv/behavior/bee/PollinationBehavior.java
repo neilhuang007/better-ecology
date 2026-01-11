@@ -1,8 +1,8 @@
 package me.javavirtualenv.behavior.bee;
 
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.BehaviorContext;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import me.javavirtualenv.ecology.spatial.BlockSpatialCache;
 import me.javavirtualenv.mixin.animal.BeeAccessor;
 import net.minecraft.core.BlockPos;
@@ -53,8 +53,8 @@ public class PollinationBehavior extends SteeringBehavior {
     }
 
     public PollinationBehavior(double weight) {
-        super(weight);
         this.flowerMemory = new ArrayList<>();
+        setWeight(weight);
         this.pollinationCooldown = 0;
         this.hasNectar = false;
         this.currentTarget = null;

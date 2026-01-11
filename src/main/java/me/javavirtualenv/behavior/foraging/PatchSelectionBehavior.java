@@ -77,7 +77,7 @@ public class PatchSelectionBehavior {
      * Assesses patch quality at a specific location.
      */
     public double assessPatchQuality(Level level, BlockPos center) {
-        if (center == null) {
+        if (center == null || level == null) {
             return 0.0;
         }
 
@@ -95,7 +95,7 @@ public class PatchSelectionBehavior {
                         totalBlocks++;
                         BlockState state = level.getBlockState(pos);
 
-                        if (isTargetBlock(state.getBlock())) {
+                        if (state != null && isTargetBlock(state.getBlock())) {
                             grassBlocks++;
                         }
                     }

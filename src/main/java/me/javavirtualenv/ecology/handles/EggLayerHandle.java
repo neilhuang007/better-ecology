@@ -60,12 +60,7 @@ public final class EggLayerHandle implements EcologyHandle {
 
         ChickenLayEggGoal layEggGoal = new ChickenLayEggGoal(
             chicken,
-            eggLayingBehavior,
-            cache.minLayInterval(),
-            cache.maxLayInterval(),
-            cache.hungerThreshold(),
-            cache.energyThreshold(),
-            cache.goldenEggChance()
+            eggLayingBehavior
         );
 
         ChickenEatGrainGoal eatGrainGoal = new ChickenEatGrainGoal(

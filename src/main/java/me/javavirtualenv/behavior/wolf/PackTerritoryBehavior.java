@@ -1,15 +1,18 @@
 package me.javavirtualenv.behavior.wolf;
 
-import me.javavirtualenv.behavior.steering.BehaviorContext;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import me.javavirtualenv.behavior.core.Vec3d;
+import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.level.Level;
-import net.minecraft.core.BlockPos;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -78,17 +81,42 @@ public class PackTerritoryBehavior extends SteeringBehavior {
 
     /**
      * Initializes or updates pack territory data.
+     * Territory center is persisted in NBT and coordinated via pack leader.
      */
     private void initializePackData(Wolf wolf) {
         if (packId == null) {
             packId = getPackId(wolf);
         }
 
+        // Load territory center from NBT if not in memory
         if (territoryCenter == null) {
-            // Territory center is where the pack formed
+            territoryCenter = loadTerritoryCenter(wolf);
+        }
+
+        // If still null, initialize as pack leader (only alpha wolves initiate territory)
+        if (territoryCenter == null && isPackLeader(wolf)) {
             territoryCenter = Vec3d.fromMinecraftVec3(wolf.position());
             saveTerritoryData(wolf);
         }
+    }
+
+    /**
+     * Checks if this wolf is the pack leader (alpha).
+     * Pack leaders are responsible for initializing territory.
+     */
+    private boolean isPackLeader(Wolf wolf) {
+        if (!(wolf instanceof EcologyAccess access)) {
+            return false;
+        }
+
+        EcologyComponent component = access.betterEcology$getEcologyComponent();
+        if (component == null) {
+            return false;
+        }
+
+        CompoundTag packTag = component.getHandleTag("pack");
+        UUID alphaId = packTag.hasUUID("alpha_id") ? packTag.getUUID("alpha_id") : null;
+        return alphaId == null || alphaId.equals(wolf.getUUID());
     }
 
     /**
@@ -277,20 +305,82 @@ public class PackTerritoryBehavior extends SteeringBehavior {
     }
 
     /**
-     * Gets or generates pack ID.
+     * Gets or generates pack ID from NBT storage.
+     * Reuses the same logic as PackHierarchyBehavior for consistency.
      */
     private UUID getPackId(Wolf wolf) {
-        if (packId == null) {
-            packId = wolf.getUUID();
+        if (packId != null) {
+            return packId;
         }
+
+        if (!(wolf instanceof EcologyAccess access)) {
+            packId = wolf.getUUID();
+            return packId;
+        }
+
+        EcologyComponent component = access.betterEcology$getEcologyComponent();
+        if (component == null) {
+            packId = wolf.getUUID();
+            return packId;
+        }
+
+        CompoundTag packTag = component.getHandleTag("pack");
+        String packIdStr = packTag.getString("pack_id");
+
+        if (packIdStr.isEmpty()) {
+            packId = wolf.getUUID();
+            packTag.putUUID("pack_id", packId);
+        } else {
+            packId = UUID.fromString(packIdStr);
+        }
+
         return packId;
     }
 
     /**
-     * Saves territory data.
+     * Loads territory center from NBT storage.
+     */
+    private Vec3d loadTerritoryCenter(Wolf wolf) {
+        if (!(wolf instanceof EcologyAccess access)) {
+            return null;
+        }
+
+        EcologyComponent component = access.betterEcology$getEcologyComponent();
+        if (component == null) {
+            return null;
+        }
+
+        CompoundTag packTag = component.getHandleTag("pack");
+        if (!packTag.contains("territory_center_x")) {
+            return null;
+        }
+
+        double x = packTag.getDouble("territory_center_x");
+        double y = packTag.getDouble("territory_center_y");
+        double z = packTag.getDouble("territory_center_z");
+
+        return new Vec3d(x, y, z);
+    }
+
+    /**
+     * Saves territory data to NBT for persistence.
      */
     private void saveTerritoryData(Wolf wolf) {
-        // Territory data is stored in memory for this session
+        if (!(wolf instanceof EcologyAccess access)) {
+            return;
+        }
+
+        EcologyComponent component = access.betterEcology$getEcologyComponent();
+        if (component == null) {
+            return;
+        }
+
+        CompoundTag packTag = component.getHandleTag("pack");
+        if (territoryCenter != null) {
+            packTag.putDouble("territory_center_x", territoryCenter.x);
+            packTag.putDouble("territory_center_y", territoryCenter.y);
+            packTag.putDouble("territory_center_z", territoryCenter.z);
+        }
     }
 
     public Vec3d getTerritoryCenter() {

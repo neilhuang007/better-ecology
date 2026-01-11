@@ -36,7 +36,7 @@ public class ForagingBehavior extends SteeringBehavior {
     public ForagingBehavior(double searchRadius, int searchInterval, List<Block> targetFoodBlocks, int memoryDuration, int hungerRestore) {
         this.searchRadius = searchRadius;
         this.searchInterval = searchInterval;
-        this.targetFoodBlocks = new ArrayList<>(targetFoodBlocks);
+        this.targetFoodBlocks = targetFoodBlocks != null ? new ArrayList<>(targetFoodBlocks) : new ArrayList<>();
         this.foodMemory = new FoodMemory(memoryDuration);
         this.hungerRestore = hungerRestore;
         this.state = ForagingState.SEARCHING;
@@ -217,6 +217,23 @@ public class ForagingBehavior extends SteeringBehavior {
 
     public FoodMemory getFoodMemory() {
         return foodMemory;
+    }
+
+
+    public double getSearchRadius() {
+        return searchRadius;
+    }
+
+    public int getSearchInterval() {
+        return searchInterval;
+    }
+
+    public int getHungerRestore() {
+        return hungerRestore;
+    }
+
+    public boolean isTargetBlock(Block block) {
+        return isFoodBlock(block);
     }
 
     public enum ForagingState {

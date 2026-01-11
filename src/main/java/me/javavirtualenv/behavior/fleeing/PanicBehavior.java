@@ -104,6 +104,11 @@ public class PanicBehavior extends SteeringBehavior {
      */
     private void updatePanicState(BehaviorContext context) {
         Mob entity = context.getEntity();
+        if (entity == null) {
+            // Cannot update panic state without entity
+            return;
+        }
+
         long currentTime = entity.level().getGameTime();
 
         // Check if panic should end
@@ -135,10 +140,12 @@ public class PanicBehavior extends SteeringBehavior {
 
         if (shouldPanic && !isInPanic) {
             triggerPanic(context);
-        } else if (!shouldPanic && isInPanic && panicTimer > MINIMUM_FLEE_DURATION) {
+        } else if (!shouldPanic && isInPanic) {
             // Gradual wind-down if threats have cleared
-            // Maintains at least MINIMUM_FLEE_DURATION ticks of continued fleeing
-            panicTimer = Math.max(panicTimer - 2, MINIMUM_FLEE_DURATION);
+            // Only wind down after minimum flee duration has passed
+            if (panicTimer > MINIMUM_FLEE_DURATION) {
+                panicTimer = Math.max(panicTimer - 2, MINIMUM_FLEE_DURATION);
+            }
         }
 
         // Update panic intensity based on threat density
@@ -243,6 +250,12 @@ public class PanicBehavior extends SteeringBehavior {
      */
     private void triggerPanic(BehaviorContext context) {
         Mob entity = context.getEntity();
+        if (entity == null) {
+            // Cannot trigger panic without entity, just set panic state
+            isInPanic = true;
+            panicTimer = PANIC_DURATION;
+            return;
+        }
 
         isInPanic = true;
         panicTimer = PANIC_DURATION;
@@ -279,6 +292,10 @@ public class PanicBehavior extends SteeringBehavior {
      */
     private void spreadPanicToHerd(BehaviorContext context) {
         Mob entity = context.getEntity();
+        if (entity == null) {
+            return;
+        }
+
         double propagationRange = config.getPanicPropagationRange();
 
         List<Mob> nearbyAnimals = entity.level().getEntitiesOfClass(
@@ -320,6 +337,10 @@ public class PanicBehavior extends SteeringBehavior {
      */
     private boolean checkNearbyPanic(BehaviorContext context) {
         Mob entity = context.getEntity();
+        if (entity == null) {
+            return false;
+        }
+
         double propagationRange = config.getPanicPropagationRange();
 
         // Check for entities with high speed (indicating panic)
@@ -365,8 +386,12 @@ public class PanicBehavior extends SteeringBehavior {
      */
     private int countNearbyThreats(BehaviorContext context) {
         Mob entity = context.getEntity();
+        if (entity == null || context.getLevel() == null) {
+            return 0;
+        }
+
         Vec3d position = context.getPosition();
-        double detectionRange = config.getFlightInitiationDistance() * 2.0;
+        double detectionRange = config.getFlightInitiationDistance() * 1.5;
 
         List<LivingEntity> nearbyEntities = context.getLevel().getEntitiesOfClass(
             LivingEntity.class,
@@ -397,6 +422,10 @@ public class PanicBehavior extends SteeringBehavior {
      */
     private boolean hasVeryCloseThreat(BehaviorContext context) {
         Mob entity = context.getEntity();
+        if (entity == null || context.getLevel() == null) {
+            return false;
+        }
+
         Vec3d position = context.getPosition();
         double criticalDistance = config.getFlightInitiationDistance() * 0.5;
 
@@ -427,8 +456,12 @@ public class PanicBehavior extends SteeringBehavior {
      */
     private LivingEntity findPrimaryThreat(BehaviorContext context) {
         Mob entity = context.getEntity();
+        if (entity == null || context.getLevel() == null) {
+            return null;
+        }
+
         Vec3d position = context.getPosition();
-        double detectionRange = config.getFlightInitiationDistance() * 2.0;
+        double detectionRange = config.getFlightInitiationDistance() * 1.5;
 
         List<LivingEntity> nearbyEntities = context.getLevel().getEntitiesOfClass(
             LivingEntity.class,
@@ -500,6 +533,10 @@ public class PanicBehavior extends SteeringBehavior {
      */
     private int countNearbyHerdMembers(BehaviorContext context) {
         Mob entity = context.getEntity();
+        if (entity == null) {
+            return 0;
+        }
+
         double detectionRange = 16.0;
 
         List<Mob> nearby = entity.level().getEntitiesOfClass(
@@ -547,6 +584,9 @@ public class PanicBehavior extends SteeringBehavior {
      * This is a simplified check - in full implementation would use entity data.
      */
     private boolean isEntityInPanic(Mob entity) {
+        if (entity == null) {
+            return false;
+        }
         // Check if entity is moving at high speed
         double speed = entity.getDeltaMovement().length();
         return speed > 0.3; // High movement speed suggests panic
@@ -556,6 +596,9 @@ public class PanicBehavior extends SteeringBehavior {
      * Checks if entity is actively fleeing.
      */
     private boolean isEntityFleeing(Mob entity) {
+        if (entity == null) {
+            return false;
+        }
         // Check if entity is moving away from player or predator
         // Simplified: check if moving at above-normal speed
         double speed = entity.getDeltaMovement().length();

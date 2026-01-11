@@ -26,6 +26,8 @@ public class MotherProtectionBehavior extends SteeringBehavior {
 
     private Entity currentTarget;
     private UUID lastProtectedBaby;
+    private int protectionCooldown;
+    private static final int PROTECTION_COOLDOWN_TICKS = 100; // 5 seconds
 
     public MotherProtectionBehavior(double protectionRange, double threatDetectionRange,
                                     double attackSpeed, double aggressionLevel) {
@@ -33,6 +35,7 @@ public class MotherProtectionBehavior extends SteeringBehavior {
         this.threatDetectionRange = threatDetectionRange;
         this.attackSpeed = attackSpeed;
         this.aggressionLevel = aggressionLevel;
+        this.protectionCooldown = 0;
     }
 
     public MotherProtectionBehavior() {
@@ -41,6 +44,18 @@ public class MotherProtectionBehavior extends SteeringBehavior {
 
     @Override
     public Vec3d calculate(BehaviorContext context) {
+        if (context == null) {
+            return new Vec3d();
+        }
+
+        // Update cooldown
+        if (protectionCooldown > 0) {
+            protectionCooldown--;
+            if (protectionCooldown > 0) {
+                return new Vec3d(); // In cooldown, don't protect
+            }
+        }
+
         Entity entity = context.getEntity();
         if (!(entity instanceof AgeableMob mother)) {
             return new Vec3d();
@@ -68,7 +83,9 @@ public class MotherProtectionBehavior extends SteeringBehavior {
         Vec3d threatPos = new Vec3d(nearestThreat.getX(), nearestThreat.getY(), nearestThreat.getZ());
         double distanceToThreat = motherPos.distanceTo(threatPos);
 
-        if (distanceToThreat <= 2.0) {
+        if (distanceToThreat <= 3.0) {
+            // Reached threat, set cooldown before protecting again
+            protectionCooldown = PROTECTION_COOLDOWN_TICKS;
             return new Vec3d();
         }
 

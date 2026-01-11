@@ -88,48 +88,144 @@ public class PreySelector {
     }
 
     /**
-     * Scores a potential prey item.
-     * Lower score = better prey (easier catch, closer).
+     * Scores a potential prey item based on optimal foraging theory.
+     * Based on Emlen (1966) and MacArthur & Pianka (1966): maximize E/h (energy gain per handling time).
+     * Lower score = better prey (higher energy/time ratio).
      * Includes prey switching logic - alternative prey scored higher when primary is scarce.
      */
     private double scorePrey(Mob predator, LivingEntity prey) {
-        double score = 0.0;
+        // Calculate energy gain from prey
+        double energyGain = calculateEnergyGain(prey);
 
-        // Distance cost
-        double distance = predator.position().distanceTo(prey.position());
-        score += distance;
+        // Calculate handling time (time to catch and consume)
+        double handlingTime = calculateHandlingTime(predator, prey);
 
-        // Size cost - prefer smaller prey
-        double sizeRatio = prey.getBbHeight() / predator.getBbHeight();
-        score += sizeRatio * sizePreference * 10.0;
+        // Calculate pursuit time (time to reach prey)
+        double pursuitTime = calculatePursuitTime(predator, prey);
 
-        // Speed cost - faster prey are harder to catch
-        double preySpeed = prey.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
-        score += preySpeed * 5.0;
+        // Total time = handling + pursuit
+        double totalTime = handlingTime + pursuitTime;
 
-        // Health cost - injured prey are easier
-        if (prey instanceof Animal animal) {
-            double healthPercent = animal.getHealth() / animal.getMaxHealth();
-            if (healthPercent < 0.5) {
-                score -= injuryBonus * 5.0; // Bonus for injured prey
-            }
-            if (animal.isBaby()) {
-                score -= babyBonus * 3.0; // Bonus for baby prey
-            }
+        // Optimal foraging: maximize E/t (energy per time)
+        // Score = 1 / (E/t) = t/E, so lower is better
+        double score;
+        if (energyGain > 0.001) {
+            score = totalTime / energyGain;
+        } else {
+            score = Double.MAX_VALUE;
         }
 
-        // Group size cost - lone prey easier than groups
-        int nearbyConspecifics = countNearbyConspecifics(prey);
-        score += nearbyConspecifics * 2.0;
-
-        // Prey switching bonus - score alternative prey higher when primary is scarce
+        // Apply population-based adjustment (prey switching)
+        // When primary prey is scarce, predators should switch to alternative prey
         double populationRatio = getPreyPopulationRatio(predator, prey.getClass());
         if (populationRatio < 0.4) {
-            // Prey is scarce - increase score to discourage hunting
-            score += (1.0 - populationRatio) * 20.0;
+            // Prey is scarce - discourage hunting to prevent extinction
+            score *= (2.0 - populationRatio);
         }
 
         return score;
+    }
+
+    /**
+     * Calculates the energy gain from a prey item.
+     * Based on prey size, nutritional value, and accessibility.
+     */
+    private double calculateEnergyGain(LivingEntity prey) {
+        double baseEnergy = 0.0;
+
+        // Base energy from prey size (larger prey = more energy)
+        double preySize = prey.getBbWidth() * prey.getBbHeight() * prey.getType().getWidth();
+        baseEnergy = preySize * 100.0;
+
+        // Adjust for prey type (some animals more nutritious)
+        String typeName = prey.getType().toString().toLowerCase();
+        if (typeName.contains("cow") || typeName.contains("mooshroom")) {
+            baseEnergy *= 1.5; // High energy
+        } else if (typeName.contains("sheep") || typeName.contains("pig")) {
+            baseEnergy *= 1.2;
+        } else if (typeName.contains("chicken") || typeName.contains("rabbit")) {
+            baseEnergy *= 0.7; // Lower energy
+        }
+
+        // Adjust for prey condition
+        if (prey instanceof Animal animal) {
+            double healthPercent = animal.getHealth() / animal.getMaxHealth();
+
+            // Injured prey: easier to catch but less meat
+            if (healthPercent < 0.5) {
+                baseEnergy *= 0.7;
+            }
+
+            // Baby prey: less energy but much easier to catch
+            if (animal.isBaby()) {
+                baseEnergy *= 0.4;
+            }
+        }
+
+        return baseEnergy;
+    }
+
+    /**
+     * Calculates the handling time for a prey item.
+     * Based on prey size, speed, and group protection.
+     */
+    private double calculateHandlingTime(Mob predator, LivingEntity prey) {
+        double baseHandlingTime = 50.0; // Base ticks to handle prey
+
+        // Larger prey takes longer to handle
+        double preySize = prey.getBbWidth() * prey.getBbHeight() * prey.getType().getWidth();
+        baseHandlingTime += preySize * 20.0;
+
+        // Faster prey are harder to catch (longer handling time)
+        double preySpeed = prey.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
+        double predatorSpeed = predator.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
+
+        if (preySpeed > predatorSpeed) {
+            baseHandlingTime *= (1.0 + (preySpeed - predatorSpeed) * 2.0);
+        }
+
+        // Group protection increases handling time (confusion effect, defense)
+        int nearbyConspecifics = countNearbyConspecifics(prey);
+        if (nearbyConspecifics > 0) {
+            // Each group member adds difficulty
+            baseHandlingTime *= (1.0 + nearbyConspecifics * 0.15);
+        }
+
+        // Injured prey easier to handle
+        if (prey instanceof Animal animal) {
+            double healthPercent = animal.getHealth() / animal.getMaxHealth();
+            if (healthPercent < 0.5) {
+                baseHandlingTime *= 0.6;
+            }
+        }
+
+        // Baby prey much easier to handle
+        if (prey instanceof Animal animal && animal.isBaby()) {
+            baseHandlingTime *= 0.3;
+        }
+
+        return baseHandlingTime;
+    }
+
+    /**
+     * Calculates the pursuit time to reach prey.
+     * Based on distance and relative speeds.
+     */
+    private double calculatePursuitTime(Mob predator, LivingEntity prey) {
+        double distance = predator.position().distanceTo(prey.position());
+
+        // Get speeds
+        double predatorSpeed = predator.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
+        double preySpeed = prey.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
+
+        // If predator is faster, use closing speed
+        if (predatorSpeed > preySpeed) {
+            double closingSpeed = predatorSpeed - preySpeed;
+            return distance / closingSpeed;
+        } else {
+            // Prey is faster - pursuit will be long or unsuccessful
+            return distance * 2.0; // Penalize faster prey
+        }
     }
 
     /**

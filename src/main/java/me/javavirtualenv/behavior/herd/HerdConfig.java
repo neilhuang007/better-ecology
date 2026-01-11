@@ -18,6 +18,7 @@ public class HerdConfig {
     private double leadershipDominanceBonus = 0.5;
     private int maxLeaders = 3; // Shared leadership, not single leader
     private double leaderFollowRadius = 16.0; // blocks
+    private int maxAgeForLeadership = 24000; // Ticks for full leadership bonus (20 minutes)
 
     // Herd cohesion parameters
     private double cohesionRadius = 12.0; // blocks
@@ -184,6 +185,14 @@ public class HerdConfig {
         this.leaderFollowRadius = Math.max(1.0, leaderFollowRadius);
     }
 
+    public int getMaxAgeForLeadership() {
+        return maxAgeForLeadership;
+    }
+
+    public void setMaxAgeForLeadership(int maxAgeForLeadership) {
+        this.maxAgeForLeadership = Math.max(100, maxAgeForLeadership);
+    }
+
     public double getCohesionRadius() {
         return cohesionRadius;
     }
@@ -267,6 +276,7 @@ public class HerdConfig {
         copy.leadershipDominanceBonus = this.leadershipDominanceBonus;
         copy.maxLeaders = this.maxLeaders;
         copy.leaderFollowRadius = this.leaderFollowRadius;
+        copy.maxAgeForLeadership = this.maxAgeForLeadership;
         copy.cohesionRadius = this.cohesionRadius;
         copy.separationDistance = this.separationDistance;
         copy.cohesionStrength = this.cohesionStrength;

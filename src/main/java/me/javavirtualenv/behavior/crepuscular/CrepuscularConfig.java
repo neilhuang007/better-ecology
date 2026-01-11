@@ -210,6 +210,16 @@ public class CrepuscularConfig {
             return this;
         }
 
+        public Builder ceilingAttractionRange(int range) {
+            config.setCeilingAttractionRange(range);
+            return this;
+        }
+
+        public Builder groupDetectionRange(int range) {
+            config.setGroupDetectionRange(range);
+            return this;
+        }
+
         public CrepuscularConfig build() {
             return config;
         }

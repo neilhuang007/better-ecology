@@ -20,22 +20,30 @@ public class EvasionBehavior extends SteeringBehavior {
     private final double evasionForce;
     private final double detectionRange;
     private final double safetyDistance;
+    private final double zigzagIntensity;
 
     private Entity currentThreat;
     private int zigzagTimer = 0;
-    private int zigzagDirection = 1;
+    private double currentZigzagDirection = 0.0;
+    private double targetZigzagDirection = 0.0;
     private boolean isEvading = false;
 
     public EvasionBehavior(double evasionSpeed, double evasionForce,
-                          double detectionRange, double safetyDistance) {
+                          double detectionRange, double safetyDistance, double zigzagIntensity) {
         this.evasionSpeed = evasionSpeed;
         this.evasionForce = evasionForce;
         this.detectionRange = detectionRange;
         this.safetyDistance = safetyDistance;
+        this.zigzagIntensity = zigzagIntensity;
+    }
+
+    public EvasionBehavior(double evasionSpeed, double evasionForce,
+                          double detectionRange, double safetyDistance) {
+        this(evasionSpeed, evasionForce, detectionRange, safetyDistance, 0.5);
     }
 
     public EvasionBehavior() {
-        this(1.5, 0.2, 24.0, 48.0);
+        this(1.5, 0.2, 24.0, 36.0, 0.5);
     }
 
     @Override
@@ -74,24 +82,34 @@ public class EvasionBehavior extends SteeringBehavior {
     }
 
     /**
-     * Calculates evasion force with zigzag pattern.
+     * Calculates evasion force with protean (unpredictable) zigzag pattern.
+     * Based on research: Moore et al. (2017) - unpredictability directly correlated with evasion success.
+     * Uses random direction changes smoothed over time to prevent predators from anticipating path.
      */
     private Vec3d calculateEvasion(Vec3d preyPos, Vec3d preyVelocity, Vec3d threatPos) {
         // Base direction: away from threat
         Vec3d awayFromThreat = Vec3d.sub(preyPos, threatPos);
         awayFromThreat.normalize();
 
-        // Add zigzag pattern
+        // Implement protean movement - unpredictable zigzagging
+        // Instead of regular pattern, use random direction changes smoothed over time
         zigzagTimer++;
-        if (zigzagTimer > 15) {
+
+        // Change target direction randomly every 5-15 ticks (unpredictable timing)
+        if (zigzagTimer > 5 + (int)(Math.random() * 10)) {
             zigzagTimer = 0;
-            zigzagDirection *= -1;
+            // Random direction between -1 and 1
+            targetZigzagDirection = (Math.random() * 2.0 - 1.0) * zigzagIntensity;
         }
 
-        // Calculate perpendicular vector
+        // Smoothly interpolate current direction toward target (prevents jerky movement)
+        double lerpFactor = 0.2;
+        currentZigzagDirection = currentZigzagDirection + (targetZigzagDirection - currentZigzagDirection) * lerpFactor;
+
+        // Calculate perpendicular vector for lateral movement
         Vec3d perpendicular = new Vec3d(-awayFromThreat.z, 0, awayFromThreat.x);
         Vec3d zigzagComponent = perpendicular.copy();
-        zigzagComponent.mult(zigzagDirection * 0.3);
+        zigzagComponent.mult(currentZigzagDirection);
 
         // Combine evasion direction with zigzag
         Vec3d evasionDirection = awayFromThreat.copy();
@@ -108,7 +126,7 @@ public class EvasionBehavior extends SteeringBehavior {
     private Entity findNearestThreat(Mob prey) {
         if (currentThreat != null && currentThreat.isAlive()) {
             double distance = prey.position().distanceTo(currentThreat.position());
-            if (distance < detectionRange * 1.5) {
+            if (distance < detectionRange) {
                 return currentThreat;
             }
         }

@@ -6,8 +6,11 @@ import java.util.List;
 import java.util.UUID;
 
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.BehaviorContext;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
+import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
@@ -184,6 +187,7 @@ public class PackHierarchyBehavior extends SteeringBehavior {
 
     /**
      * Updates hierarchy rank based on pack composition.
+     * Persists rank to NBT for cross-behavior coordination.
      */
     private void updateHierarchy(Wolf wolf, BehaviorContext context) {
         int currentTick = wolf.tickCount;
@@ -199,6 +203,8 @@ public class PackHierarchyBehavior extends SteeringBehavior {
 
         if (packMembers.isEmpty()) {
             rank = HierarchyRank.ALPHA;
+            alphaId = wolf.getUUID();
+            persistRank(wolf);
             return;
         }
 
@@ -243,6 +249,31 @@ public class PackHierarchyBehavior extends SteeringBehavior {
         // Store alpha ID
         if (!strengths.isEmpty()) {
             alphaId = strengths.get(0).wolf().getUUID();
+        }
+
+        // Persist rank to NBT for other behaviors to read
+        persistRank(wolf);
+    }
+
+    /**
+     * Persists the current hierarchy rank to NBT storage.
+     * This allows other behaviors (like WolfSiegeBehavior) to read the rank.
+     */
+    private void persistRank(Wolf wolf) {
+        if (!(wolf instanceof EcologyAccess access)) {
+            return;
+        }
+
+        EcologyComponent component = access.betterEcology$getEcologyComponent();
+        if (component == null) {
+            return;
+        }
+
+        CompoundTag packTag = component.getHandleTag("pack");
+        packTag.putString("hierarchy_rank", rank.name());
+
+        if (alphaId != null) {
+            packTag.putUUID("alpha_id", alphaId);
         }
     }
 
@@ -318,13 +349,79 @@ public class PackHierarchyBehavior extends SteeringBehavior {
     }
 
     /**
-     * Gets or generates pack ID.
+     * Gets or generates pack ID from NBT storage.
+     * Pack ID is shared among wolves in proximity to form packs.
      */
     private UUID getPackId(Wolf wolf) {
-        if (packId == null) {
-            packId = wolf.getUUID();
+        if (packId != null) {
+            return packId;
         }
+
+        if (!(wolf instanceof EcologyAccess access)) {
+            packId = wolf.getUUID();
+            return packId;
+        }
+
+        EcologyComponent component = access.betterEcology$getEcologyComponent();
+        if (component == null) {
+            packId = wolf.getUUID();
+            return packId;
+        }
+
+        CompoundTag packTag = component.getHandleTag("pack");
+        String packIdStr = packTag.getString("pack_id");
+
+        if (packIdStr.isEmpty()) {
+            // Try to find nearby pack members to join their pack
+            UUID nearbyPackId = findNearbyPackId(wolf);
+            if (nearbyPackId != null) {
+                packId = nearbyPackId;
+                packTag.putUUID("pack_id", packId);
+            } else {
+                // No nearby pack - create new pack with this wolf as alpha
+                packId = wolf.getUUID();
+                packTag.putUUID("pack_id", packId);
+            }
+        } else {
+            packId = UUID.fromString(packIdStr);
+        }
+
         return packId;
+    }
+
+    /**
+     * Finds a nearby wolf with an existing pack ID to join.
+     * Returns null if no nearby pack is found.
+     */
+    private UUID findNearbyPackId(Wolf wolf) {
+        Level level = wolf.level();
+        List<Wolf> nearbyWolves = level.getEntitiesOfClass(
+            Wolf.class,
+            wolf.getBoundingBox().inflate(48.0) // 48 block detection range
+        );
+
+        for (Wolf nearbyWolf : nearbyWolves) {
+            if (nearbyWolf.equals(wolf) || nearbyWolf.isTame()) {
+                continue;
+            }
+
+            if (!(nearbyWolf instanceof EcologyAccess access)) {
+                continue;
+            }
+
+            EcologyComponent component = access.betterEcology$getEcologyComponent();
+            if (component == null) {
+                continue;
+            }
+
+            CompoundTag packTag = component.getHandleTag("pack");
+            String packIdStr = packTag.getString("pack_id");
+            if (!packIdStr.isEmpty()) {
+                return UUID.fromString(packIdStr);
+            }
+        }
+
+        return null;
     }
 
     /**

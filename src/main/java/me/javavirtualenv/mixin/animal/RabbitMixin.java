@@ -7,6 +7,7 @@ import me.javavirtualenv.behavior.rabbit.RabbitForagingConfig;
 import me.javavirtualenv.behavior.rabbit.RabbitThumpConfig;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
+import me.javavirtualenv.ecology.ai.SeekFoodItemGoal;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.api.EcologyAccess;
@@ -16,6 +17,7 @@ import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Rabbit;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -81,6 +83,10 @@ public abstract class RabbitMixin {
         // Primary behavior goal - second highest priority for escape behaviors
         RabbitBehaviorGoal rabbitGoal = new RabbitBehaviorGoal(rabbit, component);
         accessor.betterEcology$getGoalSelector().addGoal(2, rabbitGoal);
+
+        // Food seeking goal - seek carrots and dandelions when hungry
+        accessor.betterEcology$getGoalSelector().addGoal(3, new SeekFoodItemGoal(rabbit, 1.2, 16,
+            stack -> stack.is(Items.CARROT) || stack.is(Items.GOLDEN_CARROT) || stack.is(Items.DANDELION)));
 
         // Food caching goal - lower priority, runs when safe
         RabbitBurrowCachingGoal cachingGoal = new RabbitBurrowCachingGoal(rabbit, component);

@@ -218,14 +218,14 @@ public class HerdCohesionGoal extends Goal {
         }
 
         // Check if current leader is still valid
-        if (herdLeader != null && herdLeader.isAlive() && herdMembers.contains(herdLeader)) {
+        if (herdLeader != null && herdLeader.isAlive() && herdMembers.contains(herdLeader) && isLeaderSuitable(herdLeader)) {
             return;
         }
 
         // Check if we have a stored leader UUID
         if (leaderUuid != null) {
             for (Mob member : herdMembers) {
-                if (member.getUUID().equals(leaderUuid)) {
+                if (member.getUUID().equals(leaderUuid) && isLeaderSuitable(member)) {
                     herdLeader = member;
                     return;
                 }
@@ -237,6 +237,10 @@ public class HerdCohesionGoal extends Goal {
         int bestDominance = -1;
 
         for (Mob member : herdMembers) {
+            if (!isLeaderSuitable(member)) {
+                continue;
+            }
+
             EcologyComponent memberComponent = getEcologyComponent(member);
             int dominance = 0;
             if (memberComponent != null) {
@@ -256,6 +260,35 @@ public class HerdCohesionGoal extends Goal {
 
         herdLeader = bestLeader;
         leaderUuid = herdLeader.getUUID();
+    }
+
+    /**
+     * Check if a mob is suitable as a herd leader.
+     * Validates health and dominance status.
+     */
+    private boolean isLeaderSuitable(Mob candidate) {
+        if (candidate == null || !candidate.isAlive()) {
+            return false;
+        }
+
+        // Check health threshold - leader should be reasonably healthy
+        double healthPercent = candidate.getHealth() / candidate.getMaxHealth();
+        if (healthPercent < 0.3) {
+            return false;
+        }
+
+        // Optionally validate dominance score
+        EcologyComponent component = getEcologyComponent(candidate);
+        if (component != null) {
+            var socialTag = component.getHandleTag("social");
+            int dominance = socialTag.getInt("dominance_score");
+            // Leader should have at least some dominance
+            if (dominance < 0) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

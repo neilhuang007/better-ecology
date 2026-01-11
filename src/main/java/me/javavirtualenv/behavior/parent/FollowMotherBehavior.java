@@ -41,6 +41,10 @@ public class FollowMotherBehavior extends SteeringBehavior {
 
     @Override
     public Vec3d calculate(BehaviorContext context) {
+        if (context == null) {
+            return new Vec3d();
+        }
+
         Entity entity = context.getEntity();
         if (!(entity instanceof AgeableMob offspring)) {
             return new Vec3d();

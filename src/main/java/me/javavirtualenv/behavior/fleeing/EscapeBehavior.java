@@ -253,7 +253,7 @@ public class EscapeBehavior extends SteeringBehavior {
             double distance = position.distanceTo(threatPos);
 
             // Break freeze if threat is very close (critical distance)
-            if (distance < config.getFlightInitiationDistance() * 0.5) {
+            if (distance < config.getFlightInitiationDistance() * 0.3) {
                 freezingTimer = 0;
                 isFrozen = false;
                 // Switch to primary escape strategy
@@ -313,6 +313,10 @@ public class EscapeBehavior extends SteeringBehavior {
      * @return Position of nearest refuge, or null if none found
      */
     private BlockPos findNearestRefuge(BehaviorContext context) {
+        if (context.getEntity() == null || context.getLevel() == null) {
+            return null;
+        }
+
         long currentTime = context.getEntity().level().getGameTime();
 
         // Use cached refuge if recent
@@ -485,8 +489,12 @@ public class EscapeBehavior extends SteeringBehavior {
      */
     private LivingEntity findNearestThreat(BehaviorContext context) {
         Entity entity = context.getEntity();
+        if (entity == null || context.getLevel() == null) {
+            return null;
+        }
+
         Vec3d position = context.getPosition();
-        double detectionRange = config.getFlightInitiationDistance() * 2.0;
+        double detectionRange = config.getFlightInitiationDistance() * 1.5;
 
         List<LivingEntity> nearbyEntities = context.getLevel().getEntitiesOfClass(
             LivingEntity.class,

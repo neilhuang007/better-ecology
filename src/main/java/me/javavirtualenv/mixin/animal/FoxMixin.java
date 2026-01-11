@@ -4,14 +4,18 @@ import me.javavirtualenv.behavior.fox.*;
 import me.javavirtualenv.behavior.predation.PredatorFeedingGoal;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
+import me.javavirtualenv.ecology.ai.HungryPredatorTargetGoal;
 import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.reproduction.NestBuildingHandle;
 import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
+import net.minecraft.world.entity.animal.Chicken;
 import net.minecraft.world.entity.animal.Fox;
+import net.minecraft.world.entity.animal.Rabbit;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -128,6 +132,11 @@ public abstract class FoxMixin {
         // Register goals via accessor
         MobAccessor accessor = (MobAccessor) fox;
         GoalSelector goalSelector = accessor.betterEcology$getGoalSelector();
+
+        // Register hungry predator targeting goal (targets chickens and rabbits when hungry)
+        accessor.betterEcology$getTargetSelector().addGoal(1,
+            new HungryPredatorTargetGoal<>(fox, LivingEntity.class, 50,
+                target -> target instanceof Chicken || target instanceof Rabbit));
 
         // Fox goal priorities (higher number = lower priority)
         // Low health flee: highest priority - retreat when hurt

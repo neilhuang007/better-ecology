@@ -13,14 +13,14 @@ import java.util.function.Predicate;
  */
 public class EmergenceTrigger {
     private final CrepuscularActivity activityCalculator;
-    private final CrepuscularConfig config;
+    private CrepuscularConfig config;
 
     // Targeting conditions for detecting nearby creatures
     private TargetingConditions groupDetectionConditions;
 
     public EmergenceTrigger(CrepuscularConfig config) {
-        this.config = config;
-        this.activityCalculator = new CrepuscularActivity(config);
+        this.config = config != null ? config : new CrepuscularConfig();
+        this.activityCalculator = new CrepuscularActivity(this.config);
         setupTargetingConditions();
     }
 
@@ -239,8 +239,11 @@ public class EmergenceTrigger {
      * Updates the configuration for this trigger.
      */
     public void setConfig(CrepuscularConfig config) {
-        activityCalculator.setConfig(config);
-        setupTargetingConditions();
+        if (config != null) {
+            this.config = config;
+            activityCalculator.setConfig(config);
+            setupTargetingConditions();
+        }
     }
 
     /**

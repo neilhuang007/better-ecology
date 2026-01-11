@@ -14,10 +14,12 @@ import me.javavirtualenv.behavior.predation.PursuitBehavior;
 import me.javavirtualenv.behavior.wolf.PackHierarchyBehavior;
 import me.javavirtualenv.behavior.wolf.PackHuntingBehavior;
 import me.javavirtualenv.behavior.wolf.PackTerritoryBehavior;
+import me.javavirtualenv.behavior.wolf.WolfDrinkWaterGoal;
 import me.javavirtualenv.behavior.wolf.WolfPickupItemGoal;
 import me.javavirtualenv.behavior.wolf.WolfShareFoodGoal;
 import me.javavirtualenv.behavior.wolf.WolfPackAttackGoal;
 import me.javavirtualenv.behavior.wolf.WolfSiegeAttackGoal;
+import me.javavirtualenv.ecology.ai.HungryPredatorTargetGoal;
 import me.javavirtualenv.ecology.CodeBasedHandle;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyProfile;
@@ -53,8 +55,11 @@ public final class WolfBehaviorHandle extends CodeBasedHandle {
             return;
         }
 
+        // Create shared pack hunting behavior instance for this wolf
+        PackHuntingBehavior packHunting = new PackHuntingBehavior();
+
         // Create per-entity registry to avoid shared state
-        BehaviorRegistry registry = createWolfRegistry(mob, component);
+        BehaviorRegistry registry = createWolfRegistry(mob, component, packHunting);
 
         // Create goal with wolf-specific weights
         BehaviorWeights weights = createWolfWeights();
@@ -70,6 +75,14 @@ public final class WolfBehaviorHandle extends CodeBasedHandle {
 
         MobAccessor accessor = (MobAccessor) mob;
 
+        // Register hungry predator targeting goal (targets prey when hungry)
+        accessor.betterEcology$getTargetSelector().addGoal(1,
+                HungryPredatorTargetGoal.forCommonPrey(wolf, 50));
+
+        // Register simple melee attack for hunting (runs when target is set)
+        accessor.betterEcology$getGoalSelector().addGoal(2,
+                new net.minecraft.world.entity.ai.goal.MeleeAttackGoal(wolf, 1.2, true));
+
         // Register siege attack goal (higher priority than steering)
         accessor.betterEcology$getGoalSelector().addGoal(2,
                 new WolfSiegeAttackGoal(wolf, 1.2, false));
@@ -77,17 +90,15 @@ public final class WolfBehaviorHandle extends CodeBasedHandle {
         // Register pack hunting attack goal
         accessor.betterEcology$getGoalSelector().addGoal(3,
                 new WolfPackAttackGoal(wolf, 1.0, false));
-        // Register predator feeding goal (priority 4 - below attacks but above steering)
+
+        // Register thirst-driven water seeking (priority 4)
         accessor.betterEcology$getGoalSelector().addGoal(4,
-                new PredatorFeedingGoal(wolf, 1.2));
+                new WolfDrinkWaterGoal(wolf));
 
-        // Register wolf pickup item goal (priority 5 - for gathering food)
-        accessor.betterEcology$getGoalSelector().addGoal(5,
-                new WolfPickupItemGoal(wolf));
-
-        // Register wolf share food goal (priority 5 - can run alongside pickup)
-        accessor.betterEcology$getGoalSelector().addGoal(5,
-                new WolfShareFoodGoal(wolf));
+        // NOTE: WolfPickupItemGoal, WolfShareFoodGoal, and PredatorFeedingGoal
+        // are registered in WolfPredationHandle to avoid duplicates.
+        // They are at priorities 3 (pickup/share) and 5 (feeding) to ensure
+        // wolves pick up food for sharing before eating it directly.
 
         // Register steering behavior goal (lowest priority)
         accessor.betterEcology$getGoalSelector().addGoal(steeringPriority, steeringGoal);
@@ -122,11 +133,10 @@ public final class WolfBehaviorHandle extends CodeBasedHandle {
     /**
      * Creates wolf-specific behavior registry.
      */
-    private BehaviorRegistry createWolfRegistry(Mob mob, EcologyComponent component) {
+    private BehaviorRegistry createWolfRegistry(Mob mob, EcologyComponent component, PackHuntingBehavior packHunting) {
         BehaviorRegistry registry = new BehaviorRegistry();
 
         // Wolf-specific pack behaviors - wrap SteeringBehavior with adapter
-        PackHuntingBehavior packHunting = new PackHuntingBehavior();
         registry.register("pack_hunting", new SteeringBehaviorAdapter(packHunting, 1.3, 0.18), "wolf");
 
         PackTerritoryBehavior packTerritory = new PackTerritoryBehavior();
@@ -229,7 +239,7 @@ public final class WolfBehaviorHandle extends CodeBasedHandle {
         EcologyComponent component = ((EcologyAccess) wolf).betterEcology$getEcologyComponent();
         CompoundTag hungerTag = component.getHandleTag("hunger");
         int hunger = hungerTag.getInt("hunger");
-        return hunger < 40;
+        return hunger < 75;  // Increased from 40 - wolves will pick up food when not fully satisfied
     }
 
     /**

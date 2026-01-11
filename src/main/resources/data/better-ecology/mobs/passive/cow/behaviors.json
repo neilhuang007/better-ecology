@@ -35,7 +35,13 @@
     "damage_interval": 200
   },
   "thirst": {
-    "enabled": false
+    "enabled": true,
+    "max_value": 100,
+    "starting_value": 100,
+    "decay_rate": 0.015,
+    "satisfied": 75,
+    "thirsty": 45,
+    "dehydrated": 15
   },
   "condition": {
     "enabled": true,

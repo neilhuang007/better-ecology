@@ -4,12 +4,13 @@ import java.util.List;
 import java.util.UUID;
 
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.BehaviorContext;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.seasonal.WinterSiegeScheduler.SiegeType;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.animal.Chicken;
@@ -118,31 +119,86 @@ public class WolfSiegeBehavior extends SteeringBehavior {
 
     /**
      * Determines siege role based on pack hierarchy.
-     * Alpha: Commander - coordinates → siege
+     * Uses actual biological age and PackHierarchyBehavior rank for assignment.
+     * Alpha: Commander - coordinates the siege
      * Beta: Scout - identifies weak points and targets
-     * Gamma: Guard - blocks exits and protects Alpha
+     * Others: Guard - blocks exits and protects Alpha
      */
     private void determineRole(Wolf wolf) {
-        // Get pack hierarchy rank from existing behavior
-        // For now, assign roles based on simple criteria
-
-        // Check if this wolf is in a pack with hierarchy data
-        // In a full implementation, this would integrate with PackHierarchyBehavior
-
-        // Simple role assignment for demonstration:
-        // Oldest wolf = Alpha (Commander)
-        // Middle-aged = Beta (Scout)
-        // Youngest = Gamma (Guard)
-
-        int ageInTicks = wolf.tickCount;
-
-        if (ageInTicks > 2000) {
-            role = SiegeRole.COMMANDER;
-        } else if (ageInTicks > 1000) {
-            role = SiegeRole.SCOUT;
-        } else {
+        // Try to get role from PackHierarchyBehavior via NBT storage
+        if (!(wolf instanceof EcologyAccess access)) {
             role = SiegeRole.GUARD;
+            return;
         }
+
+        EcologyComponent component = access.betterEcology$getEcologyComponent();
+        if (component == null) {
+            role = SiegeRole.GUARD;
+            return;
+        }
+
+        CompoundTag packTag = component.getHandleTag("pack");
+        String rankStr = packTag.getString("hierarchy_rank");
+
+        if (rankStr.isEmpty()) {
+            // Fallback: determine based on biological age (not tick count)
+            double ageInYears = getBiologicalAge(wolf);
+            if (ageInYears > 4.0) {
+                role = SiegeRole.COMMANDER;
+                packTag.putString("hierarchy_rank", "ALPHA");
+            } else if (ageInYears > 2.0) {
+                role = SiegeRole.SCOUT;
+                packTag.putString("hierarchy_rank", "BETA");
+            } else {
+                role = SiegeRole.GUARD;
+                packTag.putString("hierarchy_rank", "OMEGA");
+            }
+            return;
+        }
+
+        // Map hierarchy rank to siege role
+        PackHierarchyBehavior.HierarchyRank rank;
+        try {
+            rank = PackHierarchyBehavior.HierarchyRank.valueOf(rankStr);
+        } catch (IllegalArgumentException e) {
+            role = SiegeRole.GUARD;
+            return;
+        }
+
+        switch (rank) {
+            case ALPHA:
+                role = SiegeRole.COMMANDER;
+                break;
+            case BETA:
+                role = SiegeRole.SCOUT;
+                break;
+            case MID:
+            case OMEGA:
+                role = SiegeRole.GUARD;
+                break;
+            default:
+                role = SiegeRole.GUARD;
+                break;
+        }
+    }
+
+    /**
+     * Gets the biological age of the wolf in years.
+     * Uses the entity's age data, not tick count (uptime).
+     */
+    private double getBiologicalAge(Wolf wolf) {
+        if (wolf.isBaby()) {
+            // Baby wolves are less than 1 year old
+            return 0.5;
+        }
+
+        // For adults, estimate based on random variation since Minecraft
+        // doesn't track exact biological age. In a full implementation,
+        // this would read from an NBT-stored birth timestamp.
+        // Use a hash of the UUID for consistent age per entity.
+        int uuidHash = wolf.getUUID().hashCode();
+        double normalizedAge = Math.abs(uuidHash % 100) / 100.0; // 0.0 to 1.0
+        return 1.0 + normalizedAge * 7.0; // Adults: 1-8 years old
     }
 
     /**

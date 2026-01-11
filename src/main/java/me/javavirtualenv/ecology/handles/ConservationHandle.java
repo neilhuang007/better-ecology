@@ -57,7 +57,7 @@ public final class ConservationHandle implements EcologyHandle {
         // Emergency breeding goal with relaxed requirements
         accessor.betterEcology$getGoalSelector().addGoal(priority,
             new EmergencyBreedingGoal(animal, config.moveSpeed(),
-                config.reducedMinAge(), config.reducedMinHealth(),
+                config.reducedMinHealth(), config.reducedMinAge(),
                 (int) config.reducedMinCondition(), config.cooldown(),
                 component.getHandleTag("conservation").getInt("mvp_threshold")));
     }

@@ -16,13 +16,19 @@ public class Territory {
     private final double radius;
     private final List<BlockPos> markers;
     private final long establishedTime;
+    private final double boundaryOverlapThreshold;
 
     public Territory(UUID ownerId, BlockPos center, double radius) {
+        this(ownerId, center, radius, 0.3);
+    }
+
+    public Territory(UUID ownerId, BlockPos center, double radius, double boundaryOverlapThreshold) {
         this.ownerId = ownerId;
         this.center = center;
         this.radius = radius;
         this.markers = new ArrayList<>();
         this.establishedTime = System.currentTimeMillis();
+        this.boundaryOverlapThreshold = Math.max(0.0, Math.min(1.0, boundaryOverlapThreshold));
     }
 
     /**
@@ -92,6 +98,53 @@ public class Territory {
         double overlap = combinedRadius - distanceBetweenCenters;
 
         return Math.max(0, overlap);
+    }
+
+    /**
+     * Calculates the percentage of this territory that overlaps with another.
+     * Returns 0.0 if no overlap, 1.0 if completely contained within other.
+     * <p>
+     * Scientific note: Territories often overlap at boundaries (buffer zones)
+     * where conspecifics may have reduced aggression.
+     */
+    public double getOverlapPercentage(Territory other) {
+        double overlapDistance = getOverlapAmount(other);
+
+        if (overlapDistance <= 0) {
+            return 0.0;
+        }
+
+        // Estimate overlap volume as percentage of this territory's volume
+        // This is a simplified 3D sphere intersection calculation
+        double myVolume = (4.0 / 3.0) * Math.PI * Math.pow(radius, 3);
+        double otherVolume = (4.0 / 3.0) * Math.PI * Math.pow(other.radius, 3);
+
+        // Approximate overlap volume using simplified formula
+        double overlapVolume = Math.min(myVolume, otherVolume) *
+                (overlapDistance / (this.radius + other.radius));
+
+        return overlapVolume / myVolume;
+    }
+
+    /**
+     * Checks if this territory has a boundary overlap (buffer zone) with another.
+     * Boundary overlaps are common in territorial systems as buffer zones.
+     */
+    public boolean hasBoundaryOverlap(Territory other) {
+        if (!overlaps(other)) {
+            return false;
+        }
+
+        double overlapPercentage = getOverlapPercentage(other);
+        // Boundary overlap is typically less than configured threshold of territory area
+        return overlapPercentage > 0.0 && overlapPercentage < boundaryOverlapThreshold;
+    }
+
+    /**
+     * Gets the boundary overlap threshold used for determining buffer zones.
+     */
+    public double getBoundaryOverlapThreshold() {
+        return boundaryOverlapThreshold;
     }
 
     /**

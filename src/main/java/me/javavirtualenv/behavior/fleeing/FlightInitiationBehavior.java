@@ -2,6 +2,7 @@ package me.javavirtualenv.behavior.fleeing;
 
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.Vec3d;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -274,7 +275,7 @@ public class FlightInitiationBehavior {
         }
 
         // Light level - more cautious in darkness
-        int lightLevel = entity.level().getLightEmission(entity.blockPosition());
+        int lightLevel = entity.level().getBrightness(net.minecraft.world.level.LightLayer.SKY, entity.blockPosition());
         if (lightLevel < 4) {
             modifier *= 1.1; // Dark conditions, reduced visibility
         }
@@ -341,9 +342,72 @@ public class FlightInitiationBehavior {
      * @return Distance to nearest refuge, or large value if none found
      */
     private double findNearestRefugeDistance(BehaviorContext context) {
-        // Simplified refuge detection - check for nearby blocks that provide cover
-        // In full implementation, would check for water, caves, dense foliage, etc.
-        return Double.MAX_VALUE;
+        Mob entity = context.getEntity();
+        if (entity == null || entity.level() == null) {
+            return Double.MAX_VALUE;
+        }
+
+        BlockPos center = entity.blockPosition();
+        double searchRange = config.getRefugeDetectionRange();
+        int searchRadius = (int) Math.ceil(searchRange);
+
+        double nearestRefugeDistance = Double.MAX_VALUE;
+
+        // Search in expanding spiral pattern for refuge blocks
+        for (int x = -searchRadius; x <= searchRadius; x++) {
+            for (int y = -2; y <= 2; y++) {
+                for (int z = -searchRadius; z <= searchRadius; z++) {
+                    BlockPos pos = center.offset(x, y, z);
+                    double distance = Math.sqrt(x * x + y * y + z * z);
+
+                    if (distance > searchRange) {
+                        continue;
+                    }
+
+                    if (isRefuge(entity.level(), pos)) {
+                        if (distance < nearestRefugeDistance) {
+                            nearestRefugeDistance = distance;
+                        }
+                    }
+                }
+            }
+        }
+
+        return nearestRefugeDistance;
+    }
+
+    /**
+     * Determines if a block position constitutes valid refuge.
+     * Refuge includes: water, caves (darkness), leaves, bushes.
+     *
+     * @param level Level instance
+     * @param pos   Position to check
+     * @return true if position is refuge
+     */
+    private boolean isRefuge(net.minecraft.world.level.Level level, BlockPos pos) {
+        // Water is refuge for many animals
+        if (level.getBlockState(pos).is(net.minecraft.world.level.block.Blocks.WATER)) {
+            return true;
+        }
+
+        // Leaves provide cover
+        if (level.getBlockState(pos).is(net.minecraft.world.level.block.Blocks.ACACIA_LEAVES) ||
+            level.getBlockState(pos).is(net.minecraft.world.level.block.Blocks.BIRCH_LEAVES) ||
+            level.getBlockState(pos).is(net.minecraft.world.level.block.Blocks.DARK_OAK_LEAVES) ||
+            level.getBlockState(pos).is(net.minecraft.world.level.block.Blocks.JUNGLE_LEAVES) ||
+            level.getBlockState(pos).is(net.minecraft.world.level.block.Blocks.OAK_LEAVES) ||
+            level.getBlockState(pos).is(net.minecraft.world.level.block.Blocks.SPRUCE_LEAVES) ||
+            level.getBlockState(pos).is(net.minecraft.world.level.block.Blocks.AZALEA_LEAVES) ||
+            level.getBlockState(pos).is(net.minecraft.world.level.block.Blocks.FLOWERING_AZALEA_LEAVES)) {
+            return true;
+        }
+
+        // Dark areas (caves, under trees) - use getBrightness for ambient light
+        if (level.getBrightness(net.minecraft.world.level.LightLayer.SKY, pos) < 4) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

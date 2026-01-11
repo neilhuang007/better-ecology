@@ -1,8 +1,8 @@
 package me.javavirtualenv.behavior.frog;
 
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.BehaviorContext;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.frog.Frog;
@@ -53,21 +53,27 @@ public class FrogSwimmingBehavior extends SteeringBehavior {
         Vec3d force = new Vec3d();
 
         // Add surface preference
-        force.add(calculateSurfacePreference(frog, position));
+        Vec3d surfacePref = calculateSurfacePreference(frog, position);
+        force.add(surfacePref);
 
         // Add lily pad attraction
-        force.add(calculateLilyPadAttraction(frog, position));
+        Vec3d lilyAttraction = calculateLilyPadAttraction(frog, position);
+        force.add(lilyAttraction);
 
         // Add vegetation attraction
-        force.add(calculateVegetationAttraction(frog, position));
+        Vec3d vegAttraction = calculateVegetationAttraction(frog, position);
+        force.add(vegAttraction);
 
         // Add random swimming motion
         if (force.magnitude() < 0.01) {
             force = generateRandomSwimForce(frog);
         }
 
-        // Limit the force
-        force.limit(SWIM_SPEED);
+        // Limit the force to max speed
+        if (force.magnitude() > SWIM_SPEED) {
+            force.normalize();
+            force.mult(SWIM_SPEED);
+        }
 
         return force;
     }

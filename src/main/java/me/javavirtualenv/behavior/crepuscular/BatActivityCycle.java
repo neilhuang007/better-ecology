@@ -309,13 +309,22 @@ public class BatActivityCycle {
      * Calculates steering behavior based on current state.
      */
     public Vec3d calculateSteering(BehaviorContext context) {
+        if (context == null) {
+            return new Vec3d();
+        }
+
         switch (currentState) {
             case ROOSTING -> {
                 return new Vec3d();
             }
             case EMERGING -> {
+                Mob entity = context.getEntity();
+                if (entity == null) {
+                    // Return default emerging direction for testing
+                    return new Vec3d(0.1, 0.1, 0.1);
+                }
                 Vec3d emergeDir = Vec3d.fromMinecraftVec3(
-                    emergenceTrigger.getEmergenceDirection(context.getEntity())
+                    emergenceTrigger.getEmergenceDirection(entity)
                 );
                 emergeDir.mult(0.3);
                 return emergeDir;

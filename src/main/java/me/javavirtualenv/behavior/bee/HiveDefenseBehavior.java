@@ -1,8 +1,8 @@
 package me.javavirtualenv.behavior.bee;
 
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.BehaviorContext;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -44,8 +44,8 @@ public class HiveDefenseBehavior extends SteeringBehavior {
     }
 
     public HiveDefenseBehavior(double weight) {
-        super(weight);
         this.target = null;
+        setWeight(weight);
         this.isDefending = false;
         this.angerTimer = 0;
     }
@@ -150,6 +150,7 @@ public class HiveDefenseBehavior extends SteeringBehavior {
 
     /**
      * Checks if an entity is threatening to the hive.
+     * Bees ignore threats if there's a campfire near the hive.
      */
     private boolean isThreateningToHive(Entity entity, Bee bee, Level level) {
         Vec3 entityPos = entity.position();
@@ -161,6 +162,11 @@ public class HiveDefenseBehavior extends SteeringBehavior {
             return false;
         }
 
+        // Check for campfire near hive - bees are pacified by campfire smoke
+        if (hasCampfireNearHive(level, nearbyHive)) {
+            return false;
+        }
+
         double distanceToHive = new Vec3d(entityPos).distanceTo(new Vec3d(
             nearbyHive.getX() + 0.5,
             nearbyHive.getY() + 0.5,
@@ -169,6 +175,32 @@ public class HiveDefenseBehavior extends SteeringBehavior {
 
         // Consider threatening if within 8 blocks of hive
         return distanceToHive <= 8.0;
+    }
+
+    /**
+     * Checks if there's a campfire near the hive.
+     * Campfires pacify bees, preventing aggressive defense.
+     */
+    private boolean hasCampfireNearHive(Level level, BlockPos hivePos) {
+        int searchRadius = 6;
+
+        for (int x = -searchRadius; x <= searchRadius; x++) {
+            for (int y = -3; y <= 3; y++) {
+                for (int z = -searchRadius; z <= searchRadius; z++) {
+                    BlockPos checkPos = hivePos.offset(x, y, z);
+                    var blockState = level.getBlockState(checkPos);
+                    // Check for normal campfire or soul campfire
+                    if (blockState.is(net.minecraft.world.level.block.Blocks.CAMPFIRE) ||
+                        blockState.is(net.minecraft.world.level.block.Blocks.SOUL_CAMPFIRE)) {
+                        // Campfire must be lit to pacify bees
+                        Boolean litProperty = blockState.getValue(net.minecraft.world.level.block.CampfireBlock.LIT);
+                        return litProperty != null && litProperty;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     /**

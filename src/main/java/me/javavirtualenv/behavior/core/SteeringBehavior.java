@@ -13,8 +13,9 @@ public abstract class SteeringBehavior implements BehaviorRule {
             return new Vec3d();
         }
         Vec3d result = calculate(context);
-        result.mult(weight);
-        return result;
+        Vec3d weighted = result.copy();
+        weighted.mult(weight);
+        return weighted;
     }
 
     public void setWeight(double weight) {
@@ -68,5 +69,13 @@ public abstract class SteeringBehavior implements BehaviorRule {
         desired.mult(desiredSpeed);
         desired.sub(currentVelocity);
         return desired;
+    }
+
+    protected Vec3d limitForce(Vec3d force, double maxForce) {
+        if (force.magnitude() > maxForce) {
+            force.normalize();
+            force.mult(maxForce);
+        }
+        return force;
     }
 }

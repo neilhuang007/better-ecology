@@ -1,7 +1,7 @@
 package me.javavirtualenv.behavior.wolf;
 
-import me.javavirtualenv.behavior.steering.BehaviorContext;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import me.javavirtualenv.behavior.core.Vec3d;
 import me.javavirtualenv.behavior.predation.PreySelector;
 import me.javavirtualenv.ecology.EcologyComponent;
@@ -86,6 +86,10 @@ public class PackHuntingBehavior extends SteeringBehavior {
 
     @Override
     public Vec3d calculate(BehaviorContext context) {
+        if (context == null) {
+            return new Vec3d();
+        }
+
         if (!(context.getSelf() instanceof Wolf wolf)) {
             return new Vec3d();
         }
@@ -402,10 +406,10 @@ public class PackHuntingBehavior extends SteeringBehavior {
         allWolves.add(wolf);
 
         Wolf strongest = wolf;
-        double maxStrength = calculateStrength(wolf);
+        double maxStrength = calculateWolfStrength(wolf);
 
         for (Wolf other : allWolves) {
-            double strength = calculateStrength(other);
+            double strength = calculateWolfStrength(other);
             if (strength > maxStrength) {
                 maxStrength = strength;
                 strongest = other;
@@ -418,7 +422,7 @@ public class PackHuntingBehavior extends SteeringBehavior {
     /**
      * Calculates wolf strength for alpha determination.
      */
-    private double calculateStrength(Wolf wolf) {
+    private double calculateWolfStrength(Wolf wolf) {
         double health = wolf.getHealth();
         double maxHealth = wolf.getMaxHealth();
         double ageBonus = wolf.isBaby() ? 0 : 1.5;
@@ -543,12 +547,40 @@ public class PackHuntingBehavior extends SteeringBehavior {
         return currentPrey;
     }
 
+    public void setCurrentPrey(Entity prey) {
+        this.currentPrey = prey;
+    }
+
     public PackHuntingState getHuntingState() {
         return huntingState;
     }
 
+    public void setHuntingState(PackHuntingState state) {
+        this.huntingState = state;
+    }
+
     public UUID getPackId() {
         return packId;
+    }
+
+    public void setPackId(UUID packId) {
+        this.packId = packId;
+    }
+
+    /**
+     * Gets the current handling timer value.
+     * Used for testing to verify kill handling behavior.
+     */
+    public int getHandlingTimer() {
+        return handlingTimer;
+    }
+
+    /**
+     * Calculates wolf strength for alpha determination.
+     * Exposed for testing purposes.
+     */
+    public double calculateStrength(Wolf wolf) {
+        return calculateWolfStrength(wolf);
     }
 
     /**

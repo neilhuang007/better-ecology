@@ -15,6 +15,7 @@ import me.javavirtualenv.ecology.ai.CowGrazeGoal;
 import me.javavirtualenv.ecology.ai.CowProtectCalfGoal;
 import me.javavirtualenv.ecology.ai.HerdCohesionGoal;
 import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
+import me.javavirtualenv.ecology.ai.SeekWaterGoal;
 import me.javavirtualenv.ecology.handles.AgeHandle;
 import me.javavirtualenv.ecology.handles.BreedingHandle;
 import me.javavirtualenv.ecology.handles.ConditionHandle;
@@ -92,6 +93,7 @@ public abstract class CowMixin {
         AnimalConfig config = AnimalConfig.builder(COW_ID)
                 // Internal state systems
                 .addHandle(new CowHungerHandle())
+                .addHandle(new CowThirstHandle())
                 .addHandle(new CowConditionHandle())
                 .addHandle(new CowEnergyHandle())
                 .addHandle(new CowAgeHandle())
@@ -151,24 +153,27 @@ public abstract class CowMixin {
             accessor.betterEcology$getGoalSelector().addGoal(3, new BullCompetitionGoal(cow, 20.0));
         }
 
-        // Priority 4: Breed (using vanilla breeding goal with our constraints)
-        accessor.betterEcology$getGoalSelector().addGoal(4, new BreedGoal(cow, 1.0));
+        // Priority 4: Seek water when thirsty
+        accessor.betterEcology$getGoalSelector().addGoal(4, new SeekWaterGoal(cow, 1.0, 16));
 
-        // Priority 5: Grazing
-        accessor.betterEcology$getGoalSelector().addGoal(5, new CowGrazeGoal(cow, 16.0, 0.8));
+        // Priority 5: Breed (using vanilla breeding goal with our constraints)
+        accessor.betterEcology$getGoalSelector().addGoal(5, new BreedGoal(cow, 1.0));
 
-        // Priority 6: Herd cohesion (adults) or follow mother (calves)
+        // Priority 6: Grazing
+        accessor.betterEcology$getGoalSelector().addGoal(6, new CowGrazeGoal(cow, 16.0, 0.8));
+
+        // Priority 7: Herd cohesion (adults) or follow mother (calves)
         if (cow.isBaby()) {
-            accessor.betterEcology$getGoalSelector().addGoal(6, new CalfFollowMotherGoal(cow, 24.0, 1.0));
+            accessor.betterEcology$getGoalSelector().addGoal(7, new CalfFollowMotherGoal(cow, 24.0, 1.0));
         } else {
-            accessor.betterEcology$getGoalSelector().addGoal(6, new HerdCohesionGoal(cow, 24.0, 0.8));
+            accessor.betterEcology$getGoalSelector().addGoal(7, new HerdCohesionGoal(cow, 24.0, 0.8));
         }
 
-        // Priority 7: Cud chewing (idle behavior)
-        accessor.betterEcology$getGoalSelector().addGoal(7, new CowCudChewGoal(cow));
+        // Priority 8: Cud chewing (idle behavior)
+        accessor.betterEcology$getGoalSelector().addGoal(8, new CowCudChewGoal(cow));
 
-        // Priority 8: Random stroll (fallback)
-        accessor.betterEcology$getGoalSelector().addGoal(8, new WaterAvoidingRandomStrollGoal(cow, 0.6));
+        // Priority 9: Random stroll (fallback)
+        accessor.betterEcology$getGoalSelector().addGoal(9, new WaterAvoidingRandomStrollGoal(cow, 0.6));
     }
 
     // ============================================================================
@@ -250,6 +255,84 @@ public abstract class CowMixin {
 
         private boolean shouldApplyStarvation(Mob mob, int hunger) {
             return hunger <= DAMAGE_THRESHOLD && mob.level().getDifficulty() != Difficulty.PEACEFUL;
+        }
+    }
+
+    /**
+     * Thirst system for cows.
+     */
+    private static final class CowThirstHandle extends CodeBasedHandle {
+        private static final String NBT_THIRST = "thirst";
+        private static final String NBT_LAST_DAMAGE = "lastThirstDamageTick";
+
+        private static final int MAX_THIRST = 100;
+        private static final int STARTING_THIRST = 100;
+        private static final double DECAY_RATE = 0.015;
+        private static final int DAMAGE_THRESHOLD = 15;
+        private static final float DAMAGE_AMOUNT = 1.0f;
+        private static final int DAMAGE_INTERVAL = 200;
+        private static final long MAX_CATCH_UP_TICKS = 24000L;
+
+        @Override
+        public String id() {
+            return "thirst";
+        }
+
+        @Override
+        public int tickInterval() {
+            return 20;
+        }
+
+        @Override
+        public void tick(Mob mob, EcologyComponent component, EcologyProfile profile) {
+            CompoundTag tag = component.getHandleTag(id());
+            int currentThirst = getCurrentThirst(tag);
+            long elapsed = component.elapsedTicks();
+            long effectiveTicks = Math.min(Math.max(1, elapsed), MAX_CATCH_UP_TICKS);
+            long scaledDecay = (long) (DECAY_RATE * effectiveTicks);
+
+            int newThirst = currentThirst - (int) scaledDecay;
+            if (elapsed > 1) {
+                newThirst = Math.max(DAMAGE_THRESHOLD + 1, newThirst);
+            } else {
+                newThirst = Math.max(0, newThirst);
+            }
+
+            setThirst(tag, newThirst);
+
+            if (elapsed <= 1 && shouldApplyDehydration(mob, newThirst)) {
+                int currentTick = mob.tickCount;
+                int lastDamage = getLastDamageTick(tag);
+                if (currentTick - lastDamage >= DAMAGE_INTERVAL) {
+                    mob.hurt(mob.level().damageSources().starve(), DAMAGE_AMOUNT);
+                    setLastDamageTick(tag, currentTick);
+                }
+            }
+        }
+
+        @Override
+        public void writeNbt(Mob mob, EcologyComponent component, EcologyProfile profile, CompoundTag outputTag) {
+            outputTag.put(id(), component.getHandleTag(id()).copy());
+        }
+
+        private int getCurrentThirst(CompoundTag tag) {
+            return tag.contains(NBT_THIRST) ? tag.getInt(NBT_THIRST) : STARTING_THIRST;
+        }
+
+        private void setThirst(CompoundTag tag, int value) {
+            tag.putInt(NBT_THIRST, value);
+        }
+
+        private int getLastDamageTick(CompoundTag tag) {
+            return tag.getInt(NBT_LAST_DAMAGE);
+        }
+
+        private void setLastDamageTick(CompoundTag tag, int tick) {
+            tag.putInt(NBT_LAST_DAMAGE, tick);
+        }
+
+        private boolean shouldApplyDehydration(Mob mob, int thirst) {
+            return thirst <= DAMAGE_THRESHOLD && mob.level().getDifficulty() != Difficulty.PEACEFUL;
         }
     }
 

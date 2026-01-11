@@ -1,5 +1,7 @@
 package me.javavirtualenv.mixin.animal;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -44,18 +46,24 @@ import net.minecraft.world.level.pathfinder.PathType;
 @Mixin(Wolf.class)
 public abstract class WolfMixin {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger("BetterEcology/WolfMixin");
     private static final String WOLF_ID = "minecraft:wolf";
-    private static boolean behaviorsRegistered = false;
+
+    // Static initializer to register behaviors before any wolf is created
+    // This ensures the config is available when Mob.registerGoals() is called
+    static {
+        LOGGER.info("WolfMixin static initializer - registering wolf behaviors");
+        registerWolfBehaviors();
+        LOGGER.info("Wolf behaviors registered successfully");
+    }
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(EntityType<? extends Wolf> entityType, Level level, CallbackInfo ci) {
-        if (!behaviorsRegistered) {
-            registerWolfBehaviors();
-            behaviorsRegistered = true;
-        }
+        // Behaviors are already registered in static initializer
+        // This injection is kept for potential future initialization per-instance
     }
 
-    private void registerWolfBehaviors() {
+    private static void registerWolfBehaviors() {
         AnimalConfig config = AnimalConfig.builder(
                 net.minecraft.resources.ResourceLocation.parse(WOLF_ID))
                 // Basic survival handles
@@ -166,7 +174,7 @@ public abstract class WolfMixin {
 
         private static final long MAX_CATCH_UP_TICKS = 24000L; // 1 Minecraft day
         private static final int MAX_THIRST = 100;
-        private static final int STARTING_THIRST = 80;
+        private static final int STARTING_THIRST = 10; // Start thirsty so wolves immediately seek water
         private static final double DECAY_RATE = 0.02;
         private static final int THIRST_THRESHOLD = 20;
         private static final int DEHYDRATION_THRESHOLD = 5;
@@ -434,6 +442,12 @@ public abstract class WolfMixin {
             change *= elapsed;
 
             int newSocial = (int) Math.round(Math.min(MAX_VALUE, Math.max(0, currentSocial + change)));
+
+            // Instant recovery when pack is nearby - immediately clear loneliness
+            if (hasPackNearby && newSocial < LONELINESS_THRESHOLD) {
+                newSocial = LONELINESS_THRESHOLD + 10; // Set above threshold
+            }
+
             setSocial(tag, newSocial);
 
             boolean isLonely = newSocial < LONELINESS_THRESHOLD;
@@ -482,10 +496,29 @@ public abstract class WolfMixin {
 
         private static final double WALK_SPEED = 0.3;
         private static final double STROLL_SPEED = 1.0; // Speed modifier for strolling (1.0 = normal walk speed)
+        private static final float NORMAL_WATER_MALUS = 8.0F;
+        private static final float THIRSTY_WATER_MALUS = 1.0F; // Allow pathfinding to water when thirsty
 
         @Override
         public String id() {
             return "movement";
+        }
+
+        @Override
+        public int tickInterval() {
+            return 10; // Update water malus every 0.5 seconds
+        }
+
+        @Override
+        public void tick(Mob mob, EcologyComponent component, EcologyProfile profile) {
+            if (!(mob instanceof Wolf wolf)) {
+                return;
+            }
+
+            // Reduce water malus when thirsty so wolves can reach water to drink
+            boolean isThirsty = component.state().isThirsty();
+            float newMalus = isThirsty ? THIRSTY_WATER_MALUS : NORMAL_WATER_MALUS;
+            wolf.setPathfindingMalus(PathType.WATER, newMalus);
         }
 
         @Override
@@ -499,7 +532,7 @@ public abstract class WolfMixin {
                 return;
             }
 
-            wolf.setPathfindingMalus(PathType.WATER, 8.0F);
+            wolf.setPathfindingMalus(PathType.WATER, NORMAL_WATER_MALUS);
 
             me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
             accessor.betterEcology$getGoalSelector().addGoal(0, new FloatGoal(wolf));
@@ -566,21 +599,22 @@ public abstract class WolfMixin {
                 return;
             }
 
+            LOGGER.info("WolfPredationHandle.registerGoals called for wolf {}", mob.getId());
             me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
 
             // Register low health flee goal (high priority)
             accessor.betterEcology$getGoalSelector().addGoal(1,
                 new me.javavirtualenv.ecology.ai.LowHealthFleeGoal(wolf, 0.45, 1.5));
 
-            // Register wolf food sharing goals
+            // Register wolf food sharing goals - pickup BEFORE feeding (higher priority)
             accessor.betterEcology$getGoalSelector().addGoal(3,
                 new me.javavirtualenv.behavior.wolf.WolfPickupItemGoal(wolf));
 
             accessor.betterEcology$getGoalSelector().addGoal(3,
                 new me.javavirtualenv.behavior.wolf.WolfShareFoodGoal(wolf));
 
-            // Register predator feeding goal (find and eat meat items)
-            accessor.betterEcology$getGoalSelector().addGoal(4,
+            // Register predator feeding goal (find and eat meat items) - LOWER priority than pickup
+            accessor.betterEcology$getGoalSelector().addGoal(5,
                 new me.javavirtualenv.behavior.predation.PredatorFeedingGoal(wolf));
 
             // Hunt prey animals
@@ -592,6 +626,12 @@ public abstract class WolfMixin {
 
             accessor.betterEcology$getTargetSelector().addGoal(3,
                     new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Fox.class, false));
+
+            accessor.betterEcology$getTargetSelector().addGoal(3,
+                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Pig.class, false));
+
+            accessor.betterEcology$getTargetSelector().addGoal(3,
+                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Chicken.class, false));
 
             // Siege targeting - higher priority (goal 2)
             // These targets are only targeted when wolf is in siege mode

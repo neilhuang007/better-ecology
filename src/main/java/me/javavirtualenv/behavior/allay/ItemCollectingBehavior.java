@@ -1,8 +1,8 @@
 package me.javavirtualenv.behavior.allay;
 
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.BehaviorContext;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.allay.Allay;
@@ -43,8 +43,8 @@ public class ItemCollectingBehavior extends SteeringBehavior {
     }
 
     public ItemCollectingBehavior(double weight) {
-        super(weight);
         this.itemMemory = new ArrayList<>();
+        setWeight(weight);
         this.preferences = new ArrayList<>();
         this.targetItem = null;
         this.deliveryLocation = null;

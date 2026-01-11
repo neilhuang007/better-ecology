@@ -439,10 +439,16 @@ public class ParentOffspringConfig {
     }
 
     public SpeciesConfig getSpeciesConfig(String speciesId) {
+        if (speciesId == null) {
+            return null;
+        }
         return speciesConfigs.get(speciesId.toLowerCase());
     }
 
     public boolean hasConfig(String speciesId) {
+        if (speciesId == null || speciesId.isEmpty()) {
+            return false;
+        }
         return speciesConfigs.containsKey(speciesId.toLowerCase());
     }
 

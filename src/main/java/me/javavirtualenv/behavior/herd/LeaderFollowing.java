@@ -3,6 +3,9 @@ package me.javavirtualenv.behavior.herd;
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.SteeringBehavior;
 import me.javavirtualenv.behavior.core.Vec3d;
+import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Mob;
@@ -17,13 +20,16 @@ import java.util.*;
  */
 public class LeaderFollowing extends SteeringBehavior {
 
+    private static final String DOMINANCE_KEY = "dominance";
+    private static final String LAST_DECAY_KEY = "lastDecayTick";
+    private static final String NBT_DOMINANCE = "dominance";
+    private static final double LEADER_UPDATE_INTERVAL = 2.0; // seconds
+    private static final int DECAY_INTERVAL_TICKS = 1200; // 1 minute between decay checks
+    private static final double DOMINANCE_DECAY_RATE = 0.01; // Decay per check
+
     private final HerdConfig config;
     private Entity currentLeader;
     private double lastLeaderUpdate = 0.0;
-    private static final double LEADER_UPDATE_INTERVAL = 2.0; // seconds
-
-    // Per-instance storage for dominance values (no longer static/shared)
-    private final Map<UUID, Double> dominanceCache = new HashMap<>();
 
     public LeaderFollowing(HerdConfig config) {
         this.config = config;
@@ -191,6 +197,7 @@ public class LeaderFollowing extends SteeringBehavior {
     /**
      * Calculates age-based bonus for leadership.
      * Adults with more experience get higher bonus.
+     * Uses config-specified max age for realistic species behavior.
      */
     private double calculateAgeBonus(Animal animal) {
         if (animal.isBaby()) {
@@ -200,34 +207,46 @@ public class LeaderFollowing extends SteeringBehavior {
         if (animal instanceof AgeableMob ageable) {
             int age = ageable.getAge();
             // Age is negative for babies, 0 for just matured, positive for older adults
-            // Cap age bonus at some reasonable value (e.g., 100 ticks)
-            return Math.min(1.0, Math.max(0.3, age / 100.0));
+            // Cap age bonus at configured max age for realistic behavior
+            int maxAge = config.getMaxAgeForLeadership();
+            return Math.min(1.0, Math.max(0.3, (double) age / maxAge));
         }
 
         return 0.5; // Default adult bonus
     }
 
     /**
-     * Gets dominance value from entity.
+     * Gets dominance value from entity's persistent NBT storage.
      * Returns 0.0-1.0 range.
      */
     public double getDominance(Animal animal) {
-        UUID uuid = animal.getUUID();
-        if (!dominanceCache.containsKey(uuid)) {
-            // Initialize with random value if not set
+        EcologyComponent component = getEcologyComponent(animal);
+        if (component == null) {
+            return 0.5; // Default value if component unavailable
+        }
+
+        CompoundTag dominanceTag = component.getHandleTag(DOMINANCE_KEY);
+        if (!dominanceTag.contains(NBT_DOMINANCE)) {
             double initialDominance = animal.getRandom().nextDouble();
-            dominanceCache.put(uuid, initialDominance);
+            dominanceTag.putDouble(NBT_DOMINANCE, initialDominance);
             return initialDominance;
         }
-        return dominanceCache.get(uuid);
+
+        return dominanceTag.getDouble(NBT_DOMINANCE);
     }
 
     /**
-     * Sets dominance value for an animal (e.g., after winning a conflict).
+     * Sets dominance value for an animal with NBT persistence.
      */
     public void setDominance(Animal animal, double dominance) {
-        UUID uuid = animal.getUUID();
-        dominanceCache.put(uuid, Math.max(0.0, Math.min(1.0, dominance)));
+        EcologyComponent component = getEcologyComponent(animal);
+        if (component == null) {
+            return;
+        }
+
+        double clampedDominance = Math.max(0.0, Math.min(1.0, dominance));
+        CompoundTag dominanceTag = component.getHandleTag(DOMINANCE_KEY);
+        dominanceTag.putDouble(NBT_DOMINANCE, clampedDominance);
     }
 
     /**
@@ -244,6 +263,38 @@ public class LeaderFollowing extends SteeringBehavior {
     public void decreaseDominance(Animal animal, double amount) {
         double current = getDominance(animal);
         setDominance(animal, Math.max(0.0, current - amount));
+    }
+
+    /**
+     * Applies periodic dominance decay to maintain dynamic hierarchy.
+     * Should be called periodically to prevent dominance from becoming static.
+     */
+    public void applyDominanceDecay(Animal animal) {
+        EcologyComponent component = getEcologyComponent(animal);
+        if (component == null) {
+            return;
+        }
+
+        CompoundTag dominanceTag = component.getHandleTag(DOMINANCE_KEY);
+        int currentTick = animal.tickCount;
+        int lastDecayTick = dominanceTag.getInt(LAST_DECAY_KEY);
+
+        if (currentTick - lastDecayTick >= DECAY_INTERVAL_TICKS) {
+            double currentDominance = getDominance(animal);
+            double decayedDominance = Math.max(0.1, currentDominance - DOMINANCE_DECAY_RATE);
+            dominanceTag.putDouble(NBT_DOMINANCE, decayedDominance);
+            dominanceTag.putInt(LAST_DECAY_KEY, currentTick);
+        }
+    }
+
+    /**
+     * Gets EcologyComponent from an animal entity.
+     */
+    private EcologyComponent getEcologyComponent(Animal animal) {
+        if (!(animal instanceof EcologyAccess access)) {
+            return null;
+        }
+        return access.betterEcology$getEcologyComponent();
     }
 
     /**

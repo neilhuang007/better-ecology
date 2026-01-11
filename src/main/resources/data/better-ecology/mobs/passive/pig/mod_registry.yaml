@@ -116,6 +116,13 @@ internal_state:
       thirsty: 45
       dehydrated: 15
 
+  # Hunger/thirst trigger system
+  hunger_thirst_trigger:
+    enabled: true
+    priority: 4
+    hunger_threshold: 50
+    thirst_threshold: 45
+
 
   # Body condition (overall fitness - affects breeding, survival)
   condition:
