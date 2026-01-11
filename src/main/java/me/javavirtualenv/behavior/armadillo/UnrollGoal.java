@@ -1,5 +1,7 @@
 package me.javavirtualenv.behavior.armadillo;
 
+import me.javavirtualenv.BetterEcology;
+import me.javavirtualenv.debug.BehaviorLogger;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyProfile;
 import net.minecraft.server.level.ServerLevel;
@@ -7,6 +9,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.EntityType;
 
 import java.util.EnumSet;
 
@@ -25,14 +28,29 @@ import java.util.EnumSet;
  */
 public class UnrollGoal extends Goal {
 
+    // Configuration constants
+    private static final int UNROLL_DURATION = 40; // 2 seconds to unroll
+    private static final int MIN_ROLL_TIME = 60; // Must stay rolled for at least 3 seconds
+    private static final double SAFE_DISTANCE = 16.0; // No predators within 16 blocks
+
+    // Predator types
+    private static final EntityType<?>[] PREDATORS = {
+        EntityType.WOLF,
+        EntityType.CAT,
+        EntityType.OCELOT,
+        EntityType.FOX
+    };
+
+    // Instance fields
     private final Mob mob;
     private final EcologyComponent component;
     private final EcologyProfile profile;
     private final ArmadilloComponent armadilloComponent;
+    private int unrollTicks;
 
-    private static final int UNROLL_DURATION = 40; // 2 seconds to unroll
-    private static final int MIN_ROLL_TIME = 60; // Must stay rolled for at least 3 seconds
-    private static final double SAFE_DISTANCE = 16.0; // No predators within 16 blocks
+    // Debug info
+    private String lastDebugMessage = "";
+    private boolean wasSafeLastCheck = false;
 
     public UnrollGoal(Mob mob, EcologyComponent component, EcologyProfile profile) {
         this.mob = mob;
@@ -44,25 +62,53 @@ public class UnrollGoal extends Goal {
 
     @Override
     public boolean canUse() {
+        // Client-side only runs visual logic
+        if (mob.level().isClientSide) {
+            return false;
+        }
+
         // Must be rolled
         if (!armadilloComponent.isRolled()) {
             return false;
         }
 
         // Check if safe to unroll
-        return isSafeToUnroll();
+        boolean isSafe = isSafeToUnroll();
+
+        // Log state change
+        if (isSafe != wasSafeLastCheck) {
+            debug("safety state changed: " + wasSafeLastCheck + " -> " + isSafe);
+            wasSafeLastCheck = isSafe;
+        }
+
+        if (!isSafe) {
+            return false;
+        }
+
+        debug("STARTING: unrolling (safe environment detected)");
+        return true;
     }
 
     @Override
     public boolean canContinueToUse() {
-        return armadilloComponent.isRolled() &&
-               armadilloComponent.getUnrollTicks() < UNROLL_DURATION &&
-               isSafeToUnroll();
+        // Continue if rolled and not finished unrolling
+        if (!armadilloComponent.isRolled()) {
+            return false;
+        }
+
+        // Stop if no longer safe
+        if (!isSafeToUnroll()) {
+            debug("no longer safe, aborting unroll");
+            return false;
+        }
+
+        return unrollTicks < UNROLL_DURATION;
     }
 
     @Override
     public void start() {
-        armadilloComponent.setUnrollTicks(0);
+        unrollTicks = 0;
+        debug("goal started, unrolling");
 
         // Play start unrolling sound
         if (!mob.level().isClientSide()) {
@@ -82,11 +128,10 @@ public class UnrollGoal extends Goal {
 
     @Override
     public void tick() {
-        int currentTicks = armadilloComponent.getUnrollTicks();
-        armadilloComponent.setUnrollTicks(currentTicks + 1);
+        unrollTicks++;
 
         // Gradually restore movement
-        double progress = (double) currentTicks / UNROLL_DURATION;
+        double progress = (double) unrollTicks / UNROLL_DURATION;
         double currentSpeed = profile.getDouble("movement.base_speed", 0.15) * progress;
 
         if (mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED) != null) {
@@ -94,7 +139,7 @@ public class UnrollGoal extends Goal {
         }
 
         // Spawn unroll particles
-        if (currentTicks % 5 == 0 && !mob.level().isClientSide()) {
+        if (unrollTicks % 5 == 0 && !mob.level().isClientSide()) {
             ServerLevel serverLevel = (ServerLevel) mob.level();
             serverLevel.sendParticles(
                 net.minecraft.core.particles.ParticleTypes.ITEM_SLIME,
@@ -109,16 +154,23 @@ public class UnrollGoal extends Goal {
             );
         }
 
+        // Log progress every half second
+        if (unrollTicks % 10 == 0) {
+            debug("unrolling, progress=" + String.format("%.0f", progress * 100) + "%");
+        }
+
         // Fully unrolled
-        if (currentTicks >= UNROLL_DURATION) {
+        if (unrollTicks >= UNROLL_DURATION) {
             armadilloComponent.setRolled(false);
-            armadilloComponent.setUnrollTicks(0);
+            unrollTicks = 0;
 
             // Restore full movement speed
             double baseSpeed = profile.getDouble("movement.base_speed", 0.15);
             if (mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED) != null) {
                 mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED).setBaseValue(baseSpeed);
             }
+
+            debug("fully unrolled");
 
             // Play fully unrolled sound
             if (!mob.level().isClientSide()) {
@@ -140,10 +192,24 @@ public class UnrollGoal extends Goal {
     @Override
     public void stop() {
         // If stopped early (threat detected), immediately roll back up
-        if (armadilloComponent.getUnrollTicks() > 0 && armadilloComponent.getUnrollTicks() < UNROLL_DURATION) {
+        if (unrollTicks > 0 && unrollTicks < UNROLL_DURATION) {
+            debug("unroll interrupted, rolling back up");
             armadilloComponent.setRolled(true);
-            armadilloComponent.setUnrollTicks(0);
+            unrollTicks = 0;
+
+            // Restore base speed while rolled
+            double baseSpeed = profile.getDouble("movement.base_speed", 0.15);
+            if (mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED) != null) {
+                mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED).setBaseValue(baseSpeed);
+            }
+        } else {
+            debug("goal stopped");
         }
+    }
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
     }
 
     /**
@@ -178,11 +244,45 @@ public class UnrollGoal extends Goal {
     private boolean isPredatorNearby() {
         return mob.level().getEntitiesOfClass(Mob.class, mob.getBoundingBox().inflate(SAFE_DISTANCE)).stream()
             .anyMatch(entity -> {
-                net.minecraft.world.entity.EntityType<?> type = entity.getType();
-                return type == net.minecraft.world.entity.EntityType.WOLF ||
-                       type == net.minecraft.world.entity.EntityType.CAT ||
-                       type == net.minecraft.world.entity.EntityType.OCELOT ||
-                       type == net.minecraft.world.entity.EntityType.FOX;
+                EntityType<?> type = entity.getType();
+                for (EntityType<?> predator : PREDATORS) {
+                    if (type == predator) {
+                        return true;
+                    }
+                }
+                return false;
             });
+    }
+
+    /**
+     * Debug logging with consistent prefix.
+     */
+    private void debug(String message) {
+        lastDebugMessage = message;
+        if (BehaviorLogger.isMinimal() || BetterEcology.DEBUG_MODE) {
+            String prefix = "[ArmadilloUnroll] Armadillo #" + mob.getId() + " ";
+            BehaviorLogger.info(prefix + message);
+        }
+    }
+
+    /**
+     * Get last debug message for external display.
+     */
+    public String getLastDebugMessage() {
+        return lastDebugMessage;
+    }
+
+    /**
+     * Get current state info for debug display.
+     */
+    public String getDebugState() {
+        return String.format("rolled=%s, unrollTicks=%d/%d, predatorNearby=%s, panicking=%s, safe=%s",
+            armadilloComponent.isRolled(),
+            unrollTicks,
+            UNROLL_DURATION,
+            isPredatorNearby(),
+            armadilloComponent.isPanicking(),
+            isSafeToUnroll()
+        );
     }
 }

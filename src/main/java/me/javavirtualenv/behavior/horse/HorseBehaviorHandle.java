@@ -27,41 +27,21 @@ public class HorseBehaviorHandle extends CodeBasedHandle {
             return;
         }
 
-        // Get or create bond data
-        HorseBondData bondData = getOrCreateBondData(component);
-
-        // Create goals with configuration
-        KickDefenseGoal.KickConfig kickConfig = createKickConfig(horse);
-        RearingGoal.RearingConfig rearingConfig = RearingGoal.RearingConfig.createDefault();
-        BondingGoal.BondingConfig bondingConfig = BondingGoal.BondingConfig.createDefault();
-        HerdDynamicsGoal.HerdConfig herdConfig = HerdDynamicsGoal.HerdConfig.createDefault();
-        SocialGroomingGoal.GroomingConfig groomingConfig = SocialGroomingGoal.GroomingConfig.createDefault();
-
         // Register kick defense (high priority for self-defense)
         me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
-        accessor.betterEcology$getGoalSelector().addGoal(1,
-            new KickDefenseGoal(horse, kickConfig)
-        );
+        accessor.betterEcology$getGoalSelector().addGoal(1, new KickDefenseGoal(horse));
 
         // Register rearing behavior
-        accessor.betterEcology$getGoalSelector().addGoal(2,
-            new RearingGoal(horse, rearingConfig)
-        );
+        accessor.betterEcology$getGoalSelector().addGoal(2, new RearingGoal(horse));
 
         // Register bonding behavior
-        accessor.betterEcology$getGoalSelector().addGoal(3,
-            new BondingGoal(horse, bondData, bondingConfig)
-        );
+        accessor.betterEcology$getGoalSelector().addGoal(3, new BondingGoal(horse));
 
         // Register herd dynamics (only for wild horses)
-        accessor.betterEcology$getGoalSelector().addGoal(4,
-            new HerdDynamicsGoal(horse, herdConfig)
-        );
+        accessor.betterEcology$getGoalSelector().addGoal(4, new HerdDynamicsGoal(horse));
 
         // Register social grooming
-        accessor.betterEcology$getGoalSelector().addGoal(5,
-            new SocialGroomingGoal(horse, groomingConfig)
-        );
+        accessor.betterEcology$getGoalSelector().addGoal(5, new SocialGroomingGoal(horse));
     }
 
     @Override
@@ -84,18 +64,6 @@ public class HorseBehaviorHandle extends CodeBasedHandle {
             HorseBondData bondData = getOrCreateBondData(component);
             CompoundTag bondTag = tag.getCompound(NBT_BOND_DATA);
             bondData.loadFromNbt(bondTag);
-        }
-    }
-
-    private KickDefenseGoal.KickConfig createKickConfig(AbstractHorse horse) {
-        net.minecraft.world.entity.EntityType<?> type = horse.getType();
-
-        if (type == net.minecraft.world.entity.EntityType.DONKEY) {
-            return KickDefenseGoal.KickConfig.createDonkeyConfig();
-        } else if (type == net.minecraft.world.entity.EntityType.MULE) {
-            return KickDefenseGoal.KickConfig.createMuleConfig();
-        } else {
-            return KickDefenseGoal.KickConfig.createDefault();
         }
     }
 

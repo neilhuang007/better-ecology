@@ -1,16 +1,22 @@
 package me.javavirtualenv.behavior.production;
 
+import me.javavirtualenv.BetterEcology;
+import me.javavirtualenv.debug.BehaviorLogger;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyHooks;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.handles.production.ResourceProductionHandle;
 import me.javavirtualenv.mixin.animal.BeeAccessor;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.animal.Bee;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.EnumSet;
 
 /**
  * Bee-specific pollination goal.
@@ -26,20 +32,38 @@ import net.minecraft.world.phys.Vec3;
  */
 public class BeePollinationGoal extends ResourceGatheringGoal {
 
+    // NBT keys
+    private static final String POLLINATION_TICKS_KEY = "pollination_ticks";
+    private static final String FLOWER_TYPE_KEY = "pollination_flower";
+
+    // Configuration constants
     private static final int POLLINATION_TICKS_NEEDED = 60;
     private static final int CROP_GROWTH_RADIUS = 8;
+    private static final double MOVE_SPEED = 1.0;
+    private static final double FLOWER_DISTANCE = 2.0;
+    private static final double HIVE_DISTANCE = 2.0;
+    private static final int SEARCH_INTERVAL = 100;
 
+    // Instance fields
     private final Bee bee;
     private String currentFlowerType;
     private int pollinationTicks;
 
+    // Debug info
+    private String lastDebugMessage = "";
+
     public BeePollinationGoal(Bee bee) {
-        super(bee, 22.0, 100, POLLINATION_TICKS_NEEDED);
+        super(bee, 22.0, SEARCH_INTERVAL, POLLINATION_TICKS_NEEDED);
         this.bee = bee;
     }
 
     @Override
     public boolean canUse() {
+        // Client-side only runs visual logic
+        if (bee.level().isClientSide) {
+            return false;
+        }
+
         if (!bee.isAlive()) {
             return false;
         }
@@ -48,12 +72,24 @@ public class BeePollinationGoal extends ResourceGatheringGoal {
             return false;
         }
 
+        // Load state from NBT
+        CompoundTag pollinationTag = getPollinationTag();
+        if (pollinationTag != null) {
+            pollinationTicks = pollinationTag.getInt(POLLINATION_TICKS_KEY);
+            currentFlowerType = pollinationTag.getString(FLOWER_TYPE_KEY);
+        }
+
+        // If bee already has nectar, return to hive
         if (bee.hasNectar()) {
+            if (!returningHome) {
+                debug("has nectar, returning to hive");
+            }
             returningHome = true;
             hasResource = true;
             return true;
         }
 
+        // Don't pollinate at night or during bad weather
         long dayTime = bee.level().getDayTime() % 24000;
         boolean isNight = dayTime >= 13000 && dayTime < 23000;
         boolean isBadWeather = bee.level().isRaining() || bee.level().isThundering();
@@ -62,7 +98,143 @@ public class BeePollinationGoal extends ResourceGatheringGoal {
             return false;
         }
 
-        return super.canUse();
+        // Search for flowers
+        ticksSinceLastSearch++;
+        if (ticksSinceLastSearch < searchInterval) {
+            return false;
+        }
+
+        ticksSinceLastSearch = 0;
+        targetResourcePos = findNearestResource();
+
+        if (targetResourcePos != null) {
+            BlockState flowerState = bee.level().getBlockState(targetResourcePos);
+            currentFlowerType = getFlowerType(flowerState);
+            debug("STARTING: pollinating " + currentFlowerType + " at " +
+                  targetResourcePos.getX() + "," + targetResourcePos.getZ());
+        }
+
+        return targetResourcePos != null;
+    }
+
+    @Override
+    public boolean canContinueToUse() {
+        if (!bee.isAlive()) {
+            return false;
+        }
+
+        if (returningHome) {
+            return !isNearHome();
+        }
+
+        if (targetResourcePos == null) {
+            return false;
+        }
+
+        if (hasResource) {
+            return true;
+        }
+
+        return gatheringTicks < gatheringDuration && bee.level().isLoaded(targetResourcePos);
+    }
+
+    @Override
+    public void start() {
+        if (targetResourcePos != null) {
+            Vec3 targetVec = new Vec3(
+                targetResourcePos.getX() + 0.5,
+                targetResourcePos.getY(),
+                targetResourcePos.getZ() + 0.5
+            );
+            double distance = bee.position().distanceTo(targetVec);
+
+            if (distance > FLOWER_DISTANCE) {
+                bee.getNavigation().moveTo(targetResourcePos.getX(), targetResourcePos.getY(),
+                    targetResourcePos.getZ(), MOVE_SPEED);
+            }
+        }
+    }
+
+    @Override
+    public void stop() {
+        if (returningHome && isNearHome()) {
+            onResourceDelivered();
+        }
+
+        // Save state to NBT
+        CompoundTag pollinationTag = getPollinationTag();
+        if (pollinationTag != null) {
+            pollinationTag.putInt(POLLINATION_TICKS_KEY, pollinationTicks);
+            if (currentFlowerType != null) {
+                pollinationTag.putString(FLOWER_TYPE_KEY, currentFlowerType);
+            }
+        }
+
+        targetResourcePos = null;
+        gatheringTicks = 0;
+        pollinationTicks = 0;
+        currentFlowerType = null;
+
+        debug("goal stopped");
+    }
+
+    @Override
+    public void tick() {
+        if (returningHome) {
+            returnToHome();
+            return;
+        }
+
+        if (targetResourcePos == null || !bee.level().isLoaded(targetResourcePos)) {
+            return;
+        }
+
+        Vec3 targetVec = new Vec3(
+            targetResourcePos.getX() + 0.5,
+            targetResourcePos.getY(),
+            targetResourcePos.getZ() + 0.5
+        );
+        double distance = bee.position().distanceTo(targetVec);
+
+        if (distance > FLOWER_DISTANCE) {
+            bee.getNavigation().moveTo(targetResourcePos.getX(), targetResourcePos.getY(),
+                targetResourcePos.getZ(), MOVE_SPEED);
+            return;
+        }
+
+        // Close enough to pollinate
+        gatherResource();
+        pollinationTicks++;
+
+        // Pollinate nearby crops periodically
+        if (pollinationTicks >= 10 && pollinationTicks % 10 == 0) {
+            pollinateNearbyCrops();
+        }
+
+        // Log progress every second
+        if (bee.tickCount % 20 == 0) {
+            debug("pollinating, progress=" + pollinationTicks + "/" + gatheringDuration +
+                  ", flower=" + currentFlowerType);
+        }
+
+        if (pollinationTicks >= gatheringDuration) {
+            ((BeeAccessor) bee).invokeSetHasNectar(true);
+            hasResource = true;
+
+            // Store pollination target
+            EcologyComponent component = getComponent();
+            if (component != null) {
+                ResourceProductionHandle productionHandle = new ResourceProductionHandle();
+                productionHandle.setPollinationTarget(bee, component, currentFlowerType);
+            }
+
+            debug("pollination complete, returning to hive");
+        }
+    }
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
     }
 
     @Override
@@ -85,43 +257,22 @@ public class BeePollinationGoal extends ResourceGatheringGoal {
     }
 
     @Override
-    protected void gatherResource() {
-        if (targetResourcePos == null) {
+    protected void returnToHome() {
+        BlockPos hivePos = bee.getHivePos();
+        if (hivePos == null) {
             return;
         }
 
-        BlockState flowerState = bee.level().getBlockState(targetResourcePos);
-        currentFlowerType = getFlowerType(flowerState);
+        Vec3 hiveCenter = new Vec3(hivePos.getX() + 0.5, hivePos.getY(), hivePos.getZ() + 0.5);
+        double distance = bee.position().distanceTo(hiveCenter);
 
-        pollinationTicks++;
-
-        if (pollinationTicks >= 10 && pollinationTicks % 10 == 0) {
-            pollinateNearbyCrops();
+        if (distance > HIVE_DISTANCE) {
+            bee.getNavigation().moveTo(hivePos.getX(), hivePos.getY(), hivePos.getZ(), MOVE_SPEED);
         }
 
-        if (pollinationTicks >= gatheringDuration) {
-            ((BeeAccessor) bee).invokeSetHasNectar(true);
-            hasResource = true;
-
-            EcologyComponent component = EcologyHooks.getEcologyComponent(bee);
-            if (component != null) {
-                ResourceProductionHandle productionHandle = new ResourceProductionHandle();
-                productionHandle.setPollinationTarget(bee, component, currentFlowerType);
-            }
-        }
-    }
-
-    @Override
-    protected void returnToHome() {
-        BlockPos hivePos = bee.getHivePos();
-        if (hivePos != null) {
-            Vec3 beePos = bee.position();
-            Vec3 hiveCenter = new Vec3(hivePos.getX() + 0.5, hivePos.getY(), hivePos.getZ() + 0.5);
-            double distance = beePos.distanceTo(hiveCenter);
-
-            if (distance > 1.5) {
-                bee.getNavigation().moveTo(hivePos.getX(), hivePos.getY(), hivePos.getZ(), 1.0);
-            }
+        // Log progress every second
+        if (bee.tickCount % 20 == 0) {
+            debug("returning to hive, distance=" + String.format("%.1f", distance));
         }
     }
 
@@ -132,40 +283,49 @@ public class BeePollinationGoal extends ResourceGatheringGoal {
             return true;
         }
 
-        Vec3 beePos = bee.position();
         Vec3 hiveCenter = new Vec3(hivePos.getX() + 0.5, hivePos.getY(), hivePos.getZ() + 0.5);
-        double distance = beePos.distanceTo(hiveCenter);
+        double distance = bee.position().distanceTo(hiveCenter);
 
-        return distance < 2.0;
+        return distance < HIVE_DISTANCE;
     }
 
     @Override
     protected void onResourceDelivered() {
-        if (!bee.level().isClientSide) {
-            ServerLevel serverLevel = (ServerLevel) bee.level();
+        if (bee.level().isClientSide) {
+            return;
+        }
 
-            BlockPos hivePos = bee.getHivePos();
-            if (hivePos != null) {
-                BlockState hiveState = bee.level().getBlockState(hivePos);
+        ServerLevel serverLevel = (ServerLevel) bee.level();
+        BlockPos hivePos = bee.getHivePos();
 
-                int honeyLevel = 0;
-                if (hiveState.hasProperty(net.minecraft.world.level.block.BeehiveBlock.HONEY_LEVEL)) {
-                    honeyLevel = hiveState.getValue(net.minecraft.world.level.block.BeehiveBlock.HONEY_LEVEL);
-                }
+        if (hivePos != null) {
+            BlockState hiveState = bee.level().getBlockState(hivePos);
 
-                if (honeyLevel < 5) {
-                    serverLevel.setBlock(
-                        hivePos,
-                        hiveState.setValue(net.minecraft.world.level.block.BeehiveBlock.HONEY_LEVEL, honeyLevel + 1),
-                        3
-                    );
-                }
+            int honeyLevel = 0;
+            if (hiveState.hasProperty(net.minecraft.world.level.block.BeehiveBlock.HONEY_LEVEL)) {
+                honeyLevel = hiveState.getValue(net.minecraft.world.level.block.BeehiveBlock.HONEY_LEVEL);
+            }
+
+            if (honeyLevel < 5) {
+                serverLevel.setBlock(
+                    hivePos,
+                    hiveState.setValue(net.minecraft.world.level.block.BeehiveBlock.HONEY_LEVEL, honeyLevel + 1),
+                    3
+                );
+                debug("delivered nectar to hive (honey level now " + (honeyLevel + 1) + "/5)");
             }
         }
 
         ((BeeAccessor) bee).invokeSetHasNectar(false);
-        currentFlowerType = null;
-        pollinationTicks = 0;
+        returningHome = false;
+        hasResource = false;
+
+        // Clear NBT state
+        CompoundTag pollinationTag = getPollinationTag();
+        if (pollinationTag != null) {
+            pollinationTag.putInt(POLLINATION_TICKS_KEY, 0);
+            pollinationTag.putString(FLOWER_TYPE_KEY, "");
+        }
     }
 
     /**
@@ -174,36 +334,50 @@ public class BeePollinationGoal extends ResourceGatheringGoal {
     private String getFlowerType(BlockState flowerState) {
         if (flowerState.is(Blocks.SUNFLOWER)) {
             return "sunflower";
-        } else if (flowerState.is(Blocks.CORNFLOWER)) {
+        }
+        if (flowerState.is(Blocks.CORNFLOWER)) {
             return "cornflower";
-        } else if (flowerState.is(Blocks.WITHER_ROSE)) {
+        }
+        if (flowerState.is(Blocks.WITHER_ROSE)) {
             return "wither_rose";
-        } else if (flowerState.is(Blocks.LILAC)) {
+        }
+        if (flowerState.is(Blocks.LILAC)) {
             return "lilac";
-        } else if (flowerState.is(Blocks.PEONY)) {
+        }
+        if (flowerState.is(Blocks.PEONY)) {
             return "peony";
-        } else if (flowerState.is(Blocks.ROSE_BUSH)) {
+        }
+        if (flowerState.is(Blocks.ROSE_BUSH)) {
             return "rose";
-        } else if (flowerState.is(Blocks.POPPY)) {
+        }
+        if (flowerState.is(Blocks.POPPY)) {
             return "poppy";
-        } else if (flowerState.is(Blocks.DANDELION)) {
+        }
+        if (flowerState.is(Blocks.DANDELION)) {
             return "dandelion";
-        } else if (flowerState.is(Blocks.BLUE_ORCHID)) {
+        }
+        if (flowerState.is(Blocks.BLUE_ORCHID)) {
             return "orchid";
-        } else if (flowerState.is(Blocks.ALLIUM)) {
+        }
+        if (flowerState.is(Blocks.ALLIUM)) {
             return "allium";
-        } else if (flowerState.is(Blocks.AZURE_BLUET)) {
+        }
+        if (flowerState.is(Blocks.AZURE_BLUET)) {
             return "azure_bluet";
-        } else if (flowerState.is(Blocks.RED_TULIP) ||
-                   flowerState.is(Blocks.ORANGE_TULIP) ||
-                   flowerState.is(Blocks.WHITE_TULIP) ||
-                   flowerState.is(Blocks.PINK_TULIP)) {
+        }
+        if (flowerState.is(Blocks.RED_TULIP) ||
+            flowerState.is(Blocks.ORANGE_TULIP) ||
+            flowerState.is(Blocks.WHITE_TULIP) ||
+            flowerState.is(Blocks.PINK_TULIP)) {
             return "tulip";
-        } else if (flowerState.is(Blocks.OXEYE_DAISY)) {
+        }
+        if (flowerState.is(Blocks.OXEYE_DAISY)) {
             return "daisy";
-        } else if (flowerState.is(Blocks.LILY_OF_THE_VALLEY)) {
+        }
+        if (flowerState.is(Blocks.LILY_OF_THE_VALLEY)) {
             return "lily_of_the_valley";
-        } else if (flowerState.is(BlockTags.TALL_FLOWERS)) {
+        }
+        if (flowerState.is(BlockTags.TALL_FLOWERS)) {
             return "tall_flower";
         }
 
@@ -233,7 +407,6 @@ public class BeePollinationGoal extends ResourceGatheringGoal {
             if (isGrowableCrop(state)) {
                 if (serverLevel.random.nextFloat() < 0.15f) {
                     net.minecraft.world.level.block.Block block = state.getBlock();
-                    // Use isRandomlyTicking to check if the block supports random ticks
                     if (state.isRandomlyTicking()) {
                         state.randomTick(serverLevel, pos, serverLevel.random);
                     }
@@ -254,5 +427,71 @@ public class BeePollinationGoal extends ResourceGatheringGoal {
                state.is(Blocks.BAMBOO) ||
                state.is(Blocks.PUMPKIN_STEM) ||
                state.is(Blocks.MELON_STEM);
+    }
+
+    /**
+     * Get pollination tag from NBT.
+     */
+    private CompoundTag getPollinationTag() {
+        EcologyComponent component = getComponent();
+        if (component == null) {
+            return null;
+        }
+
+        CompoundTag tag = component.getHandleTag("resource_production");
+        if (!tag.contains(POLLINATION_TICKS_KEY)) {
+            tag.putInt(POLLINATION_TICKS_KEY, 0);
+        }
+        if (!tag.contains(FLOWER_TYPE_KEY)) {
+            tag.putString(FLOWER_TYPE_KEY, "");
+        }
+        return tag;
+    }
+
+    /**
+     * Get the ecology component for this bee.
+     */
+    private EcologyComponent getComponent() {
+        if (!(bee instanceof EcologyAccess access)) {
+            return null;
+        }
+        return access.betterEcology$getEcologyComponent();
+    }
+
+    /**
+     * Debug logging with consistent prefix.
+     */
+    private void debug(String message) {
+        lastDebugMessage = message;
+        if (BehaviorLogger.isMinimal() || BetterEcology.DEBUG_MODE) {
+            String prefix = "[BeePollination] Bee #" + bee.getId() + " ";
+            BehaviorLogger.info(prefix + message);
+        }
+    }
+
+    /**
+     * Get last debug message for external display.
+     */
+    public String getLastDebugMessage() {
+        return lastDebugMessage;
+    }
+
+    /**
+     * Get current state info for debug display.
+     */
+    public String getDebugState() {
+        BlockPos hivePos = bee.getHivePos();
+        String hiveInfo = hivePos != null ?
+            (hivePos.getX() + "," + hivePos.getZ()) : "none";
+
+        return String.format(
+            "has_nectar=%s, flower=%s, progress=%d/%d, hive=%s, returning=%s",
+            bee.hasNectar(),
+            currentFlowerType != null ? currentFlowerType : "none",
+            pollinationTicks,
+            gatheringDuration,
+            hiveInfo,
+            returningHome ? "yes" : "no"
+        );
     }
 }

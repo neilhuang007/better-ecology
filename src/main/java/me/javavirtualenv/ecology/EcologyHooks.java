@@ -4,12 +4,15 @@ import me.javavirtualenv.debug.BehaviorLogger;
 import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.spatial.SpatialIndex;
 import me.javavirtualenv.ecology.state.SimulatedTime;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.item.ItemStack;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Core hooks for integrating ecology system into entity lifecycle.
@@ -89,6 +92,8 @@ import net.minecraft.world.item.ItemStack;
  */
 public final class EcologyHooks {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger("BetterEcology/EcologyHooks");
+
 	// Debug flag for testing catch-up system
 	public static boolean DEBUG_CATCHUP = false;
 
@@ -102,14 +107,28 @@ public final class EcologyHooks {
 	}
 
 	public static void onRegisterGoals(Mob mob) {
+		String entityId = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()).toString();
+		LOGGER.info("onRegisterGoals called for {} ({})", entityId, mob.getId());
+
 		EcologyComponent component = component(mob);
 		component.refreshIfNeeded();
-		if (!component.hasProfile() && component.handles().isEmpty()) {
+
+		boolean hasProfile = component.hasProfile();
+		boolean hasHandles = !component.handles().isEmpty();
+		LOGGER.info("Entity {}: hasProfile={}, handles count={}",
+			entityId, hasProfile, component.handles().size());
+
+		if (!hasProfile && !hasHandles) {
+			LOGGER.info("Entity {} has no profile and no handles - skipping goal registration", entityId);
 			return;
 		}
 		if (!component.markGoalsRegistered()) {
+			LOGGER.info("Entity {} goals already registered - skipping", entityId);
 			return;
 		}
+
+		LOGGER.info("Registering goals for entity {} with {} handles",
+			entityId, component.handles().size());
 
 		// Register mob in spatial index when goals are registered
 		// This happens early in entity lifecycle (spawn or first tick)
@@ -117,6 +136,8 @@ public final class EcologyHooks {
 
 		EcologyProfile profile = component.profile();
 		for (EcologyHandle handle : component.handles()) {
+			LOGGER.info("Entity {}: calling registerGoals for handle '{}'",
+				entityId, handle.id());
 			handle.registerGoals(mob, component, profile);
 			BehaviorLogger.logHandleGoalsRegistered(mob, handle.id());
 		}

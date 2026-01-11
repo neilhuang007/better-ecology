@@ -1,40 +1,83 @@
 package me.javavirtualenv.behavior.horse;
 
+import me.javavirtualenv.BetterEcology;
+import me.javavirtualenv.debug.BehaviorLogger;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.EcologyComponent;
-import me.javavirtualenv.ecology.EcologyHooks;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
 import java.util.List;
 
 /**
  * AI Goal for social grooming behavior in horse herds.
+ * <p>
  * Horses groom each other to strengthen social bonds.
+ * This behavior reduces stress and maintains herd cohesion.
+ * <p>
+ * Grooming features:
+ * <ul>
+ *   <li>Mutual grooming between herd members</li>
+ *   <li>Heart particles to show social bonding</li>
+ *   <li>Soft breathing sounds during grooming</li>
+ *   <li>Only same-type horses groom each other</li>
+ *   <li>Wild and tame horses don't mix</li>
+ * </ul>
  */
 public class SocialGroomingGoal extends Goal {
+
+    // Configuration constants
+    private static final String FLEEING_KEY = "fleeing";
+
+    private static final double GROOMING_SEARCH_RADIUS = 8.0; // Search for partners
+    private static final double MAX_GROOMING_DISTANCE = 4.0; // Max distance to groom
+    private static final double MOVE_TO_DISTANCE = 2.0; // Distance to stop moving
+    private static final int GROOMING_DURATION_TICKS = 200; // How long to groom
+    private static final int COOLDOWN_TICKS = 600; // Cooldown after grooming
+    private static final double GROOMING_INITIATION_CHANCE = 0.15; // Chance to initiate
+    private static final double MUTUAL_GROOMING_CHANCE = 0.7; // Chance partner grooms back
+    private static final int SOUND_INTERVAL_TICKS = 60; // Ticks between grooming sounds
+    private static final int PARTICLE_INTERVAL_TICKS = 40; // Ticks between heart particles
+    private static final int MUTUAL_CHECK_INTERVAL = 20; // Ticks between mutual grooming checks
+    private static final double MOVE_SPEED = 0.8; // Speed to move to partner
+
+    // Instance fields
     private final AbstractHorse horse;
-    private final GroomingConfig config;
+    private final EntityType<?> horseType;
+
     private AbstractHorse groomingPartner;
     private int groomingTicks;
-    private int groomingCooldown;
+    private int cooldownTicks;
 
-    public SocialGroomingGoal(AbstractHorse horse, GroomingConfig config) {
+    // Debug info
+    private String lastDebugMessage = "";
+    private boolean hadPartnerLastCheck = false;
+
+    public SocialGroomingGoal(AbstractHorse horse) {
         this.horse = horse;
-        this.config = config;
+        this.horseType = horse.getType();
         this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
     }
 
     @Override
     public boolean canUse() {
-        if (groomingCooldown > 0) {
-            groomingCooldown--;
+        // Client-side only runs visual logic
+        if (horse.level().isClientSide) {
             return false;
         }
 
+        // Update cooldown
+        if (cooldownTicks > 0) {
+            cooldownTicks--;
+            return false;
+        }
+
+        // Must be alive
         if (!horse.isAlive()) {
             return false;
         }
@@ -44,45 +87,68 @@ public class SocialGroomingGoal extends Goal {
             return false;
         }
 
-        // Cannot groom if panicked
-        EcologyComponent component = EcologyHooks.getEcologyComponent(horse);
-        if (component != null && component.getHandleTag("fleeing").getBoolean("is_fleeing")) {
+        // Cannot groom if fleeing
+        if (isFleeing()) {
+            if (hadPartnerLastCheck) {
+                hadPartnerLastCheck = false;
+            }
             return false;
         }
 
         // Find a grooming partner
         groomingPartner = findGroomingPartner();
-        return groomingPartner != null && groomingPartner.isAlive();
+
+        if (groomingPartner == null) {
+            if (hadPartnerLastCheck) {
+                debug("no grooming partner found");
+                hadPartnerLastCheck = false;
+            }
+            return false;
+        }
+
+        hadPartnerLastCheck = true;
+        return true;
     }
 
     @Override
     public boolean canContinueToUse() {
         if (groomingPartner == null || !groomingPartner.isAlive()) {
+            debug("partner no longer valid");
             return false;
         }
 
         if (horse.isVehicle() || groomingPartner.isVehicle()) {
+            debug("partner or self being ridden");
+            return false;
+        }
+
+        if (isFleeing() || isPartnerFleeing()) {
+            debug("partner or self fleeing");
             return false;
         }
 
         double distance = horse.distanceToSqr(groomingPartner);
-        if (distance > config.maxGroomingDistance * config.maxGroomingDistance) {
+        if (distance > MAX_GROOMING_DISTANCE * MAX_GROOMING_DISTANCE) {
+            debug("partner moved too far");
             return false;
         }
 
-        return groomingTicks < config.groomingDuration;
+        return groomingTicks < GROOMING_DURATION_TICKS;
     }
 
     @Override
     public void start() {
         groomingTicks = 0;
+        String partnerId = "#" + groomingPartner.getId();
+        debug("STARTING: grooming with " + partnerId);
     }
 
     @Override
     public void stop() {
         groomingPartner = null;
         groomingTicks = 0;
-        groomingCooldown = config.groomingCooldown;
+        cooldownTicks = COOLDOWN_TICKS;
+        debug("grooming stopped, cooldown=" + cooldownTicks);
     }
 
     @Override
@@ -94,8 +160,8 @@ public class SocialGroomingGoal extends Goal {
         double distance = horse.distanceTo(groomingPartner);
 
         // Move towards partner if too far
-        if (distance > 2.0) {
-            horse.getNavigation().moveTo(groomingPartner, 0.8);
+        if (distance > MOVE_TO_DISTANCE) {
+            moveToPartner();
         } else {
             // Stop movement and groom
             horse.getNavigation().stop();
@@ -106,69 +172,59 @@ public class SocialGroomingGoal extends Goal {
             groomingTicks++;
 
             // Play grooming sound periodically
-            if (groomingTicks % 60 == 0) {
+            if (groomingTicks % SOUND_INTERVAL_TICKS == 0) {
                 playGroomingSound();
             }
 
             // Create heart particles occasionally
-            if (groomingTicks % 40 == 0 && horse.getRandom().nextFloat() < 0.3) {
+            if (groomingTicks % PARTICLE_INTERVAL_TICKS == 0 &&
+                horse.getRandom().nextFloat() < 0.3) {
                 spawnSocialParticles();
             }
 
             // Partner also grooms back
-            if (groomingTicks % 20 == 0) {
-                // Check if partner is also interested in grooming
+            if (groomingTicks % MUTUAL_CHECK_INTERVAL == 0) {
                 if (!groomingPartner.isVehicle() &&
-                    groomingPartner.getRandom().nextFloat() < config.mutualGroomingChance) {
+                    horse.getRandom().nextFloat() < MUTUAL_GROOMING_CHANCE) {
                     // Mutual grooming - partner looks back
                     groomingPartner.getLookControl().setLookAt(horse);
                 }
             }
+
+            // Log progress
+            if (groomingTicks % 100 == 0 && groomingTicks > 0) {
+                debug("grooming progress: " + groomingTicks + "/" + GROOMING_DURATION_TICKS);
+            }
         }
     }
 
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
+    }
+
+    /**
+     * Find a grooming partner.
+     */
     private AbstractHorse findGroomingPartner() {
-        Level level = horse.level();
-        List<AbstractHorse> nearbyHorses = level.getEntitiesOfClass(
+        List<AbstractHorse> nearbyHorses = horse.level().getEntitiesOfClass(
             AbstractHorse.class,
-            horse.getBoundingBox().inflate(config.groomingSearchRadius)
+            horse.getBoundingBox().inflate(GROOMING_SEARCH_RADIUS)
         );
 
-        // Filter for valid grooming partners
         for (AbstractHorse other : nearbyHorses) {
-            if (other == horse || !other.isAlive()) {
+            if (!isValidGroomingPartner(other)) {
                 continue;
             }
 
-            // Must be same species
-            if (other.getType() != horse.getType()) {
-                continue;
-            }
-
-            // Must be wild or tame together (social bonds form within groups)
-            if (horse.isTamed() != other.isTamed()) {
-                continue;
-            }
-
-            // Don't groom if panicking
-            EcologyComponent otherComponent = EcologyHooks.getEcologyComponent(other);
-            if (otherComponent != null && otherComponent.getHandleTag("fleeing").getBoolean("is_fleeing")) {
-                continue;
-            }
-
-            // Don't interrupt if partner is busy
-            if (other.isVehicle()) {
-                continue;
-            }
-
-            // Check if partner wants to groom
+            // Check distance
             double distance = horse.distanceTo(other);
-            if (distance > config.maxGroomingDistance) {
+            if (distance > MAX_GROOMING_DISTANCE) {
                 continue;
             }
 
             // Random chance for mutual interest
-            if (horse.getRandom().nextFloat() < config.groomingInitiationChance) {
+            if (horse.getRandom().nextFloat() < GROOMING_INITIATION_CHANCE) {
                 return other;
             }
         }
@@ -176,51 +232,97 @@ public class SocialGroomingGoal extends Goal {
         return null;
     }
 
+    /**
+     * Check if another horse is a valid grooming partner.
+     */
+    private boolean isValidGroomingPartner(AbstractHorse other) {
+        // Not self
+        if (other == horse) {
+            return false;
+        }
+
+        // Must be alive
+        if (!other.isAlive()) {
+            return false;
+        }
+
+        // Must be same species
+        if (other.getType() != horseType) {
+            return false;
+        }
+
+        // Must be wild or tame together
+        if (horse.isTamed() != other.isTamed()) {
+            return false;
+        }
+
+        // Don't groom if panicking
+        if (isPartnerFleeing()) {
+            return false;
+        }
+
+        // Don't interrupt if partner is busy
+        if (other.isVehicle()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Move towards the grooming partner with path validation.
+     */
+    private void moveToPartner() {
+        PathNavigation navigation = horse.getNavigation();
+        Path path = navigation.createPath(groomingPartner, 0);
+
+        if (path != null && path.canReach()) {
+            navigation.moveTo(groomingPartner, MOVE_SPEED);
+        }
+    }
+
+    /**
+     * Play the grooming sound.
+     */
     private void playGroomingSound() {
-        Level level = horse.level();
-        if (level.isClientSide) {
+        if (horse.level().isClientSide) {
             return;
         }
 
-        // Use a soft breathing/snorting sound
-        net.minecraft.sounds.SoundEvent sound = getGroomingSound();
-        level.playSound(null, horse.blockPosition(), sound,
-            net.minecraft.sounds.SoundSource.NEUTRAL,
-            0.5f, 1.0f
-        );
+        var sound = getGroomingSound();
+        horse.level().playSound(null, horse.blockPosition(), sound,
+            net.minecraft.sounds.SoundSource.NEUTRAL, 0.5f, 1.0f);
     }
 
+    /**
+     * Get the grooming sound for this horse type.
+     */
     private net.minecraft.sounds.SoundEvent getGroomingSound() {
-        net.minecraft.world.entity.EntityType<?> type = horse.getType();
-
-        // Note: DONKEY_BREATHE doesn't exist in 1.21.1, using DONKEY_AMBIENT instead
-        if (type == net.minecraft.world.entity.EntityType.DONKEY) {
+        if (horseType == EntityType.DONKEY || horseType == EntityType.MULE) {
             return net.minecraft.sounds.SoundEvents.DONKEY_AMBIENT;
-        } else if (type == net.minecraft.world.entity.EntityType.MULE) {
-            return net.minecraft.sounds.SoundEvents.DONKEY_AMBIENT;
-        } else {
-            return net.minecraft.sounds.SoundEvents.HORSE_BREATHE;
         }
+        return net.minecraft.sounds.SoundEvents.HORSE_BREATHE;
     }
 
+    /**
+     * Spawn heart particles between horses.
+     */
     private void spawnSocialParticles() {
-        Level level = horse.level();
-        if (level.isClientSide) {
+        if (horse.level().isClientSide) {
             return;
         }
 
         // Spawn particles between the two horses
         Vec3 startPos = horse.position().add(0, horse.getBbHeight() * 0.6, 0);
         Vec3 endPos = groomingPartner.position().add(0, groomingPartner.getBbHeight() * 0.6, 0);
-
         Vec3 between = startPos.add(endPos).scale(0.5);
 
         for (int i = 0; i < 2; i++) {
-            double offsetX = (level.getRandom().nextDouble() - 0.5) * 0.3;
-            double offsetY = (level.getRandom().nextDouble() - 0.5) * 0.3;
-            double offsetZ = (level.getRandom().nextDouble() - 0.5) * 0.3;
+            double offsetX = (horse.getRandom().nextDouble() - 0.5) * 0.3;
+            double offsetY = (horse.getRandom().nextDouble() - 0.5) * 0.3;
+            double offsetZ = (horse.getRandom().nextDouble() - 0.5) * 0.3;
 
-            ((net.minecraft.server.level.ServerLevel) level).sendParticles(
+            ((net.minecraft.server.level.ServerLevel) horse.level()).sendParticles(
                 net.minecraft.core.particles.ParticleTypes.HEART,
                 between.x + offsetX,
                 between.y + offsetY,
@@ -230,16 +332,77 @@ public class SocialGroomingGoal extends Goal {
         }
     }
 
-    public static class GroomingConfig {
-        public double groomingSearchRadius = 8.0;
-        public double maxGroomingDistance = 4.0;
-        public int groomingDuration = 200; // ticks
-        public int groomingCooldown = 600; // ticks
-        public double groomingInitiationChance = 0.15;
-        public double mutualGroomingChance = 0.7;
-
-        public static GroomingConfig createDefault() {
-            return new GroomingConfig();
+    /**
+     * Check if this horse is fleeing.
+     */
+    private boolean isFleeing() {
+        EcologyComponent component = getComponent();
+        if (component == null) {
+            return false;
         }
+        return component.getHandleTag(FLEEING_KEY).getBoolean("is_fleeing");
+    }
+
+    /**
+     * Check if the grooming partner is fleeing.
+     */
+    private boolean isPartnerFleeing() {
+        if (groomingPartner == null) {
+            return false;
+        }
+
+        EcologyComponent component = getComponent(groomingPartner);
+        if (component == null) {
+            return false;
+        }
+        return component.getHandleTag(FLEEING_KEY).getBoolean("is_fleeing");
+    }
+
+    /**
+     * Get the ecology component for this horse.
+     */
+    private EcologyComponent getComponent() {
+        if (!(horse instanceof EcologyAccess access)) {
+            return null;
+        }
+        return access.betterEcology$getEcologyComponent();
+    }
+
+    /**
+     * Get the ecology component for another horse.
+     */
+    private EcologyComponent getComponent(AbstractHorse horse) {
+        if (!(horse instanceof EcologyAccess access)) {
+            return null;
+        }
+        return access.betterEcology$getEcologyComponent();
+    }
+
+    /**
+     * Debug logging with consistent prefix.
+     */
+    private void debug(String message) {
+        lastDebugMessage = message;
+        if (BehaviorLogger.isMinimal() || BetterEcology.DEBUG_MODE) {
+            String prefix = "[SocialGrooming] Horse #" + horse.getId() + " ";
+            BehaviorLogger.info(prefix + message);
+        }
+    }
+
+    /**
+     * Get last debug message for external display.
+     */
+    public String getLastDebugMessage() {
+        return lastDebugMessage;
+    }
+
+    /**
+     * Get current state info for debug display.
+     */
+    public String getDebugState() {
+        String partnerId = groomingPartner != null ? "#" + groomingPartner.getId() : "none";
+        String typeName = horseType.toShortString();
+        return String.format("type=%s, partner=%s, ticks=%d/%d, cooldown=%d, fleeing=%b",
+            typeName, partnerId, groomingTicks, GROOMING_DURATION_TICKS, cooldownTicks, isFleeing());
     }
 }

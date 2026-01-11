@@ -1,9 +1,15 @@
 package me.javavirtualenv.behavior.parrot;
 
+import me.javavirtualenv.BetterEcology;
+import me.javavirtualenv.debug.BehaviorLogger;
 import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.level.pathfinder.Path;
 
 import java.util.EnumSet;
 
@@ -12,23 +18,35 @@ import java.util.EnumSet;
  * Parrots detect music from jukeboxes/note blocks and fly toward them to dance.
  */
 public class ParrotMusicGoal extends Goal {
+
+    private static final int MUSIC_SCAN_INTERVAL = 60;
+    private static final double ARRIVAL_DISTANCE = 6.0;
+    private static final double FLIGHT_SPEED = 1.2;
+
     private final PathfinderMob parrot;
     private final MusicDetectionBehavior musicBehavior;
     private final DanceBehavior danceBehavior;
-    private final MusicDetectionBehavior.MusicConfig musicConfig;
+    private final MusicDetectionBehavior.MusicConfig config;
+    private final EcologyComponent component;
 
-    private int scanInterval = 60;
-    private int scanTimer = 0;
-    private boolean isDancing = false;
+    private BlockPos musicSource;
+    private Path currentPath;
+    private int scanTimer;
+    private boolean isFlyingToMusic;
+    private boolean isDancing;
+
+    private String lastDebugMessage = "";
+    private boolean wasFlyingLastCheck = false;
 
     public ParrotMusicGoal(PathfinderMob parrot,
                           MusicDetectionBehavior musicBehavior,
                           DanceBehavior danceBehavior,
-                          MusicDetectionBehavior.MusicConfig musicConfig) {
+                          MusicDetectionBehavior.MusicConfig config) {
         this.parrot = parrot;
         this.musicBehavior = musicBehavior;
         this.danceBehavior = danceBehavior;
-        this.musicConfig = musicConfig;
+        this.config = config;
+        this.component = getComponent();
         this.setFlags(EnumSet.of(Flag.MOVE, Flag.JUMP, Flag.LOOK));
     }
 
@@ -38,7 +56,10 @@ public class ParrotMusicGoal extends Goal {
             return false;
         }
 
-        // Can't dance if perched on shoulder
+        if (parrot.level().isClientSide) {
+            return false;
+        }
+
         if (parrot.isPassenger()) {
             return false;
         }
@@ -52,109 +73,296 @@ public class ParrotMusicGoal extends Goal {
             return false;
         }
 
-        // Continue if we're flying to music or dancing
-        if (musicBehavior.isFlyingToMusic() || isDancing) {
-            return true;
-        }
+        CompoundTag danceTag = component.getHandleTag("dance");
+        boolean isDancing = danceTag.getBoolean("is_dancing");
 
-        return false;
+        return isFlyingToMusic || isDancing;
     }
 
     @Override
     public void start() {
+        debug("goal started");
         scanTimer = 0;
+        isFlyingToMusic = false;
         isDancing = false;
+        musicSource = null;
     }
 
     @Override
     public void stop() {
-        danceBehavior.stopDancing();
-        musicBehavior.stopFlyingToMusic();
-        isDancing = false;
+        debug("goal stopped");
+        stopDancing();
+        stopFlyingToMusic();
     }
 
     @Override
     public void tick() {
-        // Scan for music periodically
+        CompoundTag danceTag = component.getHandleTag("dance");
+        isDancing = danceTag.getBoolean("is_dancing");
+
+        boolean isFlyingNow = isFlyingToMusic;
+
+        if (isFlyingNow != wasFlyingLastCheck) {
+            debug("flight state changed: " + wasFlyingLastCheck + " -> " + isFlyingNow);
+            wasFlyingLastCheck = isFlyingNow;
+        }
+
         scanTimer++;
-        if (scanTimer >= scanInterval) {
+        if (scanTimer >= MUSIC_SCAN_INTERVAL) {
             scanTimer = 0;
             scanForMusic();
         }
 
-        // Update flight to music
-        if (musicBehavior.isFlyingToMusic()) {
+        if (isFlyingToMusic) {
             updateFlight();
         }
 
-        // Update dancing
         if (isDancing) {
             updateDancing();
         }
     }
 
-    /**
-     * Scans for nearby music sources.
-     */
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
+    }
+
     private void scanForMusic() {
-        // Don't scan if we already have a music source
-        if (musicBehavior.getMusicSource() != null && musicBehavior.isInRange(musicBehavior.getMusicSource())) {
+        if (musicSource != null && isInRange(musicSource)) {
             return;
         }
 
-        BlockPos musicSource = musicBehavior.scanForMusic();
-        if (musicSource != null) {
-            DanceBehavior.DanceStyle dance = musicBehavior.getDanceStyle(musicSource);
-            musicBehavior.startFlyingToMusic(musicSource, dance);
+        BlockPos foundMusic = musicBehavior.scanForMusic();
+        if (foundMusic == null) {
+            return;
+        }
+
+        PathNavigation navigation = parrot.getNavigation();
+        currentPath = navigation.createPath(foundMusic, 0);
+
+        if (currentPath != null && currentPath.canReach()) {
+            startFlyingToMusic(foundMusic);
+        } else {
+            debug("music found but unreachable at " + foundMusic.getX() + "," + foundMusic.getY() + "," + foundMusic.getZ());
         }
     }
 
-    /**
-     * Updates flight toward music source.
-     */
+    private void startFlyingToMusic(BlockPos musicPos) {
+        this.musicSource = musicPos;
+        this.isFlyingToMusic = true;
+
+        DanceBehavior.DanceStyle dance = musicBehavior.getDanceStyle(musicPos);
+
+        CompoundTag musicTag = component.getHandleTag("music");
+        musicTag.putInt("source_x", musicPos.getX());
+        musicTag.putInt("source_y", musicPos.getY());
+        musicTag.putInt("source_z", musicPos.getZ());
+        musicTag.putString("dance_style", dance.name());
+        musicTag.putLong("music_start_time", parrot.level().getGameTime());
+        component.setHandleTag("music", musicTag);
+
+        debug("flying to music at " + musicPos.getX() + "," + musicPos.getY() + "," + musicPos.getZ() + " (" + dance + ")");
+    }
+
+    private void stopFlyingToMusic() {
+        isFlyingToMusic = false;
+
+        CompoundTag musicTag = component.getHandleTag("music");
+        musicTag.remove("source_x");
+        musicTag.remove("source_y");
+        musicTag.remove("source_z");
+        musicTag.remove("dance_style");
+        musicTag.remove("music_start_time");
+        component.setHandleTag("music", musicTag);
+
+        musicSource = null;
+        currentPath = null;
+    }
+
     private void updateFlight() {
-        boolean stillFlying = musicBehavior.updateFlightToMusic();
+        if (musicSource == null) {
+            isFlyingToMusic = false;
+            return;
+        }
 
-        if (!stillFlying && musicBehavior.getMusicSource() != null) {
-            // We've arrived, start dancing
-            BlockPos musicPos = musicBehavior.getMusicSource();
-            DanceBehavior.DanceStyle dance = musicBehavior.getCurrentDance();
+        if (!isMusicSource(musicSource)) {
+            debug("music stopped, cancelling flight");
+            stopFlyingToMusic();
+            return;
+        }
 
-            // Check if music is still playing
-            if (musicBehavior.isInRange(musicPos)) {
-                startDancing(dance, musicPos);
+        double distance = parrot.position().distanceTo(
+            net.minecraft.world.phys.Vec3.atCenterOf(musicSource)
+        );
+
+        if (distance <= ARRIVAL_DISTANCE) {
+            arrivedAtMusic();
+            return;
+        }
+
+        PathNavigation navigation = parrot.getNavigation();
+        if (!navigation.isInProgress() ||
+            currentPath == null ||
+            !currentPath.canReach()) {
+
+            currentPath = navigation.createPath(musicSource, 0);
+            if (currentPath != null && currentPath.canReach()) {
+                navigation.moveTo(musicSource.getX() + 0.5, musicSource.getY() + 1.0, musicSource.getZ() + 0.5, FLIGHT_SPEED);
+                if (parrot.tickCount % 20 == 0) {
+                    debug("flying to music, distance=" + String.format("%.1f", distance));
+                }
             } else {
-                musicBehavior.stopFlyingToMusic();
+                debug("no path to music, giving up");
+                stopFlyingToMusic();
             }
         }
+
+        parrot.getLookControl().setLookAt(
+            musicSource.getX() + 0.5,
+            musicSource.getY() + 0.5,
+            musicSource.getZ() + 0.5,
+            30.0f,
+            30.0f
+        );
     }
 
-    /**
-     * Starts dancing to music.
-     */
-    private void startDancing(DanceBehavior.DanceStyle style, BlockPos pos) {
-        danceBehavior.startDancing(style, pos);
+    private void arrivedAtMusic() {
+        isFlyingToMusic = false;
+
+        if (!isInRange(musicSource)) {
+            stopFlyingToMusic();
+            return;
+        }
+
+        DanceBehavior.DanceStyle dance = getDanceStyle();
+        if (dance != null) {
+            startDancing(dance);
+        }
+    }
+
+    private DanceBehavior.DanceStyle getDanceStyle() {
+        CompoundTag musicTag = component.getHandleTag("music");
+        String styleName = musicTag.getString("dance_style");
+
+        if (styleName.isEmpty()) {
+            return DanceBehavior.DanceStyle.BOUNCE;
+        }
+
+        try {
+            return DanceBehavior.DanceStyle.valueOf(styleName);
+        } catch (IllegalArgumentException e) {
+            return DanceBehavior.DanceStyle.BOUNCE;
+        }
+    }
+
+    private void startDancing(DanceBehavior.DanceStyle style) {
+        danceBehavior.startDancing(style, musicSource);
         isDancing = true;
+        debug("started dancing (" + style + ")");
     }
 
-    /**
-     * Updates the dance behavior.
-     */
     private void updateDancing() {
-        // Check if music is still playing
-        BlockPos musicPos = musicBehavior.getMusicSource();
-        if (musicPos == null || !musicBehavior.isInRange(musicPos)) {
-            danceBehavior.stopDancing();
+        CompoundTag danceTag = component.getHandleTag("dance");
+        boolean isStillDancing = danceTag.getBoolean("is_dancing");
+
+        if (!isStillDancing) {
             isDancing = false;
             return;
         }
 
-        // Update dance
+        if (musicSource != null && !isInRange(musicSource)) {
+            debug("music out of range, stopping dance");
+            stopDancing();
+            return;
+        }
+
         danceBehavior.tick();
     }
 
-    @Override
-    public boolean requiresUpdateEveryTick() {
-        return true;
+    private void stopDancing() {
+        isDancing = false;
+        danceBehavior.stopDancing();
+    }
+
+    private boolean isMusicSource(BlockPos pos) {
+        if (pos == null) {
+            return false;
+        }
+
+        net.minecraft.world.level.block.Block block = parrot.level().getBlockState(pos).getBlock();
+
+        if (block == net.minecraft.world.level.block.Blocks.JUKEBOX) {
+            net.minecraft.world.level.block.entity.BlockEntity be = parrot.level().getBlockEntity(pos);
+            if (be instanceof net.minecraft.world.level.block.entity.JukeboxBlockEntity jukebox) {
+                return !jukebox.getTheItem().isEmpty();
+            }
+        }
+
+        if (block == net.minecraft.world.level.block.Blocks.NOTE_BLOCK) {
+            CompoundTag noteTag = component.getHandleTag("note_blocks");
+            long lastPlayed = noteTag.getLong(pos.toString());
+            return parrot.level().getGameTime() - lastPlayed < 100;
+        }
+
+        return false;
+    }
+
+    private boolean isInRange(BlockPos musicPos) {
+        if (musicPos == null) {
+            return false;
+        }
+
+        double distance = parrot.distanceToSqr(
+            musicPos.getX() + 0.5,
+            musicPos.getY() + 0.5,
+            musicPos.getZ() + 0.5
+        );
+
+        return distance <= config.detectionRadius * config.detectionRadius;
+    }
+
+    private EcologyComponent getComponent() {
+        if (!(parrot instanceof EcologyAccess access)) {
+            return null;
+        }
+        return access.betterEcology$getEcologyComponent();
+    }
+
+    private void debug(String message) {
+        lastDebugMessage = message;
+        if (BehaviorLogger.isMinimal() || BetterEcology.DEBUG_MODE) {
+            String prefix = "[ParrotMusic] Parrot #" + parrot.getId() + " ";
+            BehaviorLogger.info(prefix + message);
+        }
+    }
+
+    public String getLastDebugMessage() {
+        return lastDebugMessage;
+    }
+
+    public String getDebugState() {
+        CompoundTag danceTag = component.getHandleTag("dance");
+        String danceStyle = danceTag.getString("dance_style");
+
+        return String.format(
+            "flying=%s, dancing=%s, music_source=%s, style=%s, path=%s",
+            isFlyingToMusic,
+            isDancing,
+            musicSource != null ? musicSource.getX() + "," + musicSource.getY() + "," + musicSource.getZ() : "none",
+            danceStyle.isEmpty() ? "none" : danceStyle,
+            parrot.getNavigation().isInProgress() ? "moving" : "idle"
+        );
+    }
+
+    public boolean isDancing() {
+        return isDancing;
+    }
+
+    public boolean isFlyingToMusic() {
+        return isFlyingToMusic;
+    }
+
+    public BlockPos getMusicSource() {
+        return musicSource;
     }
 }

@@ -139,10 +139,18 @@ public final class EcologyComponent {
 		if (codeConfig != null) {
 			// Merge code-based handles with profile-based handles
 			// Code-based handles override profile-based handles with the same ID
+			LOGGER.info("EcologyComponent.refresh: found code config for {} with {} handles",
+				BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()),
+				codeConfig.getHandles().size());
 			handles = mergeHandles(codeConfig.getHandles(), profile);
 		} else {
+			LOGGER.info("EcologyComponent.refresh: no code config for {}, using profile handles (profile={})",
+				BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()), profile);
 			handles = profile == null ? List.of() : EcologyProfileRegistry.getHandles(profile);
 		}
+
+		LOGGER.info("EcologyComponent.refresh: final handle count for {}: {}",
+			BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()), handles.size());
 
 		// Increment global component version
 		componentVersion++;

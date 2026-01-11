@@ -848,7 +848,7 @@ public abstract class SheepMixin {
             int priority = 4; // High priority for essential behaviors
             me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
             accessor.betterEcology$getGoalSelector().addGoal(priority,
-                new WoolGrowthGoal(pathfinderMob, ecologyComponent.get(), 12.0, 1.0));
+                new WoolGrowthGoal(pathfinderMob));
         }
 
         private void initializeWoolState(Sheep sheep, CompoundTag tag) {

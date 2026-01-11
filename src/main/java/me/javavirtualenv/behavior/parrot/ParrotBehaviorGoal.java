@@ -1,7 +1,11 @@
 package me.javavirtualenv.behavior.parrot;
 
+import me.javavirtualenv.BetterEcology;
+import me.javavirtualenv.debug.BehaviorLogger;
 import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 
@@ -13,17 +17,24 @@ import java.util.EnumSet;
  * This goal manages the priority and switching between different behaviors.
  */
 public class ParrotBehaviorGoal extends Goal {
+
+    private static final int STATE_CHECK_INTERVAL = 20;
+    private static final double IDLE_WANDER_CHANCE = 0.02;
+
     private final PathfinderMob parrot;
     private final MimicBehavior mimicBehavior;
     private final MusicDetectionBehavior musicBehavior;
     private final DanceBehavior danceBehavior;
     private final PerchBehavior perchBehavior;
-
     private final ParrotBehaviorConfig config;
+    private final EcologyComponent component;
 
-    private BehaviorState currentState = BehaviorState.IDLE;
-    private int stateCheckInterval = 20;
-    private int stateCheckTimer = 0;
+    private BehaviorState currentState;
+    private int stateCheckTimer;
+    private int stateChangeCount;
+
+    private String lastDebugMessage = "";
+    private BehaviorState lastState = BehaviorState.IDLE;
 
     public ParrotBehaviorGoal(PathfinderMob parrot,
                              MimicBehavior mimicBehavior,
@@ -37,12 +48,21 @@ public class ParrotBehaviorGoal extends Goal {
         this.danceBehavior = danceBehavior;
         this.perchBehavior = perchBehavior;
         this.config = config;
+        this.component = getComponent();
         this.setFlags(EnumSet.of(Flag.MOVE, Flag.JUMP, Flag.LOOK));
     }
 
     @Override
     public boolean canUse() {
-        return parrot.isAlive();
+        if (!parrot.isAlive()) {
+            return false;
+        }
+
+        if (parrot.level().isClientSide) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override
@@ -52,115 +72,150 @@ public class ParrotBehaviorGoal extends Goal {
 
     @Override
     public void start() {
+        debug("goal started");
         currentState = BehaviorState.IDLE;
         stateCheckTimer = 0;
+        stateChangeCount = 0;
+        lastState = BehaviorState.IDLE;
     }
 
     @Override
     public void stop() {
+        debug("goal stopped, state_changes=" + stateChangeCount);
         danceBehavior.stopDancing();
         musicBehavior.stopFlyingToMusic();
     }
 
     @Override
     public void tick() {
-        // Always check for mimic opportunities
         mimicBehavior.tryMimic();
 
-        // Periodically evaluate what behavior to perform
         stateCheckTimer++;
-        if (stateCheckTimer >= stateCheckInterval) {
+        if (stateCheckTimer >= STATE_CHECK_INTERVAL) {
             stateCheckTimer = 0;
             evaluateBehaviorState();
         }
 
-        // Execute current behavior
+        executeCurrentBehavior();
+    }
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
+    }
+
+    private void evaluateBehaviorState() {
+        BehaviorState newState = determineNextState();
+
+        if (newState != currentState) {
+            debug("state changed: " + currentState + " -> " + newState);
+            currentState = newState;
+            stateChangeCount++;
+        }
+    }
+
+    private BehaviorState determineNextState() {
+        if (parrot.isPassenger()) {
+            return BehaviorState.SHOULDER_PERCHED;
+        }
+
+        CompoundTag danceTag = component.getHandleTag("dance");
+        boolean isDancing = danceTag.getBoolean("is_dancing");
+
+        CompoundTag musicTag = component.getHandleTag("music");
+        boolean hasMusicSource = musicTag.contains("source_x");
+
+        CompoundTag perchTag = component.getHandleTag("perch");
+        boolean isPerched = perchTag.getBoolean("is_perched");
+
+        if (isDancing) {
+            return BehaviorState.DANCING;
+        }
+
+        if (hasMusicSource && isMusicInRange()) {
+            return BehaviorState.FLYING_TO_MUSIC;
+        }
+
+        if (isPerched) {
+            return BehaviorState.PERCHING;
+        }
+
+        if (config.enableMusicBehavior && shouldScanForMusic()) {
+            BlockPos musicSource = musicBehavior.scanForMusic();
+            if (musicSource != null) {
+                DanceBehavior.DanceStyle dance = musicBehavior.getDanceStyle(musicSource);
+                musicBehavior.startFlyingToMusic(musicSource, dance);
+                return BehaviorState.FLYING_TO_MUSIC;
+            }
+        }
+
+        if (config.enablePerchBehavior && currentState == BehaviorState.IDLE) {
+            if (parrot.getRandom().nextDouble() < config.perchSeekChance) {
+                BlockPos perch = perchBehavior.findPerch();
+                if (perch != null) {
+                    return BehaviorState.FLYING_TO_PERCH;
+                }
+            }
+        }
+
+        return BehaviorState.IDLE;
+    }
+
+    private boolean isMusicInRange() {
+        CompoundTag musicTag = component.getHandleTag("music");
+        if (!musicTag.contains("source_x")) {
+            return false;
+        }
+
+        int musicX = musicTag.getInt("source_x");
+        int musicY = musicTag.getInt("source_y");
+        int musicZ = musicTag.getInt("source_z");
+        BlockPos musicPos = new BlockPos(musicX, musicY, musicZ);
+
+        double distance = parrot.distanceToSqr(
+            musicPos.getX() + 0.5,
+            musicPos.getY() + 0.5,
+            musicPos.getZ() + 0.5
+        );
+
+        return distance <= config.musicDetectionRadius * config.musicDetectionRadius;
+    }
+
+    private boolean shouldScanForMusic() {
+        return parrot.tickCount % config.musicDetectionInterval == 0;
+    }
+
+    private void executeCurrentBehavior() {
         switch (currentState) {
             case IDLE -> handleIdle();
             case DANCING -> handleDancing();
             case FLYING_TO_MUSIC -> handleFlyingToMusic();
             case PERCHING -> handlePerching();
             case FLYING_TO_PERCH -> handleFlyingToPerch();
+            case SHOULDER_PERCHED -> { }
         }
-    }
-
-    /**
-     * Evaluates which behavior state we should be in.
-     */
-    private void evaluateBehaviorState() {
-        // Priority: Dancing (highest) > Flying to Music > Perching > Flying to Perch > Idle
-
-        // Check if we're shoulder-perched (passenger)
-        if (parrot.isPassenger()) {
-            currentState = BehaviorState.SHOULDER_PERCHED;
-            return;
-        }
-
-        // Check for music first (highest priority)
-        if (musicBehavior.getMusicSource() != null && musicBehavior.isInRange(musicBehavior.getMusicSource())) {
-            if (danceBehavior.isDancing()) {
-                currentState = BehaviorState.DANCING;
-            } else {
-                currentState = BehaviorState.FLYING_TO_MUSIC;
-            }
-            return;
-        }
-
-        // Scan for new music sources
-        java.util.function.Supplier<BlockPos> musicScanner = () -> {
-            int scanInterval = 60;
-            if (parrot.tickCount % scanInterval == 0) {
-                return musicBehavior.scanForMusic();
-            }
-            return null;
-        };
-
-        BlockPos musicSource = musicScanner.get();
-        if (musicSource != null && config.enableMusicBehavior) {
-            DanceBehavior.DanceStyle dance = musicBehavior.getDanceStyle(musicSource);
-            musicBehavior.startFlyingToMusic(musicSource, dance);
-            currentState = BehaviorState.FLYING_TO_MUSIC;
-            return;
-        }
-
-        // Check if we should perch
-        if (perchBehavior.isPerched()) {
-            currentState = BehaviorState.PERCHING;
-            return;
-        }
-
-        // Look for a perch if idle
-        if (currentState == BehaviorState.IDLE && config.enablePerchBehavior) {
-            // Random chance to seek a perch
-            if (parrot.getRandom().nextDouble() < config.perchSeekChance) {
-                BlockPos perch = perchBehavior.findPerch();
-                if (perch != null) {
-                    // Can't directly set target here, handled by PerchGoal
-                    currentState = BehaviorState.FLYING_TO_PERCH;
-                    return;
-                }
-            }
-        }
-
-        // Default to idle
-        currentState = BehaviorState.IDLE;
     }
 
     private void handleIdle() {
-        // Just wander around
-        if (parrot.getRandom().nextDouble() < 0.02) {
+        if (parrot.getRandom().nextDouble() < IDLE_WANDER_CHANCE) {
             if (parrot.getNavigation().isDone()) {
-                // Random nearby position
-                double x = parrot.getX() + (parrot.getRandom().nextDouble() - 0.5) * 16;
-                double y = parrot.getY() + (parrot.getRandom().nextDouble() - 0.5) * 8;
-                double z = parrot.getZ() + (parrot.getRandom().nextDouble() - 0.5) * 16;
-                parrot.getNavigation().moveTo(x, y, z, 0.6);
+                wanderRandomly();
             }
         }
     }
 
+    private void wanderRandomly() {
+        double x = parrot.getX() + (parrot.getRandom().nextDouble() - 0.5) * 16;
+        double y = parrot.getY() + (parrot.getRandom().nextDouble() - 0.5) * 8;
+        double z = parrot.getZ() + (parrot.getRandom().nextDouble() - 0.5) * 16;
+        parrot.getNavigation().moveTo(x, y, z, 0.6);
+    }
+
     private void handleDancing() {
-        if (!danceBehavior.isDancing()) {
+        CompoundTag danceTag = component.getHandleTag("dance");
+        boolean isDancing = danceTag.getBoolean("is_dancing");
+
+        if (!isDancing) {
             currentState = BehaviorState.IDLE;
             return;
         }
@@ -169,43 +224,90 @@ public class ParrotBehaviorGoal extends Goal {
     }
 
     private void handleFlyingToMusic() {
-        if (!musicBehavior.isFlyingToMusic() && musicBehavior.getMusicSource() != null) {
-            // We've arrived, start dancing
-            DanceBehavior.DanceStyle dance = musicBehavior.getCurrentDance();
-            danceBehavior.startDancing(dance, musicBehavior.getMusicSource());
-            currentState = BehaviorState.DANCING;
-            return;
-        }
+        boolean stillFlying = musicBehavior.updateFlightToMusic();
 
-        musicBehavior.updateFlightToMusic();
+        if (!stillFlying) {
+            CompoundTag musicTag = component.getHandleTag("music");
+            if (musicTag.contains("source_x")) {
+                DanceBehavior.DanceStyle dance = musicBehavior.getCurrentDance();
+                if (dance != null) {
+                    int musicX = musicTag.getInt("source_x");
+                    int musicY = musicTag.getInt("source_y");
+                    int musicZ = musicTag.getInt("source_z");
+                    BlockPos musicPos = new BlockPos(musicX, musicY, musicZ);
 
-        // If music stopped, go to idle
-        if (musicBehavior.getMusicSource() == null || !musicBehavior.isInRange(musicBehavior.getMusicSource())) {
-            musicBehavior.stopFlyingToMusic();
-            currentState = BehaviorState.IDLE;
+                    danceBehavior.startDancing(dance, musicPos);
+                    currentState = BehaviorState.DANCING;
+                }
+            } else {
+                currentState = BehaviorState.IDLE;
+            }
         }
     }
 
     private void handlePerching() {
         perchBehavior.tick();
 
-        if (!perchBehavior.isPerched()) {
+        CompoundTag perchTag = component.getHandleTag("perch");
+        boolean isPerched = perchTag.getBoolean("is_perched");
+
+        if (!isPerched) {
             currentState = BehaviorState.IDLE;
         }
     }
 
     private void handleFlyingToPerch() {
-        // Handled by PerchGoal
     }
 
-    @Override
-    public boolean requiresUpdateEveryTick() {
-        return true;
+    private EcologyComponent getComponent() {
+        if (!(parrot instanceof EcologyAccess access)) {
+            return null;
+        }
+        return access.betterEcology$getEcologyComponent();
     }
 
-    /**
-     * Behavior states for parrots.
-     */
+    private void debug(String message) {
+        lastDebugMessage = message;
+        if (BehaviorLogger.isMinimal() || BetterEcology.DEBUG_MODE) {
+            String prefix = "[ParrotBehavior] Parrot #" + parrot.getId() + " ";
+            BehaviorLogger.info(prefix + message);
+        }
+    }
+
+    public String getLastDebugMessage() {
+        return lastDebugMessage;
+    }
+
+    public String getDebugState() {
+        CompoundTag danceTag = component.getHandleTag("dance");
+        CompoundTag musicTag = component.getHandleTag("music");
+        CompoundTag perchTag = component.getHandleTag("perch");
+
+        String danceStyle = danceTag.getString("dance_style");
+        String musicPos = musicTag.contains("source_x")
+            ? musicTag.getInt("source_x") + "," + musicTag.getInt("source_y") + "," + musicTag.getInt("source_z")
+            : "none";
+        boolean isPerched = perchTag.getBoolean("is_perched");
+
+        return String.format(
+            "state=%s, state_changes=%d, dancing=%s, music=%s, perched=%s, path=%s",
+            currentState,
+            stateChangeCount,
+            danceStyle.isEmpty() ? "no" : "yes(" + danceStyle + ")",
+            musicPos,
+            isPerched,
+            parrot.getNavigation().isInProgress() ? "moving" : "idle"
+        );
+    }
+
+    public BehaviorState getCurrentState() {
+        return currentState;
+    }
+
+    public int getStateChangeCount() {
+        return stateChangeCount;
+    }
+
     public enum BehaviorState {
         IDLE,
         DANCING,
@@ -215,14 +317,12 @@ public class ParrotBehaviorGoal extends Goal {
         SHOULDER_PERCHED
     }
 
-    /**
-     * Overall configuration for parrot behaviors.
-     */
     public static class ParrotBehaviorConfig {
         public boolean enableMusicBehavior = true;
         public boolean enablePerchBehavior = true;
         public boolean enableMimicBehavior = true;
         public double perchSeekChance = 0.01;
         public int musicDetectionInterval = 60;
+        public int musicDetectionRadius = 64;
     }
 }
