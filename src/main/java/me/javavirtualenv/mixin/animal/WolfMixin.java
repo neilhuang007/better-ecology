@@ -606,52 +606,33 @@ public abstract class WolfMixin {
             accessor.betterEcology$getGoalSelector().addGoal(1,
                 new me.javavirtualenv.ecology.ai.LowHealthFleeGoal(wolf, 0.45, 1.5));
 
-            // Register wolf food sharing goals - pickup BEFORE feeding (higher priority)
+            // Register wolf drink water goal (high priority when thirsty)
+            accessor.betterEcology$getGoalSelector().addGoal(2,
+                new me.javavirtualenv.behavior.wolf.WolfDrinkWaterGoal(wolf));
+
+            // Register wolf food sharing goals - pickup BEFORE sharing BEFORE feeding
             accessor.betterEcology$getGoalSelector().addGoal(3,
                 new me.javavirtualenv.behavior.wolf.WolfPickupItemGoal(wolf));
 
-            accessor.betterEcology$getGoalSelector().addGoal(3,
+            accessor.betterEcology$getGoalSelector().addGoal(4,
                 new me.javavirtualenv.behavior.wolf.WolfShareFoodGoal(wolf));
 
             // Register predator feeding goal (find and eat meat items) - LOWER priority than pickup
             accessor.betterEcology$getGoalSelector().addGoal(5,
                 new me.javavirtualenv.behavior.predation.PredatorFeedingGoal(wolf));
 
-            // Hunt prey animals
-            accessor.betterEcology$getTargetSelector().addGoal(3,
-                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Sheep.class, false));
+            // Register melee attack goal (executes when target is set)
+            accessor.betterEcology$getGoalSelector().addGoal(6,
+                new net.minecraft.world.entity.ai.goal.MeleeAttackGoal(wolf, 1.2, true));
 
-            accessor.betterEcology$getTargetSelector().addGoal(3,
-                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Rabbit.class, false));
-
-            accessor.betterEcology$getTargetSelector().addGoal(3,
-                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Fox.class, false));
-
-            accessor.betterEcology$getTargetSelector().addGoal(3,
-                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Pig.class, false));
-
-            accessor.betterEcology$getTargetSelector().addGoal(3,
-                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Chicken.class, false));
-
-            // Siege targeting - higher priority (goal 2)
-            // These targets are only targeted when wolf is in siege mode
-            // The validation is done in WolfSiegeAttackGoal
-            accessor.betterEcology$getTargetSelector().addGoal(2,
-                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Pig.class, false));
-
-            accessor.betterEcology$getTargetSelector().addGoal(2,
-                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Chicken.class, false));
-
-            accessor.betterEcology$getTargetSelector().addGoal(2,
-                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Cow.class, false));
-
-            // Villagers and golems are only targeted during full assault
-            // Validated in WolfSiegeAttackGoal
+            // Hunt prey animals using HungryPredatorTargetGoal (only hunts when hungry)
+            // Uses hunger threshold of 40 to match WolfBehaviorHandle.isHungry
+            // This handles pack hunting coordination automatically
             accessor.betterEcology$getTargetSelector().addGoal(1,
-                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.npc.Villager.class, false));
+                    me.javavirtualenv.ecology.ai.HungryPredatorTargetGoal.forCommonPrey(wolf, 40));
 
-            accessor.betterEcology$getTargetSelector().addGoal(1,
-                    new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.IronGolem.class, false));
+            // NOTE: Siege targeting removed to avoid conflicts with pack hunting
+            // WolfSiegeAttackGoal will manually set targets when in siege mode
         }
     }
 

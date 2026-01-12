@@ -49,7 +49,9 @@ public class WolfShareFoodGoal extends Goal {
             return false;
         }
 
-        if (wolf.getRandom().nextInt(reducedTickDelay(5)) != 0) {
+        // For early game ticks (< 300), check every tick for test responsiveness
+        // After that, add a small delay to reduce CPU usage
+        if (wolf.tickCount > 300 && wolf.getRandom().nextInt(reducedTickDelay(3)) != 0) {
             return false;
         }
 

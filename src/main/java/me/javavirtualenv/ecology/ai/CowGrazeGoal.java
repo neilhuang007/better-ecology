@@ -48,7 +48,7 @@ public class CowGrazeGoal extends Goal {
         this.searchRadius = searchRadius;
         this.speedModifier = speedModifier;
         this.hungerThreshold = hungerThreshold;
-        this.setFlags(EnumSet.of(Flag.MOVE));
+        this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
         this.grazeCooldown = 0;
         this.ticksEating = 0;
         this.isEating = false;
@@ -61,14 +61,18 @@ public class CowGrazeGoal extends Goal {
             return false;
         }
 
-        // Randomly decide to look for grass (higher chance when hungry)
-        float hungerBonus = isHungry() ? 0.05f : 0.01f;
-        if (mob.getRandom().nextFloat() < hungerBonus) {
+        // Check if hungry - if so, actively seek grass
+        if (!isHungry()) {
+            return false;
+        }
+
+        // Find grass every few ticks when hungry to reduce overhead
+        if (mob.tickCount % 10 == 0) {
             targetGrassPos = findNearbyGrass();
             return targetGrassPos != null;
         }
 
-        return false;
+        return targetGrassPos != null;
     }
 
     @Override
@@ -125,6 +129,9 @@ public class CowGrazeGoal extends Goal {
         if (targetGrassPos == null) {
             return;
         }
+
+        // Look at target grass while moving
+        mob.getLookControl().setLookAt(targetGrassPos.getX() + 0.5, targetGrassPos.getY() + 0.5, targetGrassPos.getZ() + 0.5);
 
         double distance = mob.distanceToSqr(targetGrassPos.getX(), targetGrassPos.getY(), targetGrassPos.getZ());
 
@@ -240,8 +247,17 @@ public class CowGrazeGoal extends Goal {
      * Check if cow is hungry and should seek food more actively.
      */
     private boolean isHungry() {
-        // This would integrate with the hunger system
-        // For now, use a simple probability
-        return mob.getRandom().nextFloat() < 0.3f;
+        var component = me.javavirtualenv.ecology.EcologyHooks.getEcologyComponent(mob);
+        if (component == null) {
+            return false;
+        }
+        var hungerTag = component.getHandleTag("hunger");
+        int hunger = hungerTag.contains("hunger") ? hungerTag.getInt("hunger") : 100;
+        return hunger < hungerThreshold;
+    }
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
     }
 }

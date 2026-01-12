@@ -53,6 +53,8 @@ public class RabbitBehaviorGoal extends Goal {
         this.thump = new ThumpBehavior(thumpConfig);
         this.foraging = new RabbitForagingBehavior(foragingConfig);
         this.burrowSystem = BurrowSystem.get(mob.level());
+        // Set MOVE flag since this goal actively uses navigation when evading or seeking burrows
+        this.setFlags(java.util.EnumSet.of(Flag.MOVE));
     }
 
     public RabbitBehaviorGoal(Mob mob, EcologyComponent component) {
@@ -64,18 +66,59 @@ public class RabbitBehaviorGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        return mob.isAlive();
+        if (!mob.isAlive()) {
+            return false;
+        }
+
+        // Create behavior context to check for threats
+        BehaviorContext context = new BehaviorContext(mob);
+
+        // Check if we're evading or should evade
+        Vec3d evasionForce = evasion.calculate(context);
+        if (evasion.isEvading() || evasionForce.magnitude() > 0.01) {
+            return true;
+        }
+
+        // Check if moving to burrow
+        if (isMovingToBurrow && targetBurrowPos != null) {
+            return true;
+        }
+
+        // Don't run passively - let other goals like SeekWater and SeekFood take priority
+        return false;
     }
 
     @Override
     public boolean canContinueToUse() {
-        return canUse();
+        if (!mob.isAlive()) {
+            return false;
+        }
+
+        // Continue if evading
+        if (evasion.isEvading()) {
+            return true;
+        }
+
+        // Continue if moving to burrow
+        if (isMovingToBurrow && targetBurrowPos != null) {
+            double dist = mob.blockPosition().distSqr(targetBurrowPos);
+            return dist > 9.0; // Stop when within 3 blocks
+        }
+
+        return false;
     }
 
     @Override
     public void start() {
         isMovingToBurrow = false;
         targetBurrowPos = null;
+
+        // Start fleeing immediately if there's a threat
+        BehaviorContext context = new BehaviorContext(mob);
+        Vec3d evasionForce = evasion.calculate(context);
+        if (evasion.isEvading()) {
+            applyEvasionMovement(evasionForce);
+        }
     }
 
     @Override
@@ -97,8 +140,10 @@ public class RabbitBehaviorGoal extends Goal {
         Vec3d evasionForce = evasion.calculate(context);
 
         if (evasion.isEvading()) {
-            // Currently evading - apply evasion movement
-            applyEvasionMovement(evasionForce);
+            // Currently evading - update navigation every few ticks
+            if (mob.tickCount % 5 == 0) {  // Update path every quarter second for responsiveness
+                applyEvasionMovement(evasionForce);
+            }
 
             // Thump to warn others if appropriate
             if (evasion.getCurrentThreat() instanceof Player) {
@@ -114,56 +159,71 @@ public class RabbitBehaviorGoal extends Goal {
             // Not immediately threatened
             burrowSearchCooldown--;
 
+            // Clear burrow navigation if we were seeking one but are no longer threatened
+            if (isMovingToBurrow) {
+                isMovingToBurrow = false;
+                targetBurrowPos = null;
+                mob.getNavigation().stop();
+            }
+
             // Priority 2: Thump if distant threat detected
             checkAndThump(context);
 
-            // Priority 3: Forage when safe
-            if (!evasion.isFrozen() && !isMovingToBurrow) {
+            // Priority 3: Forage when safe (but don't interfere with other goals)
+            if (!evasion.isFrozen() && !mob.getNavigation().isInProgress()) {
                 foraging.tick(context);
 
                 // Occasionally stand on hind legs
                 foraging.tryStand(context);
             }
 
-            // Priority 4: Return to burrow to rest
-            if (shouldReturnToBurrow(context)) {
-                trySeekBurrow(context, currentBurrowSystem);
-            }
+            // Don't seek burrow when not threatened - let other goals (water, food) take priority
         }
+    }
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
     }
 
     /**
      * Applies evasion movement forces to the mob.
+     * Uses path navigation to move away from threats.
      */
     private void applyEvasionMovement(Vec3d evasionForce) {
         if (evasionForce.magnitude() < 0.01) {
             return;
         }
 
-        // Apply steering force to movement
-        // Convert Vec3d to Minecraft Vec3
-        net.minecraft.world.phys.Vec3 currentMovement = mob.getDeltaMovement();
-
-        net.minecraft.world.phys.Vec3 newMovement = new net.minecraft.world.phys.Vec3(
-            currentMovement.x + evasionForce.x * 0.1,
-            currentMovement.y + evasionForce.y * 0.1,
-            currentMovement.z + evasionForce.z * 0.1
-        );
-
-        // Limit maximum speed
-        double maxSpeed = evasion.getConfig().getEvasionSpeed();
-        double currentSpeed = newMovement.length();
-
-        if (currentSpeed > maxSpeed) {
-            newMovement = newMovement.normalize().scale(maxSpeed);
+        // Get the threat entity to flee from
+        if (evasion.getCurrentThreat() == null) {
+            return;
         }
 
-        mob.setDeltaMovement(newMovement);
+        net.minecraft.world.entity.LivingEntity threat = (net.minecraft.world.entity.LivingEntity) evasion.getCurrentThreat();
 
-        // Face movement direction
-        if (newMovement.length() > 0.01) {
-            mob.setYRot((float) Math.toDegrees(Math.atan2(newMovement.x, newMovement.z)));
+        // Use navigation to find a path away from the threat
+        net.minecraft.world.phys.Vec3 threatPos = threat.position();
+        net.minecraft.world.phys.Vec3 fleePos = findFleePositionAwayFrom(threatPos);
+
+        if (fleePos != null) {
+            PathNavigation navigation = mob.getNavigation();
+            double speed = evasion.getConfig().getEvasionSpeed();
+            navigation.moveTo(fleePos.x, fleePos.y, fleePos.z, speed);
         }
+    }
+
+    /**
+     * Find a flee position away from the given position.
+     *
+     * @param awayFromPos The position to flee from
+     * @return A position away from the threat, or null if none found
+     */
+    private net.minecraft.world.phys.Vec3 findFleePositionAwayFrom(net.minecraft.world.phys.Vec3 awayFromPos) {
+        if (!(mob instanceof net.minecraft.world.entity.PathfinderMob pathfinderMob)) {
+            return null;
+        }
+        return net.minecraft.world.entity.ai.util.DefaultRandomPos.getPosAway(pathfinderMob, 16, 7, awayFromPos);
     }
 
     /**

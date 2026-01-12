@@ -51,12 +51,29 @@ public class SheepGrazeGoal extends Goal {
             return false;
         }
 
-        if (mob.getRandom().nextFloat() < 0.02) {
+        if (!isHungry()) {
+            return false;
+        }
+
+        // Find grass every few ticks when hungry to reduce overhead
+        // Increased frequency from 15% random to deterministic every 10 ticks for reliable behavior
+        if (mob.tickCount % 10 == 0) {
             targetGrassPos = findNearbyGrass();
             return targetGrassPos != null;
         }
 
-        return false;
+        return targetGrassPos != null;
+    }
+
+    private boolean isHungry() {
+        if (!(mob instanceof me.javavirtualenv.ecology.api.EcologyAccess access)) {
+            return false;
+        }
+        me.javavirtualenv.ecology.EcologyComponent component = access.betterEcology$getEcologyComponent();
+        if (component == null) {
+            return false;
+        }
+        return component.state().isHungry();
     }
 
     @Override

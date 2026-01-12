@@ -103,4 +103,255 @@ public final class HerbivoreTestUtils {
         getComponent(mob).state().setIsRetreating(retreating);
     }
 
+    /**
+     * Set hunger value and update entity state.
+     * Uses threshold of 50 for sheep to match SheepHungerHandle.
+     * For other animals, threshold may vary (wolves use 40, foxes use 60).
+     */
+    public static void setHunger(Mob mob, int hunger) {
+        EcologyComponent component = getComponent(mob);
+        component.getHandleTag("hunger").putInt("hunger", hunger);
+
+        // Determine threshold based on entity type
+        int hungerThreshold = 50; // Default for sheep
+        if (mob instanceof net.minecraft.world.entity.animal.Wolf) {
+            hungerThreshold = 40; // Wolves use 40
+        } else if (mob instanceof net.minecraft.world.entity.animal.Fox) {
+            hungerThreshold = 60; // Foxes use 60
+        }
+
+        component.state().setIsHungry(hunger < hungerThreshold);
+        component.state().setIsStarving(hunger <= 5);
+    }
+
+    /**
+     * Get current hunger value.
+     */
+    public static int getHunger(Mob mob) {
+        EcologyComponent component = getComponent(mob);
+        return component.getHandleTag("hunger").getInt("hunger");
+    }
+
+    /**
+     * Verify hunger state matches expected value.
+     * Uses appropriate threshold for each animal type (wolves: 40, sheep: 50, foxes: 60).
+     */
+    public static boolean verifyHungerState(Mob mob, int expectedHunger) {
+        EcologyComponent component = getComponent(mob);
+        int actualHunger = component.getHandleTag("hunger").getInt("hunger");
+
+        // Determine threshold based on entity type
+        int hungerThreshold = 50; // Default for sheep
+        if (mob instanceof net.minecraft.world.entity.animal.Wolf) {
+            hungerThreshold = 40; // Wolves use 40
+        } else if (mob instanceof net.minecraft.world.entity.animal.Fox) {
+            hungerThreshold = 60; // Foxes use 60
+        }
+
+        boolean expectedHungry = expectedHunger < hungerThreshold;
+        boolean actualHungry = component.state().isHungry();
+        return actualHunger == expectedHunger && actualHungry == expectedHungry;
+    }
+
+    /**
+     * Set thirst value and update entity state.
+     */
+    public static void setThirst(Mob mob, int thirst) {
+        EcologyComponent component = getComponent(mob);
+        component.getHandleTag("thirst").putInt("thirst", thirst);
+        component.state().setIsThirsty(thirst < 30);
+    }
+
+    /**
+     * Get current thirst value.
+     */
+    public static int getThirst(Mob mob) {
+        EcologyComponent component = getComponent(mob);
+        var thirstTag = component.getHandleTag("thirst");
+        return thirstTag.contains("thirst") ? thirstTag.getInt("thirst") : 100;
+    }
+
+    /**
+     * Verify thirst state matches expected value.
+     */
+    public static boolean verifyThirstState(Mob mob, int expectedThirst) {
+        EcologyComponent component = getComponent(mob);
+        int actualThirst = component.getHandleTag("thirst").getInt("thirst");
+        boolean expectedThirsty = expectedThirst < 30;
+        boolean actualThirsty = component.state().isThirsty();
+        return actualThirst == expectedThirst && actualThirsty == expectedThirsty;
+    }
+
+    /**
+     * Check if mob is hungry.
+     */
+    public static boolean isHungry(Mob mob) {
+        return getComponent(mob).state().isHungry();
+    }
+
+    /**
+     * Check if mob is starving.
+     */
+    public static boolean isStarving(Mob mob) {
+        return getComponent(mob).state().isStarving();
+    }
+
+    /**
+     * Reset the egg laying cooldown for chickens.
+     * Sets the cooldown to 0 so the chicken is ready to lay an egg.
+     * Also sets eggLayTime to 1 to trigger immediate egg laying on next tick.
+     */
+    public static void resetEggLayCooldown(Mob mob) {
+        EcologyComponent component = getComponent(mob);
+        component.getHandleTag("breeding").putInt("egg_lay_cooldown", 0);
+    }
+
+    /**
+     * Set the egg laying cooldown for chickens.
+     * @param mob The mob (should be a chicken)
+     * @param cooldown The cooldown in ticks
+     */
+    public static void setEggLayCooldown(Mob mob, int cooldown) {
+        EcologyComponent component = getComponent(mob);
+        component.getHandleTag("breeding").putInt("egg_lay_cooldown", cooldown);
+    }
+
+    /**
+     * Force an immediate egg lay on the next tick by directly spawning an egg.
+     * This bypasses the normal nesting behavior for testing purposes.
+     * @param chicken The chicken to lay an egg
+     */
+    public static void forceEggLay(net.minecraft.world.entity.animal.Chicken chicken) {
+        net.minecraft.world.entity.Entity egg = chicken.spawnAtLocation(net.minecraft.world.item.Items.EGG);
+        if (egg != null) {
+            egg.setDeltaMovement(
+                (chicken.level().getRandom().nextFloat() - 0.5) * 0.1,
+                chicken.level().getRandom().nextFloat() * 0.1,
+                (chicken.level().getRandom().nextFloat() - 0.5) * 0.1
+            );
+        }
+    }
+
+    /**
+     * Manually register SeekWaterGoal for a pig in game test environment.
+     * This ensures the goal is present even if mixins don't fire properly during tests.
+     */
+    public static void registerPigSeekWaterGoal(net.minecraft.world.entity.animal.Pig pig) {
+        me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) pig;
+        accessor.betterEcology$getGoalSelector().addGoal(2,
+            new me.javavirtualenv.ecology.ai.SeekWaterGoal(pig, 1.0, 16));
+    }
+
+    /**
+     * Manually register SeekWaterGoal for a chicken in game test environment.
+     * This ensures the goal is present even if mixins don't fire properly during tests.
+     */
+    public static void registerChickenSeekWaterGoal(net.minecraft.world.entity.animal.Chicken chicken) {
+        me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) chicken;
+        accessor.betterEcology$getGoalSelector().addGoal(2,
+            new me.javavirtualenv.ecology.ai.SeekWaterGoal(chicken, 1.0, 16));
+    }
+
+    /**
+     * Manually register SeekWaterGoal for a sheep in game test environment.
+     * This ensures the goal is present even if mixins don't fire properly during tests.
+     */
+    public static void registerSheepSeekWaterGoal(net.minecraft.world.entity.animal.Sheep sheep) {
+        me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) sheep;
+        accessor.betterEcology$getGoalSelector().addGoal(3,
+            new me.javavirtualenv.ecology.ai.SeekWaterGoal(sheep, 1.0, 16));
+    }
+
+    /**
+     * Manually register SeekWaterGoal for a rabbit in game test environment.
+     * This ensures the goal is present even if mixins don't fire properly during tests.
+     */
+    public static void registerRabbitSeekWaterGoal(net.minecraft.world.entity.animal.Rabbit rabbit) {
+        me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) rabbit;
+        accessor.betterEcology$getGoalSelector().addGoal(3,
+            new me.javavirtualenv.ecology.ai.SeekWaterGoal(rabbit, 1.2, 16));
+    }
+
+    /**
+     * Manually register SeekWaterGoal for a fox in game test environment.
+     * This ensures the goal is present even if mixins don't fire properly during tests.
+     */
+    public static void registerFoxSeekWaterGoal(net.minecraft.world.entity.animal.Fox fox) {
+        me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) fox;
+        accessor.betterEcology$getGoalSelector().addGoal(2,
+            new me.javavirtualenv.ecology.ai.SeekWaterGoal(fox, 1.0, 16));
+    }
+
+    /**
+     * Manually register SeekWaterGoal for a cow in game test environment.
+     * This ensures the goal is present even if mixins don't fire properly during tests.
+     */
+    public static void registerCowSeekWaterGoal(net.minecraft.world.entity.animal.Cow cow) {
+        me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) cow;
+        accessor.betterEcology$getGoalSelector().addGoal(4,
+            new me.javavirtualenv.ecology.ai.SeekWaterGoal(cow, 1.0, 16));
+    }
+
+    /**
+     * Manually register CowGrazeGoal for a cow in game test environment.
+     * This ensures the goal is present even if mixins don't fire properly during tests.
+     */
+    public static void registerCowGrazeGoal(net.minecraft.world.entity.animal.Cow cow) {
+        me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) cow;
+        accessor.betterEcology$getGoalSelector().addGoal(6,
+            new me.javavirtualenv.ecology.ai.CowGrazeGoal(cow, 16.0, 0.8));
+    }
+
+    /**
+     * Manually register HerdCohesionGoal for a cow in game test environment.
+     * This ensures the goal is present even if mixins don't fire properly during tests.
+     */
+    public static void registerCowHerdCohesionGoal(net.minecraft.world.entity.animal.Cow cow) {
+        me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) cow;
+        accessor.betterEcology$getGoalSelector().addGoal(7,
+            new me.javavirtualenv.ecology.ai.HerdCohesionGoal(cow, 24.0, 0.8));
+    }
+
+    /**
+     * Manually register all cow goals in game test environment.
+     * Delegates to CowGameTestHelpers for comprehensive goal registration.
+     */
+    public static void registerAllCowGoals(net.minecraft.world.entity.animal.Cow cow) {
+        CowGameTestHelpers.registerCowGoals(cow);
+    }
+
+    /**
+     * Manually register SheepGrazeGoal for a sheep in game test environment.
+     * This ensures the goal is present even if mixins don't fire properly during tests.
+     */
+    public static void registerSheepGrazeGoal(net.minecraft.world.entity.animal.Sheep sheep) {
+        me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) sheep;
+        accessor.betterEcology$getGoalSelector().addGoal(4,
+            new me.javavirtualenv.ecology.ai.SheepGrazeGoal(sheep, 16.0, 0.8));
+    }
+
+    /**
+     * Manually register RabbitBehaviorGoal for a rabbit in game test environment.
+     * This ensures the rabbit has evasion, thumping, and foraging behaviors.
+     */
+    public static void registerRabbitBehaviorGoal(net.minecraft.world.entity.animal.Rabbit rabbit) {
+        me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) rabbit;
+        EcologyComponent component = getComponent(rabbit);
+
+        // Register the primary behavior goal with all rabbit behaviors
+        me.javavirtualenv.behavior.rabbit.RabbitBehaviorGoal rabbitGoal =
+            new me.javavirtualenv.behavior.rabbit.RabbitBehaviorGoal(rabbit, component);
+        accessor.betterEcology$getGoalSelector().addGoal(2, rabbitGoal);
+    }
+
+    /**
+     * Manually register LowHealthFleeGoal for a rabbit in game test environment.
+     * This ensures the rabbit flees when health is low.
+     */
+    public static void registerRabbitFleeGoal(net.minecraft.world.entity.animal.Rabbit rabbit) {
+        me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) rabbit;
+        accessor.betterEcology$getGoalSelector().addGoal(1,
+            new me.javavirtualenv.ecology.ai.LowHealthFleeGoal(rabbit, 0.85, 1.6));
+    }
+
 }

@@ -64,7 +64,7 @@ public final class WolfBehaviorHandle extends CodeBasedHandle {
         // Create goal with wolf-specific weights
         BehaviorWeights weights = createWolfWeights();
 
-        int steeringPriority = 6; // Run after water avoidance (priority 5)
+        int steeringPriority = 7; // Run after melee attack (priority 6)
         SteeringBehaviorGoal steeringGoal = new SteeringBehaviorGoal(
                 mob,
                 () -> registry,
@@ -75,30 +75,18 @@ public final class WolfBehaviorHandle extends CodeBasedHandle {
 
         MobAccessor accessor = (MobAccessor) mob;
 
-        // Register hungry predator targeting goal (targets prey when hungry)
-        accessor.betterEcology$getTargetSelector().addGoal(1,
-                HungryPredatorTargetGoal.forCommonPrey(wolf, 50));
+        // NOTE: HungryPredatorTargetGoal, MeleeAttackGoal, WolfDrinkWaterGoal,
+        // WolfPickupItemGoal, WolfShareFoodGoal, and PredatorFeedingGoal
+        // are all registered in WolfPredationHandle (WolfMixin) to centralize
+        // goal registration and avoid duplicates.
 
-        // Register simple melee attack for hunting (runs when target is set)
-        accessor.betterEcology$getGoalSelector().addGoal(2,
-                new net.minecraft.world.entity.ai.goal.MeleeAttackGoal(wolf, 1.2, true));
-
-        // Register siege attack goal (higher priority than steering)
+        // Register siege attack goal
         accessor.betterEcology$getGoalSelector().addGoal(2,
                 new WolfSiegeAttackGoal(wolf, 1.2, false));
 
         // Register pack hunting attack goal
         accessor.betterEcology$getGoalSelector().addGoal(3,
                 new WolfPackAttackGoal(wolf, 1.0, false));
-
-        // Register thirst-driven water seeking (priority 4)
-        accessor.betterEcology$getGoalSelector().addGoal(4,
-                new WolfDrinkWaterGoal(wolf));
-
-        // NOTE: WolfPickupItemGoal, WolfShareFoodGoal, and PredatorFeedingGoal
-        // are registered in WolfPredationHandle to avoid duplicates.
-        // They are at priorities 3 (pickup/share) and 5 (feeding) to ensure
-        // wolves pick up food for sharing before eating it directly.
 
         // Register steering behavior goal (lowest priority)
         accessor.betterEcology$getGoalSelector().addGoal(steeringPriority, steeringGoal);
@@ -239,7 +227,7 @@ public final class WolfBehaviorHandle extends CodeBasedHandle {
         EcologyComponent component = ((EcologyAccess) wolf).betterEcology$getEcologyComponent();
         CompoundTag hungerTag = component.getHandleTag("hunger");
         int hunger = hungerTag.getInt("hunger");
-        return hunger < 75;  // Increased from 40 - wolves will pick up food when not fully satisfied
+        return hunger < 40;  // Match threshold with HungryPredatorTargetGoal
     }
 
     /**

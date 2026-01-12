@@ -6,6 +6,7 @@ import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.ai.HungryPredatorTargetGoal;
 import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
+import me.javavirtualenv.ecology.ai.SeekWaterGoal;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.reproduction.NestBuildingHandle;
 import me.javavirtualenv.mixin.MobAccessor;
@@ -54,19 +55,18 @@ public abstract class FoxMixin {
     private FoxItemCarryBehavior itemCarryBehavior;
     private FoxSleepingBehavior sleepingBehavior;
 
-    @Unique
-    private static boolean behaviorsRegistered = false;
+    // Static initializer to register behaviors before any fox is created
+    // This ensures the config is available when Mob.registerGoals() is called
+    static {
+        registerFoxBehaviors();
+    }
 
     /**
      * Registers fox behaviors from configuration.
      * Creates an AnimalConfig with handles for all fox-specific behaviors.
      */
     @Unique
-    private void registerBehaviors() {
-        if (behaviorsRegistered) {
-            return;
-        }
-
+    private static void registerFoxBehaviors() {
         ResourceLocation foxId = ResourceLocation.withDefaultNamespace("fox");
 
         AnimalConfig config = AnimalConfig.builder(foxId)
@@ -98,17 +98,37 @@ public abstract class FoxMixin {
             .build();
 
         AnimalBehaviorRegistry.register(foxId, config);
-        behaviorsRegistered = true;
     }
 
     /**
-     * Inject after Fox constructor to register behaviors.
+     * Inject after Fox constructor to remove vanilla goals and register custom goals.
      * Uses TAIL to ensure fox is fully initialized.
+     * Note: Behaviors are already registered in static initializer.
      */
     @Inject(method = "<init>", at = @At("TAIL"))
     private void onInit(CallbackInfo ci) {
-        registerBehaviors();
+        removeVanillaGoals();
         registerFoxGoals();
+    }
+
+    /**
+     * Remove vanilla fox goals that conflict with our custom behavior.
+     * Specifically removes vanilla item pickup goal.
+     */
+    private void removeVanillaGoals() {
+        Fox fox = (Fox) (Object) this;
+        MobAccessor accessor = (MobAccessor) fox;
+        GoalSelector goalSelector = accessor.betterEcology$getGoalSelector();
+
+        // Remove vanilla fox item pickup goals by clearing goals that match fox pickup patterns
+        // We'll re-add our custom pickup goal later
+        goalSelector.getAvailableGoals().removeIf(goal -> {
+            String goalClass = goal.getGoal().getClass().getSimpleName();
+            // Remove vanilla FoxEatBerriesGoal, FoxSearchForItemsGoal, FoxStalkPreyGoal
+            return goalClass.contains("FoxSearchForItems") ||
+                   goalClass.contains("FoxEatBerries") ||
+                   goalClass.contains("FoxStalkPrey");
+        });
     }
 
     /**
@@ -134,27 +154,31 @@ public abstract class FoxMixin {
         GoalSelector goalSelector = accessor.betterEcology$getGoalSelector();
 
         // Register hungry predator targeting goal (targets chickens and rabbits when hungry)
+        // Threshold 60 means fox hunts when moderately hungry
         accessor.betterEcology$getTargetSelector().addGoal(1,
-            new HungryPredatorTargetGoal<>(fox, LivingEntity.class, 50,
+            new HungryPredatorTargetGoal<>(fox, LivingEntity.class, 60,
                 target -> target instanceof Chicken || target instanceof Rabbit));
 
         // Fox goal priorities (higher number = lower priority)
         // Low health flee: highest priority - retreat when hurt
         goalSelector.addGoal(1, new LowHealthFleeGoal(fox, 0.50, 1.5));
 
-        // Sleep: high priority during day
-        goalSelector.addGoal(2, new FoxSleepGoal(pathfinderMob, sleepingBehavior));
+        // Water seeking: high priority when thirsty
+        goalSelector.addGoal(2, new SeekWaterGoal(pathfinderMob, 1.0, 16));
 
-        // Hunt: high priority when hungry or at night
+        // Hunt: high priority when hungry - MUST be before sleep to prioritize hunting when hungry
         goalSelector.addGoal(3, new FoxHuntGoal(pathfinderMob, pursuitBehavior, 1.2));
 
+        // Sleep: lower priority than hunting so hunger overrides sleep
+        goalSelector.addGoal(4, new FoxSleepGoal(pathfinderMob, sleepingBehavior));
+
         // Feed on meat items: priority after hunting
-        goalSelector.addGoal(4, new PredatorFeedingGoal(pathfinderMob, 1.2));
+        goalSelector.addGoal(5, new PredatorFeedingGoal(pathfinderMob, 1.2));
 
         // Forage: medium priority
-        goalSelector.addGoal(5, new FoxForageGoal(pathfinderMob, berryForagingBehavior, 5));
+        goalSelector.addGoal(6, new FoxForageGoal(pathfinderMob, berryForagingBehavior, 5));
 
         // Pickup items: lower priority
-        goalSelector.addGoal(7, new FoxPickupItemGoal(pathfinderMob, itemCarryBehavior, 0.8));
+        goalSelector.addGoal(7, new FoxPickupItemGoal(fox));
     }
 }

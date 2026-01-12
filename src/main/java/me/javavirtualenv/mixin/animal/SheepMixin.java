@@ -9,6 +9,7 @@ import me.javavirtualenv.ecology.handles.WoolHandle;
 import me.javavirtualenv.ecology.handles.production.WoolGrowthHandle;
 import me.javavirtualenv.ecology.ai.SheepGrazeGoal;
 import me.javavirtualenv.ecology.ai.EweProtectLambGoal;
+import me.javavirtualenv.ecology.ai.SeekWaterGoal;
 import me.javavirtualenv.behavior.production.WoolGrowthGoal;
 import me.javavirtualenv.ecology.state.EntityState;
 import net.minecraft.nbt.CompoundTag;
@@ -60,6 +61,8 @@ public abstract class SheepMixin {
         )
             // Hunger system (lines 88-103)
             .addHandle(new SheepHungerHandle())
+            // Thirst system
+            .addHandle(new SheepThirstHandle())
             // Condition system (lines 109-124)
             .addHandle(new SheepConditionHandle())
             // Energy system (lines 127-137)
@@ -132,6 +135,12 @@ public abstract class SheepMixin {
             }
             setHunger(handleTag, newHunger);
 
+            boolean isHungry = newHunger < (MAX_HUNGER / 2);
+            boolean isStarving = newHunger <= DAMAGE_THRESHOLD;
+            EntityState state = component.state();
+            state.setIsHungry(isHungry || isStarving);
+            state.setIsStarving(isStarving);
+
             if (elapsedTicks <= 1 && shouldApplyStarvation(mob, newHunger)) {
                 int currentTick = mob.tickCount;
                 int lastDamageTick = getLastDamageTick(handleTag);
@@ -165,6 +174,84 @@ public abstract class SheepMixin {
 
         private boolean shouldApplyStarvation(Mob mob, int hunger) {
             return mob.level().getDifficulty() != Difficulty.PEACEFUL && hunger <= DAMAGE_THRESHOLD;
+        }
+    }
+
+    /**
+     * Thirst handle with sheep-specific values.
+     */
+    private static final class SheepThirstHandle extends CodeBasedHandle {
+        private static final String NBT_THIRST = "thirst";
+        private static final String NBT_LAST_DAMAGE = "lastThirstDamageTick";
+
+        private static final int MAX_THIRST = 100;
+        private static final int STARTING_THIRST = 100;
+        private static final double DECAY_RATE = 0.015;
+        private static final int DAMAGE_THRESHOLD = 15;
+        private static final float DAMAGE_AMOUNT = 1.0f;
+        private static final int DAMAGE_INTERVAL = 200;
+        private static final long MAX_CATCH_UP_TICKS = 24000L;
+
+        @Override
+        public String id() {
+            return "thirst";
+        }
+
+        @Override
+        public int tickInterval() {
+            return 20;
+        }
+
+        @Override
+        public void tick(Mob mob, EcologyComponent component, EcologyProfile profile) {
+            CompoundTag tag = component.getHandleTag(id());
+            int currentThirst = getCurrentThirst(tag);
+            long elapsed = component.elapsedTicks();
+            long effectiveTicks = Math.min(Math.max(1, elapsed), MAX_CATCH_UP_TICKS);
+            long scaledDecay = (long) (DECAY_RATE * effectiveTicks);
+
+            int newThirst = currentThirst - (int) scaledDecay;
+            if (elapsed > 1) {
+                newThirst = Math.max(DAMAGE_THRESHOLD + 1, newThirst);
+            } else {
+                newThirst = Math.max(0, newThirst);
+            }
+
+            setThirst(tag, newThirst);
+
+            if (elapsed <= 1 && shouldApplyDehydration(mob, newThirst)) {
+                int currentTick = mob.tickCount;
+                int lastDamage = getLastDamageTick(tag);
+                if (currentTick - lastDamage >= DAMAGE_INTERVAL) {
+                    mob.hurt(mob.level().damageSources().starve(), DAMAGE_AMOUNT);
+                    setLastDamageTick(tag, currentTick);
+                }
+            }
+        }
+
+        @Override
+        public void writeNbt(Mob mob, EcologyComponent component, EcologyProfile profile, CompoundTag outputTag) {
+            outputTag.put(id(), component.getHandleTag(id()).copy());
+        }
+
+        private int getCurrentThirst(CompoundTag tag) {
+            return tag.contains(NBT_THIRST) ? tag.getInt(NBT_THIRST) : STARTING_THIRST;
+        }
+
+        private void setThirst(CompoundTag tag, int value) {
+            tag.putInt(NBT_THIRST, value);
+        }
+
+        private int getLastDamageTick(CompoundTag tag) {
+            return tag.getInt(NBT_LAST_DAMAGE);
+        }
+
+        private void setLastDamageTick(CompoundTag tag, int tick) {
+            tag.putInt(NBT_LAST_DAMAGE, tick);
+        }
+
+        private boolean shouldApplyDehydration(Mob mob, int thirst) {
+            return thirst <= DAMAGE_THRESHOLD && mob.level().getDifficulty() != Difficulty.PEACEFUL;
         }
     }
 
@@ -487,6 +574,7 @@ public abstract class SheepMixin {
             applyMovementSpeed(mob);
             configurePathfinding(mob);
             registerFloatGoal(mob);
+            registerSeekWaterGoal(mob);
             registerStrollGoal(mob);
             registerGrazeGoal(mob);
             registerLambProtectionGoal(mob);
@@ -512,6 +600,15 @@ public abstract class SheepMixin {
             int goalPriority = 0;
             me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
             accessor.betterEcology$getGoalSelector().addGoal(goalPriority, new FloatGoal(mob));
+        }
+
+        private void registerSeekWaterGoal(Mob mob) {
+            if (!(mob instanceof PathfinderMob pathfinderMob)) {
+                return;
+            }
+            int goalPriority = 3;
+            me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
+            accessor.betterEcology$getGoalSelector().addGoal(goalPriority, new SeekWaterGoal(pathfinderMob, 1.0, 16));
         }
 
         private void registerStrollGoal(Mob mob) {

@@ -36,7 +36,8 @@ public class SeekWaterGoal extends Goal {
     private final PathfinderMob mob;
     private final double moveSpeed;
     private final int searchRadius;
-    private BlockPos targetWaterPos;
+    private BlockPos targetWaterPos;      // The actual water block to look at
+    private BlockPos drinkingPosition;    // Where the mob stands to drink (adjacent to water)
     private int drinkTicks = 0;
     private int cooldownTicks = 0;
     private Path currentPath;
@@ -94,13 +95,15 @@ public class SeekWaterGoal extends Goal {
         }
 
         // Find nearest reachable water
-        targetWaterPos = findNearestReachableWater();
-        if (targetWaterPos == null) {
+        targetWaterPos = null;
+        drinkingPosition = findNearestReachableWater();
+        if (drinkingPosition == null) {
             debug("thirsty but no reachable water found (thirst=" + thirst + ")");
             return false;
         }
 
-        debug("STARTING: seeking water at " + targetWaterPos.getX() + "," + targetWaterPos.getY() + "," + targetWaterPos.getZ() + " (thirst=" + thirst + ")");
+        debug("STARTING: seeking drinking spot at " + drinkingPosition.getX() + "," + drinkingPosition.getY() + "," + drinkingPosition.getZ() +
+              " (water at " + targetWaterPos.getX() + "," + targetWaterPos.getY() + "," + targetWaterPos.getZ() + ", thirst=" + thirst + ")");
         return true;
     }
 
@@ -110,7 +113,7 @@ public class SeekWaterGoal extends Goal {
             return false;
         }
 
-        if (targetWaterPos == null) {
+        if (drinkingPosition == null) {
             return false;
         }
 
@@ -127,7 +130,7 @@ public class SeekWaterGoal extends Goal {
 
     @Override
     public void start() {
-        debug("goal started, pathfinding to water");
+        debug("goal started, pathfinding to drinking position");
         drinkTicks = 0;
         moveToWater();
     }
@@ -136,6 +139,7 @@ public class SeekWaterGoal extends Goal {
     public void stop() {
         debug("goal stopped (drinkTicks=" + drinkTicks + ", cooldown=" + cooldownTicks + ")");
         targetWaterPos = null;
+        drinkingPosition = null;
         drinkTicks = 0;
         currentPath = null;
         mob.getNavigation().stop();
@@ -143,20 +147,22 @@ public class SeekWaterGoal extends Goal {
 
     @Override
     public void tick() {
-        if (targetWaterPos == null) {
+        if (drinkingPosition == null) {
             return;
         }
 
-        double distSq = mob.distanceToSqr(targetWaterPos.getX() + 0.5, targetWaterPos.getY(), targetWaterPos.getZ() + 0.5);
+        double distSq = mob.distanceToSqr(drinkingPosition.getX() + 0.5, drinkingPosition.getY(), drinkingPosition.getZ() + 0.5);
 
-        // If far from water, keep moving
+        // If far from drinking position, keep moving
         if (distSq > 4.0) { // 2 blocks distance squared
-            // Re-path if we're not moving or lost our path
-            if (!mob.getNavigation().isInProgress() || currentPath == null || !currentPath.canReach()) {
-                debug("re-pathfinding to water (dist=" + (int) Math.sqrt(distSq) + " blocks)");
+            // Re-path if we're not moving
+            if (!mob.getNavigation().isInProgress()) {
+                debug("re-pathfinding to drinking spot (dist=" + (int) Math.sqrt(distSq) + " blocks)");
                 moveToWater();
             }
-            mob.getLookControl().setLookAt(targetWaterPos.getX() + 0.5, targetWaterPos.getY(), targetWaterPos.getZ() + 0.5);
+            if (targetWaterPos != null) {
+                mob.getLookControl().setLookAt(targetWaterPos.getX() + 0.5, targetWaterPos.getY(), targetWaterPos.getZ() + 0.5);
+            }
             return;
         }
 
@@ -164,7 +170,9 @@ public class SeekWaterGoal extends Goal {
         drinkTicks++;
 
         // Look at the water while drinking
-        mob.getLookControl().setLookAt(targetWaterPos.getX() + 0.5, targetWaterPos.getY(), targetWaterPos.getZ() + 0.5);
+        if (targetWaterPos != null) {
+            mob.getLookControl().setLookAt(targetWaterPos.getX() + 0.5, targetWaterPos.getY(), targetWaterPos.getZ() + 0.5);
+        }
 
         // Every second, log drinking progress
         if (drinkTicks % 20 == 0) {
@@ -177,6 +185,7 @@ public class SeekWaterGoal extends Goal {
             drinkTicks = 0;
             cooldownTicks = COOLDOWN_TICKS;
             targetWaterPos = null;
+            drinkingPosition = null;
             debug("finished drinking, cooldown started");
         }
     }
@@ -222,23 +231,34 @@ public class SeekWaterGoal extends Goal {
     }
 
     /**
-     * Move towards the water target.
+     * Move towards the drinking position (adjacent to water).
      */
     private void moveToWater() {
-        PathNavigation navigation = mob.getNavigation();
-        currentPath = navigation.createPath(targetWaterPos, 0);
+        if (drinkingPosition == null) {
+            debug("moveToWater called but drinkingPosition is null");
+            return;
+        }
 
-        if (currentPath != null && currentPath.canReach()) {
-            navigation.moveTo(targetWaterPos.getX() + 0.5, targetWaterPos.getY(), targetWaterPos.getZ() + 0.5, moveSpeed);
-            debug("path found to water, distance=" + currentPath.getNodeCount() + " nodes");
+        PathNavigation navigation = mob.getNavigation();
+        currentPath = navigation.createPath(drinkingPosition, 0);
+
+        if (currentPath != null) {
+            boolean moveStarted = navigation.moveTo(drinkingPosition.getX() + 0.5, drinkingPosition.getY(), drinkingPosition.getZ() + 0.5, moveSpeed);
+            if (moveStarted) {
+                debug("path found to drinking spot, distance=" + currentPath.getNodeCount() + " nodes");
+            } else {
+                debug("path created but moveTo failed for drinking spot at " + drinkingPosition);
+            }
         } else {
-            debug("NO PATH to water at " + targetWaterPos);
-            targetWaterPos = null; // Give up on this target
+            debug("NO PATH to drinking spot at " + drinkingPosition);
+            drinkingPosition = null; // Give up on this target
+            targetWaterPos = null;
         }
     }
 
     /**
      * Find the nearest reachable water block within search radius using spiral search.
+     * Returns a position ADJACENT to water that the mob can stand on to drink.
      */
     private BlockPos findNearestReachableWater() {
         Level level = mob.level();
@@ -252,23 +272,31 @@ public class SeekWaterGoal extends Goal {
             for (int dx = -radius; dx <= radius; dx++) {
                 for (int dz = -radius; dz <= radius; dz++) {
                     for (int dy = -2; dy <= 2; dy++) {
-                        BlockPos pos = mobPos.offset(dx, dy, dz);
+                        BlockPos waterPos = mobPos.offset(dx, dy, dz);
 
                         // Skip if not water
-                        if (!level.getBlockState(pos).is(Blocks.WATER)) {
+                        if (!level.getBlockState(waterPos).is(Blocks.WATER)) {
                             continue;
                         }
 
-                        // Check if we can reach this water
-                        Path path = mob.getNavigation().createPath(pos, 0);
-                        if (path == null || !path.canReach()) {
+                        // Find a solid block adjacent to water that the mob can stand on
+                        BlockPos drinkPos = findDrinkingPosition(level, waterPos);
+                        if (drinkPos == null) {
+                            continue; // No accessible drinking spot near this water
+                        }
+
+                        // Check if we can create a path to the drinking position
+                        Path path = mob.getNavigation().createPath(drinkPos, 0);
+                        if (path == null) {
                             continue; // Unreachable
                         }
 
-                        double dist = mobPos.distSqr(pos);
+                        double dist = mobPos.distSqr(drinkPos);
                         if (dist < nearestDist) {
                             nearestDist = dist;
-                            nearest = pos;
+                            nearest = drinkPos;
+                            // Store water position for looking at while drinking
+                            targetWaterPos = waterPos;
                         }
                     }
                 }
@@ -276,11 +304,48 @@ public class SeekWaterGoal extends Goal {
 
             // If we found water at this radius, use it (closer is better)
             if (nearest != null) {
-                break;
+                debug("found drinking spot at " + nearest.getX() + "," + nearest.getY() + "," + nearest.getZ() +
+                    " (water at " + targetWaterPos.getX() + "," + targetWaterPos.getY() + "," + targetWaterPos.getZ() + ")");
+                return nearest;
             }
         }
 
-        return nearest;
+        return null;
+    }
+
+    /**
+     * Find a solid block adjacent to water where the mob can stand to drink.
+     * Returns null if no valid drinking position exists.
+     */
+    private BlockPos findDrinkingPosition(Level level, BlockPos waterPos) {
+        BlockPos[] adjacentPositions = {
+            waterPos.north(),
+            waterPos.south(),
+            waterPos.east(),
+            waterPos.west()
+        };
+
+        for (BlockPos adjacent : adjacentPositions) {
+            // Check if there's a solid block below (ground to stand on)
+            BlockPos groundPos = adjacent.below();
+            if (!level.getBlockState(groundPos).isSolid()) {
+                continue;
+            }
+
+            // Check if the adjacent position is air (mob can stand there)
+            if (!level.getBlockState(adjacent).isAir()) {
+                continue;
+            }
+
+            // Check if there's headroom
+            if (!level.getBlockState(adjacent.above()).isAir()) {
+                continue;
+            }
+
+            return adjacent;
+        }
+
+        return null;
     }
 
     /**
@@ -315,8 +380,9 @@ public class SeekWaterGoal extends Goal {
      * Get current state info for debug display.
      */
     public String getDebugState() {
-        return String.format("thirst=%d, target=%s, drinking=%d, cooldown=%d, path=%s",
+        return String.format("thirst=%d, drinkPos=%s, water=%s, drinking=%d, cooldown=%d, path=%s",
             getThirstLevel(),
+            drinkingPosition != null ? drinkingPosition.getX() + "," + drinkingPosition.getZ() : "none",
             targetWaterPos != null ? targetWaterPos.getX() + "," + targetWaterPos.getZ() : "none",
             drinkTicks,
             cooldownTicks,

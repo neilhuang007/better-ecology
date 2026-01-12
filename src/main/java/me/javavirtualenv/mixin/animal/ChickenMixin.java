@@ -4,6 +4,7 @@ import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
 import me.javavirtualenv.ecology.ai.SeekFoodItemGoal;
+import me.javavirtualenv.ecology.ai.SeekWaterGoal;
 import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.reproduction.NestBuildingHandle;
@@ -64,7 +65,7 @@ public abstract class ChickenMixin {
      * - Health: 2 HP base, 0.5x for babies
      * - Movement: 0.2 walk speed, cliff avoidance at 3.5 blocks
      * - Hunger: 100 max, 0.015 decay rate, faster metabolism
-     * - Thirst: Disabled (chickens don't need water tracking)
+     * - Thirst: 100 max, 0.012 decay rate, seeks water when below 30
      * - Condition: Body condition that affects breeding
      * - Energy: Energy for fleeing (1.4x speed when fleeing predators)
      * - Age: 24000 tick baby duration, no elderly/death from age
@@ -136,6 +137,9 @@ public abstract class ChickenMixin {
         // Add low health flee goal - chickens flee early when damaged
         MobAccessor accessor = (MobAccessor) chicken;
         accessor.betterEcology$getGoalSelector().addGoal(1, new LowHealthFleeGoal(chicken, 0.80, 1.4));
+
+        // Add water seeking goal - chickens seek water when thirsty
+        accessor.betterEcology$getGoalSelector().addGoal(2, new SeekWaterGoal(chicken, 1.0, 16));
 
         // Add food seeking goal - chickens seek seeds when hungry
         accessor.betterEcology$getGoalSelector().addGoal(3, new SeekFoodItemGoal(chicken, 1.0, 16,

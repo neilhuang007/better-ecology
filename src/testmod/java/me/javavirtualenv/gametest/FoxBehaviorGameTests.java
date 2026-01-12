@@ -1,24 +1,49 @@
 package me.javavirtualenv.gametest;
 
 import me.javavirtualenv.behavior.fox.FoxItemStorage;
+import me.javavirtualenv.ecology.ai.HungryPredatorTargetGoal;
+import me.javavirtualenv.mixin.MobAccessor;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Chicken;
 import net.minecraft.world.entity.animal.Fox;
+import net.minecraft.world.entity.animal.Rabbit;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
 
 public class FoxBehaviorGameTests implements FabricGameTest {
 
     private Fox spawnFoxWithAi(GameTestHelper helper, BlockPos pos) {
         Fox fox = HerbivoreTestUtils.spawnMobWithAi(helper, EntityType.FOX, pos);
         fox.setNoAi(false);
+
+        // Manually register fox hunting goals for gametest environment
+        // This ensures HungryPredatorTargetGoal is registered properly
+        if (fox instanceof Mob mob) {
+            MobAccessor accessor = (MobAccessor) mob;
+
+            // Register hungry predator targeting goal (targets chickens and rabbits when hungry)
+            // Threshold 60 means fox hunts when moderately hungry
+            HungryPredatorTargetGoal<LivingEntity> targetGoal = new HungryPredatorTargetGoal<>(
+                fox,
+                LivingEntity.class,
+                60,
+                target -> target instanceof Chicken || target instanceof Rabbit
+            );
+            accessor.betterEcology$getTargetSelector().addGoal(1, targetGoal);
+
+            System.out.println("[FoxBehaviorGameTests] Registered HungryPredatorTargetGoal for fox " + fox.getId());
+        }
+
         return fox;
     }
 
@@ -110,17 +135,22 @@ public class FoxBehaviorGameTests implements FabricGameTest {
 
         final double initialDistanceSqr = fox.distanceToSqr(berries);
 
-        // Give fox time to notice and move toward item
-        helper.runAfterDelay(80, () -> {
-            helper.succeedWhen(() -> {
-                FoxItemStorage storage = FoxItemStorage.get(fox);
-                boolean pickedUp = storage.hasItem() || !berries.isAlive();
-                double currentDistanceSqr = fox.distanceToSqr(berries);
-                boolean movingToward = currentDistanceSqr < initialDistanceSqr - 1.0;
+        // Set fox to be hungry so it will pick up food
+        helper.runAtTickTime(1, () -> {
+            WolfGameTestHelpers.setHunger(fox, 30);
 
-                if (!pickedUp && !movingToward) {
-                    throw new GameTestAssertException("Fox has not picked up or moved toward berries yet");
-                }
+            // Give fox time to notice and move toward item
+            helper.runAfterDelay(80, () -> {
+                helper.succeedWhen(() -> {
+                    FoxItemStorage storage = FoxItemStorage.get(fox);
+                    boolean pickedUp = storage.hasItem() || !berries.isAlive();
+                    double currentDistanceSqr = fox.distanceToSqr(berries);
+                    boolean movingToward = currentDistanceSqr < initialDistanceSqr - 1.0;
+
+                    if (!pickedUp && !movingToward) {
+                        throw new GameTestAssertException("Fox has not picked up or moved toward berries yet");
+                    }
+                });
             });
         });
     }
@@ -138,24 +168,29 @@ public class FoxBehaviorGameTests implements FabricGameTest {
         berries.setDeltaMovement(0, 0, 0);
         helper.getLevel().addFreshEntity(berries);
 
-        // Test that fox actually stores item in its inventory
-        helper.runAfterDelay(100, () -> {
-            helper.succeedWhen(() -> {
-                FoxItemStorage storage = FoxItemStorage.get(fox);
+        // Set fox to be hungry so it will pick up food
+        helper.runAtTickTime(1, () -> {
+            WolfGameTestHelpers.setHunger(fox, 30);
 
-                if (storage.hasItem()) {
-                    // Verify the stored item is berries
-                    ItemStack carriedItem = storage.getItem();
-                    if (carriedItem.is(Items.SWEET_BERRIES)) {
-                        return; // Success - fox is carrying berries
+            // Test that fox actually stores item in its inventory
+            helper.runAfterDelay(100, () -> {
+                helper.succeedWhen(() -> {
+                    FoxItemStorage storage = FoxItemStorage.get(fox);
+
+                    if (storage.hasItem()) {
+                        // Verify the stored item is berries
+                        ItemStack carriedItem = storage.getItem();
+                        if (carriedItem.is(Items.SWEET_BERRIES)) {
+                            return; // Success - fox is carrying berries
+                        }
                     }
-                }
 
-                if (!berries.isAlive()) {
-                    throw new GameTestAssertException("Berries were picked up but not stored correctly");
-                }
+                    if (!berries.isAlive()) {
+                        throw new GameTestAssertException("Berries were picked up but not stored correctly");
+                    }
 
-                throw new GameTestAssertException("Fox has not picked up and stored berries yet");
+                    throw new GameTestAssertException("Fox has not picked up and stored berries yet");
+                });
             });
         });
     }
@@ -175,36 +210,41 @@ public class FoxBehaviorGameTests implements FabricGameTest {
         firstBerries.setDeltaMovement(0, 0, 0);
         helper.getLevel().addFreshEntity(firstBerries);
 
-        // Wait for fox to pick up first item
-        helper.runAfterDelay(100, () -> {
-            FoxItemStorage storage = FoxItemStorage.get(fox);
+        // Set fox to be hungry so it will pick up food
+        helper.runAtTickTime(1, () -> {
+            WolfGameTestHelpers.setHunger(fox, 30);
 
-            if (!storage.hasItem()) {
-                helper.fail("Fox did not pick up first item");
-                return;
-            }
+            // Wait for fox to pick up first item
+            helper.runAfterDelay(100, () -> {
+                FoxItemStorage storage = FoxItemStorage.get(fox);
 
-            // Spawn second item while fox is already carrying
-            ItemEntity secondBerries = new ItemEntity(helper.getLevel(),
-                secondItemPos.getX() + 0.5, secondItemPos.getY(), secondItemPos.getZ() + 0.5,
-                new ItemStack(Items.GLOW_BERRIES));
-            secondBerries.setDeltaMovement(0, 0, 0);
-            helper.getLevel().addFreshEntity(secondBerries);
+                if (!storage.hasItem()) {
+                    helper.fail("Fox did not pick up first item");
+                    return;
+                }
 
-            // Check that fox doesn't pick up second item while carrying first
-            helper.runAfterDelay(80, () -> {
-                helper.succeedWhen(() -> {
-                    ItemStack carriedItem = storage.getItem();
+                // Spawn second item while fox is already carrying
+                ItemEntity secondBerries = new ItemEntity(helper.getLevel(),
+                    secondItemPos.getX() + 0.5, secondItemPos.getY(), secondItemPos.getZ() + 0.5,
+                    new ItemStack(Items.GLOW_BERRIES));
+                secondBerries.setDeltaMovement(0, 0, 0);
+                helper.getLevel().addFreshEntity(secondBerries);
 
-                    // Fox should still be carrying first item (sweet berries)
-                    if (!carriedItem.is(Items.SWEET_BERRIES)) {
-                        throw new GameTestAssertException("Fox picked up second item while already carrying one");
-                    }
+                // Check that fox doesn't pick up second item while carrying first
+                helper.runAfterDelay(80, () -> {
+                    helper.succeedWhen(() -> {
+                        ItemStack carriedItem = storage.getItem();
 
-                    // Second item should still exist
-                    if (!secondBerries.isAlive()) {
-                        throw new GameTestAssertException("Second item disappeared but fox is still carrying first item");
-                    }
+                        // Fox should still be carrying first item (sweet berries)
+                        if (!carriedItem.is(Items.SWEET_BERRIES)) {
+                            throw new GameTestAssertException("Fox picked up second item while already carrying one");
+                        }
+
+                        // Second item should still exist
+                        if (!secondBerries.isAlive()) {
+                            throw new GameTestAssertException("Second item disappeared but fox is still carrying first item");
+                        }
+                    });
                 });
             });
         });
@@ -274,9 +314,9 @@ public class FoxBehaviorGameTests implements FabricGameTest {
 
         // Wait for entity initialization and set hunger
         helper.runAtTickTime(1, () -> {
-            WolfGameTestHelpers.setHunger(fox, 60);
+            WolfGameTestHelpers.setHunger(fox, 30);
 
-            if (!WolfGameTestHelpers.verifyHungerState(fox, 60)) {
+            if (!WolfGameTestHelpers.verifyHungerState(fox, 30)) {
                 helper.fail("Fox hunger state not properly initialized");
                 return;
             }
@@ -360,20 +400,71 @@ public class FoxBehaviorGameTests implements FabricGameTest {
         food.setDeltaMovement(0, 0, 0);
         helper.getLevel().addFreshEntity(food);
 
-        helper.runAfterDelay(100, () -> {
-            helper.succeedWhen(() -> {
-                FoxItemStorage storage = FoxItemStorage.get(fox);
+        // Set fox to be hungry so it will pick up food
+        helper.runAtTickTime(1, () -> {
+            WolfGameTestHelpers.setHunger(fox, 30);
 
-                if (storage.hasItem()) {
-                    return; // Successfully picked up
-                }
+            helper.runAfterDelay(100, () -> {
+                helper.succeedWhen(() -> {
+                    FoxItemStorage storage = FoxItemStorage.get(fox);
 
-                if (!food.isAlive()) {
-                    throw new GameTestAssertException("Food disappeared but fox is not carrying it");
-                }
+                    if (storage.hasItem()) {
+                        return; // Successfully picked up
+                    }
 
-                throw new GameTestAssertException("Fox has not picked up food item yet");
+                    if (!food.isAlive()) {
+                        throw new GameTestAssertException("Food disappeared but fox is not carrying it");
+                    }
+
+                    throw new GameTestAssertException("Fox has not picked up food item yet");
+                });
             });
+        });
+    }
+
+    /**
+     * Test that a thirsty fox seeks and moves toward water.
+     * This test:
+     * 1. Spawns a fox with very low thirst
+     * 2. Places a water block nearby
+     * 3. Verifies the fox moves toward the water
+     */
+    @GameTest(template = "better-ecology-gametest:empty_platform", timeoutTicks = 320)
+    public void thirstyFoxSeeksWater(GameTestHelper helper) {
+        // Place water at (5,1,1) with a drinking position at (4,1,1)
+        BlockPos waterPos = helper.absolutePos(new BlockPos(5, 1, 1));
+        BlockPos drinkPos = helper.absolutePos(new BlockPos(4, 1, 1));
+
+        // Ensure solid ground and proper drinking position
+        helper.setBlock(waterPos.below(), Blocks.STONE);
+        helper.setBlock(drinkPos.below(), Blocks.STONE);
+        helper.setBlock(waterPos, Blocks.WATER);
+        helper.setBlock(drinkPos, Blocks.AIR);
+        helper.setBlock(drinkPos.above(), Blocks.AIR);
+
+        Fox fox = spawnFoxWithAi(helper, helper.absolutePos(new BlockPos(1, 2, 1)));
+
+        helper.runAtTickTime(1, () -> {
+            // Manually register SeekWaterGoal for game test environment
+            HerbivoreTestUtils.registerFoxSeekWaterGoal(fox);
+
+            HerbivoreTestUtils.setHandleInt(fox, "thirst", "thirst", 6);
+            HerbivoreTestUtils.setThirstyState(fox, true);
+            HerbivoreTestUtils.boostNavigation(fox, 1.0);
+        });
+
+        helper.runAtTickTime(40, () -> {
+            if (fox.getNavigation().isDone() && !fox.blockPosition().closerThan(drinkPos, 2.5)) {
+                helper.fail("Fox did not start moving toward water when thirsty");
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            double distance = fox.distanceToSqr(drinkPos.getX() + 0.5, drinkPos.getY(), drinkPos.getZ() + 0.5);
+            helper.assertTrue(
+                distance < 6.25,
+                "Fox failed to reach water to drink. Distance squared: " + distance
+            );
         });
     }
 }

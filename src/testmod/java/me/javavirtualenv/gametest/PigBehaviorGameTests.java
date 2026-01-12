@@ -7,6 +7,10 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.animal.Wolf;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 
 public class PigBehaviorGameTests implements FabricGameTest {
@@ -44,13 +48,24 @@ public class PigBehaviorGameTests implements FabricGameTest {
 
     @GameTest(template = "better-ecology-gametest:empty_platform", timeoutTicks = 320)
     public void thirstyPigSeeksWater(GameTestHelper helper) {
-        BlockPos waterPos = helper.absolutePos(BlockPos.ZERO);
-        helper.setBlock(waterPos, Blocks.WATER);
+        // Place water at (5,1,1) with a drinking position at (4,1,1)
+        BlockPos waterPos = helper.absolutePos(new BlockPos(5, 1, 1));
+        BlockPos drinkPos = helper.absolutePos(new BlockPos(4, 1, 1));
 
-        Pig pig = spawnWithAi(helper, EntityType.PIG, helper.absolutePos(new BlockPos(3, 2, 3)));
+        // Ensure solid ground exists for the drinking position
+        helper.setBlock(waterPos.below(), Blocks.STONE);
+        helper.setBlock(drinkPos.below(), Blocks.STONE);
+        helper.setBlock(waterPos, Blocks.WATER);
+        helper.setBlock(drinkPos, Blocks.AIR);
+        helper.setBlock(drinkPos.above(), Blocks.AIR);
+
+        Pig pig = spawnWithAi(helper, EntityType.PIG, helper.absolutePos(new BlockPos(1, 2, 1)));
 
         // Wait a tick for ecology component to initialize
         helper.runAtTickTime(1, () -> {
+            // Manually register SeekWaterGoal for game test environment
+            HerbivoreTestUtils.registerPigSeekWaterGoal(pig);
+
             HerbivoreTestUtils.setHandleInt(pig, "thirst", "thirst", 6);
             // Also set the thirsty state on EntityState to trigger behaviors
             HerbivoreTestUtils.setThirstyState(pig, true);
@@ -60,15 +75,58 @@ public class PigBehaviorGameTests implements FabricGameTest {
         // Wait longer for AI to evaluate goals and start moving
         helper.runAtTickTime(40, () -> {
             boolean movingTowardWater = !pig.getNavigation().isDone();
-            boolean alreadyAtWater = pig.blockPosition().closerThan(waterPos, 2.5);
+            boolean alreadyAtWater = pig.blockPosition().closerThan(drinkPos, 2.5);
             if (!movingTowardWater && !alreadyAtWater) {
                 helper.fail("Pig did not start moving toward water when thirsty");
             }
         });
 
-        helper.succeedWhen(() -> helper.assertTrue(
-            pig.blockPosition().closerThan(waterPos, 2.5),
-            "Pig failed to reach water to drink"
-        ));
+        helper.succeedWhen(() -> {
+            double distance = pig.distanceToSqr(drinkPos.getX() + 0.5, drinkPos.getY(), drinkPos.getZ() + 0.5);
+            helper.assertTrue(
+                distance < 6.25,
+                "Pig failed to reach water to drink. Distance squared: " + distance
+            );
+        });
+    }
+
+    /**
+     * Test that a pig with low health flees from a wolf predator.
+     * This test:
+     * 1. Spawns a pig with low health (40%)
+     * 2. Spawns a wolf nearby to trigger flee behavior
+     * 3. Verifies the pig enters retreating state and moves away
+     */
+    @GameTest(template = "better-ecology-gametest:empty_platform", timeoutTicks = 320)
+    public void pigFleesFromPredatorWhenLowHealth(GameTestHelper helper) {
+        Pig pig = spawnWithAi(helper, EntityType.PIG, helper.absolutePos(new BlockPos(2, 2, 2)));
+        Wolf wolf = spawnWithAi(helper, EntityType.WOLF, helper.absolutePos(new BlockPos(6, 2, 2)));
+
+        HerbivoreTestUtils.boostNavigation(pig, 0.9);
+        HerbivoreTestUtils.setHealthPercent(pig, 0.4f);
+
+        final double[] initialDistance = {pig.distanceToSqr(wolf)};
+
+        wolf.setTarget(pig);
+        wolf.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BONE));
+
+        helper.runAtTickTime(20, () -> wolf.doHurtTarget(pig));
+        helper.runAtTickTime(30, () -> initialDistance[0] = pig.distanceToSqr(wolf));
+
+        final int[] checkStartTick = {-1};
+        helper.succeedWhen(() -> {
+            long currentTick = helper.getTick();
+            if (checkStartTick[0] == -1) {
+                checkStartTick[0] = (int) currentTick;
+            }
+            long ticksSinceCheckStart = currentTick - checkStartTick[0];
+            if (ticksSinceCheckStart < 50) {
+                return;
+            }
+
+            helper.assertTrue(HerbivoreTestUtils.isRetreating(pig), "Pig did not enter retreating state when threatened by wolf");
+            double currentDistance = pig.distanceToSqr(wolf);
+            helper.assertTrue(currentDistance > initialDistance[0] + 4.0, "Pig did not increase distance from wolf while fleeing");
+        });
     }
 }

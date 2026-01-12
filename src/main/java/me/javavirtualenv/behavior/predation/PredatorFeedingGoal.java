@@ -13,9 +13,11 @@ import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.pathfinder.Path;
 
 import java.util.EnumSet;
+import java.util.Set;
 
 /**
  * Goal for predator feeding behavior.
@@ -34,6 +36,19 @@ public class PredatorFeedingGoal extends Goal {
 
     private static final TagKey<Item> MEAT_TAG = TagKey.create(Registries.ITEM,
         net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("better-ecology", "meat"));
+
+    // Fallback list of meat items for gametest environment where tags may not load
+    private static final Set<Item> MEAT_ITEMS = Set.of(
+        Items.BEEF, Items.COOKED_BEEF,
+        Items.PORKCHOP, Items.COOKED_PORKCHOP,
+        Items.MUTTON, Items.COOKED_MUTTON,
+        Items.CHICKEN, Items.COOKED_CHICKEN,
+        Items.RABBIT, Items.COOKED_RABBIT,
+        Items.COD, Items.COOKED_COD,
+        Items.SALMON, Items.COOKED_SALMON,
+        Items.TROPICAL_FISH, Items.PUFFERFISH,
+        Items.ROTTEN_FLESH
+    );
 
     private final PathfinderMob mob;
     private final String mobType;
@@ -195,7 +210,8 @@ public class PredatorFeedingGoal extends Goal {
     }
 
     private boolean isMeat(ItemStack stack) {
-        return stack.is(MEAT_TAG);
+        // Try tag first, fallback to item list for gametest environment
+        return stack.is(MEAT_TAG) || MEAT_ITEMS.contains(stack.getItem());
     }
 
     private void eatItem(ItemEntity itemEntity) {

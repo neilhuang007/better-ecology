@@ -42,7 +42,7 @@ public class FoxHuntGoal extends Goal {
     private static final double POUNCE_SPEED = 1.5;
     private static final double POUNCE_RANGE = 5.0;
     private static final double CROUCH_SPEED = 0.2;
-    private static final int HUNGRY_THRESHOLD = 60;
+    private static final int HUNGRY_THRESHOLD = 60; // Match FoxMixin threshold
     private static final int STALK_DURATION = 60;
     private static final int CROUCH_DURATION = 40;
     private static final int COOLDOWN_TICKS = 300;
@@ -100,14 +100,19 @@ public class FoxHuntGoal extends Goal {
             return false;
         }
 
-        // Don't hunt if sleeping
-        if (fox.isSleeping()) {
-            return false;
-        }
-
         // Check if fox is hungry (direct NBT check for reliability)
         int hunger = getHungerLevel();
         boolean isHungry = hunger < HUNGRY_THRESHOLD;
+
+        // Wake up if hungry and sleeping - hunger overrides sleep
+        if (fox.isSleeping() && isHungry) {
+            wakeUpFox();
+        }
+
+        // Don't hunt if sleeping (but we just woke up if hungry)
+        if (fox.isSleeping()) {
+            return false;
+        }
 
         // Log state change for debugging
         if (isHungry != wasHungryLastCheck) {
@@ -402,6 +407,24 @@ public class FoxHuntGoal extends Goal {
         tag.putInt("hunger", newHunger);
 
         debug("hunger restored from kill: " + currentHunger + " -> " + newHunger);
+    }
+
+    /**
+     * Wake up the fox if it's sleeping (hunger overrides sleep).
+     */
+    private void wakeUpFox() {
+        if (fox instanceof net.minecraft.world.entity.animal.Fox minecraftFox) {
+            try {
+                // Use accessor to wake up the fox
+                if (minecraftFox instanceof me.javavirtualenv.mixin.animal.FoxAccessor foxAccessor) {
+                    foxAccessor.betterEcology$setSleeping(false);
+                    debug("woke up fox due to hunger");
+                }
+            } catch (Exception e) {
+                // If accessor fails, just log it
+                debug("failed to wake up fox: " + e.getMessage());
+            }
+        }
     }
 
     /**

@@ -104,7 +104,14 @@ internal_state:
 
   # Thirst system
   thirst:
-    enabled: false
+    enabled: true
+    max_value: 100
+    starting_value: 100
+    decay_rate: 0.012              # Moderate thirst for small bird
+    thresholds:
+      satisfied: 75
+      thirsty: 30
+      dehydrated: 10
 
   # Body condition
   condition:

@@ -2,6 +2,8 @@ package me.javavirtualenv.behavior.rabbit;
 
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.Vec3d;
+import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -72,6 +74,7 @@ public class RabbitEvasionBehavior {
         if (threat == null || !threat.isAlive()) {
             currentThreat = null;
             isEvading = false;
+            setRetreatingState(entity, false);
             return new Vec3d();
         }
 
@@ -93,6 +96,7 @@ public class RabbitEvasionBehavior {
         if (distance < config.getFlightInitiationDistance()) {
             isEvading = true;
             evasionTimer++;
+            setRetreatingState(entity, true);
 
             // Break freeze if threat gets too close
             if (isFrozen && distance < config.getFlightInitiationDistance() * 0.5) {
@@ -105,6 +109,7 @@ public class RabbitEvasionBehavior {
             // Escaped to safety
             isEvading = false;
             evasionTimer = 0;
+            setRetreatingState(entity, false);
             return new Vec3d();
         }
 
@@ -294,6 +299,18 @@ public class RabbitEvasionBehavior {
                typeName.contains("spider") ||
                typeName.contains("phantom") ||
                (entity instanceof Mob && ((Mob) entity).isAggressive());
+    }
+
+    /**
+     * Sets the retreating state on the entity's ecology component.
+     */
+    private void setRetreatingState(Mob entity, boolean retreating) {
+        if (entity instanceof EcologyAccess access) {
+            EcologyComponent component = access.betterEcology$getEcologyComponent();
+            if (component != null) {
+                component.state().setIsRetreating(retreating);
+            }
+        }
     }
 
     // Getters and setters

@@ -33,7 +33,8 @@ public class WolfDrinkWaterGoal extends Goal {
 
     // Instance fields
     private final Wolf wolf;
-    private BlockPos targetWaterPos;
+    private BlockPos targetWaterPos;      // The actual water block to look at
+    private BlockPos drinkingPosition;    // Where the wolf stands to drink (adjacent to water)
     private int drinkTicks = 0;
     private int cooldownTicks = 0;
     private Path currentPath;
@@ -90,14 +91,16 @@ public class WolfDrinkWaterGoal extends Goal {
             return false;
         }
 
-        // Find nearest water
-        targetWaterPos = findNearestReachableWater();
-        if (targetWaterPos == null) {
+        // Find nearest water - this sets both drinkingPosition and targetWaterPos
+        targetWaterPos = null;
+        drinkingPosition = findNearestReachableWater();
+        if (drinkingPosition == null) {
             debug("thirsty but no reachable water found (thirst=" + thirst + ")");
             return false;
         }
 
-        debug("STARTING: seeking water at " + targetWaterPos.getX() + "," + targetWaterPos.getY() + "," + targetWaterPos.getZ() + " (thirst=" + thirst + ")");
+        debug("STARTING: seeking drinking spot at " + drinkingPosition.getX() + "," + drinkingPosition.getY() + "," + drinkingPosition.getZ() +
+              " (water at " + targetWaterPos.getX() + "," + targetWaterPos.getY() + "," + targetWaterPos.getZ() + ", thirst=" + thirst + ")");
         return true;
     }
 
@@ -107,7 +110,7 @@ public class WolfDrinkWaterGoal extends Goal {
             return false;
         }
 
-        if (targetWaterPos == null) {
+        if (drinkingPosition == null) {
             return false;
         }
 
@@ -124,7 +127,7 @@ public class WolfDrinkWaterGoal extends Goal {
 
     @Override
     public void start() {
-        debug("goal started, pathfinding to water");
+        debug("goal started, pathfinding to drinking position");
         drinkTicks = 0;
         moveToWater();
     }
@@ -133,6 +136,7 @@ public class WolfDrinkWaterGoal extends Goal {
     public void stop() {
         debug("goal stopped (drinkTicks=" + drinkTicks + ", cooldown=" + cooldownTicks + ")");
         targetWaterPos = null;
+        drinkingPosition = null;
         drinkTicks = 0;
         currentPath = null;
         wolf.getNavigation().stop();
@@ -140,28 +144,34 @@ public class WolfDrinkWaterGoal extends Goal {
 
     @Override
     public void tick() {
-        if (targetWaterPos == null) {
+        if (drinkingPosition == null) {
             return;
         }
 
-        double distSq = wolf.distanceToSqr(targetWaterPos.getX() + 0.5, targetWaterPos.getY(), targetWaterPos.getZ() + 0.5);
+        // Calculate distance to drinking position (where wolf should stand)
+        double distSq = wolf.distanceToSqr(drinkingPosition.getX() + 0.5, drinkingPosition.getY(), drinkingPosition.getZ() + 0.5);
 
-        // If far from water, keep moving
+        // If far from drinking position, keep moving
         if (distSq > 4.0) { // 2 blocks distance squared
             // Re-path if we're not moving or lost our path
             if (!wolf.getNavigation().isInProgress() || currentPath == null || !currentPath.canReach()) {
-                debug("re-pathfinding to water (dist=" + (int) Math.sqrt(distSq) + " blocks)");
+                debug("re-pathfinding to drinking spot (dist=" + (int) Math.sqrt(distSq) + " blocks)");
                 moveToWater();
             }
-            wolf.getLookControl().setLookAt(targetWaterPos.getX() + 0.5, targetWaterPos.getY(), targetWaterPos.getZ() + 0.5);
+            // Look at water while moving
+            if (targetWaterPos != null) {
+                wolf.getLookControl().setLookAt(targetWaterPos.getX() + 0.5, targetWaterPos.getY(), targetWaterPos.getZ() + 0.5);
+            }
             return;
         }
 
-        // We're at water, start drinking
+        // We're at drinking position, start drinking
         drinkTicks++;
 
         // Look at the water while drinking
-        wolf.getLookControl().setLookAt(targetWaterPos.getX() + 0.5, targetWaterPos.getY(), targetWaterPos.getZ() + 0.5);
+        if (targetWaterPos != null) {
+            wolf.getLookControl().setLookAt(targetWaterPos.getX() + 0.5, targetWaterPos.getY(), targetWaterPos.getZ() + 0.5);
+        }
 
         // Every second, log drinking progress
         if (drinkTicks % 20 == 0) {
@@ -174,6 +184,7 @@ public class WolfDrinkWaterGoal extends Goal {
             drinkTicks = 0;
             cooldownTicks = COOLDOWN_TICKS;
             targetWaterPos = null;
+            drinkingPosition = null;
             debug("finished drinking, cooldown started");
         }
     }
@@ -190,6 +201,12 @@ public class WolfDrinkWaterGoal extends Goal {
     private int getThirstLevel() {
         EcologyComponent component = getComponent();
         if (component == null) {
+            // CRITICAL: Component is null - this means the mixin failed to apply
+            // or EcologyAccess interface is not implemented on this wolf
+            BehaviorLogger.info("[WolfDrinkWater] Wolf #" + wolf.getId() +
+                " has NULL EcologyComponent! Mixin may not have applied. " +
+                "Wolf class: " + wolf.getClass().getName() +
+                ", implements EcologyAccess: " + (wolf instanceof EcologyAccess));
             return 100;
         }
         var tag = component.getHandleTag("thirst");
@@ -219,23 +236,30 @@ public class WolfDrinkWaterGoal extends Goal {
     }
 
     /**
-     * Move towards the water target.
+     * Move towards the drinking position (adjacent to water).
      */
     private void moveToWater() {
+        if (drinkingPosition == null) {
+            debug("moveToWater called but drinkingPosition is null");
+            return;
+        }
+
         PathNavigation navigation = wolf.getNavigation();
-        currentPath = navigation.createPath(targetWaterPos, 0);
+        currentPath = navigation.createPath(drinkingPosition, 0);
 
         if (currentPath != null && currentPath.canReach()) {
-            navigation.moveTo(targetWaterPos.getX() + 0.5, targetWaterPos.getY(), targetWaterPos.getZ() + 0.5, MOVE_SPEED);
-            debug("path found to water, distance=" + currentPath.getNodeCount() + " nodes");
+            navigation.moveTo(drinkingPosition.getX() + 0.5, drinkingPosition.getY(), drinkingPosition.getZ() + 0.5, MOVE_SPEED);
+            debug("path found to drinking spot, distance=" + currentPath.getNodeCount() + " nodes");
         } else {
-            debug("NO PATH to water at " + targetWaterPos);
-            targetWaterPos = null; // Give up on this target
+            debug("NO PATH to drinking spot at " + drinkingPosition);
+            drinkingPosition = null; // Give up on this target
+            targetWaterPos = null;
         }
     }
 
     /**
      * Find the nearest reachable water block within search radius.
+     * Returns a position ADJACENT to water that the wolf can stand on to drink.
      */
     private BlockPos findNearestReachableWater() {
         Level level = wolf.level();
@@ -249,23 +273,31 @@ public class WolfDrinkWaterGoal extends Goal {
             for (int dx = -radius; dx <= radius; dx++) {
                 for (int dz = -radius; dz <= radius; dz++) {
                     for (int dy = -2; dy <= 2; dy++) {
-                        BlockPos pos = wolfPos.offset(dx, dy, dz);
+                        BlockPos waterPos = wolfPos.offset(dx, dy, dz);
 
                         // Skip if not water
-                        if (!level.getBlockState(pos).is(Blocks.WATER)) {
+                        if (!level.getBlockState(waterPos).is(Blocks.WATER)) {
                             continue;
                         }
 
-                        // Check if we can reach this water
-                        Path path = wolf.getNavigation().createPath(pos, 0);
+                        // Find a solid block adjacent to water that the wolf can stand on
+                        BlockPos drinkPos = findDrinkingPosition(level, waterPos);
+                        if (drinkPos == null) {
+                            continue; // No accessible drinking spot near this water
+                        }
+
+                        // Check if we can reach the drinking position
+                        Path path = wolf.getNavigation().createPath(drinkPos, 0);
                         if (path == null || !path.canReach()) {
                             continue; // Unreachable
                         }
 
-                        double dist = wolfPos.distSqr(pos);
+                        double dist = wolfPos.distSqr(drinkPos);
                         if (dist < nearestDist) {
                             nearestDist = dist;
-                            nearest = pos;
+                            nearest = drinkPos;
+                            // Store water position for looking at while drinking
+                            targetWaterPos = waterPos;
                         }
                     }
                 }
@@ -273,11 +305,72 @@ public class WolfDrinkWaterGoal extends Goal {
 
             // If we found water at this radius, use it (closer is better)
             if (nearest != null) {
-                break;
+                // Return the drinking position (adjacent to water)
+                BlockPos drinkPos = nearest;
+                debug("found drinking spot at " + drinkPos.getX() + "," + drinkPos.getY() + "," + drinkPos.getZ() +
+                    " (water at " + targetWaterPos.getX() + "," + targetWaterPos.getY() + "," + targetWaterPos.getZ() + ")");
+                return drinkPos;
             }
         }
 
-        return nearest;
+        return null;
+    }
+
+    /**
+     * Find a solid block adjacent to water where the wolf can stand to drink.
+     * Returns null if no valid drinking position exists.
+     */
+    private BlockPos findDrinkingPosition(Level level, BlockPos waterPos) {
+        // Check all 4 horizontal directions for a solid block next to water
+        BlockPos[] adjacentPositions = {
+            waterPos.north(),
+            waterPos.south(),
+            waterPos.east(),
+            waterPos.west()
+        };
+
+        for (BlockPos adjacent : adjacentPositions) {
+            // Check if there's a solid block below (ground to stand on)
+            BlockPos groundPos = adjacent.below();
+            if (!level.getBlockState(groundPos).isSolid()) {
+                continue; // No ground to stand on
+            }
+
+            // Check if the adjacent position is air (wolf can stand there)
+            if (!level.getBlockState(adjacent).isAir()) {
+                continue; // Blocked
+            }
+
+            // Check if there's headroom (wolf needs 2 blocks of space)
+            if (!level.getBlockState(adjacent.above()).isAir()) {
+                continue; // No headroom
+            }
+
+            return adjacent;
+        }
+
+        // Also check one block up from water (for water at ground level)
+        BlockPos aboveWater = waterPos.above();
+        for (BlockPos adjacent : adjacentPositions) {
+            BlockPos adjacentUp = adjacent.above();
+            BlockPos groundPos = adjacent;
+
+            if (!level.getBlockState(groundPos).isSolid()) {
+                continue;
+            }
+
+            if (!level.getBlockState(adjacentUp).isAir()) {
+                continue;
+            }
+
+            if (!level.getBlockState(adjacentUp.above()).isAir()) {
+                continue;
+            }
+
+            return adjacentUp;
+        }
+
+        return null;
     }
 
     /**
@@ -312,8 +405,9 @@ public class WolfDrinkWaterGoal extends Goal {
      * Get current state info for debug display.
      */
     public String getDebugState() {
-        return String.format("thirst=%d, target=%s, drinking=%d, cooldown=%d, path=%s",
+        return String.format("thirst=%d, drinkPos=%s, water=%s, drinking=%d, cooldown=%d, path=%s",
             getThirstLevel(),
+            drinkingPosition != null ? drinkingPosition.getX() + "," + drinkingPosition.getZ() : "none",
             targetWaterPos != null ? targetWaterPos.getX() + "," + targetWaterPos.getZ() : "none",
             drinkTicks,
             cooldownTicks,

@@ -1,7 +1,6 @@
 package me.javavirtualenv.behavior.fox;
 
 import me.javavirtualenv.BetterEcology;
-import me.javavirtualenv.behavior.shared.AnimalItemStorage;
 import me.javavirtualenv.debug.BehaviorLogger;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.api.EcologyAccess;
@@ -32,7 +31,6 @@ import java.util.List;
 public class FoxPickupItemGoal extends Goal {
 
     // Configuration constants
-    private static final String STORAGE_KEY = "fox_item_storage";
     private static final double SEARCH_RADIUS = 16.0;
     private static final double PICKUP_DISTANCE = 1.5;
     private static final double MOVE_SPEED = 1.2;
@@ -41,7 +39,7 @@ public class FoxPickupItemGoal extends Goal {
 
     // Instance fields
     private final Fox fox;
-    private final AnimalItemStorage storage;
+    private final FoxItemStorage storage;
     private ItemEntity targetItem;
     private Path currentPath;
     private int cooldownTicks;
@@ -53,7 +51,7 @@ public class FoxPickupItemGoal extends Goal {
 
     public FoxPickupItemGoal(Fox fox) {
         this.fox = fox;
-        this.storage = AnimalItemStorage.get(fox, STORAGE_KEY);
+        this.storage = FoxItemStorage.get(fox);
         this.setFlags(EnumSet.of(Flag.MOVE));
     }
 

@@ -59,10 +59,16 @@ public class HerdCohesionGoal extends Goal {
 
     @Override
     public boolean canUse() {
+        // Don't interfere with critical survival behaviors
+        if (hasCriticalNeeds()) {
+            return false;
+        }
+
         // Find herd members
         List<Mob> nearbyHerd = getNearbyHerdMembers();
 
-        if (nearbyHerd.size() < minHerdSize) {
+        // Require at least 1 other herd member (changed from minHerdSize)
+        if (nearbyHerd.isEmpty()) {
             return false;
         }
 
@@ -74,6 +80,11 @@ public class HerdCohesionGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
+        // Stop if critical needs arise (water/food seeking should take priority)
+        if (hasCriticalNeeds()) {
+            return false;
+        }
+
         if (herdLeader == null || !herdLeader.isAlive()) {
             return false;
         }
@@ -353,5 +364,42 @@ public class HerdCohesionGoal extends Goal {
             return false;
         }
         return mob.distanceToSqr(herdLeader) < cohesionRange * cohesionRange;
+    }
+
+    /**
+     * Check if mob has critical needs that should take priority over herd cohesion.
+     * Returns true if mob is thirsty, hungry, or fleeing.
+     */
+    private boolean hasCriticalNeeds() {
+        EcologyComponent component = getEcologyComponent(mob);
+        if (component == null) {
+            return false;
+        }
+
+        // Check entity state for critical conditions
+        var state = component.state();
+        if (state.isThirsty() || state.isHungry() || state.isFleeing() || state.isRetreating()) {
+            return true;
+        }
+
+        // Also check raw thirst/hunger values for more sensitive detection
+        var thirstTag = component.getHandleTag("thirst");
+        int thirst = thirstTag.contains("thirst") ? thirstTag.getInt("thirst") : 100;
+        if (thirst < 30) { // Matches SeekWaterGoal threshold
+            return true;
+        }
+
+        var hungerTag = component.getHandleTag("hunger");
+        int hunger = hungerTag.contains("hunger") ? hungerTag.getInt("hunger") : 100;
+        if (hunger < 60) { // Matches CowGrazeGoal threshold
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
     }
 }

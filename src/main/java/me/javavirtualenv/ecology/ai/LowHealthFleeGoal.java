@@ -41,32 +41,7 @@ public class LowHealthFleeGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        LivingEntity attacker = mob.getLastHurtByMob();
-        if (attacker == null || !attacker.isAlive()) {
-            return false;
-        }
-
-        long currentTime = mob.level().getGameTime();
-        long timeSinceHurt = currentTime - mob.getLastHurtByMobTimestamp();
-
-        if (timeSinceHurt >= recentCombatWindowTicks) {
-            return false;
-        }
-
-        float currentHealth = mob.getHealth();
-        float maxHealth = mob.getMaxHealth();
-        double healthPercent = maxHealth > 0 ? currentHealth / maxHealth : 0;
-
-        return healthPercent < healthThresholdPercent;
-    }
-
-    @Override
-    public boolean canContinueToUse() {
-        LivingEntity attacker = mob.getLastHurtByMob();
-        if (attacker == null || !attacker.isAlive()) {
-            return false;
-        }
-
+        // Check health threshold first
         float currentHealth = mob.getHealth();
         float maxHealth = mob.getMaxHealth();
         double healthPercent = maxHealth > 0 ? currentHealth / maxHealth : 0;
@@ -75,10 +50,57 @@ public class LowHealthFleeGoal extends Goal {
             return false;
         }
 
-        double distanceToAttacker = mob.distanceToSqr(attacker);
+        // Check for recent attacker
+        LivingEntity attacker = mob.getLastHurtByMob();
+        if (attacker != null && attacker.isAlive()) {
+            long currentTime = mob.level().getGameTime();
+            long timeSinceHurt = currentTime - mob.getLastHurtByMobTimestamp();
+
+            if (timeSinceHurt < recentCombatWindowTicks) {
+                return true;
+            }
+        }
+
+        // Also check for nearby hostile targets even without being hit
+        // This helps when health is manually lowered or after combat window expires
+        LivingEntity target = mob.getTarget();
+        if (target != null && target.isAlive() && mob.distanceToSqr(target) < 24.0 * 24.0) {
+            return true;
+        }
+
+        // Finally, check for nearby hostile entities or players that might be threatening us
+        LivingEntity nearbyThreat = findNearbyThreat();
+        return nearbyThreat != null;
+    }
+
+    @Override
+    public boolean canContinueToUse() {
+        // Check health first
+        float currentHealth = mob.getHealth();
+        float maxHealth = mob.getMaxHealth();
+        double healthPercent = maxHealth > 0 ? currentHealth / maxHealth : 0;
+
+        if (healthPercent >= healthThresholdPercent) {
+            return false;
+        }
+
+        // Determine threat entity - prioritize attacker, fall back to target, then nearby threats
+        LivingEntity threatEntity = mob.getLastHurtByMob();
+        if (threatEntity == null || !threatEntity.isAlive()) {
+            threatEntity = mob.getTarget();
+        }
+        if (threatEntity == null || !threatEntity.isAlive()) {
+            threatEntity = findNearbyThreat();
+        }
+
+        if (threatEntity == null) {
+            return false;
+        }
+
+        double distanceToThreat = mob.distanceToSqr(threatEntity);
         double detectionRangeSquared = 24.0 * 24.0;
 
-        return distanceToAttacker < detectionRangeSquared;
+        return distanceToThreat < detectionRangeSquared;
     }
 
     @Override
@@ -103,17 +125,25 @@ public class LowHealthFleeGoal extends Goal {
 
     @Override
     public void tick() {
-        LivingEntity attacker = mob.getLastHurtByMob();
-        if (attacker == null) {
+        // Determine who to flee from - prioritize attacker, fall back to target, then nearby threats
+        LivingEntity threatEntity = mob.getLastHurtByMob();
+        if (threatEntity == null || !threatEntity.isAlive()) {
+            threatEntity = mob.getTarget();
+        }
+        if (threatEntity == null || !threatEntity.isAlive()) {
+            threatEntity = findNearbyThreat();
+        }
+
+        if (threatEntity == null) {
             return;
         }
 
-        Vec3 fleePos = findFleePositionAwayFrom(attacker);
+        Vec3 fleePos = findFleePositionAwayFrom(threatEntity);
         if (fleePos != null) {
             mob.getNavigation().moveTo(fleePos.x, fleePos.y, fleePos.z, fleeSpeed);
         }
 
-        mob.getLookControl().setLookAt(attacker);
+        mob.getLookControl().setLookAt(threatEntity);
     }
 
     @Override
@@ -125,12 +155,20 @@ public class LowHealthFleeGoal extends Goal {
      * Find a position to flee to.
      */
     private void findFleePosition() {
-        LivingEntity attacker = mob.getLastHurtByMob();
-        if (attacker == null) {
+        // Determine who to flee from - prioritize attacker, fall back to target, then nearby threats
+        LivingEntity threatEntity = mob.getLastHurtByMob();
+        if (threatEntity == null || !threatEntity.isAlive()) {
+            threatEntity = mob.getTarget();
+        }
+        if (threatEntity == null || !threatEntity.isAlive()) {
+            threatEntity = findNearbyThreat();
+        }
+
+        if (threatEntity == null) {
             return;
         }
 
-        Vec3 fleePos = findFleePositionAwayFrom(attacker);
+        Vec3 fleePos = findFleePositionAwayFrom(threatEntity);
         if (fleePos != null) {
             mob.getNavigation().moveTo(fleePos.x, fleePos.y, fleePos.z, fleeSpeed);
         }
@@ -145,5 +183,60 @@ public class LowHealthFleeGoal extends Goal {
     private Vec3 findFleePositionAwayFrom(LivingEntity awayFromEntity) {
         Vec3 awayFromPos = awayFromEntity.position();
         return DefaultRandomPos.getPosAway(mob, 16, 7, awayFromPos);
+    }
+
+    /**
+     * Finds nearby threatening entities.
+     * Checks for hostile mobs, predators, players, or any entity targeting this mob.
+     *
+     * @return The nearest threat, or null if none found
+     */
+    private LivingEntity findNearbyThreat() {
+        java.util.List<LivingEntity> nearbyEntities = mob.level().getEntitiesOfClass(
+            LivingEntity.class,
+            mob.getBoundingBox().inflate(16.0),
+            entity -> entity != mob && entity.isAlive()
+        );
+
+        for (LivingEntity entity : nearbyEntities) {
+            // Check if this entity is targeting us
+            if (entity instanceof net.minecraft.world.entity.Mob mobEntity) {
+                if (mobEntity.getTarget() == mob) {
+                    return entity;
+                }
+            }
+
+            // Check if this is a known predator type
+            if (isPredator(entity)) {
+                return entity;
+            }
+
+            // Check for nearby players (not sneaking)
+            if (entity instanceof net.minecraft.world.entity.player.Player player) {
+                if (!player.isShiftKeyDown()) {
+                    return entity;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Checks if an entity is a predator that should trigger fleeing.
+     *
+     * @param entity The entity to check
+     * @return True if the entity is a predator
+     */
+    private boolean isPredator(LivingEntity entity) {
+        String typeName = entity.getType().toString().toLowerCase();
+        return typeName.contains("wolf") ||
+               typeName.contains("fox") ||
+               typeName.contains("cat") ||
+               typeName.contains("ocelot") ||
+               typeName.contains("spider") ||
+               typeName.contains("zombie") ||
+               typeName.contains("skeleton") ||
+               typeName.contains("creeper");
     }
 }

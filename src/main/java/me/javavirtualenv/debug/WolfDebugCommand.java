@@ -2,6 +2,13 @@ package me.javavirtualenv.debug;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
+import me.javavirtualenv.behavior.predation.PredatorFeedingGoal;
+import me.javavirtualenv.behavior.wolf.WolfDrinkWaterGoal;
+import me.javavirtualenv.behavior.wolf.WolfPackAttackGoal;
+import me.javavirtualenv.behavior.wolf.WolfPickupItemGoal;
+import me.javavirtualenv.behavior.wolf.WolfShareFoodGoal;
+import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
+import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.mixin.MobAccessor;
@@ -10,6 +17,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
@@ -20,10 +28,10 @@ import java.util.Map;
 /**
  * Debug command for inspecting wolf AI goals and internal state.
  * Usage:
- * - /wolfdebug - Shows info about the wolf you're looking at
+ * - /wolfdebug - Shows info about the nearest wolf within 5 blocks
  * - /wolfdebug <wolf> - Shows info about a specific wolf
- * - /wolfdebug goals - Shows all registered goals
- * - /wolfdebug state - Shows hunger/thirst/condition state
+ * - /wolfdebug goals - Shows all registered goals for the nearest wolf within 5 blocks
+ * - /wolfdebug state - Shows hunger/thirst/condition state for the nearest wolf within 5 blocks
  */
 public final class WolfDebugCommand {
 
@@ -54,6 +62,11 @@ public final class WolfDebugCommand {
                         .executes(WolfDebugCommand::makeThirsty))
                     .then(Commands.literal("hungry")
                         .executes(WolfDebugCommand::makeHungry)))
+                // Status subcommand - shows registry and profile info
+                .then(Commands.literal("status")
+                    .executes(WolfDebugCommand::showStatusOfLookedAt)
+                    .then(Commands.argument("wolf", EntityArgument.entity())
+                        .executes(WolfDebugCommand::showStatusOfSpecific)))
         );
     }
 
@@ -162,14 +175,93 @@ public final class WolfDebugCommand {
         return 1;
     }
 
+    private static int showStatusOfLookedAt(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
+        Wolf wolf = getLookedAtWolf(source);
+        if (wolf == null) {
+            source.sendFailure(Component.literal("No wolf found. Look at a wolf or specify one."));
+            return 0;
+        }
+        showStatusInfo(source, wolf);
+        return 1;
+    }
+
+    private static int showStatusOfSpecific(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
+        try {
+            Entity entity = EntityArgument.getEntity(context, "wolf");
+            if (!(entity instanceof Wolf wolf)) {
+                source.sendFailure(Component.literal("Target is not a wolf!"));
+                return 0;
+            }
+            showStatusInfo(source, wolf);
+            return 1;
+        } catch (Exception e) {
+            source.sendFailure(Component.literal("Error: " + e.getMessage()));
+            return 0;
+        }
+    }
+
+    private static void showStatusInfo(CommandSourceStack source, Wolf wolf) {
+        source.sendSuccess(() -> Component.literal("=== Wolf Registration Status ==="), false);
+        source.sendSuccess(() -> Component.literal("Wolf ID: " + wolf.getId()), false);
+        source.sendSuccess(() -> Component.literal("Wolf Class: " + wolf.getClass().getName()), false);
+
+        // Check if EcologyAccess is implemented
+        boolean hasEcologyAccess = wolf instanceof EcologyAccess;
+        source.sendSuccess(() -> Component.literal("Implements EcologyAccess: " + hasEcologyAccess), false);
+
+        // Check EcologyComponent
+        EcologyComponent component = getComponent(wolf);
+        boolean hasComponent = component != null;
+        source.sendSuccess(() -> Component.literal("Has EcologyComponent: " + hasComponent), false);
+
+        // Check handles from component
+        if (component != null) {
+            int handleCount = component.handles().size();
+            source.sendSuccess(() -> Component.literal("Component handle count: " + handleCount), false);
+
+            // List handles
+            if (handleCount > 0) {
+                source.sendSuccess(() -> Component.literal("--- Registered Handles ---"), false);
+                for (var handle : component.handles()) {
+                    source.sendSuccess(() -> Component.literal("  - " + handle.id()), false);
+                }
+            }
+        }
+
+        // Check AnimalBehaviorRegistry
+        AnimalConfig registryConfig = AnimalBehaviorRegistry.getForMob(wolf);
+        boolean inRegistry = registryConfig != null;
+        source.sendSuccess(() -> Component.literal("In AnimalBehaviorRegistry: " + inRegistry), false);
+
+        if (registryConfig != null) {
+            int registryHandleCount = registryConfig.getHandles().size();
+            source.sendSuccess(() -> Component.literal("Registry handle count: " + registryHandleCount), false);
+        }
+
+        // Summary
+        source.sendSuccess(() -> Component.literal("=== Summary ==="), false);
+        if (!hasEcologyAccess) {
+            source.sendFailure(Component.literal("CRITICAL: MobEcologyMixin not applied! Wolf doesn't implement EcologyAccess."));
+        } else if (!hasComponent) {
+            source.sendFailure(Component.literal("CRITICAL: EcologyComponent is null! Component creation failed."));
+        } else if (!inRegistry) {
+            source.sendFailure(Component.literal("CRITICAL: Wolf not in AnimalBehaviorRegistry! WolfMixin static initializer may not have run."));
+        } else {
+            source.sendSuccess(() -> Component.literal("OK: Wolf is properly registered and has all components."), false);
+        }
+    }
+
     private static Wolf getLookedAtWolf(CommandSourceStack source) {
-        if (!(source.getEntity() instanceof Mob mob)) {
+        Entity sourceEntity = source.getEntity();
+        if (sourceEntity == null) {
             return null;
         }
-        // Find nearest wolf within 6 blocks
-        return mob.level().getEntitiesOfClass(
+        // Find nearest wolf within 5 blocks
+        return sourceEntity.level().getEntitiesOfClass(
             Wolf.class,
-            mob.getBoundingBox().inflate(6.0)
+            sourceEntity.getBoundingBox().inflate(5.0)
         ).stream().findFirst().orElse(null);
     }
 
@@ -209,7 +301,8 @@ public final class WolfDebugCommand {
                     if (goal != null) {
                         String goalName = goal.getClass().getSimpleName();
                         String isRunning = isGoalRunning(goalWrapper) ? " [RUNNING]" : "";
-                        source.sendSuccess(() -> Component.literal("  Priority " + priority + ": " + goalName + isRunning), false);
+                        String extra = getGoalDebugInfo(goal, wolf);
+                        source.sendSuccess(() -> Component.literal("  Priority " + priority + ": " + goalName + isRunning + extra), false);
                     }
                 }
             } else {
@@ -218,6 +311,26 @@ public final class WolfDebugCommand {
         } catch (Exception e) {
             source.sendFailure(Component.literal("Error reading goals: " + e.getMessage()));
         }
+    }
+
+    private static String getGoalDebugInfo(Goal goal, Wolf wolf) {
+        if (goal instanceof WolfDrinkWaterGoal drinkGoal) {
+            return " | " + drinkGoal.getDebugState();
+        }
+        if (goal instanceof WolfPickupItemGoal pickupGoal) {
+            return " | " + pickupGoal.getDebugState();
+        }
+        if (goal instanceof WolfShareFoodGoal) {
+            return " | share_food";
+        }
+        if (goal instanceof PredatorFeedingGoal feedingGoal) {
+            return " | " + feedingGoal.getDebugState();
+        }
+        if (goal instanceof WolfPackAttackGoal) {
+            LivingEntity target = wolf.getTarget();
+            return " | target=" + (target != null ? target.getType().toShortString() : "none");
+        }
+        return "";
     }
 
     private static void showStateInfo(CommandSourceStack source, Wolf wolf) {

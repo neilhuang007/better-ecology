@@ -30,8 +30,8 @@ public class RabbitEvasionConfig {
         return new Builder()
             .evasionSpeed(1.8)
             .evasionForce(0.25)
-            .detectionRange(24.0)
-            .flightInitiationDistance(12.0)
+            .detectionRange(32.0)
+            .flightInitiationDistance(8.0)
             .safetyDistance(48.0)
             .zigzagChangeInterval(8)
             .canFreeze(true)
@@ -80,8 +80,8 @@ public class RabbitEvasionConfig {
     public static class Builder {
         private double evasionSpeed = 1.8;
         private double evasionForce = 0.25;
-        private double detectionRange = 24.0;
-        private double flightInitiationDistance = 12.0;
+        private double detectionRange = 32.0;
+        private double flightInitiationDistance = 8.0;
         private double safetyDistance = 48.0;
         private int zigzagChangeInterval = 8;
         private boolean canFreeze = true;

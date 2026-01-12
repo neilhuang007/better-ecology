@@ -8,6 +8,7 @@ import me.javavirtualenv.behavior.rabbit.RabbitThumpConfig;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.ai.LowHealthFleeGoal;
 import me.javavirtualenv.ecology.ai.SeekFoodItemGoal;
+import me.javavirtualenv.ecology.ai.SeekWaterGoal;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.api.EcologyAccess;
@@ -84,8 +85,11 @@ public abstract class RabbitMixin {
         RabbitBehaviorGoal rabbitGoal = new RabbitBehaviorGoal(rabbit, component);
         accessor.betterEcology$getGoalSelector().addGoal(2, rabbitGoal);
 
+        // Water seeking goal - seek water when thirsty
+        accessor.betterEcology$getGoalSelector().addGoal(3, new SeekWaterGoal(rabbit, 1.2, 16));
+
         // Food seeking goal - seek carrots and dandelions when hungry
-        accessor.betterEcology$getGoalSelector().addGoal(3, new SeekFoodItemGoal(rabbit, 1.2, 16,
+        accessor.betterEcology$getGoalSelector().addGoal(4, new SeekFoodItemGoal(rabbit, 1.2, 16,
             stack -> stack.is(Items.CARROT) || stack.is(Items.GOLDEN_CARROT) || stack.is(Items.DANDELION)));
 
         // Food caching goal - lower priority, runs when safe
@@ -165,6 +169,19 @@ public abstract class RabbitMixin {
     @Unique
     private void registerBehaviors() {
         AnimalConfig config = AnimalConfig.builder(ResourceLocation.withDefaultNamespace("rabbit"))
+                .addHandle(new HungerHandle())
+                .addHandle(new ThirstHandle())
+                .addHandle(new ConditionHandle())
+                .addHandle(new EnergyHandle())
+                .addHandle(new AgeHandle())
+                .addHandle(new SocialHandle())
+                .addHandle(new MovementHandle())
+                .addHandle(new HealthHandle())
+                .addHandle(new BreedingHandle())
+                .addHandle(new PredationHandle())
+                .addHandle(new DietHandle())
+                .addHandle(new TemporalHandle())
+                .addHandle(new NestBuildingHandle())
                 .build();
 
         AnimalBehaviorRegistry.register("minecraft:rabbit", config);

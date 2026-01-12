@@ -14,10 +14,12 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.pathfinder.Path;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Goal for wolves to pick up meat items from the ground.
@@ -38,10 +40,23 @@ public class WolfPickupItemGoal extends Goal {
     private static final TagKey<Item> MEAT_TAG = TagKey.create(Registries.ITEM,
         net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("better-ecology", "meat"));
 
+    // Fallback list of meat items for gametest environment where tags may not load
+    private static final Set<Item> MEAT_ITEMS = Set.of(
+        Items.BEEF, Items.COOKED_BEEF,
+        Items.PORKCHOP, Items.COOKED_PORKCHOP,
+        Items.MUTTON, Items.COOKED_MUTTON,
+        Items.CHICKEN, Items.COOKED_CHICKEN,
+        Items.RABBIT, Items.COOKED_RABBIT,
+        Items.COD, Items.COOKED_COD,
+        Items.SALMON, Items.COOKED_SALMON,
+        Items.TROPICAL_FISH, Items.PUFFERFISH,
+        Items.ROTTEN_FLESH
+    );
+
     private static final double SEARCH_RADIUS = 20.0; // Search 20 blocks for meat
     private static final double PICKUP_DISTANCE = 1.5; // Distance to pick up item
     private static final double MOVE_SPEED = 1.3; // Wolf running speed
-    private static final int HUNGRY_THRESHOLD = 75; // Pick up food when hunger < 75
+    private static final int HUNGRY_THRESHOLD = 50; // Pick up food when hunger < 50
     private static final int PACK_CHECK_RADIUS = 32; // Check pack members within 32 blocks
     private static final int COOLDOWN_TICKS = 60; // Cooldown after failing to pickup
 
@@ -300,7 +315,8 @@ public class WolfPickupItemGoal extends Goal {
      * Check if an item stack is meat.
      */
     private boolean isMeat(ItemStack stack) {
-        return stack.is(MEAT_TAG);
+        // Try tag first, fallback to item list for gametest environment
+        return stack.is(MEAT_TAG) || MEAT_ITEMS.contains(stack.getItem());
     }
 
     /**

@@ -222,6 +222,10 @@ public abstract class CowMixin {
 
             setHunger(tag, newHunger);
 
+            // Update entity state flags
+            component.state().setIsHungry(newHunger < 60);
+            component.state().setIsStarving(newHunger <= DAMAGE_THRESHOLD);
+
             if (elapsed <= 1 && shouldApplyStarvation(mob, newHunger)) {
                 int currentTick = mob.tickCount;
                 int lastDamage = getLastDamageTick(tag);
@@ -299,6 +303,9 @@ public abstract class CowMixin {
             }
 
             setThirst(tag, newThirst);
+
+            // Update entity state flag
+            component.state().setIsThirsty(newThirst < 30);
 
             if (elapsed <= 1 && shouldApplyDehydration(mob, newThirst)) {
                 int currentTick = mob.tickCount;

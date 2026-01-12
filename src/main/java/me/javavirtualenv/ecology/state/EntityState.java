@@ -76,6 +76,10 @@ public final class EntityState {
         boolean oldIsThirsty = isThirsty != null && isThirsty;
         boolean oldIsInjured = isInjured != null && isInjured;
         boolean oldIsLonely = isLonely != null && isLonely;
+        boolean oldIsRetreating = isRetreating != null && isRetreating;
+        boolean oldIsFleeing = isFleeing != null && isFleeing;
+        boolean oldIsHunting = isHunting != null && isHunting;
+        boolean oldIsPanicking = isPanicking != null && isPanicking;
 
         // Reset all cached computed states
         isBaby = null;
@@ -104,6 +108,10 @@ public final class EntityState {
         setIsHungry(oldIsHungry);
         setIsThirsty(oldIsThirsty);
         setIsLonely(oldIsLonely);
+        setIsRetreating(oldIsRetreating);
+        setIsFleeing(oldIsFleeing);
+        setIsHunting(oldIsHunting);
+        setIsPanicking(oldIsPanicking);
         if (oldIsInjured) {
             isInjured = true;
         }
