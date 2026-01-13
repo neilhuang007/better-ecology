@@ -65,11 +65,13 @@ public class HungryPredatorTargetGoal<T extends LivingEntity> extends NearestAtt
         // Find own target using parent's logic
         boolean canUse = super.canUse();
 
-        // If super.canUse() succeeded, we found a target
+        // If super.canUse() succeeded, we found a target - set it now and share with pack
         if (canUse && predator instanceof Wolf wolf) {
-            LivingEntity target = predator.getTarget();
-            if (target != null) {
-                shareTargetWithPack(wolf, target);
+            // The target field is set by super.canUse() but setTarget isn't called until start()
+            // We need to set it explicitly for pack sharing to work
+            if (this.target != null) {
+                predator.setTarget(this.target);
+                shareTargetWithPack(wolf, this.target);
             }
         }
 

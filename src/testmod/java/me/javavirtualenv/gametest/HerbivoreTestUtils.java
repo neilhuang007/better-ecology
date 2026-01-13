@@ -283,6 +283,24 @@ public final class HerbivoreTestUtils {
     }
 
     /**
+     * Manually register HungryPredatorTargetGoal for a fox in game test environment.
+     * This ensures the fox will target chickens and rabbits when hungry.
+     */
+    public static void registerFoxHuntingGoals(net.minecraft.world.entity.animal.Fox fox) {
+        me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) fox;
+
+        // Register hungry predator targeting goal (targets chickens and rabbits when hungry)
+        accessor.betterEcology$getTargetSelector().addGoal(1,
+            new me.javavirtualenv.ecology.ai.HungryPredatorTargetGoal<>(fox, net.minecraft.world.entity.LivingEntity.class, 60,
+                target -> target instanceof net.minecraft.world.entity.animal.Chicken ||
+                          target instanceof net.minecraft.world.entity.animal.Rabbit));
+
+        // Register FoxHuntGoal for movement toward and attacking prey
+        accessor.betterEcology$getGoalSelector().addGoal(3,
+            new me.javavirtualenv.behavior.fox.FoxHuntGoal(fox));
+    }
+
+    /**
      * Manually register SeekWaterGoal for a cow in game test environment.
      * This ensures the goal is present even if mixins don't fire properly during tests.
      */

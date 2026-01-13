@@ -124,7 +124,21 @@ public class FoxHuntGoal extends Goal {
             return false;
         }
 
-        // Find prey
+        // First check if HungryPredatorTargetGoal already set a target
+        LivingEntity currentTarget = fox.getTarget();
+        if (currentTarget != null && currentTarget.isAlive() && isFoxPrey(currentTarget)) {
+            double distance = fox.position().distanceTo(currentTarget.position());
+            if (distance <= DETECTION_RADIUS) {
+                targetPrey = currentTarget;
+                debug("STARTING: using existing target " + getPreyName(targetPrey) + " #" + targetPrey.getId() +
+                      " (hunger=" + hunger + ", state=" + currentState + ")");
+                currentState = HuntingState.STALKING;
+                stateTimer = 0;
+                return true;
+            }
+        }
+
+        // If no target set by target selector, find our own prey
         targetPrey = findReachablePrey();
         if (targetPrey == null) {
             return false;

@@ -942,7 +942,7 @@ public abstract class SheepMixin {
             }
 
             // Register wool growth behavior goal
-            int priority = 4; // High priority for essential behaviors
+            int priority = 8; // Lower priority to avoid conflict with grazing (priority 4)
             me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
             accessor.betterEcology$getGoalSelector().addGoal(priority,
                 new WoolGrowthGoal(pathfinderMob));

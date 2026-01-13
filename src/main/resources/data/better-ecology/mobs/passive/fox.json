@@ -1,0 +1,30 @@
+{
+  "entity_id": "minecraft:fox",
+  "tags": {
+    "predator": true,
+    "omnivore": true,
+    "nocturnal": true
+  },
+  "thirst": {
+    "enabled": true,
+    "max_value": 100,
+    "starting_value": 70,
+    "decay_rate": 0.02,
+    "satisfied": 80,
+    "thirsty": 30,
+    "dehydrated": 10,
+    "damage_interval": 200,
+    "damage_amount": 1.0
+  },
+  "hunger": {
+    "enabled": true,
+    "max_value": 100,
+    "starting_value": 70,
+    "decay_rate": 0.03,
+    "satisfied": 80,
+    "hungry": 50,
+    "starving": 20,
+    "damage_interval": 200,
+    "damage_amount": 1.0
+  }
+}

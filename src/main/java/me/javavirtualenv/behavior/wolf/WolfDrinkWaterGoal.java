@@ -65,9 +65,16 @@ public class WolfDrinkWaterGoal extends Goal {
             return false;
         }
 
-        // Check if wolf is thirsty (direct NBT check for reliability)
+        // Check if wolf is thirsty using state flag (set by WolfThirstHandle)
+        EcologyComponent component = getComponent();
+        if (component == null) {
+            return false;
+        }
+
         int thirst = getThirstLevel();
-        boolean isThirsty = thirst < THIRST_THRESHOLD;
+        // Check both state flag AND raw thirst value
+        // State flag may not be set yet if WolfThirstHandle hasn't ticked
+        boolean isThirsty = component.state().isThirsty() || thirst < THIRST_THRESHOLD;
 
         ticksSinceLastCheck++;
 
@@ -80,7 +87,7 @@ public class WolfDrinkWaterGoal extends Goal {
         if (!isThirsty) {
             // Every 5 seconds, log that we're not thirsty
             if (ticksSinceLastCheck % 100 == 0) {
-                debug("not thirsty (thirst=" + thirst + ", threshold=" + THIRST_THRESHOLD + ")");
+                debug("not thirsty (thirst=" + thirst + ", isThirsty flag=" + isThirsty + ")");
             }
             return false;
         }

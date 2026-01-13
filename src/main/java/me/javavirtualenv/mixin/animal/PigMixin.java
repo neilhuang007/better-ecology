@@ -584,10 +584,10 @@ public abstract class PigMixin {
             accessor.betterEcology$getGoalSelector().addGoal(3, new PigTruffleSeekGoal(pig));
             accessor.betterEcology$getGoalSelector().addGoal(4, new WaterAvoidingRandomStrollGoal(pig, 0.3));
             accessor.betterEcology$getGoalSelector().addGoal(5, new PigRootingGoal(pig, 0.6));
-            accessor.betterEcology$getGoalSelector().addGoal(5, new PigMudBathingGoal(pig, 0.7));
-            accessor.betterEcology$getGoalSelector().addGoal(5, new PigSocialMudBathingGoal(pig));
-            accessor.betterEcology$getGoalSelector().addGoal(5, new PigFeedingGoal(pig, 0.5));
-            accessor.betterEcology$getGoalSelector().addGoal(6, new PigSniffTrufflesGoal(pig));
+            accessor.betterEcology$getGoalSelector().addGoal(6, new PigMudBathingGoal(pig, 0.7));
+            accessor.betterEcology$getGoalSelector().addGoal(7, new PigSocialMudBathingGoal(pig));
+            accessor.betterEcology$getGoalSelector().addGoal(8, new PigFeedingGoal(pig, 0.5));
+            accessor.betterEcology$getGoalSelector().addGoal(9, new PigSniffTrufflesGoal(pig));
         }
     }
 
@@ -676,7 +676,7 @@ public abstract class PigMixin {
             }
 
             me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
-            accessor.betterEcology$getGoalSelector().addGoal(6,
+            accessor.betterEcology$getGoalSelector().addGoal(10,
                 new me.javavirtualenv.ecology.ai.EcologyBreedGoal(animal, 1.0, MIN_AGE, 0.6,
                     MIN_CONDITION, COOLDOWN, null));
         }

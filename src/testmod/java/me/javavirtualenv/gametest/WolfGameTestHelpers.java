@@ -21,6 +21,12 @@ final class WolfGameTestHelpers {
     static void registerWolfGoals(Wolf wolf) {
         System.out.println("[WolfGameTestHelpers] Manually registering wolf goals for " + wolf.getId());
         EcologyHooks.onRegisterGoals(wolf);
+
+        // Verify goals were registered by checking target selector
+        if (wolf instanceof me.javavirtualenv.mixin.MobAccessor accessor) {
+            int targetGoalCount = accessor.betterEcology$getTargetSelector().getAvailableGoals().size();
+            System.out.println("[WolfGameTestHelpers] Wolf " + wolf.getId() + " has " + targetGoalCount + " target goals registered");
+        }
     }
 
     static void setHunger(LivingEntity entity, int hunger) {
@@ -125,11 +131,13 @@ final class WolfGameTestHelpers {
 
     static void setThirst(Wolf wolf, int thirst) {
         if (!(wolf instanceof EcologyAccess access)) {
+            System.err.println("[WolfGameTestHelpers] Cannot set thirst - wolf does not implement EcologyAccess");
             return;
         }
 
         EcologyComponent component = access.betterEcology$getEcologyComponent();
         if (component == null) {
+            System.err.println("[WolfGameTestHelpers] Cannot set thirst - EcologyComponent is null");
             return;
         }
 
@@ -137,7 +145,11 @@ final class WolfGameTestHelpers {
         thirstTag.putInt("thirst", thirst);
 
         var state = component.state();
-        state.setIsThirsty(thirst < 30);
+        boolean isThirsty = thirst < 30;
+        state.setIsThirsty(isThirsty);
+
+        System.out.println("[WolfGameTestHelpers] Set wolf " + wolf.getId() + " thirst to " + thirst +
+            ", isThirsty=" + isThirsty);
     }
 
     static int getThirst(Wolf wolf) {
@@ -156,22 +168,34 @@ final class WolfGameTestHelpers {
 
     static boolean verifyThirstState(Wolf wolf, int expectedThirst) {
         if (!(wolf instanceof EcologyAccess access)) {
+            System.err.println("[WolfGameTestHelpers] Cannot verify thirst - wolf does not implement EcologyAccess");
             return false;
         }
 
         EcologyComponent component = access.betterEcology$getEcologyComponent();
         if (component == null) {
+            System.err.println("[WolfGameTestHelpers] Cannot verify thirst - EcologyComponent is null");
             return false;
         }
 
         CompoundTag thirstTag = component.getHandleTag("thirst");
-        int actualThirst = thirstTag.getInt("thirst");
+        int actualThirst = thirstTag.contains("thirst") ? thirstTag.getInt("thirst") : 100;
 
         var state = component.state();
         boolean expectedThirsty = expectedThirst < 30;
         boolean actualThirsty = state.isThirsty();
 
-        return actualThirst == expectedThirst && actualThirsty == expectedThirsty;
+        boolean nbtMatch = actualThirst == expectedThirst;
+        boolean stateMatch = actualThirsty == expectedThirsty;
+
+        if (!nbtMatch) {
+            System.err.println("[WolfGameTestHelpers] Thirst NBT mismatch: expected " + expectedThirst + ", got " + actualThirst);
+        }
+        if (!stateMatch) {
+            System.err.println("[WolfGameTestHelpers] Thirst state mismatch: expected thirsty=" + expectedThirsty + ", got " + actualThirsty);
+        }
+
+        return nbtMatch && stateMatch;
     }
 
     static boolean hasEcologyComponent(Wolf wolf) {
@@ -267,5 +291,31 @@ final class WolfGameTestHelpers {
 
         CompoundTag hungerTag = component.getHandleTag("hunger");
         return hungerTag.contains("hunger") ? hungerTag.getInt("hunger") : 100;
+    }
+
+    static void printPackHuntingDebug(Wolf wolf, String context) {
+        System.out.println("[PackHuntDebug] === Wolf " + wolf.getId() + " (" + context + ") ===");
+        System.out.println("  Has target: " + (wolf.getTarget() != null));
+        if (wolf.getTarget() != null) {
+            System.out.println("  Target type: " + wolf.getTarget().getType());
+        }
+        System.out.println("  Hunger: " + getHunger(wolf));
+        System.out.println("  Thirst: " + getThirst(wolf));
+
+        if (wolf instanceof EcologyAccess access) {
+            EcologyComponent component = access.betterEcology$getEcologyComponent();
+            if (component != null) {
+                System.out.println("  State isHungry: " + component.state().isHungry());
+                System.out.println("  State isThirsty: " + component.state().isThirsty());
+
+                // Print pack ID
+                CompoundTag behaviorTag = component.getHandleTag("behavior");
+                if (behaviorTag.hasUUID("packId")) {
+                    System.out.println("  Pack ID: " + behaviorTag.getUUID("packId"));
+                } else {
+                    System.out.println("  Pack ID: NOT SET");
+                }
+            }
+        }
     }
 }

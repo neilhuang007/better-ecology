@@ -33,6 +33,7 @@ public class RabbitEvasionBehavior {
     private boolean isEvading = false;
     private Entity currentThreat = null;
     private int evasionTimer = 0;
+    private int lastHurtTime = -1000;
 
     // Zigzag state
     private int zigzagTimer = 0;
@@ -60,11 +61,20 @@ public class RabbitEvasionBehavior {
     public Vec3d calculate(BehaviorContext context) {
         Mob entity = context.getEntity();
 
+        // Check if recently hurt - this triggers immediate evasion
+        boolean wasRecentlyHurt = checkRecentlyHurt(entity);
+
         // Check if currently freezing
         if (isFrozen) {
-            updateFreezeState(context);
-            if (isFrozen) {
-                return new Vec3d(); // Continue freezing - no movement
+            // Break freeze if recently hurt
+            if (wasRecentlyHurt) {
+                isFrozen = false;
+                freezeTimer = 0;
+            } else {
+                updateFreezeState(context);
+                if (isFrozen) {
+                    return new Vec3d(); // Continue freezing - no movement
+                }
             }
         }
 
@@ -72,28 +82,41 @@ public class RabbitEvasionBehavior {
         LivingEntity threat = findNearestThreat(entity);
 
         if (threat == null || !threat.isAlive()) {
-            currentThreat = null;
-            isEvading = false;
-            setRetreatingState(entity, false);
-            return new Vec3d();
+            // Stop evading only if not recently hurt
+            if (!wasRecentlyHurt) {
+                currentThreat = null;
+                isEvading = false;
+                setRetreatingState(entity, false);
+                return new Vec3d();
+            }
         }
 
-        currentThreat = threat;
+        // Use found threat or keep current threat if recently hurt
+        if (threat != null) {
+            currentThreat = threat;
+        } else if (wasRecentlyHurt && currentThreat == null) {
+            // Recently hurt but no visible threat - still evade in random direction
+            isEvading = true;
+            evasionTimer++;
+            setRetreatingState(entity, true);
+            return calculatePanicEvasion(context);
+        }
+
         Vec3d position = context.getPosition();
-        Vec3d threatPos = new Vec3d(threat.getX(), threat.getY(), threat.getZ());
+        Vec3d threatPos = new Vec3d(currentThreat.getX(), currentThreat.getY(), currentThreat.getZ());
         double distance = position.distanceTo(threatPos);
 
         // Decide whether to freeze or flee
-        if (distance > config.getFlightInitiationDistance() * 0.7) {
-            // Far enough that we might freeze first
-            if (config.canFreeze() && !isEvading && shouldFreeze(entity, threat)) {
+        if (distance > config.getFlightInitiationDistance() * 0.7 && !wasRecentlyHurt) {
+            // Far enough that we might freeze first (but not if recently hurt)
+            if (config.canFreeze() && !isEvading && shouldFreeze(entity, (LivingEntity)currentThreat)) {
                 initiateFreeze();
                 return new Vec3d();
             }
         }
 
-        // Start evading if threat is close enough
-        if (distance < config.getFlightInitiationDistance()) {
+        // Start evading if threat is close enough OR recently hurt
+        if (distance < config.getFlightInitiationDistance() || wasRecentlyHurt) {
             isEvading = true;
             evasionTimer++;
             setRetreatingState(entity, true);
@@ -104,7 +127,7 @@ public class RabbitEvasionBehavior {
                 freezeTimer = 0;
             }
 
-            return calculateEvasion(context, threat);
+            return calculateEvasion(context, (LivingEntity)currentThreat);
         } else if (distance > config.getSafetyDistance()) {
             // Escaped to safety
             isEvading = false;
@@ -114,6 +137,39 @@ public class RabbitEvasionBehavior {
         }
 
         return new Vec3d();
+    }
+
+    /**
+     * Checks if the entity was recently hurt.
+     * This triggers immediate evasion response.
+     */
+    private boolean checkRecentlyHurt(Mob entity) {
+        int currentHurtTime = entity.hurtTime;
+        if (currentHurtTime > 0 && currentHurtTime != lastHurtTime) {
+            lastHurtTime = currentHurtTime;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Calculates panic evasion when hurt but no visible threat.
+     * Rabbits flee in a semi-random direction when attacked.
+     */
+    private Vec3d calculatePanicEvasion(BehaviorContext context) {
+        Vec3d velocity = context.getVelocity();
+
+        // Choose a random evasion direction
+        double angle = random.nextDouble() * Math.PI * 2;
+        Vec3d evasionDirection = new Vec3d(Math.cos(angle), 0, Math.sin(angle));
+        evasionDirection.normalize();
+        evasionDirection.mult(config.getEvasionSpeed());
+
+        // Calculate steering force
+        Vec3d steer = Vec3d.sub(evasionDirection, velocity);
+        steer.limit(config.getEvasionForce());
+
+        return steer;
     }
 
     /**
@@ -343,6 +399,7 @@ public class RabbitEvasionBehavior {
         isEvading = false;
         currentThreat = null;
         evasionTimer = 0;
+        lastHurtTime = -1000;
         zigzagTimer = 0;
         zigzagDirection = 1;
         zigzagIntensity = 0.0;

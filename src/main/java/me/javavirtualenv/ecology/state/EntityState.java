@@ -74,6 +74,8 @@ public final class EntityState {
         // Store old values for change detection (only for externally set states)
         boolean oldIsHungry = isHungry != null && isHungry;
         boolean oldIsThirsty = isThirsty != null && isThirsty;
+        boolean oldIsStarving = isStarving != null && isStarving;
+        boolean oldIsDehydrated = isDehydrated != null && isDehydrated;
         boolean oldIsInjured = isInjured != null && isInjured;
         boolean oldIsLonely = isLonely != null && isLonely;
         boolean oldIsRetreating = isRetreating != null && isRetreating;
@@ -87,8 +89,8 @@ public final class EntityState {
         isInjured = null;
         isHungry = null;
         isThirsty = null;
-        isStarving = false;
-        isDehydrated = false;
+        isStarving = null;
+        isDehydrated = null;
         isFleeing = null;
         isHunting = null;
         isCarryingOffspring = null;
@@ -107,6 +109,8 @@ public final class EntityState {
         // Restore externally set states and detect changes
         setIsHungry(oldIsHungry);
         setIsThirsty(oldIsThirsty);
+        setIsStarving(oldIsStarving);
+        setIsDehydrated(oldIsDehydrated);
         setIsLonely(oldIsLonely);
         setIsRetreating(oldIsRetreating);
         setIsFleeing(oldIsFleeing);

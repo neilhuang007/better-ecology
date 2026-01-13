@@ -129,6 +129,12 @@ public abstract class WolfMixin {
             }
             setHunger(handleTag, newHunger);
 
+            // Update state flags for hunger (threshold is 40 for wolves)
+            boolean isHungry = newHunger < 40;
+            boolean isStarving = newHunger <= DAMAGE_THRESHOLD;
+            component.state().setIsHungry(isHungry);
+            component.state().setIsStarving(isStarving);
+
             if (elapsedTicks <= 1 && shouldApplyStarvation(mob, newHunger)) {
                 int currentTick = mob.tickCount;
                 int lastDamageTick = getLastDamageTick(handleTag);
@@ -176,7 +182,7 @@ public abstract class WolfMixin {
         private static final int MAX_THIRST = 100;
         private static final int STARTING_THIRST = 10; // Start thirsty so wolves immediately seek water
         private static final double DECAY_RATE = 0.02;
-        private static final int THIRST_THRESHOLD = 20;
+        private static final int THIRST_THRESHOLD = 30; // Must match WolfDrinkWaterGoal.THIRST_THRESHOLD
         private static final int DEHYDRATION_THRESHOLD = 5;
         private static final float DEHYDRATION_DAMAGE = 1.0f;
         private static final int DAMAGE_INTERVAL = 200;
@@ -189,6 +195,18 @@ public abstract class WolfMixin {
         @Override
         public int tickInterval() {
             return 20;
+        }
+
+        @Override
+        public void registerGoals(Mob mob, EcologyComponent component, EcologyProfile profile) {
+            // Initialize thirsty state based on starting thirst value
+            // This ensures WolfDrinkWaterGoal can activate immediately without waiting for tick
+            CompoundTag tag = component.getHandleTag(id());
+            int currentThirst = getCurrentThirst(tag);
+            boolean isThirsty = currentThirst < THIRST_THRESHOLD;
+            component.state().setIsThirsty(isThirsty);
+
+            LOGGER.debug("WolfThirstHandle initialized: thirst={}, isThirsty={}", currentThirst, isThirsty);
         }
 
         @Override
