@@ -194,4 +194,164 @@ public class DolphinBehaviorTests implements FabricGameTest {
             }
         });
     }
+
+    /**
+     * Test that multiple dolphins form schools and stay together.
+     * Setup: Spawn multiple dolphins in water.
+     * Expected: Dolphins exhibit schooling behavior and maintain cohesion.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
+    public void testDolphinSchools(GameTestHelper helper) {
+        // Create large water environment for schooling behavior
+        for (int x = 0; x < 21; x++) {
+            for (int z = 0; z < 21; z++) {
+                for (int y = 2; y <= 6; y++) {
+                    helper.setBlock(new BlockPos(x, y, z), Blocks.WATER);
+                }
+                helper.setBlock(new BlockPos(x, 1, z), Blocks.STONE);
+            }
+        }
+
+        // Spawn dolphins at different positions to test schooling
+        BlockPos dolphin1Pos = new BlockPos(10, 4, 10);
+        BlockPos dolphin2Pos = new BlockPos(13, 4, 10);
+        BlockPos dolphin3Pos = new BlockPos(10, 4, 13);
+        BlockPos dolphin4Pos = new BlockPos(13, 4, 13);
+
+        Dolphin dolphin1 = helper.spawn(EntityType.DOLPHIN, dolphin1Pos);
+        Dolphin dolphin2 = helper.spawn(EntityType.DOLPHIN, dolphin2Pos);
+        Dolphin dolphin3 = helper.spawn(EntityType.DOLPHIN, dolphin3Pos);
+        Dolphin dolphin4 = helper.spawn(EntityType.DOLPHIN, dolphin4Pos);
+
+        // Wait for school cohesion behavior to activate
+        helper.runAfterDelay(100, () -> {
+            if (dolphin1.isAlive() && dolphin2.isAlive() && dolphin3.isAlive() && dolphin4.isAlive()) {
+                // Calculate distances between dolphins
+                double distance12 = dolphin1.distanceTo(dolphin2);
+                double distance13 = dolphin1.distanceTo(dolphin3);
+                double distance14 = dolphin1.distanceTo(dolphin4);
+                double distance23 = dolphin2.distanceTo(dolphin3);
+                double distance24 = dolphin2.distanceTo(dolphin4);
+                double distance34 = dolphin3.distanceTo(dolphin4);
+
+                // Find max distance in school
+                double maxDistance = Math.max(Math.max(Math.max(distance12, distance13), Math.max(distance14, distance23)), Math.max(distance24, distance34));
+
+                // Dolphins should maintain school cohesion within max distance (20 blocks based on cohesion radius)
+                if (maxDistance <= 20.0) {
+                    helper.succeed();
+                } else {
+                    helper.fail("Dolphins school too dispersed. Max distance: " + maxDistance);
+                }
+            } else {
+                helper.fail("Not all dolphins alive");
+            }
+        });
+    }
+
+    /**
+     * Test that dolphins prefer water environment.
+     * Setup: Spawn dolphin in water with land nearby.
+     * Expected: Dolphin stays in water and does not move to land.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
+    public void testDolphinSeeksWater(GameTestHelper helper) {
+        // Create mixed environment - water on one side, land on other
+        for (int x = 0; x < 21; x++) {
+            for (int z = 0; z < 21; z++) {
+                helper.setBlock(new BlockPos(x, 1, z), Blocks.STONE);
+            }
+        }
+
+        // Water area (left side)
+        for (int x = 0; x < 12; x++) {
+            for (int z = 0; z < 21; z++) {
+                for (int y = 2; y <= 5; y++) {
+                    helper.setBlock(new BlockPos(x, y, z), Blocks.WATER);
+                }
+            }
+        }
+
+        // Land area (right side) - just air above stone
+        // x 12-20 remains as stone floor with air above
+
+        // Spawn dolphin in water near the land boundary
+        BlockPos dolphinPos = new BlockPos(8, 3, 10);
+        Dolphin dolphin = helper.spawn(EntityType.DOLPHIN, dolphinPos);
+
+        // Calculate position relative to water
+        double initialX = dolphin.getX();
+
+        // Wait and verify dolphin stays in or moves toward water
+        helper.runAfterDelay(100, () -> {
+            if (dolphin.isAlive()) {
+                double finalX = dolphin.getX();
+                boolean inWater = dolphin.isInWater();
+
+                // Dolphin should be in water or have moved away from land (lower X values = toward water)
+                if (inWater || finalX < 12.0) {
+                    helper.succeed();
+                } else {
+                    helper.fail("Dolphin not preferring water. In water: " + inWater + ", X position: " + finalX);
+                }
+            } else {
+                helper.fail("Dolphin not alive");
+            }
+        });
+    }
+
+    /**
+     * Test that dolphins avoid land to prevent suffocation damage.
+     * Setup: Spawn dolphin in water with clear pathfinding.
+     * Expected: Dolphin remains in water and avoids beaching itself.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
+    public void testDolphinAvoidsLand(GameTestHelper helper) {
+        // Create water pool surrounded by land
+        for (int x = 0; x < 21; x++) {
+            for (int z = 0; z < 21; z++) {
+                helper.setBlock(new BlockPos(x, 1, z), Blocks.STONE);
+            }
+        }
+
+        // Create central water pool
+        for (int x = 5; x < 16; x++) {
+            for (int z = 5; z < 16; z++) {
+                for (int y = 2; y <= 5; y++) {
+                    helper.setBlock(new BlockPos(x, y, z), Blocks.WATER);
+                }
+            }
+        }
+
+        // Spawn dolphin in center of water pool
+        BlockPos dolphinPos = new BlockPos(10, 3, 10);
+        Dolphin dolphin = helper.spawn(EntityType.DOLPHIN, dolphinPos);
+
+        // Record initial health
+        float initialHealth = dolphin.getHealth();
+
+        // Wait and verify dolphin stays in water without taking damage
+        helper.runAfterDelay(100, () -> {
+            if (dolphin.isAlive()) {
+                boolean inWater = dolphin.isInWater();
+                float finalHealth = dolphin.getHealth();
+                BlockPos currentPos = dolphin.blockPosition();
+
+                // Check if dolphin is still in the water pool area
+                boolean inWaterArea = currentPos.getX() >= 5 && currentPos.getX() < 16
+                                   && currentPos.getZ() >= 5 && currentPos.getZ() < 16;
+
+                // Dolphin should remain in water and not take suffocation damage
+                if (inWater && inWaterArea && finalHealth >= initialHealth) {
+                    helper.succeed();
+                } else {
+                    helper.fail("Dolphin beached or took damage. In water: " + inWater +
+                              ", In pool area: " + inWaterArea +
+                              ", Health: " + initialHealth + " -> " + finalHealth);
+                }
+            } else {
+                helper.fail("Dolphin died");
+            }
+        });
+    }
 }

@@ -65,9 +65,9 @@ public abstract class CowMixin {
             )
         );
 
-        // Priority 5: Baby cows follow adult cows
+        // Priority 4: Baby cows follow adult cows (higher priority than grazing)
         goalSelector.addGoal(
-            AnimalThresholds.PRIORITY_SOCIAL,
+            AnimalThresholds.PRIORITY_HUNT,
             new FollowParentGoal(cow, Cow.class)
         );
 

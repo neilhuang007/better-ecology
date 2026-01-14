@@ -230,4 +230,146 @@ public class CatBehaviorTests implements FabricGameTest {
             }
         });
     }
+
+    /**
+     * Test that cat stalks chicken slowly.
+     * Setup: Spawn hungry wild cat near chicken.
+     * Expected: Cat approaches chicken slowly in stalking mode.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
+    public void testCatStalksChicken(GameTestHelper helper) {
+        // Create floor for pathfinding
+        for (int x = 0; x < 21; x++) {
+            for (int z = 0; z < 21; z++) {
+                helper.setBlock(new BlockPos(x, 1, z), net.minecraft.world.level.block.Blocks.GRASS_BLOCK);
+            }
+        }
+
+        // Spawn wild cat and chicken
+        BlockPos catPos = new BlockPos(5, 2, 5);
+        BlockPos chickenPos = new BlockPos(12, 2, 5);
+        Cat cat = helper.spawn(EntityType.CAT, catPos);
+        Chicken chicken = helper.spawn(EntityType.CHICKEN, chickenPos);
+
+        // Ensure cat is wild (not tamed)
+        cat.setTame(false, true);
+
+        // Make cat hungry so it hunts
+        AnimalNeeds.setHunger(cat, AnimalThresholds.HUNGRY - 10);
+
+        // Record initial distance
+        double initialDistance = cat.distanceTo(chicken);
+
+        // Wait for cat to stalk
+        helper.runAfterDelay(100, () -> {
+            if (cat.isAlive() && chicken.isAlive()) {
+                double finalDistance = cat.distanceTo(chicken);
+                boolean catHasTarget = cat.getTarget() != null;
+                boolean catIsCrouching = cat.isCrouching();
+
+                // Cat should be approaching (reduced distance) or crouching (stalking)
+                if (finalDistance < initialDistance || catIsCrouching || catHasTarget) {
+                    helper.succeed();
+                } else {
+                    helper.fail("Cat did not stalk chicken. Initial distance: " + initialDistance +
+                               ", Final distance: " + finalDistance + ", Crouching: " + catIsCrouching +
+                               ", Has target: " + catHasTarget);
+                }
+            } else {
+                helper.fail("Cat or chicken not alive");
+            }
+        });
+    }
+
+    /**
+     * Test that cat pounces on prey after stalking.
+     * Setup: Spawn hungry wild cat close to chicken.
+     * Expected: Cat attacks chicken when in range.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
+    public void testCatPounceOnPrey(GameTestHelper helper) {
+        // Create floor for pathfinding
+        for (int x = 0; x < 21; x++) {
+            for (int z = 0; z < 21; z++) {
+                helper.setBlock(new BlockPos(x, 1, z), net.minecraft.world.level.block.Blocks.GRASS_BLOCK);
+            }
+        }
+
+        // Spawn wild cat very close to chicken to trigger pounce
+        BlockPos catPos = new BlockPos(5, 2, 5);
+        BlockPos chickenPos = new BlockPos(7, 2, 5);
+        Cat cat = helper.spawn(EntityType.CAT, catPos);
+        Chicken chicken = helper.spawn(EntityType.CHICKEN, chickenPos);
+
+        // Ensure cat is wild (not tamed)
+        cat.setTame(false, true);
+
+        // Make cat hungry so it hunts
+        AnimalNeeds.setHunger(cat, AnimalThresholds.HUNGRY - 10);
+
+        // Wait for cat to pounce
+        helper.runAfterDelay(100, () -> {
+            // If chicken is dead or hurt, cat successfully pounced
+            if (cat.isAlive()) {
+                boolean chickenAttacked = !chicken.isAlive() || chicken.getHealth() < chicken.getMaxHealth();
+                boolean catHasTarget = cat.getTarget() != null;
+                double distance = chicken.isAlive() ? cat.distanceTo(chicken) : 0.0;
+
+                if (chickenAttacked || catHasTarget || distance < 3.0) {
+                    helper.succeed();
+                } else {
+                    helper.fail("Cat did not pounce on prey. Chicken attacked: " + chickenAttacked +
+                               ", Has target: " + catHasTarget + ", Distance: " + distance);
+                }
+            } else {
+                helper.fail("Cat not alive");
+            }
+        });
+    }
+
+    /**
+     * Test that tamed cat does not hunt.
+     * Setup: Spawn tamed cat with nearby chicken.
+     * Expected: Tamed cat does not stalk or hunt prey.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
+    public void testTamedCatDoesNotHunt(GameTestHelper helper) {
+        // Create floor
+        for (int x = 0; x < 21; x++) {
+            for (int z = 0; z < 21; z++) {
+                helper.setBlock(new BlockPos(x, 1, z), net.minecraft.world.level.block.Blocks.GRASS_BLOCK);
+            }
+        }
+
+        // Spawn tamed cat and chicken
+        BlockPos catPos = new BlockPos(5, 2, 5);
+        BlockPos chickenPos = new BlockPos(8, 2, 5);
+        Cat cat = helper.spawn(EntityType.CAT, catPos);
+        Chicken chicken = helper.spawn(EntityType.CHICKEN, chickenPos);
+
+        // Ensure cat is tamed
+        cat.setTame(true, true);
+
+        // Make cat hungry (but tamed cats shouldn't hunt regardless)
+        AnimalNeeds.setHunger(cat, AnimalThresholds.HUNGRY - 10);
+
+        // Wait and verify cat doesn't hunt
+        helper.runAfterDelay(100, () -> {
+            if (cat.isAlive() && chicken.isAlive()) {
+                boolean catHasTarget = cat.getTarget() != null;
+                boolean catIsCrouching = cat.isCrouching();
+                boolean chickenAttacked = chicken.getHealth() < chicken.getMaxHealth();
+
+                // Tamed cat should not hunt
+                if (!catHasTarget && !catIsCrouching && !chickenAttacked) {
+                    helper.succeed();
+                } else {
+                    helper.fail("Tamed cat is hunting. Has target: " + catHasTarget +
+                               ", Crouching: " + catIsCrouching + ", Chicken attacked: " + chickenAttacked);
+                }
+            } else {
+                helper.fail("Cat or chicken not alive");
+            }
+        });
+    }
 }

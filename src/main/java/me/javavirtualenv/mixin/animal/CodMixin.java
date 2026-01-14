@@ -1,6 +1,7 @@
 package me.javavirtualenv.mixin.animal;
 
 import me.javavirtualenv.behavior.core.AnimalThresholds;
+import me.javavirtualenv.behavior.core.FlashExpansionFleeGoal;
 import me.javavirtualenv.behavior.core.FleeFromPredatorGoal;
 import me.javavirtualenv.behavior.core.HerdCohesionGoal;
 import me.javavirtualenv.mixin.MobAccessor;
@@ -17,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * Mixin that registers ecology-based goals for Cod.
  * Cod are schooling fish that flee from aquatic predators.
- * They use herd cohesion to stay together in schools.
+ * They use herd cohesion to stay together in schools and flash expansion to escape threats.
  */
 @Mixin(Cod.class)
 public abstract class CodMixin {
@@ -29,6 +30,13 @@ public abstract class CodMixin {
     private void betterEcology$init(EntityType<?> entityType, Level level, CallbackInfo ci) {
         Cod cod = (Cod) (Object) this;
         var goalSelector = ((MobAccessor) cod).getGoalSelector();
+
+        // Priority 1: Flash expansion flee (coordinated school scatter when attacked)
+        // When one fish is hurt, the entire school bursts away in a coordinated panic response
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_FLEE,
+            new FlashExpansionFleeGoal(cod, Cod.class)
+        );
 
         // Priority 1: Flee from predators (dolphins, axolotls)
         // Cod flee from aquatic predators

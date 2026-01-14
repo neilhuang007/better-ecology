@@ -1,6 +1,7 @@
 package me.javavirtualenv.mixin.animal;
 
 import me.javavirtualenv.behavior.core.AnimalThresholds;
+import me.javavirtualenv.behavior.core.FlashExpansionFleeGoal;
 import me.javavirtualenv.behavior.core.FleeFromPredatorGoal;
 import me.javavirtualenv.behavior.core.HerdCohesionGoal;
 import me.javavirtualenv.mixin.MobAccessor;
@@ -16,7 +17,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Mixin that registers ecology-based goals for TropicalFish.
- * Tropical fish are reef-dwelling schooling fish that flee from predators.
+ * Tropical fish are reef-dwelling schooling fish that flee from predators
+ * and use flash expansion to rapidly scatter when attacked.
  */
 @Mixin(TropicalFish.class)
 public abstract class TropicalFishMixin {
@@ -28,6 +30,13 @@ public abstract class TropicalFishMixin {
     private void betterEcology$init(EntityType<?> entityType, Level level, CallbackInfo ci) {
         TropicalFish tropicalFish = (TropicalFish) (Object) this;
         var goalSelector = ((MobAccessor) tropicalFish).getGoalSelector();
+
+        // Priority 1: Flash expansion flee (coordinated school scatter when attacked)
+        // When one fish is hurt, the entire school bursts away in a coordinated panic response
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_FLEE,
+            new FlashExpansionFleeGoal(tropicalFish, TropicalFish.class)
+        );
 
         // Priority 1: Flee from predators (axolotls and pufferfish)
         // Tropical fish are prey for these aquatic predators

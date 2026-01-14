@@ -4,6 +4,7 @@ import me.javavirtualenv.behavior.core.AnimalThresholds;
 import me.javavirtualenv.behavior.core.BreedingBehaviorGoal;
 import me.javavirtualenv.behavior.core.FleeFromPredatorGoal;
 import me.javavirtualenv.behavior.core.FollowParentGoal;
+import me.javavirtualenv.behavior.core.GoatClimbingExplorationGoal;
 import me.javavirtualenv.behavior.core.HerdCohesionGoal;
 import me.javavirtualenv.behavior.core.MotherProtectBabyGoal;
 import me.javavirtualenv.behavior.core.SeekFoodGoal;
@@ -22,8 +23,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * Mixin that registers ecology-based goals for Goat.
  * Goats are mountain-dwelling herbivores that graze, flee from predators,
- * and exhibit strong herd cohesion. They are known for ramming threats
- * and agile climbing abilities.
+ * exhibit strong herd cohesion, and are exceptional climbers that seek
+ * elevated positions for predator detection and accessing browse vegetation.
  */
 @Mixin(Goat.class)
 public abstract class GoatMixin {
@@ -94,6 +95,12 @@ public abstract class GoatMixin {
         goalSelector.addGoal(
             AnimalThresholds.PRIORITY_IDLE,
             new BreedingBehaviorGoal(goat, 1.0)
+        );
+
+        // Priority 6: Climbing exploration - seek elevated positions for lookout
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_IDLE,
+            new GoatClimbingExplorationGoal(goat, 1.0)
         );
     }
 

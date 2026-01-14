@@ -3,6 +3,8 @@ package me.javavirtualenv.mixin.animal;
 import me.javavirtualenv.behavior.core.AnimalThresholds;
 import me.javavirtualenv.behavior.core.FleeFromPredatorGoal;
 import me.javavirtualenv.behavior.core.HerdCohesionGoal;
+import me.javavirtualenv.behavior.core.ParrotCanopyPerchingGoal;
+import me.javavirtualenv.behavior.core.ParrotContactCallingGoal;
 import me.javavirtualenv.behavior.core.SeekFoodGoal;
 import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.world.entity.animal.Cat;
@@ -17,8 +19,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Mixin that registers ecology-based goals for Parrot.
- * Parrots are social birds that flock together and flee from predators.
- * They seek seeds for food and are wary of cats and ocelots.
+ * Parrots are social birds that flock together, communicate via contact calls,
+ * perch in tree canopies, seek seeds for food, and flee from predators.
  */
 @Mixin(Parrot.class)
 public abstract class ParrotMixin {
@@ -62,6 +64,20 @@ public abstract class ParrotMixin {
         goalSelector.addGoal(
             AnimalThresholds.PRIORITY_SOCIAL,
             new HerdCohesionGoal(parrot, Parrot.class)
+        );
+
+        // Priority 6: Contact calling for flock cohesion
+        // Parrots emit contact calls to maintain communication with flock members
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_IDLE,
+            new ParrotContactCallingGoal(parrot)
+        );
+
+        // Priority 7: Seek canopy perches
+        // Parrots prefer high tree positions for safety and visibility
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_IDLE + 1,
+            new ParrotCanopyPerchingGoal(parrot, 1.0)
         );
     }
 

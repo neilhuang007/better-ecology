@@ -4,6 +4,7 @@ import me.javavirtualenv.behavior.core.AnimalThresholds;
 import me.javavirtualenv.behavior.core.HuntPreyGoal;
 import me.javavirtualenv.behavior.core.SeekWaterGoal;
 import me.javavirtualenv.behavior.core.WolfPackData;
+import me.javavirtualenv.behavior.core.WolfPackHuntCoordinationGoal;
 import me.javavirtualenv.behavior.core.WolfPickupMeatGoal;
 import me.javavirtualenv.behavior.core.WolfShareFoodGoal;
 import me.javavirtualenv.mixin.MobAccessor;
@@ -60,7 +61,13 @@ public abstract class WolfMixin {
             new WolfPickupMeatGoal(wolf)
         );
 
-        // Priority 4: Hunt prey when hungry and no meat items available
+        // Priority 4: Pack hunt coordination (for 3+ wolves hunting large prey)
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_HUNT,
+            new WolfPackHuntCoordinationGoal(wolf)
+        );
+
+        // Priority 4: Hunt prey when hungry and no meat items available (solo hunting)
         goalSelector.addGoal(
             AnimalThresholds.PRIORITY_HUNT,
             new HuntPreyGoal(

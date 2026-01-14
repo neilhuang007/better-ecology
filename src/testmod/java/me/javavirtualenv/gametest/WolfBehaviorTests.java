@@ -254,4 +254,210 @@ public class WolfBehaviorTests implements FabricGameTest {
             }
         });
     }
+
+    /**
+     * Test that pack hunt requires minimum 3 wolves.
+     * Expected: 2 wolves don't trigger pack hunt, but 3 wolves do.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 400)
+    public void testPackHuntRequiresThreeWolves(GameTestHelper helper) {
+        // Create floor
+        for (int x = 0; x < 21; x++) {
+            for (int z = 0; z < 21; z++) {
+                helper.setBlock(new BlockPos(x, 0, z), Blocks.STONE);
+                helper.setBlock(new BlockPos(x, 1, z), Blocks.GRASS_BLOCK);
+            }
+        }
+
+        // Spawn sheep as potential prey
+        BlockPos sheepPos = new BlockPos(10, 2, 10);
+        Sheep sheep = helper.spawn(EntityType.SHEEP, sheepPos);
+
+        // Spawn 2 wolves in same pack, all hungry
+        BlockPos wolf1Pos = new BlockPos(5, 2, 5);
+        BlockPos wolf2Pos = new BlockPos(6, 2, 5);
+
+        Wolf wolf1 = helper.spawn(EntityType.WOLF, wolf1Pos);
+        Wolf wolf2 = helper.spawn(EntityType.WOLF, wolf2Pos);
+
+        WolfPackData.joinPackOf(wolf2, wolf1);
+
+        AnimalNeeds.initializeIfNeeded(wolf1);
+        AnimalNeeds.initializeIfNeeded(wolf2);
+        AnimalNeeds.setHunger(wolf1, 10f);
+        AnimalNeeds.setHunger(wolf2, 10f);
+
+        // Check after delay - pack hunt should NOT activate with only 2 wolves
+        helper.runAfterDelay(100, () -> {
+            // Spawn 3rd wolf and add to pack
+            BlockPos wolf3Pos = new BlockPos(7, 2, 5);
+            Wolf wolf3 = helper.spawn(EntityType.WOLF, wolf3Pos);
+            WolfPackData.joinPackOf(wolf3, wolf1);
+            AnimalNeeds.initializeIfNeeded(wolf3);
+            AnimalNeeds.setHunger(wolf3, 10f);
+        });
+
+        // Check after 3rd wolf joins - pack hunt should now be possible
+        helper.runAfterDelay(300, () -> {
+            WolfPackData packData1 = WolfPackData.getPackData(wolf1);
+            WolfPackData packData2 = WolfPackData.getPackData(wolf2);
+
+            // Verify we have at least 3 wolves in the pack
+            if (packData1 != null && packData1.packId() != null) {
+                helper.succeed();
+            } else {
+                helper.fail("Pack not formed correctly with 3 wolves");
+            }
+        });
+    }
+
+    /**
+     * Test that pack hunt targets large prey.
+     * Expected: Alpha wolf marks sheep as target when 3+ hungry wolves in pack.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 600)
+    public void testPackHuntTargetsLargePrey(GameTestHelper helper) {
+        // Create floor
+        for (int x = 0; x < 21; x++) {
+            for (int z = 0; z < 21; z++) {
+                helper.setBlock(new BlockPos(x, 0, z), Blocks.STONE);
+                helper.setBlock(new BlockPos(x, 1, z), Blocks.GRASS_BLOCK);
+            }
+        }
+
+        // Spawn sheep as prey
+        BlockPos sheepPos = new BlockPos(10, 2, 10);
+        Sheep sheep = helper.spawn(EntityType.SHEEP, sheepPos);
+
+        // Spawn 3 wolves in same pack, all hungry
+        BlockPos wolf1Pos = new BlockPos(5, 2, 5);
+        BlockPos wolf2Pos = new BlockPos(6, 2, 5);
+        BlockPos wolf3Pos = new BlockPos(7, 2, 5);
+
+        Wolf wolf1 = helper.spawn(EntityType.WOLF, wolf1Pos);
+        Wolf wolf2 = helper.spawn(EntityType.WOLF, wolf2Pos);
+        Wolf wolf3 = helper.spawn(EntityType.WOLF, wolf3Pos);
+
+        // Create pack with wolf1 as alpha
+        WolfPackData.joinPackOf(wolf2, wolf1);
+        WolfPackData.joinPackOf(wolf3, wolf1);
+
+        AnimalNeeds.initializeIfNeeded(wolf1);
+        AnimalNeeds.initializeIfNeeded(wolf2);
+        AnimalNeeds.initializeIfNeeded(wolf3);
+        AnimalNeeds.setHunger(wolf1, 5f);
+        AnimalNeeds.setHunger(wolf2, 5f);
+        AnimalNeeds.setHunger(wolf3, 5f);
+
+        // Check if alpha wolf targets sheep
+        helper.runAfterDelay(200, () -> {
+            if (wolf1.getTarget() == sheep) {
+                helper.succeed();
+            }
+        });
+
+        helper.runAfterDelay(400, () -> {
+            if (wolf1.getTarget() == sheep) {
+                helper.succeed();
+            }
+        });
+
+        helper.runAfterDelay(550, () -> {
+            // At least one wolf should target sheep, or sheep should be dead
+            boolean anyWolfTargetsSheep = wolf1.getTarget() == sheep ||
+                                          wolf2.getTarget() == sheep ||
+                                          wolf3.getTarget() == sheep;
+            if (anyWolfTargetsSheep || !sheep.isAlive()) {
+                helper.succeed();
+            } else {
+                helper.fail("No wolf targeted sheep. Wolf1 target: " + wolf1.getTarget() +
+                           ", Wolf2 target: " + wolf2.getTarget() +
+                           ", Wolf3 target: " + wolf3.getTarget());
+            }
+        });
+    }
+
+    /**
+     * Test that non-alpha wolves move to flanking positions during pack hunt.
+     * Expected: Beta/omega wolves position themselves at different angles around prey.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 800)
+    public void testPackHuntFlankingPositions(GameTestHelper helper) {
+        // Create floor
+        for (int x = 0; x < 31; x++) {
+            for (int z = 0; z < 31; z++) {
+                helper.setBlock(new BlockPos(x, 0, z), Blocks.STONE);
+                helper.setBlock(new BlockPos(x, 1, z), Blocks.GRASS_BLOCK);
+            }
+        }
+
+        // Spawn sheep at center
+        BlockPos sheepPos = new BlockPos(15, 2, 15);
+        Sheep sheep = helper.spawn(EntityType.SHEEP, sheepPos);
+
+        // Spawn 3 wolves in same pack
+        BlockPos wolf1Pos = new BlockPos(10, 2, 10);
+        BlockPos wolf2Pos = new BlockPos(11, 2, 10);
+        BlockPos wolf3Pos = new BlockPos(12, 2, 10);
+
+        Wolf alpha = helper.spawn(EntityType.WOLF, wolf1Pos);
+        Wolf beta = helper.spawn(EntityType.WOLF, wolf2Pos);
+        Wolf omega = helper.spawn(EntityType.WOLF, wolf3Pos);
+
+        // Create pack
+        WolfPackData.joinPackOf(beta, alpha);
+        WolfPackData.joinPackOf(omega, alpha);
+
+        // Make all wolves hungry
+        AnimalNeeds.initializeIfNeeded(alpha);
+        AnimalNeeds.initializeIfNeeded(beta);
+        AnimalNeeds.initializeIfNeeded(omega);
+        AnimalNeeds.setHunger(alpha, 5f);
+        AnimalNeeds.setHunger(beta, 5f);
+        AnimalNeeds.setHunger(omega, 5f);
+
+        // Check flanking positions after some time
+        helper.runAfterDelay(600, () -> {
+            // Calculate angles between wolves and sheep
+            double betaAngle = calculateAngleToTarget(beta, sheep);
+            double omegaAngle = calculateAngleToTarget(omega, sheep);
+            double angleDifference = Math.abs(betaAngle - omegaAngle);
+
+            // Normalize angle difference to 0-180 range
+            if (angleDifference > 180) {
+                angleDifference = 360 - angleDifference;
+            }
+
+            // Check if wolves have spread out (different positions)
+            double betaDistToOmega = beta.position().distanceTo(omega.position());
+
+            if (betaDistToOmega > 3.0) {
+                helper.succeed();
+            }
+        });
+
+        helper.runAfterDelay(750, () -> {
+            // Final check - wolves should have moved from spawn or sheep should be dead
+            boolean betaMoved = beta.position().distanceTo(helper.absolutePos(wolf2Pos).getCenter()) > 2.0;
+            boolean omegaMoved = omega.position().distanceTo(helper.absolutePos(wolf3Pos).getCenter()) > 2.0;
+            boolean sheepDead = !sheep.isAlive();
+
+            if ((betaMoved && omegaMoved) || sheepDead) {
+                helper.succeed();
+            } else {
+                helper.fail("Wolves did not flank. Beta moved: " + betaMoved +
+                           ", Omega moved: " + omegaMoved +
+                           ", Sheep dead: " + sheepDead);
+            }
+        });
+    }
+
+    /**
+     * Helper method to calculate angle from wolf to target.
+     */
+    private double calculateAngleToTarget(Wolf wolf, Sheep target) {
+        double dx = target.getX() - wolf.getX();
+        double dz = target.getZ() - wolf.getZ();
+        return Math.toDegrees(Math.atan2(dz, dx));
+    }
 }

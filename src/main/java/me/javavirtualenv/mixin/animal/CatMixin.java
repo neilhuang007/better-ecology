@@ -1,6 +1,8 @@
 package me.javavirtualenv.mixin.animal;
 
 import me.javavirtualenv.behavior.core.AnimalThresholds;
+import me.javavirtualenv.behavior.core.CatAmbushFromHidingGoal;
+import me.javavirtualenv.behavior.core.CatStalkingAmbushGoal;
 import me.javavirtualenv.behavior.core.FollowParentGoal;
 import me.javavirtualenv.behavior.core.HuntPreyGoal;
 import me.javavirtualenv.behavior.core.MotherProtectBabyGoal;
@@ -45,7 +47,27 @@ public abstract class CatMixin {
             )
         );
 
-        // Priority 4: Hunt small prey when hungry
+        // Priority 4: Stalk and pounce hunting behavior
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_HUNT,
+            new CatStalkingAmbushGoal(
+                cat,
+                Chicken.class,
+                Rabbit.class
+            )
+        );
+
+        // Priority 4: Ambush from hiding behavior
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_HUNT,
+            new CatAmbushFromHidingGoal(
+                cat,
+                Chicken.class,
+                Rabbit.class
+            )
+        );
+
+        // Priority 4: Hunt small prey when hungry (fallback)
         goalSelector.addGoal(
             AnimalThresholds.PRIORITY_HUNT,
             new HuntPreyGoal(

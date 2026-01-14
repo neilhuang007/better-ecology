@@ -1,6 +1,8 @@
 package me.javavirtualenv.mixin.animal;
 
 import me.javavirtualenv.behavior.core.AnimalThresholds;
+import me.javavirtualenv.behavior.core.CatAmbushFromHidingGoal;
+import me.javavirtualenv.behavior.core.CatStalkingAmbushGoal;
 import me.javavirtualenv.behavior.core.FleeFromPredatorGoal;
 import me.javavirtualenv.behavior.core.FollowParentGoal;
 import me.javavirtualenv.behavior.core.HuntPreyGoal;
@@ -63,7 +65,25 @@ public abstract class OcelotMixin {
             )
         );
 
-        // Priority 4: Hunt chickens when hungry
+        // Priority 4: Stalk and pounce hunting behavior
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_HUNT,
+            new CatStalkingAmbushGoal(
+                ocelot,
+                Chicken.class
+            )
+        );
+
+        // Priority 4: Ambush from hiding behavior
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_HUNT,
+            new CatAmbushFromHidingGoal(
+                ocelot,
+                Chicken.class
+            )
+        );
+
+        // Priority 4: Hunt chickens when hungry (fallback)
         goalSelector.addGoal(
             AnimalThresholds.PRIORITY_HUNT,
             new HuntPreyGoal(

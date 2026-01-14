@@ -64,6 +64,8 @@ public class RabbitZigzagFleeGoal extends FleeFromPredatorGoal {
         LOGGER.debug("{} started zigzag fleeing with initial direction {}",
                 mob.getName().getString(),
                 zigzagDirection);
+
+        AnimalAnimations.playStartledJump(this.mob);
     }
 
     @Override
@@ -86,6 +88,10 @@ public class RabbitZigzagFleeGoal extends FleeFromPredatorGoal {
 
         double speedModifier = calculateSpeedModifier(distanceToPredator);
         this.mob.getNavigation().setSpeedModifier(speedModifier);
+
+        AnimalAnimations.spawnFleeingDustParticles(this.mob, this.ticksSinceFlee);
+        AnimalAnimations.playDistressSound(this.mob, this.ticksSinceFlee);
+        AnimalAnimations.applyFleeingLookBack(this.mob, this.nearestPredator, this.ticksSinceFlee);
     }
 
     /**

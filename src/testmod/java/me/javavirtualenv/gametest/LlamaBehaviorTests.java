@@ -263,4 +263,129 @@ public class LlamaBehaviorTests implements FabricGameTest {
             }
         });
     }
+
+    /**
+     * Test that llama spits at wolf near bonded sheep.
+     * Setup: Spawn llama, sheep, and wolf in close proximity.
+     * Expected: Llama targets the wolf to protect the sheep.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
+    public void testLlamaSpitsAtWolfNearSheep(GameTestHelper helper) {
+        // Create floor for pathfinding
+        for (int x = 0; x < 21; x++) {
+            for (int z = 0; z < 21; z++) {
+                helper.setBlock(new BlockPos(x, 1, z), net.minecraft.world.level.block.Blocks.GRASS_BLOCK);
+            }
+        }
+
+        // Spawn llama, sheep, and wolf
+        BlockPos llamaPos = new BlockPos(10, 2, 10);
+        BlockPos sheepPos = new BlockPos(12, 2, 10);
+        BlockPos wolfPos = new BlockPos(15, 2, 10);
+
+        Llama llama = helper.spawn(EntityType.LLAMA, llamaPos);
+        helper.spawn(EntityType.SHEEP, sheepPos);
+        Wolf wolf = helper.spawn(EntityType.WOLF, wolfPos);
+
+        // Wait for llama to detect threat and target wolf
+        helper.runAfterDelay(100, () -> {
+            if (llama.isAlive() && wolf.isAlive()) {
+                // Llama should target the wolf as a threat to the sheep
+                if (llama.getTarget() == wolf) {
+                    helper.succeed();
+                } else {
+                    helper.fail("Llama did not target wolf. Target: " + llama.getTarget());
+                }
+            } else {
+                helper.fail("Llama or wolf not alive");
+            }
+        });
+    }
+
+    /**
+     * Test that llama guards nearby sheep herd.
+     * Setup: Spawn llama near a group of sheep.
+     * Expected: Llama stays close to sheep to provide protection.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 300)
+    public void testLlamaGuardsNearbySheep(GameTestHelper helper) {
+        // Create floor for pathfinding
+        for (int x = 0; x < 21; x++) {
+            for (int z = 0; z < 21; z++) {
+                helper.setBlock(new BlockPos(x, 1, z), net.minecraft.world.level.block.Blocks.GRASS_BLOCK);
+            }
+        }
+
+        // Spawn llama and sheep herd
+        BlockPos llamaPos = new BlockPos(10, 2, 10);
+        BlockPos sheep1Pos = new BlockPos(8, 2, 8);
+        BlockPos sheep2Pos = new BlockPos(12, 2, 8);
+        BlockPos sheep3Pos = new BlockPos(10, 2, 12);
+
+        Llama llama = helper.spawn(EntityType.LLAMA, llamaPos);
+        helper.spawn(EntityType.SHEEP, sheep1Pos);
+        helper.spawn(EntityType.SHEEP, sheep2Pos);
+        helper.spawn(EntityType.SHEEP, sheep3Pos);
+
+        // Record initial position
+        BlockPos initialLlamaPos = llama.blockPosition();
+
+        // Wait and verify llama stays within guarding distance of sheep
+        helper.runAfterDelay(150, () -> {
+            if (llama.isAlive()) {
+                BlockPos currentLlamaPos = llama.blockPosition();
+                double distanceFromInitial = Math.sqrt(
+                    Math.pow(currentLlamaPos.getX() - initialLlamaPos.getX(), 2) +
+                    Math.pow(currentLlamaPos.getZ() - initialLlamaPos.getZ(), 2)
+                );
+
+                // Llama should stay within reasonable guarding distance (not wander far)
+                if (distanceFromInitial < 16.0) {
+                    helper.succeed();
+                } else {
+                    helper.fail("Llama wandered too far from sheep. Distance: " + distanceFromInitial);
+                }
+            } else {
+                helper.fail("Llama not alive");
+            }
+        });
+    }
+
+    /**
+     * Test that llama ignores peaceful mobs and doesn't spit at them.
+     * Setup: Spawn llama near cows and pigs.
+     * Expected: Llama does not target peaceful animals.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
+    public void testLlamaIgnoresPeacefulMobs(GameTestHelper helper) {
+        // Create floor for pathfinding
+        for (int x = 0; x < 21; x++) {
+            for (int z = 0; z < 21; z++) {
+                helper.setBlock(new BlockPos(x, 1, z), net.minecraft.world.level.block.Blocks.GRASS_BLOCK);
+            }
+        }
+
+        // Spawn llama with peaceful mobs nearby
+        BlockPos llamaPos = new BlockPos(10, 2, 10);
+        BlockPos cowPos = new BlockPos(12, 2, 10);
+        BlockPos pigPos = new BlockPos(10, 2, 12);
+
+        Llama llama = helper.spawn(EntityType.LLAMA, llamaPos);
+        helper.spawn(EntityType.COW, cowPos);
+        helper.spawn(EntityType.PIG, pigPos);
+
+        // Wait and verify llama does not target peaceful mobs
+        helper.runAfterDelay(100, () -> {
+            if (llama.isAlive()) {
+                // Llama should not have any target (peaceful mobs should be ignored)
+                if (llama.getTarget() == null) {
+                    helper.succeed();
+                } else {
+                    helper.fail("Llama targeted peaceful mob. Target: " + llama.getTarget());
+                }
+            } else {
+                helper.fail("Llama not alive");
+            }
+        });
+    }
 }

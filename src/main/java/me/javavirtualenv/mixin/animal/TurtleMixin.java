@@ -6,6 +6,8 @@ import me.javavirtualenv.behavior.core.FollowParentGoal;
 import me.javavirtualenv.behavior.core.MotherProtectBabyGoal;
 import me.javavirtualenv.behavior.core.SeekFoodGoal;
 import me.javavirtualenv.behavior.core.SeekWaterGoal;
+import me.javavirtualenv.behavior.core.TurtleBaskingGoal;
+import me.javavirtualenv.behavior.core.TurtleBeachNestingGoal;
 import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.world.entity.animal.Cat;
 import net.minecraft.world.entity.animal.Fox;
@@ -21,7 +23,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * Mixin that registers ecology-based goals for Turtle.
  * Turtles are aquatic animals that seek water, flee from predators,
- * and exhibit parent-offspring behaviors.
+ * exhibit parent-offspring behaviors, and demonstrate natal philopatry
+ * (returning to birth beach for nesting).
  */
 @Mixin(Turtle.class)
 public abstract class TurtleMixin {
@@ -52,6 +55,18 @@ public abstract class TurtleMixin {
         goalSelector.addGoal(
             AnimalThresholds.PRIORITY_CRITICAL,
             new MotherProtectBabyGoal(turtle, Turtle.class, 10.0, 14.0, 1.2, Fox.class, Wolf.class, Cat.class)
+        );
+
+        // Priority 3: Beach nesting behavior (natal philopatry)
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_NORMAL,
+            new TurtleBeachNestingGoal(turtle, 0.8)
+        );
+
+        // Priority 3: Basking behavior (thermoregulation)
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_NORMAL,
+            new TurtleBaskingGoal(turtle, 0.8)
         );
 
         // Priority 3: Seek water (aquatic animal)

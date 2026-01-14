@@ -238,4 +238,159 @@ public class RabbitBehaviorTests implements FabricGameTest {
             }
         });
     }
+
+    /**
+     * Test that rabbit freezes when predator is nearby.
+     * Setup: Spawn rabbit and fox at freeze distance (10-14 blocks).
+     * Expected: Rabbit initially freezes with minimal movement.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200, required = false)
+    public void testRabbitFreezesWhenPredatorNear(GameTestHelper helper) {
+        // Create floor for pathfinding
+        for (int x = 0; x < 25; x++) {
+            for (int z = 0; z < 25; z++) {
+                helper.setBlock(new BlockPos(x, 1, z), net.minecraft.world.level.block.Blocks.GRASS_BLOCK);
+            }
+        }
+
+        // Spawn rabbit and fox at freeze distance (10-14 blocks)
+        // Freeze behavior activates at 10-14 block distance
+        BlockPos rabbitPos = new BlockPos(5, 2, 10);
+        BlockPos foxPos = new BlockPos(17, 2, 10);  // 12 blocks away (within freeze range)
+        Rabbit rabbit = helper.spawn(EntityType.RABBIT, rabbitPos);
+        Fox fox = helper.spawn(EntityType.FOX, foxPos);
+
+        // Record initial position
+        double initialX = rabbit.getX();
+        double initialZ = rabbit.getZ();
+
+        // Check movement after short delay during freeze period
+        // Note: 20% chance to panic instead of freeze (individual variation)
+        helper.runAfterDelay(30, () -> {
+            if (rabbit.isAlive()) {
+                double currentX = rabbit.getX();
+                double currentZ = rabbit.getZ();
+                double movement = Math.sqrt(Math.pow(currentX - initialX, 2) + Math.pow(currentZ - initialZ, 2));
+
+                // During freeze, movement should be minimal (less than 2 blocks)
+                // Allow for 20% panic chance where rabbit flees immediately
+                if (movement < 2.0 || rabbit.distanceTo(fox) > 12.0) {
+                    helper.succeed();
+                } else {
+                    helper.fail("Rabbit moved too much during freeze period: " + movement + " blocks");
+                }
+            } else {
+                helper.fail("Rabbit not alive");
+            }
+        });
+    }
+
+    /**
+     * Test that rabbit flees after freeze period.
+     * Setup: Spawn rabbit and fox at freeze distance.
+     * Expected: After freeze period, rabbit flees from predator.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 300, required = false)
+    public void testRabbitFleesAfterFreeze(GameTestHelper helper) {
+        // Create floor for pathfinding
+        for (int x = 0; x < 25; x++) {
+            for (int z = 0; z < 25; z++) {
+                helper.setBlock(new BlockPos(x, 1, z), net.minecraft.world.level.block.Blocks.GRASS_BLOCK);
+            }
+        }
+
+        // Spawn rabbit and fox at freeze distance (10-14 blocks)
+        BlockPos rabbitPos = new BlockPos(5, 2, 10);
+        BlockPos foxPos = new BlockPos(17, 2, 10);  // 12 blocks away
+        Rabbit rabbit = helper.spawn(EntityType.RABBIT, rabbitPos);
+        Fox fox = helper.spawn(EntityType.FOX, foxPos);
+
+        // Record initial position
+        double initialX = rabbit.getX();
+        double initialZ = rabbit.getZ();
+        double initialDistance = rabbit.distanceTo(fox);
+
+        // Check movement after freeze period (60-80 ticks max freeze duration)
+        helper.runAfterDelay(100, () -> {
+            if (rabbit.isAlive()) {
+                double currentX = rabbit.getX();
+                double currentZ = rabbit.getZ();
+                double movement = Math.sqrt(Math.pow(currentX - initialX, 2) + Math.pow(currentZ - initialZ, 2));
+                double currentDistance = rabbit.distanceTo(fox);
+
+                // After freeze, rabbit should have moved OR increased distance from fox
+                // Allow for panic response where rabbit might flee immediately
+                if (movement > 1.0 || currentDistance > initialDistance) {
+                    helper.succeed();
+                } else {
+                    helper.fail("Rabbit did not flee after freeze. Movement: " + movement + ", Distance change: " + (currentDistance - initialDistance));
+                }
+            } else {
+                helper.fail("Rabbit not alive");
+            }
+        });
+    }
+
+    /**
+     * Test that rabbit freeze duration is approximately 1.5-3 seconds.
+     * Setup: Spawn rabbit and fox at freeze distance.
+     * Expected: Rabbit freezes for 30-60 ticks before fleeing.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 300, required = false)
+    public void testRabbitFreezeDuration(GameTestHelper helper) {
+        // Create floor for pathfinding
+        for (int x = 0; x < 25; x++) {
+            for (int z = 0; z < 25; z++) {
+                helper.setBlock(new BlockPos(x, 1, z), net.minecraft.world.level.block.Blocks.GRASS_BLOCK);
+            }
+        }
+
+        // Spawn rabbit and fox at freeze distance (10-14 blocks)
+        BlockPos rabbitPos = new BlockPos(5, 2, 10);
+        BlockPos foxPos = new BlockPos(17, 2, 10);  // 12 blocks away
+        Rabbit rabbit = helper.spawn(EntityType.RABBIT, rabbitPos);
+        Fox fox = helper.spawn(EntityType.FOX, foxPos);
+
+        // Record initial position
+        double initialX = rabbit.getX();
+        double initialZ = rabbit.getZ();
+
+        // Check at 15 ticks (0.75 seconds) - should still be freezing (min freeze is 30 ticks)
+        helper.runAfterDelay(15, () -> {
+            if (!rabbit.isAlive()) {
+                helper.fail("Rabbit not alive at 15 ticks");
+                return;
+            }
+
+            double x15 = rabbit.getX();
+            double z15 = rabbit.getZ();
+            double movement15 = Math.sqrt(Math.pow(x15 - initialX, 2) + Math.pow(z15 - initialZ, 2));
+
+            // Should still be frozen or panicked at 15 ticks
+            // Allow for 20% panic chance where rabbit flees immediately
+            if (movement15 >= 3.0 && rabbit.distanceTo(fox) <= 12.0) {
+                helper.fail("Rabbit moved too much too early at 15 ticks: " + movement15 + " blocks");
+                return;
+            }
+
+            // Check at 80 ticks (4 seconds) - should have started fleeing after max freeze duration (60 ticks)
+            helper.runAfterDelay(65, () -> {
+                if (rabbit.isAlive()) {
+                    double x80 = rabbit.getX();
+                    double z80 = rabbit.getZ();
+                    double movement80 = Math.sqrt(Math.pow(x80 - initialX, 2) + Math.pow(z80 - initialZ, 2));
+
+                    // Should have started fleeing by 80 ticks (after max 60 tick freeze)
+                    // OR if panic occurred, would have fled much earlier
+                    if (movement80 > 1.0 || rabbit.distanceTo(fox) > 12.0) {
+                        helper.succeed();
+                    } else {
+                        helper.fail("Rabbit did not flee after freeze period. Movement: " + movement80 + " blocks");
+                    }
+                } else {
+                    helper.fail("Rabbit not alive at 80 ticks");
+                }
+            });
+        });
+    }
 }

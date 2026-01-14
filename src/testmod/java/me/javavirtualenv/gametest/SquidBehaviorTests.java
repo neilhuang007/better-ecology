@@ -5,9 +5,11 @@ import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Squid;
 import net.minecraft.world.entity.animal.Dolphin;
+import net.minecraft.world.entity.monster.Guardian;
 import net.minecraft.world.level.block.Blocks;
 
 /**
@@ -134,6 +136,143 @@ public class SquidBehaviorTests implements FabricGameTest {
                 helper.fail("Squid survival test failed. Alive: " + squid.isAlive()
                     + ", in water: " + squid.isInWater());
             }
+        });
+    }
+
+    /**
+     * Test that squid ink cloud defense is triggered by low health.
+     * Setup: Spawn squid in water, damage it to below 50% health.
+     * Expected: Squid receives Speed II effect for escape.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
+    public void testSquidInkCloudTriggeredByLowHealth(GameTestHelper helper) {
+        // Create water environment
+        BlockPos waterStart = new BlockPos(2, 2, 2);
+        BlockPos waterEnd = new BlockPos(8, 5, 8);
+        for (int x = waterStart.getX(); x <= waterEnd.getX(); x++) {
+            for (int y = waterStart.getY(); y <= waterEnd.getY(); y++) {
+                for (int z = waterStart.getZ(); z <= waterEnd.getZ(); z++) {
+                    helper.setBlock(new BlockPos(x, y, z), Blocks.WATER);
+                }
+            }
+        }
+
+        // Spawn squid in water
+        BlockPos squidPos = new BlockPos(5, 3, 5);
+        Squid squid = helper.spawn(EntityType.SQUID, squidPos);
+
+        // Wait for squid to stabilize
+        helper.runAfterDelay(20, () -> {
+            // Damage squid to below 50% health (squid max health is 10)
+            float damageAmount = squid.getMaxHealth() * 0.6f; // 60% damage to get below 50%
+            squid.hurt(helper.getLevel().damageSources().generic(), damageAmount);
+
+            // Verify speed boost is applied after ink cloud defense triggers
+            helper.runAfterDelay(40, () -> {
+                boolean hasSpeedBoost = squid.hasEffect(MobEffects.MOVEMENT_SPEED);
+                float currentHealth = squid.getHealth();
+                float maxHealth = squid.getMaxHealth();
+                boolean isLowHealth = currentHealth < (maxHealth * 0.5f);
+
+                if (squid.isAlive() && isLowHealth && hasSpeedBoost) {
+                    helper.succeed();
+                } else {
+                    helper.fail("Squid ink cloud not triggered by low health. Alive: " + squid.isAlive()
+                        + ", health: " + currentHealth + "/" + maxHealth
+                        + ", has speed: " + hasSpeedBoost);
+                }
+            });
+        });
+    }
+
+    /**
+     * Test that squid ink cloud defense is triggered by nearby predator.
+     * Setup: Spawn squid in water, spawn guardian nearby (predator).
+     * Expected: Squid activates ink cloud defense when guardian approaches.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
+    public void testSquidInkCloudTriggeredByPredator(GameTestHelper helper) {
+        // Create water environment
+        BlockPos waterStart = new BlockPos(2, 2, 2);
+        BlockPos waterEnd = new BlockPos(8, 5, 8);
+        for (int x = waterStart.getX(); x <= waterEnd.getX(); x++) {
+            for (int y = waterStart.getY(); y <= waterEnd.getY(); y++) {
+                for (int z = waterStart.getZ(); z <= waterEnd.getZ(); z++) {
+                    helper.setBlock(new BlockPos(x, y, z), Blocks.WATER);
+                }
+            }
+        }
+
+        // Spawn squid in water
+        BlockPos squidPos = new BlockPos(5, 3, 5);
+        Squid squid = helper.spawn(EntityType.SQUID, squidPos);
+
+        // Spawn guardian nearby (within 4 blocks to trigger defense)
+        BlockPos guardianPos = new BlockPos(6, 3, 5);
+        Guardian guardian = helper.spawn(EntityType.GUARDIAN, guardianPos);
+
+        // Verify ink cloud defense is activated
+        helper.runAfterDelay(100, () -> {
+            boolean hasSpeedBoost = squid.hasEffect(MobEffects.MOVEMENT_SPEED);
+            double distanceToPredator = squid.distanceTo(guardian);
+
+            if (squid.isAlive() && distanceToPredator <= 4.5 && hasSpeedBoost) {
+                helper.succeed();
+            } else {
+                helper.fail("Squid ink cloud not triggered by predator. Distance: " + distanceToPredator
+                    + ", has speed: " + hasSpeedBoost
+                    + ", squid alive: " + squid.isAlive());
+            }
+        });
+    }
+
+    /**
+     * Test that squid ink cloud applies blindness effect to nearby entities.
+     * Setup: Spawn squid and guardian in water, damage squid to trigger defense.
+     * Expected: Guardian receives Blindness effect when ink cloud is deployed.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
+    public void testSquidInkCloudBlindnessEffect(GameTestHelper helper) {
+        // Create water environment
+        BlockPos waterStart = new BlockPos(2, 2, 2);
+        BlockPos waterEnd = new BlockPos(8, 5, 8);
+        for (int x = waterStart.getX(); x <= waterEnd.getX(); x++) {
+            for (int y = waterStart.getY(); y <= waterEnd.getY(); y++) {
+                for (int z = waterStart.getZ(); z <= waterEnd.getZ(); z++) {
+                    helper.setBlock(new BlockPos(x, y, z), Blocks.WATER);
+                }
+            }
+        }
+
+        // Spawn squid and guardian close together
+        BlockPos squidPos = new BlockPos(5, 3, 5);
+        BlockPos guardianPos = new BlockPos(6, 3, 5);
+        Squid squid = helper.spawn(EntityType.SQUID, squidPos);
+        Guardian guardian = helper.spawn(EntityType.GUARDIAN, guardianPos);
+
+        // Wait for entities to stabilize
+        helper.runAfterDelay(20, () -> {
+            // Damage squid to trigger ink cloud defense
+            float damageAmount = squid.getMaxHealth() * 0.6f;
+            squid.hurt(helper.getLevel().damageSources().generic(), damageAmount);
+
+            // Verify blindness effect is applied to nearby guardian
+            helper.runAfterDelay(40, () -> {
+                boolean guardianHasBlindness = guardian.hasEffect(MobEffects.BLINDNESS);
+                boolean squidHasSpeedBoost = squid.hasEffect(MobEffects.MOVEMENT_SPEED);
+                double distance = squid.distanceTo(guardian);
+
+                if (squid.isAlive() && guardian.isAlive() && distance <= 3.0
+                    && guardianHasBlindness && squidHasSpeedBoost) {
+                    helper.succeed();
+                } else {
+                    helper.fail("Squid ink cloud blindness test failed. Distance: " + distance
+                        + ", guardian blindness: " + guardianHasBlindness
+                        + ", squid speed: " + squidHasSpeedBoost
+                        + ", squid alive: " + squid.isAlive()
+                        + ", guardian alive: " + guardian.isAlive());
+                }
+            });
         });
     }
 }

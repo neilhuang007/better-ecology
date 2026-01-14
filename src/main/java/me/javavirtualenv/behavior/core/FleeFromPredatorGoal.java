@@ -40,6 +40,7 @@ public class FleeFromPredatorGoal extends Goal {
     protected LivingEntity nearestPredator;
     @Nullable
     protected Path escapePath;
+    protected int fleeTicks;
 
     /**
      * Creates a new flee from predator goal.
@@ -134,12 +135,16 @@ public class FleeFromPredatorGoal extends Goal {
 
     @Override
     public void start() {
+        this.fleeTicks = 0;
+
         if (this.escapePath != null) {
             this.pathNav.moveTo(this.escapePath, this.speedModifier);
             LOGGER.debug("{} started fleeing at {}x speed",
                     mob.getName().getString(),
                     speedModifier);
         }
+
+        AnimalAnimations.playStartledJump(this.mob);
     }
 
     @Override
@@ -156,6 +161,7 @@ public class FleeFromPredatorGoal extends Goal {
         }
         this.nearestPredator = null;
         this.escapePath = null;
+        this.fleeTicks = 0;
     }
 
     @Override
@@ -163,6 +169,8 @@ public class FleeFromPredatorGoal extends Goal {
         if (this.nearestPredator == null) {
             return;
         }
+
+        this.fleeTicks++;
 
         double distanceSq = this.mob.distanceToSqr(this.nearestPredator);
         double criticalDistanceSq = 49.0;
@@ -172,6 +180,10 @@ public class FleeFromPredatorGoal extends Goal {
         } else {
             this.mob.getNavigation().setSpeedModifier(this.speedModifier);
         }
+
+        AnimalAnimations.spawnFleeingDustParticles(this.mob, this.fleeTicks);
+        AnimalAnimations.playDistressSound(this.mob, this.fleeTicks);
+        AnimalAnimations.applyFleeingLookBack(this.mob, this.nearestPredator, this.fleeTicks);
 
         // Recalculate escape path if navigation stopped or stuck
         if (this.pathNav.isDone() && this.mob.distanceTo(this.nearestPredator) < this.fleeDistance) {

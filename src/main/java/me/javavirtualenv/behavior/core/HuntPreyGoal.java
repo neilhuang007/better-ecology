@@ -43,6 +43,8 @@ public class HuntPreyGoal extends Goal {
     private static final double FOOD_ITEM_CHECK_RADIUS = 16.0;
     private static final double ATTACK_DISTANCE_SQUARED = 4.0;  // 2 blocks
     private static final int ATTACK_COOLDOWN_TICKS = 20;
+    private static final int RETARGET_CHECK_INTERVAL = 20;  // Check for better targets every second
+    private static final double RETARGET_DISTANCE_THRESHOLD = 0.5;  // Retarget if new prey is significantly closer (50% of current distance)
 
     private final PathfinderMob mob;
     private final double speedModifier;
@@ -54,6 +56,7 @@ public class HuntPreyGoal extends Goal {
     private int huntTicks;
     private int pathRecalculationTimer;
     private int attackCooldown;
+    private int retargetTimer;
     private boolean preyWasKilled;
 
     /**
@@ -74,6 +77,7 @@ public class HuntPreyGoal extends Goal {
         this.huntTicks = 0;
         this.pathRecalculationTimer = 0;
         this.attackCooldown = 0;
+        this.retargetTimer = 0;
         this.preyWasKilled = false;
 
         this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.TARGET, Goal.Flag.LOOK));
@@ -145,6 +149,13 @@ public class HuntPreyGoal extends Goal {
             return false;
         }
 
+        // Check if prey is still reachable (may have climbed to unreachable position)
+        if (!canReachPrey(this.targetPrey)) {
+            LOGGER.debug("{} prey {} is no longer reachable",
+                this.mob.getName().getString(), this.targetPrey.getName().getString());
+            return false;
+        }
+
         return true;
     }
 
@@ -154,6 +165,7 @@ public class HuntPreyGoal extends Goal {
             this.targetPrey != null ? this.targetPrey.getName().getString() : "null");
         this.huntTicks = 0;
         this.pathRecalculationTimer = 0;
+        this.retargetTimer = 0;
         this.preyWasKilled = false;
 
         if (this.targetPrey != null) {
@@ -170,6 +182,7 @@ public class HuntPreyGoal extends Goal {
         this.mob.getNavigation().stop();
         this.huntTicks = 0;
         this.pathRecalculationTimer = 0;
+        this.retargetTimer = 0;
     }
 
     @Override
@@ -181,6 +194,7 @@ public class HuntPreyGoal extends Goal {
     public void tick() {
         this.huntTicks++;
         this.pathRecalculationTimer++;
+        this.retargetTimer++;
 
         if (this.targetPrey == null) {
             return;
@@ -193,16 +207,31 @@ public class HuntPreyGoal extends Goal {
 
         this.mob.getLookControl().setLookAt(this.targetPrey, 30.0F, 30.0F);
 
+        // Play hunting posture animation (for wolves)
+        HuntingAnimations.playHuntingPostureAnimation(this.mob, this.targetPrey, this.huntTicks);
+
         // Decrement attack cooldown
         if (this.attackCooldown > 0) {
             this.attackCooldown--;
         }
 
+        // Periodically check for better (closer) targets
+        if (this.retargetTimer >= RETARGET_CHECK_INTERVAL) {
+            this.retargetTimer = 0;
+            checkForBetterTarget();
+        }
+
         // Check if close enough to attack
         double distanceSq = this.mob.distanceToSqr(this.targetPrey);
         if (distanceSq <= ATTACK_DISTANCE_SQUARED && this.attackCooldown <= 0) {
+            // Play lunge animation before attack
+            if (this.attackCooldown == 0) {
+                HuntingAnimations.playLungeAnimation(this.mob, this.targetPrey);
+            }
+
             // Attack the prey
             this.mob.doHurtTarget(this.targetPrey);
+            HuntingAnimations.playAttackSwingAnimation(this.mob, this.targetPrey);
             this.attackCooldown = ATTACK_COOLDOWN_TICKS;
             LOGGER.debug("{} attacked {} at distance {}",
                 this.mob.getName().getString(),
@@ -215,6 +244,53 @@ public class HuntPreyGoal extends Goal {
         if (this.mob.getNavigation().isDone() || shouldRecalculatePath()) {
             pathfindToPrey();
             this.pathRecalculationTimer = 0;
+        }
+    }
+
+    /**
+     * Checks for a better (closer) target and switches if found.
+     * This allows predators to dynamically retarget to prey that spawns
+     * or moves closer to them.
+     */
+    private void checkForBetterTarget() {
+        if (this.targetPrey == null) {
+            return;
+        }
+
+        double currentDistanceSq = this.mob.distanceToSqr(this.targetPrey);
+
+        // Find all valid prey
+        AABB searchBox = this.mob.getBoundingBox().inflate(this.huntRange);
+        List<LivingEntity> potentialPrey = this.mob.level().getEntitiesOfClass(
+            LivingEntity.class, searchBox, this::isValidPrey);
+
+        // Find the closest prey
+        LivingEntity closestPrey = null;
+        double closestDistanceSq = currentDistanceSq;
+
+        for (LivingEntity prey : potentialPrey) {
+            if (prey == this.targetPrey) {
+                continue;
+            }
+            double distanceSq = this.mob.distanceToSqr(prey);
+            if (distanceSq < closestDistanceSq) {
+                closestDistanceSq = distanceSq;
+                closestPrey = prey;
+            }
+        }
+
+        // Switch to closer target if it's significantly closer (within threshold)
+        if (closestPrey != null && closestDistanceSq < currentDistanceSq * RETARGET_DISTANCE_THRESHOLD) {
+            LOGGER.debug("{} retargeting from {} (dist={}) to {} (dist={})",
+                this.mob.getName().getString(),
+                this.targetPrey.getName().getString(),
+                String.format("%.1f", Math.sqrt(currentDistanceSq)),
+                closestPrey.getName().getString(),
+                String.format("%.1f", Math.sqrt(closestDistanceSq)));
+
+            this.targetPrey = closestPrey;
+            this.mob.setTarget(closestPrey);
+            pathfindToPrey();
         }
     }
 
@@ -296,13 +372,47 @@ public class HuntPreyGoal extends Goal {
             return false;
         }
 
+        // Check if prey type is valid
+        boolean isValidType = false;
         for (Class<? extends LivingEntity> preyType : this.preyTypes) {
             if (preyType.isInstance(entity)) {
-                return true;
+                isValidType = true;
+                break;
             }
         }
 
-        return false;
+        if (!isValidType) {
+            return false;
+        }
+
+        // Check if prey is reachable (can pathfind to it)
+        // This prevents targeting prey on unreachable platforms/ledges
+        return canReachPrey(entity);
+    }
+
+    /**
+     * Checks if the predator can actually reach the prey.
+     * This prevents targeting prey that is on ledges or otherwise unreachable.
+     *
+     * @param prey the prey entity to check
+     * @return true if prey is reachable
+     */
+    private boolean canReachPrey(LivingEntity prey) {
+        // Quick check: if prey is very close, assume reachable
+        double distanceSq = this.mob.distanceToSqr(prey);
+        if (distanceSq < 64.0) {  // Within 8 blocks, assume reachable
+            return true;
+        }
+
+        // For distant prey, check if a path can be calculated
+        var path = this.mob.getNavigation().createPath(prey, 1);
+        if (path == null) {
+            // Path is null - may be too far or unreachable
+            // Allow hunting anyway if within hunting range (the mob may get closer first)
+            return distanceSq < (this.huntRange * this.huntRange);
+        }
+
+        return path.canReach();
     }
 
     /**

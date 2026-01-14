@@ -1,8 +1,11 @@
 package me.javavirtualenv.mixin.animal;
 
 import me.javavirtualenv.behavior.core.AnimalThresholds;
+import me.javavirtualenv.behavior.core.FlashExpansionFleeGoal;
 import me.javavirtualenv.behavior.core.FleeFromPredatorGoal;
 import me.javavirtualenv.behavior.core.HerdCohesionGoal;
+import me.javavirtualenv.behavior.core.SalmonUpstreamMigrationGoal;
+import me.javavirtualenv.behavior.core.SalmonWaterfallJumpingGoal;
 import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Salmon;
@@ -17,8 +20,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Mixin that registers ecology-based goals for Salmon.
- * Salmon are schooling fish that flee from aquatic predators.
- * They exhibit group cohesion behavior and rapid escape responses.
+ * Salmon are schooling fish that flee from aquatic predators and perform
+ * upstream migration with waterfall jumping capabilities.
+ * They exhibit group cohesion behavior and rapid flash expansion escape responses.
  */
 @Mixin(Salmon.class)
 public abstract class SalmonMixin {
@@ -30,6 +34,13 @@ public abstract class SalmonMixin {
     private void betterEcology$init(EntityType<?> entityType, Level level, CallbackInfo ci) {
         Salmon salmon = (Salmon) (Object) this;
         var goalSelector = ((MobAccessor) salmon).getGoalSelector();
+
+        // Priority 1: Flash expansion flee (coordinated school scatter when attacked)
+        // When one fish is hurt, the entire school bursts away in a coordinated panic response
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_FLEE,
+            new FlashExpansionFleeGoal(salmon, Salmon.class)
+        );
 
         // Priority 1: Flee from predators (dolphins, axolotls, polar bears)
         // Salmon are hunted by aquatic and semi-aquatic predators
@@ -44,6 +55,20 @@ public abstract class SalmonMixin {
                 Axolotl.class,
                 PolarBear.class
             )
+        );
+
+        // Priority 2: Waterfall jumping during upstream migration
+        // Salmon leap up waterfalls to reach spawning grounds
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_CRITICAL,
+            new SalmonWaterfallJumpingGoal(salmon)
+        );
+
+        // Priority 3: Upstream migration
+        // Salmon swim against currents toward river sources for spawning
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_NORMAL,
+            new SalmonUpstreamMigrationGoal(salmon)
         );
 
         // Priority 5: School with other salmon (herd cohesion)

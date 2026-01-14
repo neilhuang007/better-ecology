@@ -3,6 +3,7 @@ package me.javavirtualenv.mixin.animal;
 import me.javavirtualenv.behavior.core.AnimalThresholds;
 import me.javavirtualenv.behavior.core.FleeFromPredatorGoal;
 import me.javavirtualenv.behavior.core.HerdCohesionGoal;
+import me.javavirtualenv.behavior.core.SquidInkCloudDefenseGoal;
 import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.world.entity.animal.Squid;
 import net.minecraft.world.entity.animal.axolotl.Axolotl;
@@ -27,6 +28,18 @@ public abstract class SquidMixin {
     private void betterEcology$registerGoals(CallbackInfo ci) {
         Squid squid = (Squid) (Object) this;
         var goalSelector = ((MobAccessor) squid).getGoalSelector();
+
+        // Priority 1: Ink cloud defense when threatened
+        // Squids eject ink clouds to blind predators and escape
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_FLEE,
+            new SquidInkCloudDefenseGoal(
+                squid,
+                10,   // detection range
+                Dolphin.class,
+                Axolotl.class
+            )
+        );
 
         // Priority 1: Flee from predators (dolphins, axolotls)
         // Squids are prey for these aquatic hunters

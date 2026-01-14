@@ -4,7 +4,7 @@ import me.javavirtualenv.behavior.core.AnimalThresholds;
 import me.javavirtualenv.behavior.core.BreedingBehaviorGoal;
 import me.javavirtualenv.behavior.core.FleeFromPredatorGoal;
 import me.javavirtualenv.behavior.core.FollowParentGoal;
-import me.javavirtualenv.behavior.core.HuntPreyGoal;
+import me.javavirtualenv.behavior.core.FoxPounceHuntingGoal;
 import me.javavirtualenv.behavior.core.MotherProtectBabyGoal;
 import me.javavirtualenv.behavior.core.SeekFoodGoal;
 import me.javavirtualenv.behavior.core.SeekWaterGoal;
@@ -23,7 +23,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Mixin that registers ecology-based goals for Fox.
- * Foxes are cunning predators that hunt small prey like chickens and rabbits.
+ * Foxes are cunning predators that use their signature pounce-hunting technique
+ * to catch small prey like chickens and rabbits with high-arc jumps.
  * They also scavenge for food items and flee from larger predators like wolves.
  */
 @Mixin(Fox.class)
@@ -67,13 +68,11 @@ public abstract class FoxMixin {
             )
         );
 
-        // Priority 4: Hunt small prey when hungry
+        // Priority 4: Pounce-hunt small prey when hungry (signature fox behavior)
         goalSelector.addGoal(
             AnimalThresholds.PRIORITY_HUNT,
-            new HuntPreyGoal(
+            new FoxPounceHuntingGoal(
                 fox,
-                1.3,  // speed when hunting
-                24,   // hunt range
                 Chicken.class,
                 Rabbit.class
             )

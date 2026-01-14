@@ -3,6 +3,8 @@ package me.javavirtualenv.mixin.animal;
 import me.javavirtualenv.behavior.core.AnimalThresholds;
 import me.javavirtualenv.behavior.core.BreedingBehaviorGoal;
 import me.javavirtualenv.behavior.core.FollowParentGoal;
+import me.javavirtualenv.behavior.core.RabbitBinkyGoal;
+import me.javavirtualenv.behavior.core.RabbitFreezeBeforeFleeGoal;
 import me.javavirtualenv.behavior.core.RabbitThumpWarningGoal;
 import me.javavirtualenv.behavior.core.RabbitZigzagFleeGoal;
 import me.javavirtualenv.behavior.core.SeekFoodGoal;
@@ -37,6 +39,19 @@ public abstract class RabbitMixin {
     private void betterEcology$registerGoals(CallbackInfo ci) {
         Rabbit rabbit = (Rabbit) (Object) this;
         var goalSelector = ((MobAccessor) rabbit).getGoalSelector();
+
+        // Priority 0: Freeze before fleeing when predator detected at medium distance
+        // Rabbits freeze motionless for camouflage before deciding to flee
+        goalSelector.addGoal(
+            0,
+            new RabbitFreezeBeforeFleeGoal(
+                rabbit,
+                Fox.class,
+                Wolf.class,
+                Cat.class,
+                Ocelot.class
+            )
+        );
 
         // Priority 0: Thump warning when predator detected (before fleeing)
         // Rabbits warn others before they flee
@@ -102,6 +117,19 @@ public abstract class RabbitMixin {
         goalSelector.addGoal(
             AnimalThresholds.PRIORITY_IDLE,
             new BreedingBehaviorGoal(rabbit, 1.2)
+        );
+
+        // Priority 7: Binky jump when safe and happy
+        // Rabbits perform happy jumps when feeling safe, well-fed, and social
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_IDLE + 1,
+            new RabbitBinkyGoal(
+                rabbit,
+                Fox.class,
+                Wolf.class,
+                Cat.class,
+                Ocelot.class
+            )
         );
     }
 

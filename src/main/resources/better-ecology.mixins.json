@@ -39,6 +39,7 @@
 		"animal.TadpoleMixin",
 		"animal.TraderLlamaMixin",
 		"animal.TropicalFishMixin",
+		"animal.TurtleAccessor",
 		"animal.TurtleMixin",
 		"animal.WolfMixin",
 		"villager.VillagerMixin",

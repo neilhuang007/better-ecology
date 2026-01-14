@@ -1,6 +1,8 @@
 package me.javavirtualenv.mixin.animal;
 
 import me.javavirtualenv.behavior.core.AnimalThresholds;
+import me.javavirtualenv.behavior.core.BeeRecruitedForagingGoal;
+import me.javavirtualenv.behavior.core.BeeWaggleDanceGoal;
 import me.javavirtualenv.behavior.core.HerdCohesionGoal;
 import me.javavirtualenv.behavior.core.SeekWaterGoal;
 import me.javavirtualenv.mixin.MobAccessor;
@@ -13,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * Mixin that registers ecology-based goals for Bee.
  * Bees maintain herd cohesion with other bees and seek water when thirsty.
+ * Implements waggle dance behavior for recruiting other bees to flower patches.
  * Note: Vanilla bee behavior (pollination, hive return) is preserved.
  */
 @Mixin(Bee.class)
@@ -26,11 +29,25 @@ public abstract class BeeMixin {
         Bee bee = (Bee) (Object) this;
         var goalSelector = ((MobAccessor) bee).getGoalSelector();
 
+        // Priority 2: Follow waggle dance directions to recruited flower patches
+        // Lower priority than vanilla pollination but higher than general foraging
+        goalSelector.addGoal(
+            2,
+            new BeeRecruitedForagingGoal(bee)
+        );
+
         // Priority 3: Seek water when thirsty
         // Bees need to drink water in real life
         goalSelector.addGoal(
             AnimalThresholds.PRIORITY_NORMAL,
             new SeekWaterGoal(bee, 1.0, 16)
+        );
+
+        // Priority 4: Perform waggle dance to recruit other bees to flower patches
+        // Based on Karl von Frisch's Nobel Prize-winning research
+        goalSelector.addGoal(
+            4,
+            new BeeWaggleDanceGoal(bee)
         );
 
         // Priority 5: Maintain cohesion with other bees

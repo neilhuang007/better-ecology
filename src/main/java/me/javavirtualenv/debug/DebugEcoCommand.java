@@ -18,6 +18,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Debug command for testing Better Ecology behaviors.
  * Usage: /debugeco [scenario]
@@ -25,9 +30,13 @@ import net.minecraft.world.level.block.Blocks;
  * - predator: Creates wolf hunting scenario with prey animals
  * - food: Creates wolf with dropped meat items
  * - thirst: Creates animals near water to test drinking
+ * - test: Creates test structures and monitors results
  * - all: Creates a complete test environment
  */
 public class DebugEcoCommand {
+
+    // Active tests tracking
+    private static final Map<String, TestScenario> activeTests = new HashMap<>();
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("debugeco")
@@ -42,6 +51,8 @@ public class DebugEcoCommand {
                 .executes(ctx -> createBabyScenario(ctx)))
             .then(Commands.literal("pack")
                 .executes(ctx -> createPackScenario(ctx)))
+            .then(Commands.literal("test")
+                .executes(ctx -> runAllTests(ctx)))
             .then(Commands.literal("all")
                 .executes(ctx -> createAllScenarios(ctx)))
             .then(Commands.literal("status")
@@ -66,6 +77,7 @@ public class DebugEcoCommand {
             "§e/debugeco thirst§7 - Animals near water\n" +
             "§e/debugeco baby§7 - Baby animals with parents\n" +
             "§e/debugeco pack§7 - Wolf pack for hierarchy testing\n" +
+            "§e/debugeco test§7 - Run all behavior tests (outputs results to chat)\n" +
             "§e/debugeco all§7 - Complete test environment\n" +
             "§e/debugeco status§7 - Show nearby animal stats\n" +
             "§e/debugeco detail§7 - Detailed info for nearest animal\n" +
@@ -495,5 +507,262 @@ public class DebugEcoCommand {
             level.setBlock(pos.offset(0, 1, z), Blocks.OAK_FENCE.defaultBlockState(), 3);
             level.setBlock(pos.offset(width - 1, 1, z), Blocks.OAK_FENCE.defaultBlockState(), 3);
         }
+    }
+
+    // ============ Test Framework ============
+
+    /**
+     * Runs all behavior tests and outputs results to chat after a timeout.
+     */
+    private static int runAllTests(CommandContext<CommandSourceStack> ctx) {
+        ServerLevel level = ctx.getSource().getLevel();
+        BlockPos playerPos = BlockPos.containing(ctx.getSource().getPosition());
+        CommandSourceStack source = ctx.getSource();
+
+        // Clear any previous tests
+        activeTests.clear();
+
+        source.sendSuccess(() -> Component.literal(
+            "§6========== Running Better Ecology Tests ==========\n" +
+            "§7Creating test structures... Results in 30 seconds."
+        ), false);
+
+        // Create all test scenarios
+        List<TestScenario> tests = new ArrayList<>();
+
+        // Test 1: Wolf hunts prey
+        BlockPos predatorPos = playerPos.offset(5, 0, 0);
+        createPlatform(level, predatorPos, 15, 15);
+        createFence(level, predatorPos, 15, 15);
+        Wolf huntWolf = EntityType.WOLF.create(level);
+        Sheep huntSheep = EntityType.SHEEP.create(level);
+        if (huntWolf != null && huntSheep != null) {
+            huntWolf.setPos(predatorPos.getX() + 2, predatorPos.getY() + 1, predatorPos.getZ() + 2);
+            AnimalNeeds.setHunger(huntWolf, 5); // Very hungry
+            level.addFreshEntity(huntWolf);
+
+            huntSheep.setPos(predatorPos.getX() + 10, predatorPos.getY() + 1, predatorPos.getZ() + 10);
+            level.addFreshEntity(huntSheep);
+
+            tests.add(new TestScenario(
+                "Wolf Hunts Prey",
+                () -> !huntSheep.isAlive() || huntWolf.getTarget() == huntSheep,
+                "Wolf should target or kill the sheep"
+            ));
+        }
+
+        // Test 2: Baby follows parent
+        BlockPos babyPos = playerPos.offset(25, 0, 0);
+        createPlatform(level, babyPos, 15, 15);
+        createFence(level, babyPos, 15, 15);
+        Cow adultCow = EntityType.COW.create(level);
+        Cow babyCow = EntityType.COW.create(level);
+        if (adultCow != null && babyCow != null) {
+            adultCow.setPos(babyPos.getX() + 10, babyPos.getY() + 1, babyPos.getZ() + 10);
+            level.addFreshEntity(adultCow);
+
+            babyCow.setPos(babyPos.getX() + 3, babyPos.getY() + 1, babyPos.getZ() + 3);
+            babyCow.setBaby(true);
+            level.addFreshEntity(babyCow);
+
+            tests.add(new TestScenario(
+                "Baby Follows Parent",
+                () -> babyCow.distanceTo(adultCow) < 6.0,
+                "Baby cow should move towards adult cow"
+            ));
+        }
+
+        // Test 3: Prey flees from predator
+        BlockPos fleePos = playerPos.offset(5, 0, 20);
+        createPlatform(level, fleePos, 15, 15);
+        createFence(level, fleePos, 15, 15);
+        Wolf fleeWolf = EntityType.WOLF.create(level);
+        Chicken fleeChicken = EntityType.CHICKEN.create(level);
+        double chickenStartX = fleePos.getX() + 7;
+        double chickenStartZ = fleePos.getZ() + 7;
+        if (fleeWolf != null && fleeChicken != null) {
+            fleeWolf.setPos(fleePos.getX() + 5, fleePos.getY() + 1, fleePos.getZ() + 7);
+            AnimalNeeds.setHunger(fleeWolf, 10); // Make hungry so it's threatening
+            level.addFreshEntity(fleeWolf);
+
+            fleeChicken.setPos(chickenStartX, fleePos.getY() + 1, chickenStartZ);
+            level.addFreshEntity(fleeChicken);
+
+            tests.add(new TestScenario(
+                "Prey Flees Predator",
+                () -> {
+                    if (!fleeChicken.isAlive()) return true; // If killed, still considered success
+                    double currentDist = fleeChicken.distanceTo(fleeWolf);
+                    return currentDist > 4.0; // Chicken should maintain distance
+                },
+                "Chicken should flee from wolf"
+            ));
+        }
+
+        // Test 4: Animal seeks water when thirsty
+        BlockPos thirstPos = playerPos.offset(25, 0, 20);
+        createPlatform(level, thirstPos, 15, 15);
+        for (int x = 6; x < 10; x++) {
+            for (int z = 6; z < 10; z++) {
+                level.setBlock(thirstPos.offset(x, 0, z), Blocks.WATER.defaultBlockState(), 3);
+            }
+        }
+        Cow thirstyCow = EntityType.COW.create(level);
+        if (thirstyCow != null) {
+            thirstyCow.setPos(thirstPos.getX() + 2, thirstPos.getY() + 1, thirstPos.getZ() + 2);
+            AnimalNeeds.setThirst(thirstyCow, 15); // Make thirsty
+            level.addFreshEntity(thirstyCow);
+
+            tests.add(new TestScenario(
+                "Animal Seeks Water",
+                () -> thirstyCow.isInWater() || AnimalNeeds.getThirst(thirstyCow) > 20,
+                "Thirsty cow should move toward water or drink"
+            ));
+        }
+
+        // Test 5: Wolf pack data initialization
+        Wolf packWolf = EntityType.WOLF.create(level);
+        if (packWolf != null) {
+            packWolf.setPos(playerPos.getX() + 45, playerPos.getY() + 1, playerPos.getZ() + 10);
+            level.addFreshEntity(packWolf);
+
+            tests.add(new TestScenario(
+                "Wolf Pack Data Init",
+                () -> {
+                    WolfPackData data = WolfPackData.getPackData(packWolf);
+                    return data != null && data.packId() != null;
+                },
+                "Wolf should have pack data initialized"
+            ));
+        }
+
+        // Test 6: Dynamic retargeting test
+        BlockPos retargetPos = playerPos.offset(45, 0, 0);
+        createPlatform(level, retargetPos, 20, 20);
+        createFence(level, retargetPos, 20, 20);
+        Wolf retargetWolf = EntityType.WOLF.create(level);
+        Chicken farChicken = EntityType.CHICKEN.create(level);
+        Chicken closeChicken = EntityType.CHICKEN.create(level);
+        if (retargetWolf != null && farChicken != null && closeChicken != null) {
+            retargetWolf.setPos(retargetPos.getX() + 10, retargetPos.getY() + 1, retargetPos.getZ() + 10);
+            AnimalNeeds.setHunger(retargetWolf, 5); // Very hungry
+            level.addFreshEntity(retargetWolf);
+
+            farChicken.setPos(retargetPos.getX() + 18, retargetPos.getY() + 1, retargetPos.getZ() + 10);
+            level.addFreshEntity(farChicken);
+
+            // Spawn close chicken after a delay (simulated by just spawning it closer)
+            closeChicken.setPos(retargetPos.getX() + 12, retargetPos.getY() + 1, retargetPos.getZ() + 10);
+            level.addFreshEntity(closeChicken);
+
+            tests.add(new TestScenario(
+                "Dynamic Prey Retargeting",
+                () -> {
+                    // Success if wolf targets closer chicken or kills one
+                    return !closeChicken.isAlive() || !farChicken.isAlive() ||
+                           (retargetWolf.getTarget() == closeChicken);
+                },
+                "Wolf should prefer closer prey"
+            ));
+        }
+
+        // Schedule result check after 30 seconds (600 ticks)
+        final List<TestScenario> finalTests = tests;
+        level.getServer().execute(() -> {
+            scheduleTestResults(level, source, finalTests, 600);
+        });
+
+        return tests.size();
+    }
+
+    /**
+     * Schedules test result checking after a delay.
+     */
+    private static void scheduleTestResults(ServerLevel level, CommandSourceStack source,
+                                             List<TestScenario> tests, int delayTicks) {
+        // We need to use the server's scheduled task system
+        // Since we can't directly schedule, we'll use a simple tick counter approach
+        // Store the test info and check in a follow-up
+
+        // For simplicity, we'll output a message and rely on the /debugeco status command
+        // to check results, OR we implement a polling approach
+
+        // Using server scheduling
+        final long startTime = level.getGameTime();
+        final long endTime = startTime + delayTicks;
+
+        // Create a scheduled task using the server's tick
+        Thread checker = new Thread(() -> {
+            try {
+                Thread.sleep(delayTicks * 50L); // 50ms per tick
+
+                // Run on server thread
+                level.getServer().execute(() -> {
+                    outputTestResults(source, tests);
+                });
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+        checker.setDaemon(true);
+        checker.start();
+    }
+
+    /**
+     * Outputs test results to chat.
+     */
+    private static void outputTestResults(CommandSourceStack source, List<TestScenario> tests) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("§6========== Test Results ==========\n");
+
+        int passed = 0;
+        int failed = 0;
+
+        for (TestScenario test : tests) {
+            boolean success;
+            try {
+                success = test.condition.check();
+            } catch (Exception e) {
+                success = false;
+            }
+
+            if (success) {
+                sb.append("§a✓ ").append(test.name).append("\n");
+                passed++;
+            } else {
+                sb.append("§c✗ ").append(test.name).append("\n");
+                sb.append("  §7").append(test.failureMessage).append("\n");
+                failed++;
+            }
+        }
+
+        sb.append("§6===================================\n");
+        sb.append(String.format("§aPass: %d §7| §cFail: %d §7| Total: %d", passed, failed, tests.size()));
+
+        String result = sb.toString();
+        source.sendSuccess(() -> Component.literal(result), false);
+    }
+
+    /**
+     * Represents a test scenario with a name, condition, and failure message.
+     */
+    private static class TestScenario {
+        final String name;
+        final TestCondition condition;
+        final String failureMessage;
+
+        TestScenario(String name, TestCondition condition, String failureMessage) {
+            this.name = name;
+            this.condition = condition;
+            this.failureMessage = failureMessage;
+        }
+    }
+
+    /**
+     * Functional interface for test conditions.
+     */
+    @FunctionalInterface
+    private interface TestCondition {
+        boolean check();
     }
 }

@@ -230,4 +230,149 @@ public class GoatBehaviorTests implements FabricGameTest {
             }
         });
     }
+
+    /**
+     * Test that goat seeks high ground.
+     * Setup: Create terrain with a high point and spawn goat on low ground.
+     * Expected: Goat moves toward elevated position.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 300)
+    public void testGoatSeeksHighGround(GameTestHelper helper) {
+        // Create base floor at y=1
+        for (int x = 0; x < 21; x++) {
+            for (int z = 0; z < 21; z++) {
+                helper.setBlock(new BlockPos(x, 1, z), Blocks.STONE);
+            }
+        }
+
+        // Create elevated hill at far end (y=1 to y=8)
+        for (int x = 15; x < 21; x++) {
+            for (int z = 8; z < 14; z++) {
+                for (int y = 2; y <= 8; y++) {
+                    helper.setBlock(new BlockPos(x, y, z), Blocks.STONE);
+                }
+            }
+        }
+
+        // Spawn goat on low ground
+        BlockPos goatPos = new BlockPos(5, 2, 10);
+        Goat goat = helper.spawn(EntityType.GOAT, goatPos);
+        double initialY = goat.position().y;
+
+        // Wait for goat to climb toward high ground
+        helper.runAfterDelay(200, () -> {
+            if (goat.isAlive()) {
+                double currentY = goat.position().y;
+                double currentX = goat.position().x;
+
+                // Goat should have moved toward the elevated area or increased elevation
+                if (currentY > initialY + 1.0 || currentX > goatPos.getX() + 3.0) {
+                    helper.succeed();
+                } else {
+                    helper.fail("Goat did not seek high ground. Initial Y: " + initialY + ", Current Y: " + currentY + ", Current X: " + currentX);
+                }
+            } else {
+                helper.fail("Goat not alive");
+            }
+        });
+    }
+
+    /**
+     * Test that goat can climb steep terrain.
+     * Setup: Create steep hill with multiple elevation levels.
+     * Expected: Goat navigates up the steep incline.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 300)
+    public void testGoatClimbsSteepTerrain(GameTestHelper helper) {
+        // Create base floor
+        for (int x = 0; x < 21; x++) {
+            for (int z = 0; z < 21; z++) {
+                helper.setBlock(new BlockPos(x, 1, z), Blocks.DIRT);
+            }
+        }
+
+        // Create steep hill with increasing height
+        for (int x = 8; x < 18; x++) {
+            int height = 2 + (x - 8) / 2; // Height increases every 2 blocks
+            for (int z = 8; z < 14; z++) {
+                for (int y = 2; y <= height; y++) {
+                    helper.setBlock(new BlockPos(x, y, z), Blocks.STONE);
+                }
+            }
+        }
+
+        // Spawn goat at base of hill
+        BlockPos goatPos = new BlockPos(8, 2, 10);
+        Goat goat = helper.spawn(EntityType.GOAT, goatPos);
+        double initialY = goat.position().y;
+
+        // Wait for goat to climb the steep terrain
+        helper.runAfterDelay(200, () -> {
+            if (goat.isAlive()) {
+                double currentY = goat.position().y;
+
+                // Goat should have climbed at least 1 block up the steep hill
+                if (currentY > initialY + 1.0) {
+                    helper.succeed();
+                } else {
+                    helper.fail("Goat did not climb steep terrain. Initial Y: " + initialY + ", Current Y: " + currentY);
+                }
+            } else {
+                helper.fail("Goat not alive");
+            }
+        });
+    }
+
+    /**
+     * Test that goat prefers elevation over flat ground.
+     * Setup: Spawn goat between low ground and high ground options.
+     * Expected: Goat chooses to move toward elevated position.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 300)
+    public void testGoatPrefersElevation(GameTestHelper helper) {
+        // Create base floor
+        for (int x = 0; x < 21; x++) {
+            for (int z = 0; z < 21; z++) {
+                helper.setBlock(new BlockPos(x, 1, z), Blocks.GRASS_BLOCK);
+            }
+        }
+
+        // Create low platform on left (y=1, flat)
+        for (int x = 0; x < 6; x++) {
+            for (int z = 8; z < 14; z++) {
+                helper.setBlock(new BlockPos(x, 1, z), Blocks.GRASS_BLOCK);
+            }
+        }
+
+        // Create high platform on right (y=1 to y=6)
+        for (int x = 15; x < 21; x++) {
+            for (int z = 8; z < 14; z++) {
+                for (int y = 2; y <= 6; y++) {
+                    helper.setBlock(new BlockPos(x, y, z), Blocks.STONE);
+                }
+            }
+        }
+
+        // Spawn goat in the middle between both options
+        BlockPos goatPos = new BlockPos(10, 2, 10);
+        Goat goat = helper.spawn(EntityType.GOAT, goatPos);
+        double initialX = goat.position().x;
+
+        // Wait for goat to make a choice
+        helper.runAfterDelay(200, () -> {
+            if (goat.isAlive()) {
+                double currentX = goat.position().x;
+                double currentY = goat.position().y;
+
+                // Goat should move toward high platform (x > 15) or have increased elevation
+                if (currentX > 14.0 || currentY > 3.0) {
+                    helper.succeed();
+                } else {
+                    helper.fail("Goat did not prefer elevation. Initial X: " + initialX + ", Current X: " + currentX + ", Current Y: " + currentY);
+                }
+            } else {
+                helper.fail("Goat not alive");
+            }
+        });
+    }
 }

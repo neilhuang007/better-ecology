@@ -8,6 +8,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ambient.Bat;
 import net.minecraft.world.entity.animal.Cat;
+import net.minecraft.world.level.block.Blocks;
 
 /**
  * Game tests for bat behaviors.
@@ -80,6 +81,82 @@ public class BatBehaviorTests implements FabricGameTest {
                 helper.succeed();
             } else {
                 helper.fail("Bat should remain alive and maintain ambient behavior");
+            }
+        });
+    }
+
+    /**
+     * Test that a bat rests during the day.
+     * Setup: Spawn bat with cave ceiling, set time to day.
+     * Expected: Bat should be resting during day time.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
+    public void testBatRestsDuringDay(GameTestHelper helper) {
+        // Create a cave-like ceiling for the bat to rest under
+        BlockPos ceilingPos = new BlockPos(5, 4, 5);
+        helper.setBlock(ceilingPos, Blocks.STONE);
+
+        // Spawn bat under ceiling
+        BlockPos batPos = new BlockPos(5, 3, 5);
+        Bat bat = helper.spawn(EntityType.BAT, batPos);
+
+        // Set time to day (6000 ticks = noon)
+        helper.getLevel().setDayTime(6000);
+
+        // Wait for bat to process nocturnal behavior
+        helper.runAfterDelay(40, () -> {
+            if (bat.isResting()) {
+                helper.succeed();
+            } else {
+                helper.fail("Bat should be resting during day time");
+            }
+        });
+    }
+
+    /**
+     * Test that a bat becomes active at night.
+     * Setup: Spawn bat, set time to night.
+     * Expected: Bat should not be resting during night time.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
+    public void testBatActiveAtNight(GameTestHelper helper) {
+        // Spawn bat
+        BlockPos batPos = new BlockPos(5, 3, 5);
+        Bat bat = helper.spawn(EntityType.BAT, batPos);
+
+        // Set time to night (18000 ticks = midnight)
+        helper.getLevel().setDayTime(18000);
+
+        // Wait for bat to process nocturnal behavior
+        helper.runAfterDelay(40, () -> {
+            if (!bat.isResting()) {
+                helper.succeed();
+            } else {
+                helper.fail("Bat should be active (not resting) during night time");
+            }
+        });
+    }
+
+    /**
+     * Test that a bat becomes active at dusk.
+     * Setup: Spawn bat, set time to dusk.
+     * Expected: Bat should not be resting during dusk.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
+    public void testBatActiveAtDusk(GameTestHelper helper) {
+        // Spawn bat
+        BlockPos batPos = new BlockPos(5, 3, 5);
+        Bat bat = helper.spawn(EntityType.BAT, batPos);
+
+        // Set time to dusk (13000 ticks)
+        helper.getLevel().setDayTime(13000);
+
+        // Wait for bat to process nocturnal behavior
+        helper.runAfterDelay(40, () -> {
+            if (!bat.isResting()) {
+                helper.succeed();
+            } else {
+                helper.fail("Bat should be active (not resting) during dusk");
             }
         });
     }

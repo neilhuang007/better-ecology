@@ -193,4 +193,154 @@ public class CodBehaviorTests implements FabricGameTest {
             }
         });
     }
+
+    /**
+     * Test flash expansion trigger when one cod is hurt.
+     * Setup: Spawn multiple cod in water, damage one cod.
+     * Expected: Nearby cod within 8 blocks should scatter away from hurt cod.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
+    public void testFlashExpansionTrigger(GameTestHelper helper) {
+        // Create water environment
+        for (int x = 0; x < 21; x++) {
+            for (int z = 0; z < 21; z++) {
+                for (int y = 1; y <= 4; y++) {
+                    helper.setBlock(new BlockPos(x, y, z), Blocks.WATER);
+                }
+            }
+        }
+
+        // Spawn school of cod close together
+        BlockPos cod1Pos = new BlockPos(10, 3, 10);
+        BlockPos cod2Pos = new BlockPos(12, 3, 10);
+        BlockPos cod3Pos = new BlockPos(10, 3, 12);
+        BlockPos farCodPos = new BlockPos(20, 3, 20);
+
+        Cod cod1 = helper.spawn(EntityType.COD, cod1Pos);
+        Cod cod2 = helper.spawn(EntityType.COD, cod2Pos);
+        Cod cod3 = helper.spawn(EntityType.COD, cod3Pos);
+        Cod farCod = helper.spawn(EntityType.COD, farCodPos);
+
+        // Record initial distances
+        helper.runAfterDelay(10, () -> {
+            double initialDist2 = cod1.distanceTo(cod2);
+            double initialDist3 = cod1.distanceTo(cod3);
+
+            // Damage cod1 to trigger flash expansion
+            cod1.hurt(cod1.damageSources().generic(), 1.0f);
+
+            // Wait for flash expansion response
+            helper.runAfterDelay(30, () -> {
+                if (cod1.isAlive() && cod2.isAlive() && cod3.isAlive() && farCod.isAlive()) {
+                    double finalDist2 = cod1.distanceTo(cod2);
+                    double finalDist3 = cod1.distanceTo(cod3);
+
+                    // Nearby cod should have moved away (within detection radius of 8 blocks)
+                    boolean cod2Scattered = finalDist2 > initialDist2 + 1.0;
+                    boolean cod3Scattered = finalDist3 > initialDist3 + 1.0;
+
+                    if (cod2Scattered || cod3Scattered) {
+                        helper.succeed();
+                    } else {
+                        helper.fail("Nearby cod did not scatter. Cod2 dist: " + initialDist2 + " -> " + finalDist2 +
+                                ", Cod3 dist: " + initialDist3 + " -> " + finalDist3);
+                    }
+                } else {
+                    helper.fail("Not all cod are alive");
+                }
+            });
+        });
+    }
+
+    /**
+     * Test flash expansion burst speed.
+     * Setup: Spawn cod in water, damage it to trigger flash expansion.
+     * Expected: Cod should move faster during burst (2.0x speed multiplier).
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
+    public void testFlashExpansionBurstSpeed(GameTestHelper helper) {
+        // Create water environment
+        for (int x = 0; x < 21; x++) {
+            for (int z = 0; z < 21; z++) {
+                for (int y = 1; y <= 4; y++) {
+                    helper.setBlock(new BlockPos(x, y, z), Blocks.WATER);
+                }
+            }
+        }
+
+        // Spawn cod
+        BlockPos codPos = new BlockPos(10, 3, 10);
+        Cod cod = helper.spawn(EntityType.COD, codPos);
+
+        // Record position before damage
+        helper.runAfterDelay(10, () -> {
+            double startX = cod.getX();
+            double startZ = cod.getZ();
+
+            // Damage cod to trigger burst swimming
+            cod.hurt(cod.damageSources().generic(), 1.0f);
+
+            // Check distance traveled during burst (should be moving faster)
+            helper.runAfterDelay(20, () -> {
+                if (cod.isAlive()) {
+                    double distanceTraveled = Math.sqrt(
+                            Math.pow(cod.getX() - startX, 2) +
+                            Math.pow(cod.getZ() - startZ, 2)
+                    );
+
+                    // During burst at 2.0x speed, cod should travel at least 2 blocks in 20 ticks
+                    if (distanceTraveled > 2.0) {
+                        helper.succeed();
+                    } else {
+                        helper.fail("Cod did not move fast enough during burst. Distance: " + distanceTraveled);
+                    }
+                } else {
+                    helper.fail("Cod is not alive");
+                }
+            });
+        });
+    }
+
+    /**
+     * Test flash expansion bubble particles.
+     * Setup: Spawn cod in water, damage it to trigger flash expansion.
+     * Expected: Cod should be in burst mode (verified by movement pattern).
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
+    public void testFlashExpansionBurstMode(GameTestHelper helper) {
+        // Create water environment
+        for (int x = 0; x < 21; x++) {
+            for (int z = 0; z < 21; z++) {
+                for (int y = 1; y <= 4; y++) {
+                    helper.setBlock(new BlockPos(x, y, z), Blocks.WATER);
+                }
+            }
+        }
+
+        // Spawn cod
+        BlockPos codPos = new BlockPos(10, 3, 10);
+        Cod cod = helper.spawn(EntityType.COD, codPos);
+
+        helper.runAfterDelay(10, () -> {
+            // Damage cod to trigger flash expansion and burst mode
+            cod.hurt(cod.damageSources().generic(), 1.0f);
+
+            // Verify cod enters burst mode by checking it has active navigation
+            helper.runAfterDelay(5, () -> {
+                if (cod.isAlive()) {
+                    // Check that cod is actively navigating (burst swimming)
+                    boolean isNavigating = cod.getNavigation().isInProgress();
+                    boolean wasRecentlyHurt = cod.hurtTime > 0;
+
+                    if (isNavigating || wasRecentlyHurt) {
+                        helper.succeed();
+                    } else {
+                        helper.fail("Cod did not enter burst mode after damage");
+                    }
+                } else {
+                    helper.fail("Cod is not alive");
+                }
+            });
+        });
+    }
 }

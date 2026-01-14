@@ -3,7 +3,9 @@ package me.javavirtualenv.mixin.animal;
 import me.javavirtualenv.behavior.core.AnimalNeeds;
 import me.javavirtualenv.behavior.core.AnimalThresholds;
 import me.javavirtualenv.behavior.core.BreedingBehaviorGoal;
+import me.javavirtualenv.behavior.core.ChickenDustBathingGoal;
 import me.javavirtualenv.behavior.core.ChickenPeckingGoal;
+import me.javavirtualenv.behavior.core.ChickenRoostingGoal;
 import me.javavirtualenv.behavior.core.EnhancedEggLayingGoal;
 import me.javavirtualenv.behavior.core.FleeFromPredatorGoal;
 import me.javavirtualenv.behavior.core.FollowParentGoal;
@@ -97,6 +99,18 @@ public abstract class ChickenMixin {
         goalSelector.addGoal(
             AnimalThresholds.PRIORITY_SOCIAL,
             new ChickenPeckingGoal(chicken)
+        );
+
+        // Priority 5: Dust bathing behavior for feather maintenance
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_SOCIAL,
+            new ChickenDustBathingGoal(chicken)
+        );
+
+        // Priority 4: Roosting behavior at night
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_HUNT,
+            new ChickenRoostingGoal(chicken)
         );
 
         // Priority 6: Enhanced egg laying (replaces vanilla egg laying)

@@ -162,4 +162,143 @@ public class BeeBehaviorTests implements FabricGameTest {
             }
         });
     }
+
+    /**
+     * Test bee waggle dance behavior when flowers are nearby.
+     * Setup: Place flowers and hive, spawn bee near them.
+     * Expected: Bee moves toward flowers for foraging.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 400)
+    public void testBeeWaggleDanceNearFlowers(GameTestHelper helper) {
+        // Create grass floor for proper bee navigation
+        createFloor(helper, Blocks.GRASS_BLOCK, 0, 1);
+
+        // Place beehive
+        BlockPos hivePos = new BlockPos(5, 2, 5);
+        helper.setBlock(hivePos, Blocks.BEEHIVE);
+
+        // Place flowers nearby
+        BlockPos flower1Pos = new BlockPos(8, 2, 8);
+        BlockPos flower2Pos = new BlockPos(9, 2, 8);
+        BlockPos flower3Pos = new BlockPos(8, 2, 9);
+        helper.setBlock(flower1Pos, Blocks.DANDELION);
+        helper.setBlock(flower2Pos, Blocks.DANDELION);
+        helper.setBlock(flower3Pos, Blocks.DANDELION);
+
+        // Spawn bee near hive
+        BlockPos beePos = new BlockPos(5, 2, 3);
+        Bee bee = helper.spawn(EntityType.BEE, beePos);
+
+        // Record initial distance to flowers
+        double initialDistance = bee.position().distanceTo(flower1Pos.getCenter());
+
+        // Wait for bee to move toward flowers
+        helper.runAfterDelay(300, () -> {
+            double currentDistance = bee.position().distanceTo(flower1Pos.getCenter());
+
+            // Bee should have moved closer to flowers
+            if (bee.isAlive() && currentDistance < initialDistance) {
+                helper.succeed();
+            } else {
+                helper.fail("Bee did not move toward flowers. Initial dist: " + initialDistance +
+                    ", Current dist: " + currentDistance);
+            }
+        });
+    }
+
+    /**
+     * Test bee waggle dance communication between multiple bees.
+     * Setup: Spawn 2 bees near hive with flowers nearby.
+     * Expected: Both bees eventually find flowers through foraging or observation.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 500)
+    public void testBeeWaggleDanceCommunication(GameTestHelper helper) {
+        // Create grass floor for proper bee navigation
+        createFloor(helper, Blocks.GRASS_BLOCK, 0, 1);
+
+        // Place beehive
+        BlockPos hivePos = new BlockPos(5, 2, 5);
+        helper.setBlock(hivePos, Blocks.BEEHIVE);
+
+        // Place flowers at distance
+        BlockPos flowerPos = new BlockPos(10, 2, 10);
+        helper.setBlock(flowerPos, Blocks.DANDELION);
+        helper.setBlock(new BlockPos(11, 2, 10), Blocks.DANDELION);
+        helper.setBlock(new BlockPos(10, 2, 11), Blocks.DANDELION);
+
+        // Spawn two bees near hive
+        BlockPos bee1Pos = new BlockPos(5, 2, 4);
+        BlockPos bee2Pos = new BlockPos(6, 2, 5);
+        Bee bee1 = helper.spawn(EntityType.BEE, bee1Pos);
+        Bee bee2 = helper.spawn(EntityType.BEE, bee2Pos);
+
+        // Record initial distances to flowers
+        double initialDistance1 = bee1.position().distanceTo(flowerPos.getCenter());
+        double initialDistance2 = bee2.position().distanceTo(flowerPos.getCenter());
+
+        // Wait for bees to discover and move toward flowers
+        helper.runAfterDelay(400, () -> {
+            double currentDistance1 = bee1.position().distanceTo(flowerPos.getCenter());
+            double currentDistance2 = bee2.position().distanceTo(flowerPos.getCenter());
+
+            // At least one bee should have moved closer to flowers
+            boolean bee1MovedCloser = currentDistance1 < initialDistance1;
+            boolean bee2MovedCloser = currentDistance2 < initialDistance2;
+
+            if (bee1.isAlive() && bee2.isAlive() && (bee1MovedCloser || bee2MovedCloser)) {
+                helper.succeed();
+            } else {
+                helper.fail("Bees did not communicate flower location. Bee1 closer: " + bee1MovedCloser +
+                    ", Bee2 closer: " + bee2MovedCloser);
+            }
+        });
+    }
+
+    /**
+     * Test bee returns to hive after foraging flowers.
+     * Setup: Place hive and flowers, spawn bee.
+     * Expected: Bee returns to hive area after visiting flowers.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 600)
+    public void testBeeReturnsToHiveAfterForaging(GameTestHelper helper) {
+        // Create grass floor for proper bee navigation
+        createFloor(helper, Blocks.GRASS_BLOCK, 0, 1);
+
+        // Place beehive
+        BlockPos hivePos = new BlockPos(5, 2, 5);
+        helper.setBlock(hivePos, Blocks.BEEHIVE);
+
+        // Place flowers at moderate distance
+        BlockPos flowerPos = new BlockPos(9, 2, 9);
+        helper.setBlock(flowerPos, Blocks.DANDELION);
+        helper.setBlock(new BlockPos(10, 2, 9), Blocks.DANDELION);
+        helper.setBlock(new BlockPos(9, 2, 10), Blocks.DANDELION);
+
+        // Spawn bee between hive and flowers
+        BlockPos beePos = new BlockPos(7, 2, 7);
+        Bee bee = helper.spawn(EntityType.BEE, beePos);
+
+        // Wait for bee to forage and return to hive area
+        helper.runAfterDelay(500, () -> {
+            double distanceToHive = bee.position().distanceTo(hivePos.getCenter());
+
+            // Bee should be back near hive area (within reasonable range)
+            if (bee.isAlive() && distanceToHive < 8.0) {
+                helper.succeed();
+            } else {
+                helper.fail("Bee did not return to hive. Distance to hive: " + distanceToHive);
+            }
+        });
+    }
+
+    /**
+     * Helper method to create a floor for proper entity navigation.
+     */
+    private void createFloor(GameTestHelper helper, net.minecraft.world.level.block.Block block, int xStart, int yLevel) {
+        for (int x = xStart; x <= 15; x++) {
+            for (int z = 0; z <= 15; z++) {
+                helper.setBlock(new BlockPos(x, yLevel, z), block);
+            }
+        }
+    }
 }

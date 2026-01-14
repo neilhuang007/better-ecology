@@ -216,5 +216,144 @@ public class ChickenBehaviorTests implements FabricGameTest {
             }
         });
     }
+
+    /**
+     * Test that a chicken dust bathes on dirt blocks.
+     * Setup: Place dirt block and spawn chicken nearby.
+     * Expected: Chicken moves toward dirt block for dust bathing.
+     * Note: This is a probabilistic behavior that may not activate every time.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 600, required = false)
+    public void testChickenDustBathingOnDirt(GameTestHelper helper) {
+        // Place dirt block
+        BlockPos dirtPos = new BlockPos(5, 1, 5);
+        helper.setBlock(dirtPos, Blocks.DIRT);
+
+        // Spawn chicken nearby
+        BlockPos chickenPos = new BlockPos(5, 2, 5);
+        Chicken chicken = helper.spawn(EntityType.CHICKEN, chickenPos);
+
+        // Store initial position
+        BlockPos initialPos = chicken.blockPosition();
+
+        // Verify chicken is alive and near dirt block after some time
+        helper.runAfterDelay(200, () -> {
+            BlockPos currentPos = chicken.blockPosition();
+            double distanceToDirt = Math.sqrt(currentPos.distSqr(dirtPos));
+
+            if (chicken.isAlive() && distanceToDirt <= 3.0) {
+                helper.succeed();
+            } else {
+                helper.fail("Chicken did not move toward dirt. Distance: " + distanceToDirt + ", Alive: " + chicken.isAlive());
+            }
+        });
+    }
+
+    /**
+     * Test that chickens exhibit social dust bathing behavior.
+     * Setup: Spawn 2 chickens near dirt block.
+     * Expected: Both chickens are attracted to the same dirt area.
+     * Note: This is a probabilistic behavior that may not activate every time.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 600, required = false)
+    public void testChickenSocialDustBathing(GameTestHelper helper) {
+        // Place dirt block
+        BlockPos dirtPos = new BlockPos(5, 1, 5);
+        helper.setBlock(dirtPos, Blocks.DIRT);
+
+        // Spawn two chickens nearby
+        BlockPos chicken1Pos = new BlockPos(3, 2, 5);
+        BlockPos chicken2Pos = new BlockPos(7, 2, 5);
+        Chicken chicken1 = helper.spawn(EntityType.CHICKEN, chicken1Pos);
+        Chicken chicken2 = helper.spawn(EntityType.CHICKEN, chicken2Pos);
+
+        // Verify both chickens are near dirt area after some time
+        helper.runAfterDelay(200, () -> {
+            BlockPos pos1 = chicken1.blockPosition();
+            BlockPos pos2 = chicken2.blockPosition();
+            double distance1 = Math.sqrt(pos1.distSqr(dirtPos));
+            double distance2 = Math.sqrt(pos2.distSqr(dirtPos));
+
+            if (chicken1.isAlive() && chicken2.isAlive() && distance1 <= 4.0 && distance2 <= 4.0) {
+                helper.succeed();
+            } else {
+                helper.fail("Chickens did not gather near dirt. Distance1: " + distance1 + ", Distance2: " + distance2);
+            }
+        });
+    }
+
+    /**
+     * Test that chickens roost at night on elevated positions.
+     * Setup: Set time to night, spawn chicken near fence.
+     * Expected: Chicken seeks elevated position on fence.
+     * Note: Roosting behavior may not activate if other goals take priority.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 800, required = false)
+    public void testChickenRoostingAtNight(GameTestHelper helper) {
+        // Set time to night (18000 ticks = midnight)
+        helper.getLevel().setDayTime(18000);
+
+        // Create elevated fence structure
+        BlockPos fenceBasePos = new BlockPos(5, 1, 5);
+        BlockPos fence1Pos = new BlockPos(5, 2, 5);
+        BlockPos fence2Pos = new BlockPos(5, 3, 5);
+        helper.setBlock(fenceBasePos, Blocks.OAK_PLANKS);
+        helper.setBlock(fence1Pos, Blocks.OAK_FENCE);
+        helper.setBlock(fence2Pos, Blocks.OAK_FENCE);
+
+        // Spawn chicken nearby
+        BlockPos chickenPos = new BlockPos(7, 2, 5);
+        Chicken chicken = helper.spawn(EntityType.CHICKEN, chickenPos);
+
+        // Verify chicken seeks elevated position after some time
+        helper.runAfterDelay(400, () -> {
+            BlockPos currentPos = chicken.blockPosition();
+            boolean isElevated = currentPos.getY() >= 3;
+            double distanceToRoost = Math.sqrt(currentPos.distSqr(fence2Pos));
+
+            if (chicken.isAlive() && (isElevated || distanceToRoost <= 2.0)) {
+                helper.succeed();
+            } else {
+                helper.fail("Chicken did not roost. Y: " + currentPos.getY() + ", Distance to roost: " + distanceToRoost);
+            }
+        });
+    }
+
+    /**
+     * Test that chickens do not roost during the day.
+     * Setup: Set time to day, spawn chicken near fence.
+     * Expected: Chicken ignores fence roost and does not seek elevated position.
+     */
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 400)
+    public void testChickenDoesNotRoostDuringDay(GameTestHelper helper) {
+        // Set time to day (6000 ticks = noon)
+        helper.getLevel().setDayTime(6000);
+
+        // Create elevated fence structure
+        BlockPos fenceBasePos = new BlockPos(5, 1, 5);
+        BlockPos fence1Pos = new BlockPos(5, 2, 5);
+        BlockPos fence2Pos = new BlockPos(5, 3, 5);
+        helper.setBlock(fenceBasePos, Blocks.OAK_PLANKS);
+        helper.setBlock(fence1Pos, Blocks.OAK_FENCE);
+        helper.setBlock(fence2Pos, Blocks.OAK_FENCE);
+
+        // Spawn chicken nearby at ground level
+        BlockPos chickenPos = new BlockPos(7, 2, 5);
+        Chicken chicken = helper.spawn(EntityType.CHICKEN, chickenPos);
+
+        BlockPos initialPos = chicken.blockPosition();
+
+        // Verify chicken does not seek elevated position during day
+        helper.runAfterDelay(200, () -> {
+            BlockPos currentPos = chicken.blockPosition();
+            boolean remainedLow = currentPos.getY() <= 2;
+
+            if (chicken.isAlive() && remainedLow) {
+                helper.succeed();
+            } else {
+                helper.fail("Chicken should not roost during day. Y: " + currentPos.getY());
+            }
+        });
+    }
 }
 

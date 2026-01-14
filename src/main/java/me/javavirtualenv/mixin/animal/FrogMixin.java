@@ -2,6 +2,7 @@ package me.javavirtualenv.mixin.animal;
 
 import me.javavirtualenv.behavior.core.AnimalThresholds;
 import me.javavirtualenv.behavior.core.FleeFromPredatorGoal;
+import me.javavirtualenv.behavior.core.FrogAmbushHuntingGoal;
 import me.javavirtualenv.behavior.core.HuntPreyGoal;
 import me.javavirtualenv.behavior.core.SeekWaterGoal;
 import me.javavirtualenv.mixin.MobAccessor;
@@ -54,10 +55,17 @@ public abstract class FrogMixin {
             new SeekWaterGoal(frog, 1.0, 16)
         );
 
-        // Priority 4: Hunt small prey (slimes and small magma cubes)
-        // Frogs use their tongue to catch small slime-like creatures
+        // Priority 4: Ambush hunting (sit-and-wait predator strategy)
+        // Frogs use ambush tactics with higher success rate (70%) than active hunting
         goalSelector.addGoal(
             AnimalThresholds.PRIORITY_HUNT,
+            new FrogAmbushHuntingGoal(frog, Slime.class, MagmaCube.class)
+        );
+
+        // Priority 5: Active hunting as fallback
+        // Frogs use their tongue to catch small slime-like creatures
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_HUNT + 1,
             new HuntPreyGoal(
                 frog,
                 1.0,  // speed when hunting

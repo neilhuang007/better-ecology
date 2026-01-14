@@ -6,6 +6,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -155,6 +156,7 @@ public final class AnimalAnimations {
     /**
      * Plays drinking animation for a mob at a water source.
      * Creates water splash particles and plays drinking sound.
+     * Implements realistic drinking behavior with periodic head raising for vigilance.
      *
      * @param mob the mob that is drinking
      * @param waterPos the position of the water block
@@ -163,28 +165,68 @@ public final class AnimalAnimations {
     public static void playDrinkingAnimation(Mob mob, BlockPos waterPos, int tickCount) {
         Level level = mob.level();
 
-        // Make mob look at water
-        mob.getLookControl().setLookAt(
-            waterPos.getX() + 0.5,
-            waterPos.getY() + 0.5,
-            waterPos.getZ() + 0.5
-        );
+        // Vigilance cycle: drink for ~1 second, raise head for ~0.5 seconds
+        // This creates a natural drinking rhythm where animals periodically check for danger
+        int vigilanceCycle = tickCount % 30; // 1.5 second cycle
+        boolean isRaisingHead = vigilanceCycle >= 20; // Last 0.5 seconds of cycle
 
-        // Play splash particles every 5 ticks
-        if (tickCount % 5 == 0) {
-            spawnDrinkingParticles(mob, waterPos);
-        }
+        if (isRaisingHead) {
+            // Raise head to look around (vigilance behavior)
+            applyVigilanceLook(mob);
+        } else {
+            // Lower head to water level for drinking
+            applyDrinkingHeadPosition(mob, waterPos);
 
-        // Play drinking sound every 10 ticks
-        if (tickCount % 10 == 0) {
-            playDrinkingSound(mob);
-        }
+            // Play splash particles every 5 ticks while head is down
+            if (tickCount % 5 == 0) {
+                spawnDrinkingParticles(mob, waterPos);
+            }
 
-        // Head bobbing animation - dip head toward water
-        if (tickCount % 4 == 0) {
-            // Broadcast entity event for head movement
-            level.broadcastEntityEvent(mob, EVENT_EAT_GRASS);
+            // Play drinking sound every 10 ticks while drinking
+            if (tickCount % 10 == 0) {
+                playDrinkingSound(mob);
+            }
+
+            // Head bobbing animation - subtle dip toward water
+            if (tickCount % 4 == 0) {
+                level.broadcastEntityEvent(mob, EVENT_EAT_GRASS);
+            }
         }
+    }
+
+    /**
+     * Positions the mob's head to look at the water source.
+     * Creates a lowered head position for realistic drinking.
+     *
+     * @param mob the mob drinking
+     * @param waterPos position of the water being drunk from
+     */
+    private static void applyDrinkingHeadPosition(Mob mob, BlockPos waterPos) {
+        // Calculate water surface position (slightly above the block)
+        double waterX = waterPos.getX() + 0.5;
+        double waterY = waterPos.getY() + 0.8; // Water surface height
+        double waterZ = waterPos.getZ() + 0.5;
+
+        // Make mob look at water surface with head lowered
+        mob.getLookControl().setLookAt(waterX, waterY, waterZ);
+    }
+
+    /**
+     * Makes the mob raise its head and look around for danger.
+     * Animals exhibit vigilance behavior while drinking.
+     *
+     * @param mob the mob exhibiting vigilance
+     */
+    private static void applyVigilanceLook(Mob mob) {
+        // Look up and scan the environment (alternating directions)
+        double scanAngle = (mob.tickCount % 60) * 6.0; // Sweep 360 degrees over 3 seconds
+        double scanRadius = 8.0;
+
+        double lookX = mob.getX() + Math.cos(Math.toRadians(scanAngle)) * scanRadius;
+        double lookY = mob.getY() + mob.getEyeHeight() + 0.5; // Look slightly upward
+        double lookZ = mob.getZ() + Math.sin(Math.toRadians(scanAngle)) * scanRadius;
+
+        mob.getLookControl().setLookAt(lookX, lookY, lookZ);
     }
 
     /**
@@ -199,15 +241,21 @@ public final class AnimalAnimations {
             return;
         }
 
-        // Spawn splash particles at water surface
+        // Calculate positions
+        Vec3 lookVec = mob.getLookAngle();
         double waterX = waterPos.getX() + 0.5;
         double waterY = waterPos.getY() + 1.0;  // Top of water block
         double waterZ = waterPos.getZ() + 0.5;
 
-        // Create ripple effect with multiple particles
-        for (int i = 0; i < 4; i++) {
-            double offsetX = (mob.getRandom().nextDouble() - 0.5) * 0.4;
-            double offsetZ = (mob.getRandom().nextDouble() - 0.5) * 0.4;
+        // Calculate mouth position
+        double mouthX = mob.getX() + lookVec.x * 0.5;
+        double mouthY = mob.getY() + mob.getEyeHeight() * 0.6; // Lower than eyes
+        double mouthZ = mob.getZ() + lookVec.z * 0.5;
+
+        // Create ripple effect with splash particles at water surface
+        for (int i = 0; i < 5; i++) {
+            double offsetX = (mob.getRandom().nextDouble() - 0.5) * 0.5;
+            double offsetZ = (mob.getRandom().nextDouble() - 0.5) * 0.5;
 
             serverLevel.sendParticles(
                 ParticleTypes.SPLASH,
@@ -215,32 +263,59 @@ public final class AnimalAnimations {
                 waterY,
                 waterZ + offsetZ,
                 1,
-                0, 0.1, 0,
+                0, 0.15, 0,
                 0.1
             );
         }
 
-        // Occasional drip particle near mob's mouth
-        if (mob.getRandom().nextFloat() < 0.3f) {
-            Vec3 lookVec = mob.getLookAngle();
+        // Water drips from mouth while drinking (more frequent)
+        if (mob.getRandom().nextFloat() < 0.5f) {
             serverLevel.sendParticles(
                 ParticleTypes.DRIPPING_WATER,
-                mob.getX() + lookVec.x * 0.4,
-                mob.getY() + mob.getEyeHeight() - 0.3,
-                mob.getZ() + lookVec.z * 0.4,
-                1,
-                0, 0, 0,
+                mouthX,
+                mouthY,
+                mouthZ,
+                2,
+                0.05, 0, 0.05,
                 0
+            );
+        }
+
+        // Occasional falling water particles (simulate water being scooped)
+        if (mob.getRandom().nextFloat() < 0.2f) {
+            serverLevel.sendParticles(
+                ParticleTypes.FALLING_WATER,
+                mouthX,
+                mouthY + 0.1,
+                mouthZ,
+                1,
+                0, -0.1, 0,
+                0.05
+            );
+        }
+
+        // Bubble particles in water (creates drinking effect)
+        if (mob.getRandom().nextFloat() < 0.3f) {
+            serverLevel.sendParticles(
+                ParticleTypes.BUBBLE,
+                waterX + (mob.getRandom().nextDouble() - 0.5) * 0.3,
+                waterY - 0.2,
+                waterZ + (mob.getRandom().nextDouble() - 0.5) * 0.3,
+                1,
+                0, 0.1, 0,
+                0.02
             );
         }
     }
 
     /**
      * Plays the drinking sound for a mob.
+     * Uses varied pitch and volume for natural drinking sounds.
      *
      * @param mob the mob drinking
      */
     public static void playDrinkingSound(Mob mob) {
+        // Main drinking sound
         mob.level().playSound(
             null,
             mob.getX(),
@@ -248,15 +323,30 @@ public final class AnimalAnimations {
             mob.getZ(),
             SoundEvents.GENERIC_DRINK,
             SoundSource.NEUTRAL,
-            0.4F + mob.getRandom().nextFloat() * 0.2F,
-            0.9F + mob.getRandom().nextFloat() * 0.2F
+            0.5F + mob.getRandom().nextFloat() * 0.3F,  // Volume: 0.5-0.8
+            0.8F + mob.getRandom().nextFloat() * 0.4F   // Pitch: 0.8-1.2
         );
+
+        // Occasional water splash sound for realism
+        if (mob.getRandom().nextFloat() < 0.3f) {
+            mob.level().playSound(
+                null,
+                mob.getX(),
+                mob.getY(),
+                mob.getZ(),
+                SoundEvents.GENERIC_SPLASH,
+                SoundSource.NEUTRAL,
+                0.3F + mob.getRandom().nextFloat() * 0.2F,
+                1.0F + mob.getRandom().nextFloat() * 0.3F
+            );
+        }
     }
 
     // ========== GRAZING ANIMATIONS ==========
 
     /**
      * Plays grazing animation for herbivores eating grass.
+     * Includes vigilance behavior - animals periodically raise their head to check for predators.
      *
      * @param mob the mob that is grazing
      * @param grassPos the position of the grass being eaten
@@ -265,25 +355,40 @@ public final class AnimalAnimations {
     public static void playGrazingAnimation(Mob mob, BlockPos grassPos, int tickCount) {
         Level level = mob.level();
 
-        // Make mob look at grass
-        mob.getLookControl().setLookAt(
-            grassPos.getX() + 0.5,
-            grassPos.getY() + 0.3,
-            grassPos.getZ() + 0.5
-        );
+        // Vigilance behavior: raise head every 20-30 ticks to check for predators
+        // Grazing animals in nature periodically scan their environment for threats
+        int vigilanceCycle = tickCount % 30;  // 1.5 second cycle
+        boolean isVigilant = vigilanceCycle >= 22;  // Look up for last 8 ticks (0.4 seconds)
 
-        // Trigger head-down animation (same as sheep eating)
-        if (tickCount % 4 == 0) {
-            level.broadcastEntityEvent(mob, EVENT_EAT_GRASS);
+        if (isVigilant) {
+            // Look around while being vigilant (scan for predators)
+            applyVigilanceLook(mob);
+        } else {
+            // Make mob look at grass while eating
+            mob.getLookControl().setLookAt(
+                grassPos.getX() + 0.5,
+                grassPos.getY() + 0.3,
+                grassPos.getZ() + 0.5
+            );
+
+            // Trigger head-down animation (same as sheep eating)
+            if (tickCount % 4 == 0) {
+                level.broadcastEntityEvent(mob, EVENT_EAT_GRASS);
+            }
+
+            // Chewing animation - subtle head bob while eating
+            if (tickCount % 3 == 0) {
+                applyChewingAnimation(mob, grassPos);
+            }
         }
 
-        // Play grass rustling/eating sound
-        if (tickCount % 6 == 0) {
+        // Play grass rustling/eating sound (only when head is down)
+        if (!isVigilant && tickCount % 6 == 0) {
             playGrazingSound(mob);
         }
 
-        // Spawn grass particles
-        if (tickCount % 8 == 0) {
+        // Spawn grass particles (only when actively chewing)
+        if (!isVigilant && tickCount % 8 == 0) {
             spawnGrazingParticles(mob, grassPos);
         }
     }
@@ -327,6 +432,143 @@ public final class AnimalAnimations {
             SoundSource.NEUTRAL,
             0.3F,
             1.0F + mob.getRandom().nextFloat() * 0.2F
+        );
+    }
+
+    /**
+     * Applies subtle chewing animation while grazing.
+     * Creates a realistic head bobbing motion as the animal chews grass.
+     *
+     * @param mob the mob chewing
+     * @param grassPos position of the grass being eaten
+     */
+    private static void applyChewingAnimation(Mob mob, BlockPos grassPos) {
+        // Create a subtle bobbing motion by slightly varying the look target height
+        // This simulates the up-and-down jaw movement of chewing
+        double bobOffset = Math.sin(mob.tickCount * 0.5) * 0.15;  // Small vertical offset
+
+        mob.getLookControl().setLookAt(
+            grassPos.getX() + 0.5,
+            grassPos.getY() + 0.3 + bobOffset,  // Slight vertical variation
+            grassPos.getZ() + 0.5
+        );
+    }
+
+    // ========== FLEEING ANIMATIONS ==========
+
+    /**
+     * Triggers a startled jump reaction when a prey animal first detects a predator.
+     * Provides immediate visual feedback that the predator has been spotted.
+     *
+     * @param mob the prey mob that is startled
+     */
+    public static void playStartledJump(Mob mob) {
+        if (!mob.onGround()) {
+            return;
+        }
+
+        Vec3 currentMotion = mob.getDeltaMovement();
+        double jumpStrength = 0.42;
+        mob.setDeltaMovement(
+            currentMotion.x * 0.5,
+            jumpStrength,
+            currentMotion.z * 0.5
+        );
+
+        playStartledSound(mob);
+    }
+
+    /**
+     * Spawns dust particles from a fleeing animal's feet as it runs.
+     * Creates a visual trail showing panic movement.
+     *
+     * @param mob the fleeing mob
+     * @param tickCount current tick in the flee animation (for pacing)
+     */
+    public static void spawnFleeingDustParticles(Mob mob, int tickCount) {
+        Level level = mob.level();
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        if (!mob.onGround()) {
+            return;
+        }
+
+        if (tickCount % 3 != 0) {
+            return;
+        }
+
+        Vec3 velocity = mob.getDeltaMovement();
+        double speed = velocity.horizontalDistance();
+
+        if (speed < 0.1) {
+            return;
+        }
+
+        int particleCount = 2 + mob.getRandom().nextInt(3);
+        for (int i = 0; i < particleCount; i++) {
+            double offsetX = (mob.getRandom().nextDouble() - 0.5) * mob.getBbWidth();
+            double offsetZ = (mob.getRandom().nextDouble() - 0.5) * mob.getBbWidth();
+
+            serverLevel.sendParticles(
+                ParticleTypes.POOF,
+                mob.getX() + offsetX,
+                mob.getY() + 0.1,
+                mob.getZ() + offsetZ,
+                1,
+                0, 0, 0,
+                0.02
+            );
+        }
+    }
+
+    /**
+     * Plays distress vocalization when a prey animal is fleeing.
+     * Different animal types have characteristic distress calls.
+     *
+     * @param mob the fleeing mob
+     * @param tickCount current tick in the flee animation (for pacing)
+     */
+    public static void playDistressSound(Mob mob, int tickCount) {
+        if (tickCount % 40 != 0) {
+            return;
+        }
+
+        mob.playAmbientSound();
+    }
+
+    /**
+     * Makes a fleeing mob occasionally look back at its pursuing predator.
+     * Creates realistic vigilance behavior during escape.
+     *
+     * @param mob the fleeing mob
+     * @param predator the pursuing predator
+     * @param tickCount current tick in the flee animation
+     */
+    public static void applyFleeingLookBack(Mob mob, LivingEntity predator, int tickCount) {
+        int lookCycle = tickCount % 40;
+
+        if (lookCycle >= 35 && lookCycle <= 40) {
+            mob.getLookControl().setLookAt(predator, 30.0F, 30.0F);
+        }
+    }
+
+    /**
+     * Plays a startled/alarm sound when predator is first detected.
+     *
+     * @param mob the startled mob
+     */
+    private static void playStartledSound(Mob mob) {
+        mob.level().playSound(
+            null,
+            mob.getX(),
+            mob.getY(),
+            mob.getZ(),
+            SoundEvents.RABBIT_JUMP,
+            SoundSource.NEUTRAL,
+            0.6F,
+            1.2F + mob.getRandom().nextFloat() * 0.3F
         );
     }
 }
