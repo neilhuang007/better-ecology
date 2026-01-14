@@ -177,9 +177,16 @@ public class RabbitBehaviorTests implements FabricGameTest {
      */
     @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
     public void testRabbitZigzagFleeFromPredator(GameTestHelper helper) {
+        // Create floor for pathfinding
+        for (int x = 0; x < 21; x++) {
+            for (int z = 0; z < 21; z++) {
+                helper.setBlock(new BlockPos(x, 1, z), net.minecraft.world.level.block.Blocks.GRASS_BLOCK);
+            }
+        }
+
         // Spawn rabbit and fox very close together
-        BlockPos rabbitPos = new BlockPos(5, 2, 5);
-        BlockPos foxPos = new BlockPos(7, 2, 5);
+        BlockPos rabbitPos = new BlockPos(10, 2, 10);
+        BlockPos foxPos = new BlockPos(12, 2, 10);
         Rabbit rabbit = helper.spawn(EntityType.RABBIT, rabbitPos);
         Fox fox = helper.spawn(EntityType.FOX, foxPos);
 

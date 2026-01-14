@@ -235,12 +235,12 @@ public class SeekWaterGoal extends Goal {
             return;
         }
 
-        this.mob.getLookControl().setLookAt(
-            this.targetWaterPos.getX() + 0.5,
-            this.targetWaterPos.getY() + 0.5,
-            this.targetWaterPos.getZ() + 0.5
-        );
+        // Play drinking animation with particles and sounds
+        if (this.targetWaterPos != null) {
+            AnimalAnimations.playDrinkingAnimation(this.mob, this.targetWaterPos, this.drinkingTicks);
+        }
 
+        // Restore thirst periodically during drinking
         if (this.drinkingTicks % 10 == 0) {
             float restoreAmount = AnimalThresholds.DRINKING_THIRST_RESTORE;
             AnimalNeeds.modifyThirst(this.mob, restoreAmount);

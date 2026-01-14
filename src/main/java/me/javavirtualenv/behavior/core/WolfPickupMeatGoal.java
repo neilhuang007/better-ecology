@@ -98,6 +98,12 @@ public class WolfPickupMeatGoal extends Goal {
     public void tick() {
         // Handle eating animation
         if (eatTimer > 0) {
+            // Play eating animation with particles and sounds
+            ItemStack heldItem = wolf.getItemBySlot(EquipmentSlot.MAINHAND);
+            if (!heldItem.isEmpty()) {
+                AnimalAnimations.playEatingAnimation(wolf, heldItem, EAT_DURATION - eatTimer);
+            }
+
             eatTimer--;
             if (eatTimer <= 0) {
                 finishEating();
@@ -203,6 +209,9 @@ public class WolfPickupMeatGoal extends Goal {
         }
 
         AnimalNeeds.modifyHunger(wolf, restoreAmount);
+
+        // Play finish eating sound
+        AnimalAnimations.playEatingFinishSound(wolf);
 
         // Clear the held item
         wolf.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);

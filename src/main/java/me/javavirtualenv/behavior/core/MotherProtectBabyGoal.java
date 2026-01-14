@@ -2,9 +2,11 @@ package me.javavirtualenv.behavior.core;
 
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -180,11 +182,19 @@ public class MotherProtectBabyGoal extends Goal {
             }
         }
 
-        // Attack if in range
+        // Attack/push if in range
         if (distance <= 2.0 && this.attackCooldown <= 0) {
-            this.mob.doHurtTarget(this.targetThreat);
+            // Check if mob has attack damage attribute (predators do, herbivores don't)
+            if (this.mob.getAttributes().hasAttribute(Attributes.ATTACK_DAMAGE)) {
+                this.mob.doHurtTarget(this.targetThreat);
+                LOGGER.debug("{} attacks threat {}", this.mob.getName().getString(), this.targetThreat.getName().getString());
+            } else {
+                // Push/ram the threat instead (for herbivores like cows and sheep)
+                Vec3 pushDirection = this.targetThreat.position().subtract(this.mob.position()).normalize();
+                this.targetThreat.push(pushDirection.x * 0.5, 0.2, pushDirection.z * 0.5);
+                LOGGER.debug("{} pushes threat {}", this.mob.getName().getString(), this.targetThreat.getName().getString());
+            }
             this.attackCooldown = ATTACK_COOLDOWN_TICKS;
-            LOGGER.debug("{} attacks threat {}", this.mob.getName().getString(), this.targetThreat.getName().getString());
         }
 
         if (this.attackCooldown > 0) {

@@ -25,7 +25,7 @@ import java.util.List;
 public class FollowParentGoal extends Goal {
     private static final Logger LOGGER = LoggerFactory.getLogger(FollowParentGoal.class);
 
-    private static final int SEARCH_INTERVAL_TICKS = 40;
+    private static final int SEARCH_INTERVAL_TICKS = 20;
     private static final int FOLLOW_START_DISTANCE = 6;
     private static final int FOLLOW_STOP_DISTANCE = 2;
     private static final int LOST_PARENT_DISTANCE = 24;

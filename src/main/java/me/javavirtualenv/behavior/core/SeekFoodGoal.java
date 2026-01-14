@@ -243,6 +243,11 @@ public class SeekFoodGoal extends Goal {
     private void handleEatingAnimation() {
         this.eatAnimationTick--;
 
+        // Play grazing animation during eating
+        if (this.mode == FoodMode.GRAZER && this.targetGrassPos != null) {
+            AnimalAnimations.playGrazingAnimation(this.mob, this.targetGrassPos, EAT_ANIMATION_TICKS - this.eatAnimationTick);
+        }
+
         if (this.eatAnimationTick == this.adjustedTickDelay(4)) {
             if (this.mode == FoodMode.GRAZER) {
                 consumeGrass();
@@ -304,9 +309,9 @@ public class SeekFoodGoal extends Goal {
     private void handleItemEating() {
         this.itemEatingTick--;
 
-        // Play eating particles/sound periodically
-        if (this.itemEatingTick % 10 == 0 && this.heldFoodItem != null) {
-            this.level.broadcastEntityEvent(this.mob, (byte) 45);  // Eating particles
+        // Play eating animation with particles and sounds
+        if (this.heldFoodItem != null && !this.heldFoodItem.isEmpty()) {
+            AnimalAnimations.playEatingAnimation(this.mob, this.heldFoodItem, ITEM_EATING_TICKS - this.itemEatingTick);
         }
 
         // Finish eating
@@ -321,6 +326,10 @@ public class SeekFoodGoal extends Goal {
                 }
 
                 AnimalNeeds.modifyHunger(this.mob, restoreAmount);
+
+                // Play finish eating sound
+                AnimalAnimations.playEatingFinishSound(this.mob);
+
                 LOGGER.debug("{} finished eating {} and restored {} hunger (now: {})",
                     this.mob, this.heldFoodItem.getItem(), restoreAmount, AnimalNeeds.getHunger(this.mob));
 

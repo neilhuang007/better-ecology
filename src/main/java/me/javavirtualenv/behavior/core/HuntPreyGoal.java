@@ -85,13 +85,13 @@ public class HuntPreyGoal extends Goal {
         boolean needsFood = AnimalNeeds.isHungry(this.mob) || hasHungryPackMember();
 
         if (!needsFood) {
-            LOGGER.warn("{} canUse: not hungry (hunger={})", this.mob.getName().getString(), AnimalNeeds.getHunger(this.mob));
+            LOGGER.debug("{} canUse: not hungry (hunger={})", this.mob.getName().getString(), AnimalNeeds.getHunger(this.mob));
             return false;
         }
 
         // ALWAYS check for food items first - don't hunt if easier food is available
         if (hasFoodItemsNearby()) {
-            LOGGER.warn("{} found food items nearby, not hunting prey", this.mob.getName().getString());
+            LOGGER.debug("{} found food items nearby, not hunting prey", this.mob.getName().getString());
             return false;
         }
 
@@ -102,7 +102,7 @@ public class HuntPreyGoal extends Goal {
 
         this.searchCooldown = reducedTickDelay(SEARCH_INTERVAL_TICKS);
         boolean foundPrey = findAndTargetPrey();
-        LOGGER.warn("{} canUse: foundPrey={}, hunger={}", this.mob.getName().getString(), foundPrey, AnimalNeeds.getHunger(this.mob));
+        LOGGER.debug("{} canUse: foundPrey={}, hunger={}", this.mob.getName().getString(), foundPrey, AnimalNeeds.getHunger(this.mob));
         return foundPrey;
     }
 
