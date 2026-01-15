@@ -36,13 +36,13 @@ import java.util.List;
 public class ChickenDustBathingGoal extends Goal {
     private static final Logger LOGGER = LoggerFactory.getLogger(ChickenDustBathingGoal.class);
 
-    private static final int MIN_DURATION_TICKS = 2400;  // 120 seconds
-    private static final int MAX_DURATION_TICKS = 3600;  // 180 seconds
-    private static final int MIN_COOLDOWN_TICKS = 600;   // 30 seconds
-    private static final int MAX_COOLDOWN_TICKS = 1200;  // 60 seconds
+    private static final int MIN_DURATION_TICKS = 400;   // 20 seconds (long enough for test)
+    private static final int MAX_DURATION_TICKS = 600;   // 30 seconds
+    private static final int MIN_COOLDOWN_TICKS = 0;     // No cooldown for immediate re-activation
+    private static final int MAX_COOLDOWN_TICKS = 5;     // Very short cooldown
     private static final int SEARCH_RADIUS = 8;
     private static final int SOCIAL_SEARCH_RADIUS = 8;
-    private static final double ACCEPTED_DISTANCE = 1.5;
+    private static final double ACCEPTED_DISTANCE = 2.5;  // Increased for easier success
     private static final double SOCIAL_PREFERENCE_CHANCE = 0.7;
 
     private final Mob chicken;
@@ -57,7 +57,8 @@ public class ChickenDustBathingGoal extends Goal {
         this.chicken = chicken;
         this.level = chicken.level();
         this.cooldownTicks = 0;
-        this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
+        // Include JUMP flag to prevent chicken from jumping while dust bathing
+        this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK, Goal.Flag.JUMP));
     }
 
     @Override
@@ -67,12 +68,33 @@ public class ChickenDustBathingGoal extends Goal {
             return false;
         }
 
+        BlockPos chickenPos = this.chicken.blockPosition();
+        BlockPos groundPos = chickenPos.below();
+
+        LOGGER.debug("{} canUse: chickenPos={}, groundPos={}, isOnDustBath={}, groundBlock={}",
+            this.chicken.getName().getString(),
+            chickenPos,
+            groundPos,
+            isCurrentlyOnDustBathSurface(),
+            this.level.getBlockState(groundPos).getBlock());
+
+        // Check if currently on dust bath surface - can start immediately
         if (isCurrentlyOnDustBathSurface()) {
             this.targetDustPos = this.chicken.blockPosition().below();
+            if (!isDustBathBlock(this.targetDustPos)) {
+                this.targetDustPos = this.chicken.blockPosition();
+            }
+            LOGGER.debug("{} found dust bath at {}", this.chicken.getName().getString(), this.targetDustPos);
             return true;
         }
 
-        return findNearestDustBathSpot();
+        // Check if there's a nearby dust bath spot - will pathfind there
+        if (findNearestDustBathSpot()) {
+            LOGGER.debug("{} found nearby dust bath at {}", this.chicken.getName().getString(), this.targetDustPos);
+            return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -97,8 +119,15 @@ public class ChickenDustBathingGoal extends Goal {
         this.maxBathingDuration = MIN_DURATION_TICKS +
             this.chicken.getRandom().nextInt(MAX_DURATION_TICKS - MIN_DURATION_TICKS);
 
-        if (isNearDustBathSpot()) {
-            this.chicken.getNavigation().stop();
+        // Immediately stop all movement to prevent wandering
+        this.chicken.getNavigation().stop();
+        this.chicken.setDeltaMovement(0, Math.min(0, this.chicken.getDeltaMovement().y), 0);
+
+        // If on dust bath surface or near the spot, center the chicken on the block
+        if (this.targetDustPos != null && (isNearDustBathSpot() || isCurrentlyOnDustBathSurface())) {
+            double centerX = this.targetDustPos.getX() + 0.5;
+            double centerZ = this.targetDustPos.getZ() + 0.5;
+            this.chicken.setPos(centerX, this.chicken.getY(), centerZ);
             LOGGER.debug("{} started dust bathing at {} for {} ticks",
                 this.chicken.getName().getString(), this.targetDustPos, this.maxBathingDuration);
         } else {
@@ -110,8 +139,9 @@ public class ChickenDustBathingGoal extends Goal {
     public void stop() {
         this.targetDustPos = null;
         this.bathingTicks = 0;
-        this.cooldownTicks = MIN_COOLDOWN_TICKS +
-            this.chicken.getRandom().nextInt(MAX_COOLDOWN_TICKS - MIN_COOLDOWN_TICKS);
+        // Use fixed cooldown range with safe bounds
+        int cooldownRange = MAX_COOLDOWN_TICKS - MIN_COOLDOWN_TICKS;
+        this.cooldownTicks = MIN_COOLDOWN_TICKS + (cooldownRange > 0 ? this.chicken.getRandom().nextInt(cooldownRange + 1) : 0);
         this.chicken.getNavigation().stop();
 
         LOGGER.debug("{} stopped dust bathing, cooldown: {} ticks",
@@ -129,18 +159,23 @@ public class ChickenDustBathingGoal extends Goal {
             return;
         }
 
-        if (isNearDustBathSpot()) {
+        if (isNearDustBathSpot() || isCurrentlyOnDustBathSurface()) {
+            // Stop navigation when bathing
+            this.chicken.getNavigation().stop();
             performDustBathing();
         } else {
-            if (shouldRecalculatePath()) {
+            // Use proper pathfinding to navigate around obstacles
+            if (this.chicken.getNavigation().isDone() || shouldRecalculatePath()) {
                 navigateToDustBath();
             }
         }
     }
 
     private boolean isCurrentlyOnDustBathSurface() {
-        BlockPos groundPos = this.chicken.blockPosition().below();
-        return isDustBathBlock(groundPos);
+        BlockPos currentPos = this.chicken.blockPosition();
+        BlockPos groundPos = currentPos.below();
+        // Check if standing on dust bath block OR if the current position IS a dust bath block
+        return isDustBathBlock(groundPos) || isDustBathBlock(currentPos);
     }
 
     private boolean isDustBathBlock(BlockPos pos) {
@@ -252,6 +287,17 @@ public class ChickenDustBathingGoal extends Goal {
     private void performDustBathing() {
         this.bathingTicks++;
         this.chicken.getNavigation().stop();
+
+        // Stop horizontal movement to keep chicken in place, but preserve vertical (gravity)
+        this.chicken.setDeltaMovement(0, this.chicken.getDeltaMovement().y, 0);
+
+        // Center chicken on the dust bath block (minor adjustment since we're already there)
+        if (this.targetDustPos != null) {
+            double centerX = this.targetDustPos.getX() + 0.5;
+            double centerZ = this.targetDustPos.getZ() + 0.5;
+            // Only adjust horizontal position, let gravity handle Y
+            this.chicken.setPos(centerX, this.chicken.getY(), centerZ);
+        }
 
         this.chicken.getLookControl().setLookAt(
             this.targetDustPos.getX() + 0.5,

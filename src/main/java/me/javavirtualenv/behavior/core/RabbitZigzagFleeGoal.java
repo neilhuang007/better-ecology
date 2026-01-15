@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
  *   <li>Adds perpendicular movement components to create unpredictable paths</li>
  *   <li>Intensity varies based on distance to predator (more erratic when closer)</li>
  *   <li>Balances between escape direction and unpredictability</li>
+ *   <li>Unlike other prey, rabbits flee immediately at any distance (no freeze at close range)</li>
  * </ul>
  */
 public class RabbitZigzagFleeGoal extends FleeFromPredatorGoal {
@@ -28,8 +29,14 @@ public class RabbitZigzagFleeGoal extends FleeFromPredatorGoal {
 
     private static final double BASE_ZIGZAG_INTENSITY = 0.4;
     private static final double CLOSE_RANGE_INTENSITY_MULTIPLIER = 1.8;
-    private static final double CLOSE_RANGE_THRESHOLD = 7.0;
+    private static final double CLOSE_RANGE_THRESHOLD = 12.0;  // Increased to cover freeze distance
     private static final int DIRECTION_CHANGE_INTERVAL = 8;
+
+    /**
+     * Rabbits flee at any distance - they don't freeze at close range like other prey.
+     * Their freeze behavior is handled separately by RabbitFreezeBeforeFleeGoal at medium distance.
+     */
+    private static final double RABBIT_MIN_FLEE_DISTANCE = 0.0;
 
     private int ticksSinceFlee;
     private int zigzagDirection;
@@ -53,6 +60,61 @@ public class RabbitZigzagFleeGoal extends FleeFromPredatorGoal {
         super(mob, speedModifier, detectionRange, fleeDistance, predatorTypes);
         this.ticksSinceFlee = 0;
         this.zigzagDirection = 1;
+    }
+
+    /**
+     * Override canUse to remove the MIN_FLEE_DISTANCE check.
+     * Rabbits flee at any distance - they don't freeze at close range like other prey.
+     * Their freeze behavior is handled separately by RabbitFreezeBeforeFleeGoal at medium distance (10-14 blocks).
+     */
+    @Override
+    public boolean canUse() {
+        this.nearestPredator = findNearestPredator();
+
+        if (this.nearestPredator == null) {
+            LOGGER.debug("{} canUse: no predator found within range",
+                    mob.getName().getString());
+            return false;
+        }
+
+        double distanceToPredator = this.mob.distanceTo(this.nearestPredator);
+
+        // Rabbits DON'T freeze at close range - they flee immediately
+        // This is different from the parent FleeFromPredatorGoal which has MIN_FLEE_DISTANCE
+        LOGGER.debug("{} canUse: found predator {} at distance {}",
+                mob.getName().getString(),
+                nearestPredator.getName().getString(),
+                String.format("%.1f", distanceToPredator));
+
+        Vec3 escapePosition = calculateEscapePosition();
+        if (escapePosition == null) {
+            LOGGER.debug("{} canUse: Could not find escape position fleeing from {}",
+                    mob.getName().getString(), nearestPredator.getName().getString());
+            // Fall back to moving directly away from predator
+            Vec3 mobPos = this.mob.position();
+            Vec3 awayDir = mobPos.subtract(this.nearestPredator.position()).normalize();
+            if (awayDir.lengthSqr() > 0.001) {
+                escapePosition = mobPos.add(awayDir.scale(8.0));
+            } else {
+                return false;
+            }
+        }
+
+        if (!isEscapePositionBetter(escapePosition)) {
+            LOGGER.debug("{} canUse: escape position not better than current",
+                    mob.getName().getString());
+            return false;
+        }
+
+        this.escapePath = this.pathNav.createPath(escapePosition.x, escapePosition.y, escapePosition.z, 0);
+
+        LOGGER.debug("{} fleeing from {} at distance {} (path: {})",
+                mob.getName().getString(),
+                nearestPredator.getName().getString(),
+                String.format("%.1f", mob.distanceTo(nearestPredator)),
+                this.escapePath != null ? "found" : "direct movement");
+
+        return true;  // Always flee when predator detected
     }
 
     @Override
@@ -125,6 +187,7 @@ public class RabbitZigzagFleeGoal extends FleeFromPredatorGoal {
 
     /**
      * Calculates a zigzag escape position with unpredictable movement.
+     * Uses a fallback to ensure we always get a valid escape direction.
      *
      * @param distanceToPredator current distance to the predator
      * @return escape position with zigzag applied, or null if none found
@@ -139,6 +202,12 @@ public class RabbitZigzagFleeGoal extends FleeFromPredatorGoal {
         Vec3 predatorPos = this.nearestPredator.position();
 
         Vec3 awayFromPredator = mobPos.subtract(predatorPos).normalize();
+
+        // If the vector is zero (on top of predator), use a random direction
+        if (awayFromPredator.lengthSqr() < 0.001) {
+            double angle = this.mob.getRandom().nextDouble() * Math.PI * 2;
+            awayFromPredator = new Vec3(Math.cos(angle), 0, Math.sin(angle));
+        }
 
         Vec3 perpendicular = new Vec3(-awayFromPredator.z, 0, awayFromPredator.x);
 

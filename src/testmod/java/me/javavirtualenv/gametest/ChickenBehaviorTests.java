@@ -223,7 +223,7 @@ public class ChickenBehaviorTests implements FabricGameTest {
      * Expected: Chicken moves toward dirt block for dust bathing.
      * Note: This is a probabilistic behavior that may not activate every time.
      */
-    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 600, required = false)
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 400)
     public void testChickenDustBathingOnDirt(GameTestHelper helper) {
         // Place dirt block
         BlockPos dirtPos = new BlockPos(5, 1, 5);
@@ -255,7 +255,7 @@ public class ChickenBehaviorTests implements FabricGameTest {
      * Expected: Both chickens are attracted to the same dirt area.
      * Note: This is a probabilistic behavior that may not activate every time.
      */
-    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 600, required = false)
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 400)
     public void testChickenSocialDustBathing(GameTestHelper helper) {
         // Place dirt block
         BlockPos dirtPos = new BlockPos(5, 1, 5);
@@ -288,7 +288,7 @@ public class ChickenBehaviorTests implements FabricGameTest {
      * Expected: Chicken seeks elevated position on fence.
      * Note: Roosting behavior may not activate if other goals take priority.
      */
-    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 800, required = false)
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 600)
     public void testChickenRoostingAtNight(GameTestHelper helper) {
         // Set time to night (18000 ticks = midnight)
         helper.getLevel().setDayTime(18000);

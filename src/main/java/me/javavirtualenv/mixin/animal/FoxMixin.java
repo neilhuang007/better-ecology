@@ -10,6 +10,7 @@ import me.javavirtualenv.behavior.core.SeekFoodGoal;
 import me.javavirtualenv.behavior.core.SeekWaterGoal;
 import me.javavirtualenv.behavior.core.SeparationDistressGoal;
 import me.javavirtualenv.mixin.MobAccessor;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.animal.Chicken;
 import net.minecraft.world.entity.animal.Fox;
 import net.minecraft.world.entity.animal.Rabbit;
@@ -37,6 +38,35 @@ public abstract class FoxMixin {
     private void betterEcology$registerGoals(CallbackInfo ci) {
         Fox fox = (Fox) (Object) this;
         var goalSelector = ((MobAccessor) fox).getGoalSelector();
+        var targetSelector = ((MobAccessor) fox).getTargetSelector();
+
+        // Remove ALL vanilla fox attack and stalk goals to prevent close-range attacks
+        // Our FoxPounceHuntingGoal handles hunting with proper distance requirements
+        goalSelector.removeAllGoals(goal -> {
+            String className = goal.getClass().getName();
+            // Only remove VANILLA goals (from net.minecraft or Fox inner classes)
+            // Don't remove our ecology goals
+            if (className.startsWith("me.javavirtualenv")) {
+                return false;
+            }
+            // Remove ALL vanilla attack-related goals including Fox inner classes
+            return goal instanceof MeleeAttackGoal ||
+                   className.contains("MeleeAttack") ||
+                   className.contains("Attack") ||
+                   className.contains("FoxAttack") ||
+                   className.contains("StalkPrey") ||
+                   className.contains("Stalk") ||
+                   className.contains("Pounce") ||
+                   className.contains("FoxPounce");
+        });
+
+        // Remove ALL vanilla target selectors that make fox target chickens/rabbits
+        // Our FoxPounceHuntingGoal handles targeting with proper distance requirements
+        targetSelector.removeAllGoals(goal -> {
+            String className = goal.getClass().getName();
+            // Only remove vanilla goals, not our own
+            return !className.startsWith("me.javavirtualenv");
+        });
 
         // Priority 1: Flee from wolves (foxes avoid larger predators)
         goalSelector.addGoal(

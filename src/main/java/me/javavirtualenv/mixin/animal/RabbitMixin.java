@@ -11,6 +11,7 @@ import me.javavirtualenv.behavior.core.SeekFoodGoal;
 import me.javavirtualenv.behavior.core.SeekWaterGoal;
 import me.javavirtualenv.behavior.core.SeparationDistressGoal;
 import me.javavirtualenv.mixin.MobAccessor;
+import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
 import net.minecraft.world.entity.animal.Fox;
 import net.minecraft.world.entity.animal.Rabbit;
 import net.minecraft.world.entity.animal.Wolf;
@@ -39,6 +40,9 @@ public abstract class RabbitMixin {
     private void betterEcology$registerGoals(CallbackInfo ci) {
         Rabbit rabbit = (Rabbit) (Object) this;
         var goalSelector = ((MobAccessor) rabbit).getGoalSelector();
+
+        // Remove vanilla AvoidEntityGoal to prevent conflicts with our custom freeze/flee behavior
+        goalSelector.removeAllGoals(goal -> goal instanceof AvoidEntityGoal);
 
         // Priority 0: Freeze before fleeing when predator detected at medium distance
         // Rabbits freeze motionless for camouflage before deciding to flee

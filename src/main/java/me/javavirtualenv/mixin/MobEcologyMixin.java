@@ -2,6 +2,9 @@ package me.javavirtualenv.mixin;
 
 import me.javavirtualenv.behavior.core.AnimalNeeds;
 import me.javavirtualenv.behavior.core.AnimalThresholds;
+import me.javavirtualenv.network.EcologyPackets;
+import net.minecraft.core.BlockPos;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.animal.Animal;
 import org.spongepowered.asm.mixin.Mixin;
@@ -42,12 +45,16 @@ public abstract class MobEcologyMixin {
             return;
         }
 
+        // Store old values for change detection
+        float oldHunger = AnimalNeeds.getHunger(animal);
+        float oldThirst = AnimalNeeds.getThirst(animal);
+
         // Decay hunger and thirst
         AnimalNeeds.decayHunger(animal, AnimalThresholds.DEFAULT_HUNGER_DECAY);
         AnimalNeeds.decayThirst(animal, AnimalThresholds.DEFAULT_THIRST_DECAY);
 
-        // Auto-hydrate when in water (touching water or submerged)
-        if (animal.isInWater() || animal.isInWaterOrRain()) {
+        // Auto-hydrate when in water (touching water, submerged, or standing in water)
+        if (animal.isInWater() || animal.isInWaterOrRain() || betterEcology$isStandingInWater(animal)) {
             betterEcology$autoHydrate(animal);
         }
 
@@ -59,6 +66,18 @@ public abstract class MobEcologyMixin {
         // Apply dehydration damage
         if (AnimalNeeds.isDehydrated(animal)) {
             betterEcology$applyNeedsDamage(animal, "dehydration");
+        }
+
+        // Sync to clients if values changed significantly (more than 0.5 difference)
+        // or periodically every 20 ticks for nearby players
+        float newHunger = AnimalNeeds.getHunger(animal);
+        float newThirst = AnimalNeeds.getThirst(animal);
+        boolean hungerChanged = Math.abs(newHunger - oldHunger) > 0.5f;
+        boolean thirstChanged = Math.abs(newThirst - oldThirst) > 0.5f;
+        boolean shouldSync = hungerChanged || thirstChanged || (animal.level().getGameTime() % 20 == 0);
+
+        if (shouldSync) {
+            EcologyPackets.sendAnimalNeedsToTracking(animal, newHunger, newThirst);
         }
     }
 
@@ -83,5 +102,21 @@ public abstract class MobEcologyMixin {
             animal.hurt(damageSource, AnimalThresholds.DEFAULT_DAMAGE);
             AnimalNeeds.setLastDamageTick(animal, animal.level().getGameTime());
         }
+    }
+
+    /**
+     * Check if the animal is standing in water (feet or body touching water block).
+     */
+    @Unique
+    private boolean betterEcology$isStandingInWater(Animal animal) {
+        BlockPos feetPos = animal.blockPosition();
+        // Check if the block at feet level or below contains water
+        if (animal.level().getFluidState(feetPos).is(FluidTags.WATER)) {
+            return true;
+        }
+        if (animal.level().getFluidState(feetPos.below()).is(FluidTags.WATER)) {
+            return true;
+        }
+        return false;
     }
 }

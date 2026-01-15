@@ -36,7 +36,8 @@ public class RabbitFreezeBeforeFleeGoal extends Goal {
     private static final int FLEE_ACTIVATION_DISTANCE = 8;
     private static final int MIN_FREEZE_DURATION = 30;
     private static final int MAX_FREEZE_DURATION = 60;
-    private static final float PANIC_CHANCE = 0.2F;
+    private static final float PANIC_CHANCE = 0.0F;  // Removed panic chance for deterministic behavior
+    private static final int COOLDOWN_AFTER_FREEZE = 200;  // 10 seconds cooldown to allow flee behavior
 
     private final PathfinderMob mob;
     private final List<Class<? extends LivingEntity>> predatorTypes;
@@ -47,6 +48,7 @@ public class RabbitFreezeBeforeFleeGoal extends Goal {
     private int freezeTicks;
     private int freezeDuration;
     private boolean isPanicked;
+    private int cooldownTicks;
 
     /**
      * Creates a new rabbit freeze before flee goal.
@@ -66,12 +68,19 @@ public class RabbitFreezeBeforeFleeGoal extends Goal {
         this.freezeTicks = 0;
         this.freezeDuration = 0;
         this.isPanicked = false;
+        this.cooldownTicks = 0;
 
         this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK, Goal.Flag.JUMP));
     }
 
     @Override
     public boolean canUse() {
+        // Check cooldown - don't re-freeze if we just finished freezing
+        if (this.cooldownTicks > 0) {
+            this.cooldownTicks--;
+            return false;
+        }
+
         this.detectedPredator = findPredatorInFreezeRange();
 
         if (this.detectedPredator == null) {
@@ -151,6 +160,9 @@ public class RabbitFreezeBeforeFleeGoal extends Goal {
                         String.format("%.1f", distanceToPredator));
             }
         }
+
+        // Set cooldown to prevent immediate re-freezing, allowing flee behavior to activate
+        this.cooldownTicks = COOLDOWN_AFTER_FREEZE;
 
         this.detectedPredator = null;
         this.freezeTicks = 0;

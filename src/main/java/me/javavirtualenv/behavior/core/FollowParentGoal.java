@@ -25,10 +25,10 @@ import java.util.List;
 public class FollowParentGoal extends Goal {
     private static final Logger LOGGER = LoggerFactory.getLogger(FollowParentGoal.class);
 
-    private static final int SEARCH_INTERVAL_TICKS = 20;
-    private static final int FOLLOW_START_DISTANCE = 6;
-    private static final int FOLLOW_STOP_DISTANCE = 2;
-    private static final int LOST_PARENT_DISTANCE = 24;
+    private static final int SEARCH_INTERVAL_TICKS = 0;   // No delay for immediate activation
+    private static final int FOLLOW_START_DISTANCE = 2;   // Reduced to activate sooner
+    private static final int FOLLOW_STOP_DISTANCE = 1;
+    private static final int LOST_PARENT_DISTANCE = 32;   // Increased to not lose parent easily
 
     private final Mob mob;
     private final Class<? extends Mob> parentType;

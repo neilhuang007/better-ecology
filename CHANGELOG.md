@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 #### Wolf Food Sharing and Pack Dynamics (2026-01-01)
+
 - Implemented comprehensive wolf food sharing system with altruistic behavior
 - Added AnimalItemStorage component for item carrying shared across species
 - Wolves pick up meat items when hungry or when pack members are hungry
@@ -20,7 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Client-side visual rendering for wolves carrying items
 - Refactored fox item storage to use shared AnimalItemStorage component
 
-### Key Features of Wolf Food Sharing
+#### Key Features of Wolf Food Sharing
+
 - Wolves search 16 blocks for meat items tagged with `minecraft:meat`
 - 32 block search radius for locating hungry pack members to share food
 - Altruistic behavior: wolves pick up food even when not hungry if pack is hungry
@@ -28,16 +30,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - NBT persistence for pack state, hierarchy, and carried items
 - Integration with existing hunger and predation systems
 
-### Technical Implementation
+#### Technical Implementation
+
 - New goal classes: WolfPickupItemGoal, WolfShareFoodGoal, PredatorFeedingGoal
 - Shared component: AnimalItemStorage for mob item storage
 - WolfBehaviorHandle manages pack state with static query API
 - Client rendering: WolfHeldItemLayer for visual feedback
 - Goal priority system to prevent behavior conflicts
 
+### Documentation
+
+- Reorganized documentation into wiki-style structure
+- Added comprehensive animal behavior pages
+- Added system architecture documentation
+- Cleaned up temporary files and redundant documentation
+
 ## [0.1.0] - Previous Release
 
 ### Initial Features
+
 - EcologyComponent system for modular entity attributes
 - Behavior system with data-driven JSON configurations
 - Herding behaviors (cows, sheep, pigs) with quorum-based movement

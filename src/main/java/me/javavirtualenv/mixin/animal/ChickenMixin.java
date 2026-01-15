@@ -14,6 +14,7 @@ import me.javavirtualenv.behavior.core.SeekFoodGoal;
 import me.javavirtualenv.behavior.core.SeekWaterGoal;
 import me.javavirtualenv.behavior.core.SeparationDistressGoal;
 import me.javavirtualenv.mixin.MobAccessor;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.animal.Chicken;
 import net.minecraft.world.entity.animal.Fox;
 import net.minecraft.world.entity.animal.Wolf;
@@ -61,6 +62,15 @@ public abstract class ChickenMixin {
         Chicken chicken = (Chicken) (Object) this;
         var goalSelector = ((MobAccessor) chicken).getGoalSelector();
 
+        // Remove vanilla wandering goals to prevent interference with dust bathing and roosting
+        goalSelector.removeAllGoals(goal -> {
+            String className = goal.getClass().getName();
+            return goal instanceof WaterAvoidingRandomStrollGoal ||
+                   className.contains("RandomStroll") ||
+                   className.contains("RandomLook") ||
+                   className.contains("Wander");
+        });
+
         // Priority 1: Flee from predators (foxes, wolves, cats, ocelots)
         // Chickens are hunted by many predators
         goalSelector.addGoal(
@@ -101,15 +111,16 @@ public abstract class ChickenMixin {
             new ChickenPeckingGoal(chicken)
         );
 
-        // Priority 5: Dust bathing behavior for feather maintenance
+        // Priority 0: Dust bathing behavior for feather maintenance
+        // Must be highest priority to ensure it activates immediately when on dust bath surface
         goalSelector.addGoal(
-            AnimalThresholds.PRIORITY_SOCIAL,
+            0,  // Highest priority to prevent wandering off the block
             new ChickenDustBathingGoal(chicken)
         );
 
-        // Priority 4: Roosting behavior at night
+        // Priority 0: Roosting behavior at night (same priority as dust bathing, but roosting only activates at night)
         goalSelector.addGoal(
-            AnimalThresholds.PRIORITY_HUNT,
+            0,  // Highest priority for roosting at night
             new ChickenRoostingGoal(chicken)
         );
 

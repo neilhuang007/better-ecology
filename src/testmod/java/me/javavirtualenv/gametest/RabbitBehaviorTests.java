@@ -244,7 +244,7 @@ public class RabbitBehaviorTests implements FabricGameTest {
      * Setup: Spawn rabbit and fox at freeze distance (10-14 blocks).
      * Expected: Rabbit initially freezes with minimal movement.
      */
-    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200, required = false)
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 100)
     public void testRabbitFreezesWhenPredatorNear(GameTestHelper helper) {
         // Create floor for pathfinding
         for (int x = 0; x < 25; x++) {
@@ -290,7 +290,7 @@ public class RabbitBehaviorTests implements FabricGameTest {
      * Setup: Spawn rabbit and fox at freeze distance.
      * Expected: After freeze period, rabbit flees from predator.
      */
-    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 300, required = false)
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
     public void testRabbitFleesAfterFreeze(GameTestHelper helper) {
         // Create floor for pathfinding
         for (int x = 0; x < 25; x++) {
@@ -336,7 +336,7 @@ public class RabbitBehaviorTests implements FabricGameTest {
      * Setup: Spawn rabbit and fox at freeze distance.
      * Expected: Rabbit freezes for 30-60 ticks before fleeing.
      */
-    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 300, required = false)
+    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 200)
     public void testRabbitFreezeDuration(GameTestHelper helper) {
         // Create floor for pathfinding
         for (int x = 0; x < 25; x++) {

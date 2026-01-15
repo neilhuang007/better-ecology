@@ -64,9 +64,9 @@ public abstract class SheepMixin {
             )
         );
 
-        // Priority 4: Baby sheep follow adult sheep (higher priority than eating grass)
+        // Priority 2: Baby sheep follow adult sheep (high priority for babies)
         goalSelector.addGoal(
-            AnimalThresholds.PRIORITY_HUNT,  // Use priority 4 so babies prioritize following parents over grazing
+            AnimalThresholds.PRIORITY_CRITICAL,
             new FollowParentGoal(sheep, Sheep.class)
         );
 
