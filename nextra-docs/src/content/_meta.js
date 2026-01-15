@@ -3,14 +3,6 @@ export default {
     title: 'Home',
     display: 'hidden'
   },
-  wiki: {
-    title: 'Wiki',
-    type: 'page'
-  },
-  '---': {
-    type: 'separator',
-    title: 'Developer Docs'
-  },
   'getting-started': 'Getting Started',
   animals: 'Animals',
   systems: 'Systems',

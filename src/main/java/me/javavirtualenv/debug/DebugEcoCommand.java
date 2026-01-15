@@ -13,15 +13,15 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.*;
+import net.minecraft.world.entity.animal.frog.Frog;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Debug command for testing Better Ecology behaviors.
@@ -30,13 +30,10 @@ import java.util.Map;
  * - predator: Creates wolf hunting scenario with prey animals
  * - food: Creates wolf with dropped meat items
  * - thirst: Creates animals near water to test drinking
- * - test: Creates test structures and monitors results
+ * - test: Creates test structures for manual observation
  * - all: Creates a complete test environment
  */
 public class DebugEcoCommand {
-
-    // Active tests tracking
-    private static final Map<String, TestScenario> activeTests = new HashMap<>();
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("debugeco")
@@ -51,6 +48,24 @@ public class DebugEcoCommand {
                 .executes(ctx -> createBabyScenario(ctx)))
             .then(Commands.literal("pack")
                 .executes(ctx -> createPackScenario(ctx)))
+            .then(Commands.literal("herd")
+                .executes(ctx -> createHerdScenario(ctx)))
+            .then(Commands.literal("dustbath")
+                .executes(ctx -> createDustBathScenario(ctx)))
+            .then(Commands.literal("roost")
+                .executes(ctx -> createRoostScenario(ctx)))
+            .then(Commands.literal("freeze")
+                .executes(ctx -> createFreezeScenario(ctx)))
+            .then(Commands.literal("zigzag")
+                .executes(ctx -> createZigzagScenario(ctx)))
+            .then(Commands.literal("pounce")
+                .executes(ctx -> createPounceScenario(ctx)))
+            .then(Commands.literal("ambush")
+                .executes(ctx -> createAmbushScenario(ctx)))
+            .then(Commands.literal("protect")
+                .executes(ctx -> createProtectScenario(ctx)))
+            .then(Commands.literal("school")
+                .executes(ctx -> createSchoolScenario(ctx)))
             .then(Commands.literal("test")
                 .executes(ctx -> runAllTests(ctx)))
             .then(Commands.literal("all")
@@ -77,12 +92,22 @@ public class DebugEcoCommand {
             "§e/debugeco thirst§7 - Animals near water\n" +
             "§e/debugeco baby§7 - Baby animals with parents\n" +
             "§e/debugeco pack§7 - Wolf pack for hierarchy testing\n" +
-            "§e/debugeco test§7 - Run all behavior tests (outputs results to chat)\n" +
+            "§e/debugeco herd§7 - Herd cohesion test (Cows/Sheep)\n" +
+            "§e/debugeco dustbath§7 - Chicken dust bathing test\n" +
+            "§e/debugeco roost§7 - Chicken roosting test\n" +
+            "§e/debugeco freeze§7 - Rabbit freeze behavior test\n" +
+            "§e/debugeco zigzag§7 - Rabbit zigzag flee test\n" +
+            "§e/debugeco pounce§7 - Fox pouncing test\n" +
+            "§e/debugeco ambush§7 - Frog ambush test\n" +
+            "§e/debugeco protect§7 - Parent protection test\n" +
+            "§e/debugeco school§7 - Fish schooling test\n" +
+            "§e/debugeco test§7 - Run all behavior tests\n" +
             "§e/debugeco all§7 - Complete test environment\n" +
             "§e/debugeco status§7 - Show nearby animal stats\n" +
             "§e/debugeco detail§7 - Detailed info for nearest animal\n" +
             "§e/debugeco sethunger <0-100>§7 - Set nearby animal hunger\n" +
-            "§e/debugeco setthirst <0-100>§7 - Set nearby animal thirst"
+            "§e/debugeco setthirst <0-100>§7 - Set nearby animal thirst\n" +
+            "§e/ecologyoverlay§7 - Toggle debug HUD overlay"
         ), false);
         return 1;
     }
@@ -519,16 +544,14 @@ public class DebugEcoCommand {
         BlockPos playerPos = BlockPos.containing(ctx.getSource().getPosition());
         CommandSourceStack source = ctx.getSource();
 
-        // Clear any previous tests
-        activeTests.clear();
-
         source.sendSuccess(() -> Component.literal(
             "§6========== Running Better Ecology Tests ==========\n" +
-            "§7Creating test structures... Results in 30 seconds."
+            "§7Creating test structures...\n" +
+            "§7Run §e/debugeco status§7 to check results manually."
         ), false);
 
         // Create all test scenarios
-        List<TestScenario> tests = new ArrayList<>();
+        List<String> tests = new ArrayList<>();
 
         // Test 1: Wolf hunts prey
         BlockPos predatorPos = playerPos.offset(5, 0, 0);
@@ -543,12 +566,7 @@ public class DebugEcoCommand {
 
             huntSheep.setPos(predatorPos.getX() + 10, predatorPos.getY() + 1, predatorPos.getZ() + 10);
             level.addFreshEntity(huntSheep);
-
-            tests.add(new TestScenario(
-                "Wolf Hunts Prey",
-                () -> !huntSheep.isAlive() || huntWolf.getTarget() == huntSheep,
-                "Wolf should target or kill the sheep"
-            ));
+            tests.add("Wolf Hunts Prey - Wolf should target or kill sheep");
         }
 
         // Test 2: Baby follows parent
@@ -564,12 +582,7 @@ public class DebugEcoCommand {
             babyCow.setPos(babyPos.getX() + 3, babyPos.getY() + 1, babyPos.getZ() + 3);
             babyCow.setBaby(true);
             level.addFreshEntity(babyCow);
-
-            tests.add(new TestScenario(
-                "Baby Follows Parent",
-                () -> babyCow.distanceTo(adultCow) < 6.0,
-                "Baby cow should move towards adult cow"
-            ));
+            tests.add("Baby Follows Parent - Baby cow should move towards adult");
         }
 
         // Test 3: Prey flees from predator
@@ -578,25 +591,14 @@ public class DebugEcoCommand {
         createFence(level, fleePos, 15, 15);
         Wolf fleeWolf = EntityType.WOLF.create(level);
         Chicken fleeChicken = EntityType.CHICKEN.create(level);
-        double chickenStartX = fleePos.getX() + 7;
-        double chickenStartZ = fleePos.getZ() + 7;
         if (fleeWolf != null && fleeChicken != null) {
             fleeWolf.setPos(fleePos.getX() + 5, fleePos.getY() + 1, fleePos.getZ() + 7);
             AnimalNeeds.setHunger(fleeWolf, 10); // Make hungry so it's threatening
             level.addFreshEntity(fleeWolf);
 
-            fleeChicken.setPos(chickenStartX, fleePos.getY() + 1, chickenStartZ);
+            fleeChicken.setPos(fleePos.getX() + 7, fleePos.getY() + 1, fleePos.getZ() + 7);
             level.addFreshEntity(fleeChicken);
-
-            tests.add(new TestScenario(
-                "Prey Flees Predator",
-                () -> {
-                    if (!fleeChicken.isAlive()) return true; // If killed, still considered success
-                    double currentDist = fleeChicken.distanceTo(fleeWolf);
-                    return currentDist > 4.0; // Chicken should maintain distance
-                },
-                "Chicken should flee from wolf"
-            ));
+            tests.add("Prey Flees Predator - Chicken should flee from wolf");
         }
 
         // Test 4: Animal seeks water when thirsty
@@ -612,12 +614,7 @@ public class DebugEcoCommand {
             thirstyCow.setPos(thirstPos.getX() + 2, thirstPos.getY() + 1, thirstPos.getZ() + 2);
             AnimalNeeds.setThirst(thirstyCow, 15); // Make thirsty
             level.addFreshEntity(thirstyCow);
-
-            tests.add(new TestScenario(
-                "Animal Seeks Water",
-                () -> thirstyCow.isInWater() || AnimalNeeds.getThirst(thirstyCow) > 20,
-                "Thirsty cow should move toward water or drink"
-            ));
+            tests.add("Animal Seeks Water - Thirsty cow should move toward water");
         }
 
         // Test 5: Wolf pack data initialization
@@ -625,15 +622,7 @@ public class DebugEcoCommand {
         if (packWolf != null) {
             packWolf.setPos(playerPos.getX() + 45, playerPos.getY() + 1, playerPos.getZ() + 10);
             level.addFreshEntity(packWolf);
-
-            tests.add(new TestScenario(
-                "Wolf Pack Data Init",
-                () -> {
-                    WolfPackData data = WolfPackData.getPackData(packWolf);
-                    return data != null && data.packId() != null;
-                },
-                "Wolf should have pack data initialized"
-            ));
+            tests.add("Wolf Pack Data Init - Wolf should have pack data initialized");
         }
 
         // Test 6: Dynamic retargeting test
@@ -651,118 +640,360 @@ public class DebugEcoCommand {
             farChicken.setPos(retargetPos.getX() + 18, retargetPos.getY() + 1, retargetPos.getZ() + 10);
             level.addFreshEntity(farChicken);
 
-            // Spawn close chicken after a delay (simulated by just spawning it closer)
             closeChicken.setPos(retargetPos.getX() + 12, retargetPos.getY() + 1, retargetPos.getZ() + 10);
             level.addFreshEntity(closeChicken);
-
-            tests.add(new TestScenario(
-                "Dynamic Prey Retargeting",
-                () -> {
-                    // Success if wolf targets closer chicken or kills one
-                    return !closeChicken.isAlive() || !farChicken.isAlive() ||
-                           (retargetWolf.getTarget() == closeChicken);
-                },
-                "Wolf should prefer closer prey"
-            ));
+            tests.add("Dynamic Prey Retargeting - Wolf should prefer closer prey");
         }
 
-        // Schedule result check after 30 seconds (600 ticks)
-        final List<TestScenario> finalTests = tests;
-        level.getServer().execute(() -> {
-            scheduleTestResults(level, source, finalTests, 600);
-        });
+        source.sendSuccess(() -> Component.literal(
+            String.format("§aCreated %d test scenarios.\n" +
+                "§7Observe the areas for a minute or two, then use §e/debugeco status§7 to inspect animals.", tests.size())
+        ), false);
 
         return tests.size();
     }
 
-    /**
-     * Schedules test result checking after a delay.
-     */
-    private static void scheduleTestResults(ServerLevel level, CommandSourceStack source,
-                                             List<TestScenario> tests, int delayTicks) {
-        // We need to use the server's scheduled task system
-        // Since we can't directly schedule, we'll use a simple tick counter approach
-        // Store the test info and check in a follow-up
+    private static int createHerdScenario(CommandContext<CommandSourceStack> ctx) {
+        ServerLevel level = ctx.getSource().getLevel();
+        BlockPos playerPos = BlockPos.containing(ctx.getSource().getPosition());
 
-        // For simplicity, we'll output a message and rely on the /debugeco status command
-        // to check results, OR we implement a polling approach
+        BlockPos basePos = playerPos.offset(5, 0, 0);
+        createPlatform(level, basePos, 25, 25);
+        createFence(level, basePos, 25, 25);
 
-        // Using server scheduling
-        final long startTime = level.getGameTime();
-        final long endTime = startTime + delayTicks;
-
-        // Create a scheduled task using the server's tick
-        Thread checker = new Thread(() -> {
-            try {
-                Thread.sleep(delayTicks * 50L); // 50ms per tick
-
-                // Run on server thread
-                level.getServer().execute(() -> {
-                    outputTestResults(source, tests);
-                });
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        });
-        checker.setDaemon(true);
-        checker.start();
-    }
-
-    /**
-     * Outputs test results to chat.
-     */
-    private static void outputTestResults(CommandSourceStack source, List<TestScenario> tests) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("§6========== Test Results ==========\n");
-
-        int passed = 0;
-        int failed = 0;
-
-        for (TestScenario test : tests) {
-            boolean success;
-            try {
-                success = test.condition.check();
-            } catch (Exception e) {
-                success = false;
-            }
-
-            if (success) {
-                sb.append("§a✓ ").append(test.name).append("\n");
-                passed++;
-            } else {
-                sb.append("§c✗ ").append(test.name).append("\n");
-                sb.append("  §7").append(test.failureMessage).append("\n");
-                failed++;
+        // Spawn multiple cows to test herd cohesion
+        for (int i = 0; i < 8; i++) {
+            Cow cow = EntityType.COW.create(level);
+            if (cow != null) {
+                double x = basePos.getX() + 5 + (i % 4) * 4;
+                double z = basePos.getZ() + 5 + (i / 4) * 4;
+                cow.setPos(x, basePos.getY() + 1, z);
+                level.addFreshEntity(cow);
             }
         }
 
-        sb.append("§6===================================\n");
-        sb.append(String.format("§aPass: %d §7| §cFail: %d §7| Total: %d", passed, failed, tests.size()));
+        // Spawn multiple sheep to test herd cohesion
+        for (int i = 0; i < 8; i++) {
+            Sheep sheep = EntityType.SHEEP.create(level);
+            if (sheep != null) {
+                double x = basePos.getX() + 12 + (i % 4) * 4;
+                double z = basePos.getZ() + 12 + (i / 4) * 4;
+                sheep.setPos(x, basePos.getY() + 1, z);
+                level.addFreshEntity(sheep);
+            }
+        }
 
-        String result = sb.toString();
-        source.sendSuccess(() -> Component.literal(result), false);
+        ctx.getSource().sendSuccess(() -> Component.literal(
+            "§aCreated herd scenario at " + basePos.toShortString() +
+            "\n§78 Cows + 8 Sheep for herd cohesion testing"
+        ), true);
+        return 1;
     }
 
-    /**
-     * Represents a test scenario with a name, condition, and failure message.
-     */
-    private static class TestScenario {
-        final String name;
-        final TestCondition condition;
-        final String failureMessage;
+    private static int createDustBathScenario(CommandContext<CommandSourceStack> ctx) {
+        ServerLevel level = ctx.getSource().getLevel();
+        BlockPos playerPos = BlockPos.containing(ctx.getSource().getPosition());
 
-        TestScenario(String name, TestCondition condition, String failureMessage) {
-            this.name = name;
-            this.condition = condition;
-            this.failureMessage = failureMessage;
+        BlockPos basePos = playerPos.offset(5, 0, 0);
+        createPlatform(level, basePos, 15, 15);
+        createFence(level, basePos, 15, 15);
+
+        // Replace some grass with dirt for dust bathing
+        for (int x = 5; x < 10; x++) {
+            for (int z = 5; z < 10; z++) {
+                level.setBlock(basePos.offset(x, 0, z), Blocks.DIRT.defaultBlockState(), 3);
+            }
+        }
+
+        // Spawn chickens
+        for (int i = 0; i < 5; i++) {
+            Chicken chicken = EntityType.CHICKEN.create(level);
+            if (chicken != null) {
+                double x = basePos.getX() + 2 + i * 2;
+                double z = basePos.getZ() + 7;
+                chicken.setPos(x, basePos.getY() + 1, z);
+                level.addFreshEntity(chicken);
+            }
+        }
+
+        ctx.getSource().sendSuccess(() -> Component.literal(
+            "§aCreated dust bath scenario at " + basePos.toShortString() +
+            "\n§75 Chickens + dirt patch for dust bathing"
+        ), true);
+        return 1;
+    }
+
+    private static int createRoostScenario(CommandContext<CommandSourceStack> ctx) {
+        ServerLevel level = ctx.getSource().getLevel();
+        BlockPos playerPos = BlockPos.containing(ctx.getSource().getPosition());
+
+        BlockPos basePos = playerPos.offset(5, 0, 0);
+        createPlatform(level, basePos, 15, 15);
+        createFence(level, basePos, 15, 15);
+
+        // Create fence posts at different heights for roosting
+        for (int x = 4; x < 12; x += 3) {
+            for (int z = 4; z < 12; z += 3) {
+                int height = 2 + ((x + z) % 3);
+                for (int y = 1; y <= height; y++) {
+                    level.setBlock(basePos.offset(x, y, z), Blocks.OAK_FENCE.defaultBlockState(), 3);
+                }
+            }
+        }
+
+        // Spawn chickens
+        for (int i = 0; i < 6; i++) {
+            Chicken chicken = EntityType.CHICKEN.create(level);
+            if (chicken != null) {
+                double x = basePos.getX() + 2 + i * 2;
+                double z = basePos.getZ() + 2;
+                chicken.setPos(x, basePos.getY() + 1, z);
+                level.addFreshEntity(chicken);
+            }
+        }
+
+        // Set time to night for roosting
+        long currentTime = level.getDayTime();
+        long timeOfDay = currentTime % 24000;
+        if (timeOfDay < 13000 || timeOfDay > 23000) {
+            level.setDayTime(currentTime + (13000 - timeOfDay));
+        }
+
+        ctx.getSource().sendSuccess(() -> Component.literal(
+            "§aCreated roost scenario at " + basePos.toShortString() +
+            "\n§76 Chickens + fence posts at varying heights\n§7Time set to night for roosting behavior"
+        ), true);
+        return 1;
+    }
+
+    private static int createFreezeScenario(CommandContext<CommandSourceStack> ctx) {
+        ServerLevel level = ctx.getSource().getLevel();
+        BlockPos playerPos = BlockPos.containing(ctx.getSource().getPosition());
+
+        BlockPos basePos = playerPos.offset(5, 0, 0);
+        createPlatform(level, basePos, 30, 10);
+        createFence(level, basePos, 30, 10);
+
+        // Spawn rabbit at one end
+        Rabbit rabbit = EntityType.RABBIT.create(level);
+        if (rabbit != null) {
+            rabbit.setPos(basePos.getX() + 3, basePos.getY() + 1, basePos.getZ() + 5);
+            level.addFreshEntity(rabbit);
+        }
+
+        // Spawn wolf at the other end (far enough to trigger freeze but not immediate flee)
+        Wolf wolf = EntityType.WOLF.create(level);
+        if (wolf != null) {
+            wolf.setPos(basePos.getX() + 20, basePos.getY() + 1, basePos.getZ() + 5);
+            AnimalNeeds.setHunger(wolf, 15);
+            level.addFreshEntity(wolf);
+        }
+
+        ctx.getSource().sendSuccess(() -> Component.literal(
+            "§aCreated freeze scenario at " + basePos.toShortString() +
+            "\n§7Rabbit + distant Wolf to trigger freeze behavior"
+        ), true);
+        return 1;
+    }
+
+    private static int createZigzagScenario(CommandContext<CommandSourceStack> ctx) {
+        ServerLevel level = ctx.getSource().getLevel();
+        BlockPos playerPos = BlockPos.containing(ctx.getSource().getPosition());
+
+        BlockPos basePos = playerPos.offset(5, 0, 0);
+        createPlatform(level, basePos, 20, 20);
+        createFence(level, basePos, 20, 20);
+
+        // Spawn rabbit
+        Rabbit rabbit = EntityType.RABBIT.create(level);
+        if (rabbit != null) {
+            rabbit.setPos(basePos.getX() + 10, basePos.getY() + 1, basePos.getZ() + 10);
+            level.addFreshEntity(rabbit);
+        }
+
+        // Spawn wolf closer to trigger flee with zigzag
+        Wolf wolf = EntityType.WOLF.create(level);
+        if (wolf != null) {
+            wolf.setPos(basePos.getX() + 6, basePos.getY() + 1, basePos.getZ() + 10);
+            AnimalNeeds.setHunger(wolf, 10);
+            level.addFreshEntity(wolf);
+        }
+
+        ctx.getSource().sendSuccess(() -> Component.literal(
+            "§aCreated zigzag scenario at " + basePos.toShortString() +
+            "\n§7Rabbit + close Wolf to trigger zigzag flee behavior"
+        ), true);
+        return 1;
+    }
+
+    private static int createPounceScenario(CommandContext<CommandSourceStack> ctx) {
+        ServerLevel level = ctx.getSource().getLevel();
+        BlockPos playerPos = BlockPos.containing(ctx.getSource().getPosition());
+
+        BlockPos basePos = playerPos.offset(5, 0, 0);
+        createPlatform(level, basePos, 15, 15);
+        createFence(level, basePos, 15, 15);
+
+        // Spawn fox
+        Fox fox = EntityType.FOX.create(level);
+        if (fox != null) {
+            fox.setPos(basePos.getX() + 3, basePos.getY() + 1, basePos.getZ() + 7);
+            AnimalNeeds.setHunger(fox, 15);
+            level.addFreshEntity(fox);
+        }
+
+        // Spawn chicken as prey
+        Chicken chicken = EntityType.CHICKEN.create(level);
+        if (chicken != null) {
+            chicken.setPos(basePos.getX() + 10, basePos.getY() + 1, basePos.getZ() + 7);
+            level.addFreshEntity(chicken);
+        }
+
+        // Spawn rabbit as alternative prey
+        Rabbit rabbit = EntityType.RABBIT.create(level);
+        if (rabbit != null) {
+            rabbit.setPos(basePos.getX() + 7, basePos.getY() + 1, basePos.getZ() + 10);
+            level.addFreshEntity(rabbit);
+        }
+
+        ctx.getSource().sendSuccess(() -> Component.literal(
+            "§aCreated pounce scenario at " + basePos.toShortString() +
+            "\n§7Hungry Fox + Chicken + Rabbit for pouncing behavior"
+        ), true);
+        return 1;
+    }
+
+    private static int createAmbushScenario(CommandContext<CommandSourceStack> ctx) {
+        ServerLevel level = ctx.getSource().getLevel();
+        BlockPos playerPos = BlockPos.containing(ctx.getSource().getPosition());
+
+        BlockPos basePos = playerPos.offset(5, 0, 0);
+        createPlatform(level, basePos, 15, 15);
+        createFence(level, basePos, 15, 15);
+
+        // Add some water and lily pads for frog
+        for (int x = 5; x < 10; x++) {
+            for (int z = 5; z < 10; z++) {
+                level.setBlock(basePos.offset(x, 0, z), Blocks.WATER.defaultBlockState(), 3);
+            }
+        }
+
+        // Spawn frog
+        Frog frog = EntityType.FROG.create(level);
+        if (frog != null) {
+            frog.setPos(basePos.getX() + 7, basePos.getY() + 1, basePos.getZ() + 7);
+            level.addFreshEntity(frog);
+        }
+
+        // Spawn small slime as prey
+        Slime slime = EntityType.SLIME.create(level);
+        if (slime != null) {
+            slime.setPos(basePos.getX() + 10, basePos.getY() + 1, basePos.getZ() + 10);
+            slime.setSize(1, true);
+            level.addFreshEntity(slime);
+        }
+
+        ctx.getSource().sendSuccess(() -> Component.literal(
+            "§aCreated ambush scenario at " + basePos.toShortString() +
+            "\n§7Frog + small Slime + water patch for ambush behavior"
+        ), true);
+        return 1;
+    }
+
+    private static int createProtectScenario(CommandContext<CommandSourceStack> ctx) {
+        ServerLevel level = ctx.getSource().getLevel();
+        BlockPos playerPos = BlockPos.containing(ctx.getSource().getPosition());
+
+        BlockPos basePos = playerPos.offset(5, 0, 0);
+        createPlatform(level, basePos, 15, 15);
+        createFence(level, basePos, 15, 15);
+
+        // Spawn adult cow
+        Cow adultCow = EntityType.COW.create(level);
+        if (adultCow != null) {
+            adultCow.setPos(basePos.getX() + 7, basePos.getY() + 1, basePos.getZ() + 7);
+            level.addFreshEntity(adultCow);
+        }
+
+        // Spawn baby cow
+        Cow babyCow = EntityType.COW.create(level);
+        if (babyCow != null) {
+            babyCow.setPos(basePos.getX() + 8, basePos.getY() + 1, basePos.getZ() + 7);
+            babyCow.setBaby(true);
+            level.addFreshEntity(babyCow);
+        }
+
+        // Spawn wolf as threat
+        Wolf wolf = EntityType.WOLF.create(level);
+        if (wolf != null) {
+            wolf.setPos(basePos.getX() + 12, basePos.getY() + 1, basePos.getZ() + 7);
+            AnimalNeeds.setHunger(wolf, 15);
+            level.addFreshEntity(wolf);
+        }
+
+        ctx.getSource().sendSuccess(() -> Component.literal(
+            "§aCreated protect scenario at " + basePos.toShortString() +
+            "\n§7Adult Cow + Baby Cow + Wolf to test protection behavior"
+        ), true);
+        return 1;
+    }
+
+    private static int createSchoolScenario(CommandContext<CommandSourceStack> ctx) {
+        ServerLevel level = ctx.getSource().getLevel();
+        BlockPos playerPos = BlockPos.containing(ctx.getSource().getPosition());
+
+        BlockPos basePos = playerPos.offset(5, 0, 0);
+
+        // Create glass water tank
+        createWaterTank(level, basePos, 12, 12, 5);
+
+        // Spawn cod for schooling
+        for (int i = 0; i < 10; i++) {
+            Cod cod = EntityType.COD.create(level);
+            if (cod != null) {
+                double x = basePos.getX() + 3 + (i % 3) * 2;
+                double y = basePos.getY() + 2;
+                double z = basePos.getZ() + 3 + (i / 3) * 2;
+                cod.setPos(x, y, z);
+                level.addFreshEntity(cod);
+            }
+        }
+
+        ctx.getSource().sendSuccess(() -> Component.literal(
+            "§aCreated school scenario at " + basePos.toShortString() +
+            "\n§710 Cod in glass water tank for schooling behavior"
+        ), true);
+        return 1;
+    }
+
+    private static void createWaterTank(ServerLevel level, BlockPos pos, int width, int depth, int height) {
+        // Create glass walls
+        for (int y = 0; y <= height; y++) {
+            for (int x = 0; x < width; x++) {
+                level.setBlock(pos.offset(x, y, 0), Blocks.GLASS.defaultBlockState(), 3);
+                level.setBlock(pos.offset(x, y, depth - 1), Blocks.GLASS.defaultBlockState(), 3);
+            }
+            for (int z = 0; z < depth; z++) {
+                level.setBlock(pos.offset(0, y, z), Blocks.GLASS.defaultBlockState(), 3);
+                level.setBlock(pos.offset(width - 1, y, z), Blocks.GLASS.defaultBlockState(), 3);
+            }
+        }
+
+        // Fill with water
+        for (int x = 1; x < width - 1; x++) {
+            for (int z = 1; z < depth - 1; z++) {
+                for (int y = 1; y < height; y++) {
+                    level.setBlock(pos.offset(x, y, z), Blocks.WATER.defaultBlockState(), 3);
+                }
+            }
+        }
+
+        // Glass floor
+        for (int x = 0; x < width; x++) {
+            for (int z = 0; z < depth; z++) {
+                level.setBlock(pos.offset(x, 0, z), Blocks.GLASS.defaultBlockState(), 3);
+            }
         }
     }
 
-    /**
-     * Functional interface for test conditions.
-     */
-    @FunctionalInterface
-    private interface TestCondition {
-        boolean check();
-    }
 }

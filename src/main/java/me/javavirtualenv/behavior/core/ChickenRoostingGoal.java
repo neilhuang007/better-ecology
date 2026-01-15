@@ -321,12 +321,22 @@ public class ChickenRoostingGoal extends Goal {
         double targetX = this.roostPos.getX() + 0.5;
         double targetZ = this.roostPos.getZ() + 0.5;
 
+        // Gently nudge chicken toward center using physics-based movement
+        // This respects collision detection unlike setPos()
         double deltaX = targetX - this.chicken.getX();
         double deltaZ = targetZ - this.chicken.getZ();
         double distSq = deltaX * deltaX + deltaZ * deltaZ;
 
         if (distSq > 0.01) {
-            this.chicken.setPos(targetX, this.chicken.getY(), targetZ);
+            // Apply a gentle centering velocity (physics-based, respects collision)
+            double centeringSpeed = 0.05;
+            double dist = Math.sqrt(distSq);
+            double velX = (deltaX / dist) * centeringSpeed;
+            double velZ = (deltaZ / dist) * centeringSpeed;
+            this.chicken.setDeltaMovement(velX, this.chicken.getDeltaMovement().y, velZ);
+        } else {
+            // Close enough - stop horizontal movement
+            this.chicken.setDeltaMovement(0, this.chicken.getDeltaMovement().y, 0);
         }
 
         this.chicken.setYRot(this.chicken.getYRot() + (this.chicken.getRandom().nextFloat() - 0.5f) * 2.0f);

@@ -165,11 +165,11 @@ public class FleeFromPredatorGoal extends Goal {
                     mob.getName().getString(),
                     speedModifier);
         } else {
-            // No path available, use direct movement
-            LOGGER.debug("{} started fleeing at {}x speed (direct movement)",
+            // No path available, try to create a path to a nearby position away from predator
+            LOGGER.debug("{} started fleeing at {}x speed (trying alternative path)",
                     mob.getName().getString(),
                     speedModifier);
-            applyDirectMovementAwayFromPredator();
+            tryJumpOverObstacle();
         }
 
         AnimalAnimations.playStartledJump(this.mob);

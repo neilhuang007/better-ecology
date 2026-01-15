@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import me.javavirtualenv.behavior.core.AnimalNeeds;
 import me.javavirtualenv.behavior.core.WolfPackData;
 import me.javavirtualenv.debug.DebugEcoCommand;
+import me.javavirtualenv.network.EcologyPackets;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 
@@ -27,6 +28,9 @@ public class BetterEcology implements ModInitializer {
 		// This ensures attachments are available for deserialization
 		registerAttachments();
 
+		// Register network packets
+		registerNetworking();
+
 		// Register commands
 		registerCommands();
 
@@ -44,6 +48,14 @@ public class BetterEcology implements ModInitializer {
 		LOGGER.debug("Registering last_damage_tick attachment: {}", AnimalNeeds.LAST_DAMAGE_TICK_ATTACHMENT);
 		LOGGER.debug("Registering initialized attachment: {}", AnimalNeeds.INITIALIZED_ATTACHMENT);
 		LOGGER.debug("Registering wolf pack attachment: {}", WolfPackData.PACK_DATA_ATTACHMENT);
+	}
+
+	/**
+	 * Registers all network packets used by the mod.
+	 */
+	private void registerNetworking() {
+		EcologyPackets.register();
+		LOGGER.debug("Registered ecology networking");
 	}
 
 	/**

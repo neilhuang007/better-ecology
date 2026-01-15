@@ -123,11 +123,9 @@ public class ChickenDustBathingGoal extends Goal {
         this.chicken.getNavigation().stop();
         this.chicken.setDeltaMovement(0, Math.min(0, this.chicken.getDeltaMovement().y), 0);
 
-        // If on dust bath surface or near the spot, center the chicken on the block
+        // If on dust bath surface or near the spot, gently nudge toward center
         if (this.targetDustPos != null && (isNearDustBathSpot() || isCurrentlyOnDustBathSurface())) {
-            double centerX = this.targetDustPos.getX() + 0.5;
-            double centerZ = this.targetDustPos.getZ() + 0.5;
-            this.chicken.setPos(centerX, this.chicken.getY(), centerZ);
+            // Use physics-based centering (respects collision) instead of setPos()
             LOGGER.debug("{} started dust bathing at {} for {} ticks",
                 this.chicken.getName().getString(), this.targetDustPos, this.maxBathingDuration);
         } else {
@@ -288,15 +286,29 @@ public class ChickenDustBathingGoal extends Goal {
         this.bathingTicks++;
         this.chicken.getNavigation().stop();
 
-        // Stop horizontal movement to keep chicken in place, but preserve vertical (gravity)
-        this.chicken.setDeltaMovement(0, this.chicken.getDeltaMovement().y, 0);
-
-        // Center chicken on the dust bath block (minor adjustment since we're already there)
+        // Gently nudge chicken toward center using physics-based movement
+        // This respects collision detection unlike setPos()
         if (this.targetDustPos != null) {
             double centerX = this.targetDustPos.getX() + 0.5;
             double centerZ = this.targetDustPos.getZ() + 0.5;
-            // Only adjust horizontal position, let gravity handle Y
-            this.chicken.setPos(centerX, this.chicken.getY(), centerZ);
+            double deltaX = centerX - this.chicken.getX();
+            double deltaZ = centerZ - this.chicken.getZ();
+            double distSq = deltaX * deltaX + deltaZ * deltaZ;
+
+            if (distSq > 0.01) {
+                // Apply a gentle centering velocity (physics-based, respects collision)
+                double centeringSpeed = 0.03;
+                double dist = Math.sqrt(distSq);
+                double velX = (deltaX / dist) * centeringSpeed;
+                double velZ = (deltaZ / dist) * centeringSpeed;
+                this.chicken.setDeltaMovement(velX, this.chicken.getDeltaMovement().y, velZ);
+            } else {
+                // Close enough - stop horizontal movement
+                this.chicken.setDeltaMovement(0, this.chicken.getDeltaMovement().y, 0);
+            }
+        } else {
+            // No target - just stop horizontal movement
+            this.chicken.setDeltaMovement(0, this.chicken.getDeltaMovement().y, 0);
         }
 
         this.chicken.getLookControl().setLookAt(
