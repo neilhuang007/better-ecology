@@ -1,0 +1,21 @@
+export default {
+  chicken: 'Chicken',
+  cow: 'Cow',
+  pig: 'Pig',
+  sheep: 'Sheep',
+  wolf: 'Wolf',
+  fox: 'Fox',
+  rabbit: 'Rabbit',
+  parrot: 'Parrot',
+  bat: 'Bat',
+  bee: 'Bee',
+  cat: 'Cat',
+  ocelot: 'Ocelot',
+  goat: 'Goat',
+  frog: 'Frog',
+  llama: 'Llama',
+  turtle: 'Turtle',
+  squid: 'Squid',
+  salmon: 'Salmon',
+  armadillo: 'Armadillo'
+}
