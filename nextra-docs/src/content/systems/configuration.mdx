@@ -1,0 +1,254 @@
+---
+title: "Configuration"
+description: "Better Ecology uses data-driven JSON/YAML configuration files that can be hot-reloaded without restarting the game."
+---
+
+## Overview
+
+All animal behaviors are configurable through:
+- Mob profile files (per-entity configuration)
+- Archetype files (reusable behavior templates)
+- Template files (base configuration)
+
+## File Locations
+
+| Type | Path |
+|------|------|
+| Mob profiles | `data/better-ecology/mobs/<category>/<mob>.json` |
+| Archetypes | `data/better-ecology/archetypes/<path>.yaml` |
+| Templates | `data/better-ecology/templates/<template>.yaml` |
+
+### Categories
+
+- `passive/` - Non-hostile animals (sheep, cow, pig, chicken)
+- `predator/` - Predatory animals (wolf, fox)
+- `ambient/` - Ambient creatures (bat)
+
+## Profile Structure
+
+### Basic Profile
+
+```json
+{
+  "identity": {
+    "mob_id": "minecraft:sheep"
+  },
+  "archetypes": [
+    "better-ecology:passive/grazer",
+    "better-ecology:herd/diurnal"
+  ],
+  "hunger": {
+    "enabled": true,
+    "max": 100,
+    "starting": 75,
+    "decay_rate": 0.01
+  },
+  "behaviors": {
+    "cohesion": 1.5,
+    "separation": 1.8,
+    "flee": 2.0
+  }
+}
+```
+
+### Archetype Reference
+
+Archetypes provide reusable behavior templates:
+
+```yaml
+# archetypes/passive/grazer.yaml
+hunger:
+  enabled: true
+  max: 100
+  decay_rate: 0.01
+grazing:
+  enabled: true
+  search_radius: 16.0
+  speed_modifier: 0.8
+```
+
+## Common Configuration Sections
+
+### Hunger
+
+```json
+{
+  "hunger": {
+    "enabled": true,
+    "max": 100,
+    "starting": 75,
+    "decay_rate": 0.01,
+    "starvation_threshold": 10,
+    "starvation_damage": 1
+  }
+}
+```
+
+### Condition
+
+```json
+{
+  "condition": {
+    "enabled": true,
+    "max": 100,
+    "starting": 70
+  }
+}
+```
+
+### Behaviors
+
+```json
+{
+  "behaviors": {
+    "cohesion": 1.5,
+    "separation": 1.8,
+    "alignment": 1.0,
+    "flee": 2.0,
+    "herd_cohesion": 1.6
+  }
+}
+```
+
+### Flock Dynamics
+
+```json
+{
+  "flock_dynamics": {
+    "cohesion_radius": 16.0,
+    "separation_distance": 2.0,
+    "distress_radius": 20.0,
+    "min_flock_size": 3
+  }
+}
+```
+
+### Fleeing
+
+```json
+{
+  "fleeing": {
+    "enabled": true,
+    "flight_initiation_distance": 16.0,
+    "escape_strategy": "ZIGZAG",
+    "zigzag_intensity": 0.5,
+    "panic_threshold": 3
+  }
+}
+```
+
+### Grazing
+
+```json
+{
+  "grazing": {
+    "enabled": true,
+    "search_radius": 16.0,
+    "speed_modifier": 0.8,
+    "hunger_restoration": 25,
+    "priority": 4
+  }
+}
+```
+
+### Diet
+
+```json
+{
+  "diet": {
+    "food_sources": {
+      "primary": [
+        {"type": "ITEM", "id": "minecraft:wheat"},
+        {"type": "TAG", "id": "#minecraft:flowers"}
+      ]
+    }
+  }
+}
+```
+
+### Player Interaction
+
+```json
+{
+  "player_interaction": {
+    "player_breeding": {
+      "items": ["minecraft:wheat"],
+      "cooldown": 6000
+    }
+  }
+}
+```
+
+## Hot-Reloading
+
+Configuration changes take effect after running `/reload`:
+
+1. Modify JSON/YAML configuration files
+2. Run `/reload` command in-game
+3. New behaviors apply immediately
+4. Existing entities update gracefully
+
+## Merge Rules
+
+When profiles include archetypes, values are merged:
+
+| Scenario | Result |
+|----------|--------|
+| `null` in profile | Archetype value used |
+| Empty list in profile | Archetype value used |
+| Non-empty list in profile | Profile value replaces |
+| Map in both | Recursive merge |
+
+## Validation
+
+Invalid configurations produce warnings:
+- Missing `identity.mob_id` skips the profile
+- Unknown handle IDs are logged
+- Type mismatches use defaults
+
+## Default Parameters
+
+### Behavior Weights
+
+| Parameter | Default | Range |
+|-----------|---------|-------|
+| cohesion | 1.0 | 0.0 - 3.0 |
+| separation | 1.5 | 0.0 - 3.0 |
+| alignment | 1.0 | 0.0 - 3.0 |
+| flee | 2.0 | 0.0 - 5.0 |
+
+### Distance Parameters
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| quorumThreshold | 0.3 - 0.7 | % of group needed to move |
+| topologicalNeighbors | 6 - 7 | Neighbors for flocking |
+| flightInitiationDistance | 8 - 32 blocks | Flee trigger distance |
+| givingUpDensity | 0.1 - 0.5 | Patch depletion threshold |
+| territoryRadius | 16 - 64 blocks | Breeding territory size |
+| separationDistance | 1 - 5 blocks | Minimum spacing |
+| perceptionAngle | 270 degrees | Visual field |
+
+## Debugging
+
+### Inspect Entity Data
+
+```
+/data get entity @e[type=sheep,limit=1] better-ecology
+```
+
+### Check Applied Weights
+
+```
+/data get entity @e[type=sheep,limit=1] better-ecology.behavior
+```
+
+### Verify Profile Loading
+
+Check server logs after `/reload` for profile parsing messages.
+
+## See Also
+
+- [Architecture](architecture)
+- [Ecology Component](ecology-component)
+- [Behavior System](behavior-system)

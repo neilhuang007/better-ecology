@@ -1,0 +1,140 @@
+---
+title: "Wolf"
+description: "Wolves in Better Ecology feature comprehensive pack dynamics, food sharing, hunting coordination, and social hierarchy behaviors."
+---
+
+## Overview
+
+| Attribute | Value |
+|-----------|-------|
+| Health | 20 HP (10 hearts, tamed: 40 HP) |
+| Damage | 4 (wild), 8 (tamed) |
+| Tameable | Yes |
+| Pack Animal | Yes |
+| Social Type | Pack hierarchy |
+
+## Behaviors
+
+### Pack Dynamics
+
+Wolves form packs with social hierarchies and shared behaviors.
+
+**Pack Identification:**
+- UUID-based pack IDs stored in NBT
+- Tamed wolves excluded from wild pack behaviors
+- Pack members recognized via pack ID matching
+
+**Hierarchy System:**
+
+| Rank | Role |
+|------|------|
+| Alpha | Pack leader, priority in feeding |
+| Beta | Secondary rank |
+| Omega | Lowest rank |
+
+### Food Sharing System
+
+**Implementation:** `WolfShareFoodGoal`, `WolfPickupItemGoal`
+
+Wolves exhibit altruistic food sharing behavior within their pack.
+
+**Pickup Behavior:**
+- Search radius for meat items: 16 blocks
+- Picks up items tagged with `minecraft:meat`
+- Altruistic: picks up food even when not hungry if pack is hungry
+
+**Sharing Priority:**
+
+| Priority | Recipient |
+|----------|-----------|
+| 1 (highest) | Mate |
+| 2 | Alpha |
+| 3 | Other hungry pack members |
+
+**Search Behavior:**
+- 32 block search radius for hungry pack members
+- Respects pack boundaries
+- Tamed wolves excluded from wild pack behaviors
+
+### Pack Hunting
+
+Wolves coordinate hunting as a pack.
+
+**Coordination:**
+- Pack members share targets
+- Coordinated approach to prey
+- Social hierarchy influences attack order
+
+### Territorial Defense
+
+Wolves defend their territory from intruders.
+
+**Territory Behavior:**
+- Establish territory around den/home area
+- Warn intruders with growling
+- Pack defends territory together
+
+### Item Storage
+
+**Implementation:** `AnimalItemStorage`
+
+Wolves can carry items (shared component with foxes).
+
+**Mechanics:**
+- Visual rendering of held items
+- NBT persistence for carried items
+- Integration with feeding and sharing systems
+
+## NBT Data
+
+Pack state is persisted in NBT:
+
+```
+BetterEcology.wolf_behavior -> {
+  pack_id: <UUID>,
+  hierarchy_rank: <string>,
+  carried_item: <ItemStack>
+}
+```
+
+## Goal Classes
+
+| Goal | Purpose |
+|------|---------|
+| `WolfPickupItemGoal` | Picking up meat items |
+| `WolfShareFoodGoal` | Sharing food with pack |
+| `PredatorFeedingGoal` | Opportunistic scavenging |
+
+## Visual Rendering
+
+**Implementation:** `WolfHeldItemLayer`
+
+Client-side rendering for wolves carrying items provides visual feedback on wolf state.
+
+## Integration
+
+### Hunger System
+- Wolves have hunger needs
+- Eating restores hunger
+- Hungry wolves seek food more actively
+
+### Predation System
+- Integration with existing hunting behaviors
+- Pack coordination during hunts
+
+## Scientific Basis
+
+### Pack Behavior
+Based on wolf pack dynamics research showing social hierarchies and cooperative behaviors.
+
+### Food Sharing
+Based on observations of altruistic food sharing in wolf packs, particularly between mates and toward pack leaders.
+
+### Territorial Behavior
+Based on research on wolf territory establishment and defense patterns.
+
+## See Also
+
+- [Herd Movement Research](/research/HerdMovement)
+- [Fleeing Research](/research/Fleeing)
+- [Ecology Component](/systems/EcologyComponent)

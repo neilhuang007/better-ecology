@@ -1,0 +1,88 @@
+---
+title: 'API Reference'
+description: 'Reference documentation for developers integrating with Better Ecology'
+---
+
+## Overview
+
+Better Ecology provides APIs for:
+
+- Accessing entity ecology data
+- Registering custom behavior handles
+- Modifying entity configurations
+- Querying spatial data
+
+## Core Interfaces
+
+### EcologyAccess
+
+Access ecology components from entities:
+
+```java
+EcologyComponent component = ((EcologyAccess) entity).getComponent();
+```
+
+### EcologyHandle
+
+Interface for implementing custom behavior systems:
+
+```java
+public interface EcologyHandle {
+    boolean supports(EcologyProfile profile);
+    void registerGoals(Mob mob, GoalSelector goals, GoalSelector targets);
+    void tick(Mob mob);
+    void readNbt(CompoundTag tag);
+    void writeNbt(CompoundTag tag);
+}
+```
+
+### EcologyComponent
+
+Per-entity data storage:
+
+```java
+// Read handle data
+CompoundTag hungerTag = component.getHandleTag("hunger");
+float hunger = hungerTag.getFloat("current");
+
+// Write handle data
+CompoundTag tag = component.getOrCreateHandleTag("hunger");
+tag.putFloat("current", newValue);
+```
+
+## Registering Custom Handles
+
+Register handles during mod initialization:
+
+```java
+EcologyHandleRegistry.register("my_handle", new MyCustomHandle());
+```
+
+Custom handles are automatically enabled for entities whose profiles include the handle's configuration keys.
+
+## Spatial Queries
+
+Query nearby entities efficiently:
+
+```java
+List<Entity> neighbors = SpatialIndex.getNeighbors(
+    entity.position(),
+    radius,
+    entity.getType()
+);
+```
+
+## Events
+
+Better Ecology fires events at key lifecycle points:
+
+- Profile reload
+- Goal registration
+- Entity tick
+- NBT save/load
+
+## Further Documentation
+
+- [Architecture](/systems/architecture) - System design overview
+- [Ecology Component](/systems/ecology-component) - Component details
+- [Behavior System](/systems/behavior-system) - Goal and steering system

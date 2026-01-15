@@ -1,0 +1,132 @@
+---
+title: "Armadillo"
+description: "Armadillos in Better Ecology feature rolling defense, burrowing, insect foraging, and crepuscular activity patterns."
+---
+
+## Overview
+
+| Attribute | Value |
+|-----------|-------|
+| Health | 12 HP (6 hearts) |
+| Size | 0.7 x 0.65 blocks |
+| Diet | Insectivore |
+| Activity Pattern | Crepuscular/Nocturnal |
+
+## Behaviors
+
+### Rolling Defense
+
+Armadillos curl into a ball when threatened.
+
+| Parameter | Value |
+|-----------|-------|
+| Roll duration | 60 ticks |
+| Unroll duration | 40 ticks |
+| Min roll time | 60 ticks |
+| Roll trigger distance | 8.0 blocks |
+| Unroll safe distance | 16.0 blocks |
+| Damage reduction | 80% |
+| Movement while rolled | Disabled |
+
+### Burrowing
+
+Armadillos dig and use burrows for safety.
+
+| Parameter | Value |
+|-----------|-------|
+| Dig cooldown | 1200 ticks |
+| Burrow search range | 64.0 blocks |
+| Min burrow distance | 12.0 blocks |
+| Burrow capacity | 4 armadillos |
+| Daytime burrow chance | 70% |
+| Flee burrow chance | 90% |
+
+### Insect Foraging
+
+Armadillos forage for insects in soil.
+
+**Insect Blocks:**
+- Grass blocks
+- Dirt
+- Sand
+- Coarse dirt
+- Podzol
+- Mycelium
+
+| Parameter | Value |
+|-----------|-------|
+| Scent range | 12.0 blocks |
+| Sniff duration | 40 ticks |
+| Dig duration | 30 ticks |
+| Hunger restore | 30 |
+| Forage cooldown | 600 ticks |
+| Min hunger threshold | 70 |
+
+### Predator Avoidance
+
+| Predator | Avoided |
+|----------|---------|
+| Wolf | Yes |
+| Cat | Yes |
+| Ocelot | Yes |
+| Fox | Yes |
+| Tamed variants | Ignored |
+
+| Parameter | Value |
+|-----------|-------|
+| Detection radius | 24.0 blocks |
+| Roll threshold | 8.0 blocks |
+| Flee weight | 1.5 |
+
+### Panic Response
+
+| Trigger | Enabled |
+|---------|---------|
+| Attack | Yes |
+| Loud noise | Yes |
+| Predator nearby | Yes |
+| Duration | 200 ticks |
+
+### Activity Pattern
+
+| Time | Active |
+|------|--------|
+| Dawn | Yes |
+| Dusk | Yes |
+| Night | Yes |
+| Day | Resting |
+
+## Needs Systems
+
+### Hunger
+
+| Parameter | Value |
+|-----------|-------|
+| Maximum | 100 |
+| Starting | 80 |
+| Decay rate | 0.015 |
+| Damage threshold | 5 |
+
+### Thirst
+
+| Parameter | Value |
+|-----------|-------|
+| Maximum | 100 |
+| Starting | 85 |
+| Decay rate | 0.015 |
+
+### Energy
+
+| Parameter | Value |
+|-----------|-------|
+| Maximum | 100 |
+| Recovery rate | 0.7 |
+| Foraging cost | 0.12 |
+| Fleeing cost | 0.25 |
+| Burrowing cost | 0.2 |
+| Rolled cost | 0.005 |
+
+## See Also
+
+- [Fleeing Research](/research/fleeing)
+- [Sleep Research](/research/sleep)

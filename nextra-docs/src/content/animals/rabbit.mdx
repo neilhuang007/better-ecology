@@ -1,0 +1,109 @@
+---
+title: 'Rabbit'
+description: 'Rabbits in Better Ecology feature enhanced fleeing behaviors, burrowing systems, and alarm signals.'
+---
+
+## Overview
+
+| Attribute | Value |
+|-----------|-------|
+| Health | 3 HP (1.5 hearts) |
+| Movement Speed | 0.3 (fast) |
+| Diet | Carrots, dandelions, golden carrots |
+| Social Type | Colony animal |
+| Prey Status | High vulnerability |
+
+## Behaviors
+
+### Fleeing Behavior
+
+Rabbits have sophisticated escape mechanisms.
+
+**Zigzag Evasion:**
+- Unpredictable path changes during flight
+- Protean movement to confuse predators
+- Direction changes vary in intensity
+
+**Freezing:**
+- Initial freeze response before fleeing
+- Assesses threat level while frozen
+- Controlled by threat proximity
+
+**Flight Initiation Distance:**
+- High FID due to small size and vulnerability
+- Earlier escape when refuge is farther
+- Adjusts based on predator type
+
+### Burrowing System
+
+Rabbits seek and use burrows for safety.
+
+**Burrow Detection:**
+- Search for holes in terrain
+- Natural cave entrances
+- Underground spaces
+
+**Burrow Behavior:**
+- Run toward burrow when threatened
+- Hide inside burrow
+- Emerge cautiously after threat passes
+
+### Alarm Signals
+
+Rabbits warn colony members of threats.
+
+**Thumping Warnings:**
+- Rear foot thumping
+- Alerts nearby rabbits
+- Contagious alarming spreads through colony
+
+**Visual Signals:**
+- White tail flash when fleeing
+- Alerts other rabbits to danger
+
+### Food Caching
+
+Rabbits may store food for later.
+
+**Caching Behavior:**
+- Store excess food items
+- Return to caches when hungry
+- Defend cache locations
+
+## Escape Strategies
+
+| Strategy | When Used |
+|----------|-----------|
+| Straight-line | Refuge nearby and accessible |
+| Zigzag | Open terrain, cursorial predator |
+| Freeze | Ambush predator detected |
+| Burrow | Burrow within reach |
+
+## Configuration
+
+```json
+{
+  "fleeing": {
+    "flightInitiationDistance": 16,
+    "zigzagIntensity": 0.7,
+    "freezingDuration": 40,
+    "escapeStrategy": "ZIGZAG"
+  }
+}
+```
+
+## Scientific Basis
+
+### Zigzag Evasion
+Based on research on protean movement showing unpredictability correlates with evasion success.
+
+### Thumping Behavior
+Based on observed rabbit warning behaviors in wild populations.
+
+### Freezing Response
+Based on research on prey animal freeze responses to ambush predators.
+
+## See Also
+
+- [Fleeing Research](/research/fleeing)
+- [Parent-Offspring Research](/research/parent-offspring)

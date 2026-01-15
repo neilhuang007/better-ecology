@@ -1,0 +1,78 @@
+---
+title: "Horse"
+description: "Horses in Better Ecology feature defensive behaviors, herd dynamics, social grooming, and bonding systems."
+---
+
+## Overview
+
+| Attribute | Value |
+|-----------|-------|
+| Health | 15-30 HP (varies) |
+| Movement Speed | Variable by individual |
+| Tameable | Yes |
+| Social Type | Herd animal |
+
+## Behaviors
+
+### Kick Defense
+
+Horses can kick threats approaching from behind.
+
+| Parameter | Value |
+|-----------|-------|
+| Kick range | 3.0 blocks |
+| Detection range | 4.0 blocks |
+| Warmup duration | 15 ticks |
+| Cooldown | 60 ticks |
+| Base damage | 4.0 |
+| Knockback | 0.6 |
+
+### Rearing
+
+Horses rear up in response to threats or randomly.
+
+| Trigger | Chance |
+|---------|--------|
+| Predator nearby | 70% |
+| When hurt | 50% |
+| Low health (below 30%) | 40% |
+| Random | 0.5% |
+
+### Bonding System
+
+Horses form bonds with nearby horses.
+
+| Parameter | Value |
+|-----------|-------|
+| Bonding range | 12.0 blocks |
+| Bond interval | 100 ticks |
+| Interaction bond gain | +5 |
+| Max bond level | 100 |
+
+### Herd Dynamics
+
+| Parameter | Value |
+|-----------|-------|
+| Herd radius | 32.0 blocks |
+| Cohesion distance | 12.0 blocks |
+| Min distance to leader | 3.0 blocks |
+| Threat detection range | 24.0 blocks |
+| Alarm call range | 32.0 blocks |
+
+### Social Grooming
+
+Horses engage in mutual grooming behavior.
+
+| Parameter | Value |
+|-----------|-------|
+| Search radius | 8.0 blocks |
+| Max grooming distance | 4.0 blocks |
+| Grooming duration | 200 ticks |
+| Cooldown | 600 ticks |
+| Initiation chance | 15% |
+| Mutual grooming chance | 70% |
+
+## See Also
+
+- [Herd Movement Research](/research/herd-movement)
+- [Configuration](/systems/configuration)

@@ -1,0 +1,131 @@
+---
+title: "Configuration"
+description: "Better Ecology uses data-driven configuration files that can be hot-reloaded without restarting the game."
+---
+
+## Overview
+
+All animal behaviors are configurable through:
+
+- **Mob profile files**: Per-entity configuration
+- **Archetype files**: Reusable behavior templates
+- **Template files**: Base configuration defaults
+
+## File Locations
+
+| Type | Path |
+|------|------|
+| Mob profiles | `data/better-ecology/mobs/<category>/<mob>.json` |
+| Archetypes | `data/better-ecology/archetypes/<path>.yaml` |
+| Templates | `data/better-ecology/templates/<template>.yaml` |
+
+### Categories
+
+- `passive/` - Non-hostile animals (sheep, cow, pig, chicken)
+- `predator/` - Predatory animals (wolf, fox)
+- `ambient/` - Ambient creatures (bat)
+
+## Hot-Reloading
+
+Configuration changes take effect after running `/reload`:
+
+1. Modify configuration files
+2. Run `/reload` command in-game
+3. New behaviors apply immediately
+4. Existing entities update gracefully
+
+## Basic Configuration
+
+### Hunger System
+
+```json
+{
+  "hunger": {
+    "enabled": true,
+    "max": 100,
+    "starting": 75,
+    "decay_rate": 0.01,
+    "starvation_threshold": 10,
+    "starvation_damage": 1
+  }
+}
+```
+
+### Behavior Weights
+
+```json
+{
+  "behaviors": {
+    "cohesion": 1.5,
+    "separation": 1.8,
+    "alignment": 1.0,
+    "flee": 2.0
+  }
+}
+```
+
+### Fleeing Configuration
+
+```json
+{
+  "fleeing": {
+    "enabled": true,
+    "flight_initiation_distance": 16.0,
+    "escape_strategy": "ZIGZAG",
+    "zigzag_intensity": 0.5
+  }
+}
+```
+
+## Using Archetypes
+
+Archetypes provide reusable behavior templates:
+
+```json
+{
+  "archetypes": [
+    "better-ecology:passive/grazer",
+    "better-ecology:herd/diurnal"
+  ]
+}
+```
+
+Values from archetypes are merged with the mob profile, with profile values taking precedence.
+
+## Common Parameters
+
+### Distance Parameters
+
+| Parameter | Default Range | Description |
+|-----------|---------------|-------------|
+| `quorumThreshold` | 0.3 - 0.7 | Percentage of group needed to move |
+| `topologicalNeighbors` | 6 - 7 | Neighbors tracked for flocking |
+| `flightInitiationDistance` | 8 - 32 blocks | Distance to trigger fleeing |
+| `separationDistance` | 1 - 5 blocks | Minimum spacing between animals |
+
+### Behavior Weights
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `cohesion` | 1.0 | Strength of group cohesion |
+| `separation` | 1.5 | Strength of spacing maintenance |
+| `alignment` | 1.0 | Strength of heading alignment |
+| `flee` | 2.0 | Strength of escape behavior |
+
+## Debugging
+
+### Inspect Entity Data
+
+```
+/data get entity @e[type=sheep,limit=1] better-ecology
+```
+
+### Check Applied Weights
+
+```
+/data get entity @e[type=sheep,limit=1] better-ecology.behavior
+```
+
+## Advanced Configuration
+
+For detailed configuration options, see the [Configuration System](/systems/configuration) documentation.

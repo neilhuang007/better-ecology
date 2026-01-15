@@ -1,0 +1,107 @@
+---
+title: "Fox"
+description: "Foxes in Better Ecology feature hunting behaviors, food caching, and crepuscular activity patterns."
+---
+
+## Overview
+
+| Attribute | Value |
+|-----------|-------|
+| Health | 10 HP (5 hearts) |
+| Damage | 2 |
+| Diet | Berries, chickens, rabbits, fish |
+| Activity Pattern | Crepuscular (dawn/dusk) |
+| Social Type | Solitary/pair |
+
+## Behaviors
+
+### Hunting
+
+Foxes actively hunt small prey.
+
+**Prey Targets:**
+- Chickens
+- Rabbits
+- Fish (if accessible)
+
+**Hunting Techniques:**
+- Stalk approach
+- Pounce attack
+- Chase for fleeing prey
+
+### Food Caching
+
+Foxes store excess food for later retrieval.
+
+**Caching Behavior:**
+- Bury food items in ground
+- Remember cache locations
+- Return when hungry
+
+**Cache Management:**
+- Multiple cache sites
+- Prioritize recent caches
+- Defend caches from theft
+
+### Item Storage
+
+**Implementation:** `AnimalItemStorage`
+
+Foxes carry items in their mouths (shared component with wolves).
+
+**Mechanics:**
+- Pick up items from ground
+- Carry while moving
+- Drop or consume items
+
+### Crepuscular Activity
+
+Foxes are most active at dawn and dusk.
+
+**Activity Pattern:**
+- Peak activity: Dawn and dusk
+- Reduced activity: Midday
+- Sleep during bright day/deep night
+
+**Trigger:**
+- Light level changes
+- Time of day
+- Weather conditions
+
+### Berry Foraging
+
+Foxes eat berries from sweet berry bushes.
+
+**Foraging Behavior:**
+- Seek sweet berry bushes
+- Harvest berries
+- Consume or cache berries
+
+## Social Behavior
+
+| Parameter | Value |
+|-----------|-------|
+| Social Type | Solitary or mated pairs |
+| Territory | Established around den |
+| Pair Bonding | Seasonal breeding |
+
+## Configuration
+
+Fox behaviors use the shared `AnimalItemStorage` component and integrate with the ecology system.
+
+## Scientific Basis
+
+### Food Caching
+Based on research on fox caching behavior and memory for cache locations.
+
+### Crepuscular Activity
+Based on observed activity patterns in wild fox populations.
+
+### Hunting Behavior
+Based on documented fox hunting techniques including stalking and pouncing.
+
+## See Also
+
+- [Sleep Research](/research/Sleep)
+- [Foraging Research](/research/Foraging)
+- [Ecology Component](/systems/EcologyComponent)

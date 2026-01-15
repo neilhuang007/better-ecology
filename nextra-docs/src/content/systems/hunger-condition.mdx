@@ -1,0 +1,243 @@
+---
+title: "Hunger and Condition Systems"
+description: "Better Ecology implements needs-based systems for hunger, condition, and related attributes that affect animal behavior."
+---
+
+## Hunger System
+
+### Overview
+
+The hunger system tracks how fed an animal is and affects its behavior priorities.
+
+### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| max | float | Maximum hunger value |
+| current | float | Current hunger level |
+| decay_rate | float | Hunger lost per tick |
+| starvation_threshold | float | Level below which starvation occurs |
+| starvation_damage | float | Damage dealt when starving |
+
+### Hunger Effects
+
+| Hunger Level | Effect |
+|--------------|--------|
+| 70-100% | Normal behavior |
+| 40-70% | Increased food seeking |
+| 10-40% | Priority food seeking |
+| 0-10% | Starvation damage |
+
+### Hunger Restoration
+
+Different food sources restore different amounts:
+
+| Source | Restoration | Example |
+|--------|-------------|---------|
+| Grazing | +25 | Sheep eating grass |
+| Crops | +15-25 | Pig eating carrots |
+| Prey | +40 | Wolf eating meat |
+| Items | Variable | Fed by player |
+
+### Configuration
+
+```json
+{
+  "hunger": {
+    "enabled": true,
+    "max": 100,
+    "starting": 75,
+    "decay_rate": 0.01,
+    "starvation_threshold": 10,
+    "starvation_damage": 1,
+    "starvation_interval": 200
+  }
+}
+```
+
+### NBT Storage
+
+```
+BetterEcology.hunger -> {
+  current: 75.0,
+  last_damage_tick: 0
+}
+```
+
+## Condition System
+
+### Overview
+
+Condition represents overall health and well-being beyond just HP.
+
+### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| max | float | Maximum condition value |
+| current | float | Current condition level |
+
+### Condition Factors
+
+Condition is affected by:
+- Hunger level (well-fed = condition gain)
+- Starvation (condition loss)
+- Mud bathing (condition restoration for pigs)
+- Social needs (isolation = condition loss)
+- Weather/temperature
+
+### Condition Effects
+
+| Condition Level | Effect |
+|-----------------|--------|
+| 80-100% | Optimal behavior, premium outputs |
+| 50-80% | Normal behavior |
+| 20-50% | Reduced breeding success |
+| 0-20% | Impaired behavior, poor outputs |
+
+### Output Quality
+
+Condition affects output quality:
+
+| Output | High Condition | Low Condition |
+|--------|----------------|---------------|
+| Wool | Premium drops | Reduced drops |
+| Breeding | Higher success | Lower success |
+| Truffle finding | Better odds | Worse odds |
+
+### Configuration
+
+```json
+{
+  "condition": {
+    "enabled": true,
+    "max": 100,
+    "starting": 70,
+    "hunger_gain_rate": 0.02,
+    "starvation_loss_rate": 0.05
+  }
+}
+```
+
+## Social System
+
+### Overview
+
+Social needs track how lonely or content an animal is with its social environment.
+
+### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| decay_rate | float | Loneliness increase when alone |
+| recovery_rate | float | Loneliness decrease near herd |
+| threshold | float | Level at which distress behaviors trigger |
+
+### Social Needs by Animal Type
+
+| Animal Type | Social Preference |
+|-------------|-------------------|
+| Herd (cow, sheep, pig) | Needs nearby herd |
+| Pack (wolf) | Needs pack members |
+| Flock (chicken, parrot) | Needs flock |
+| Solitary (fox, bat) | Minimal social needs |
+
+### Social Effects
+
+| Loneliness Level | Effect |
+|------------------|--------|
+| 0-40 | Content, normal behavior |
+| 40-70 | Seeking company |
+| 70-100 | Distress behaviors, condition loss |
+
+### Configuration
+
+```json
+{
+  "social": {
+    "enabled": true,
+    "herd_radius": 16.0,
+    "min_herd_size": 3,
+    "decay_rate": 0.008,
+    "recovery_rate": 0.1,
+    "loneliness_threshold": 40
+  }
+}
+```
+
+## Energy System
+
+### Overview
+
+Energy tracks stamina for high-intensity activities like fleeing.
+
+### Energy Consumption
+
+| Activity | Energy Cost |
+|----------|-------------|
+| Walking | Low |
+| Running | Medium |
+| Fleeing | High |
+| Sprinting | Very High |
+
+### Energy Recovery
+
+- Resting: Fast recovery
+- Walking: Slow recovery
+- Eating: Moderate recovery
+
+## System Interactions
+
+### Hunger -> Condition
+
+```
+if (hunger > 70%) {
+    condition += gain_rate;
+} else if (hunger < starvation_threshold) {
+    condition -= loss_rate;
+}
+```
+
+### Condition -> Behavior
+
+```
+if (condition < 50%) {
+    breeding_success *= 0.5;
+    output_quality *= condition / 100.0;
+}
+```
+
+### Social -> Condition
+
+```
+if (loneliness > threshold) {
+    condition -= social_loss_rate;
+    triggerDistressBehaviors();
+}
+```
+
+## Accessing System Data
+
+### Reading Values
+
+```java
+EcologyComponent component = entity.getComponent();
+CompoundTag hungerTag = component.getHandleTag("hunger");
+float currentHunger = hungerTag.getFloat("current");
+float hungerPercent = currentHunger / hungerTag.getFloat("max");
+```
+
+### Modifying Values
+
+```java
+CompoundTag tag = component.getOrCreateHandleTag("hunger");
+float current = tag.getFloat("current");
+tag.putFloat("current", Math.min(current + restoration, max));
+```
+
+## See Also
+
+- [Ecology Component](ecology-component)
+- [Configuration](configuration)
+- [Sheep](../animals/sheep) - Wool quality based on condition
+- [Pig](../animals/pig) - Mud bathing restores condition

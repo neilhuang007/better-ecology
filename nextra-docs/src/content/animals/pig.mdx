@@ -1,0 +1,216 @@
+---
+title: 'Pig'
+description: 'Pigs in Better Ecology feature scientifically-based behaviors including rooting, truffle hunting, mud bathing, and crop feeding.'
+---
+
+## Overview
+
+| Attribute | Value |
+|-----------|-------|
+| Health | 10 HP (5 hearts) |
+| Size | 0.9 x 0.9 blocks |
+| Movement Speed | 0.25 walk, 0.35 run |
+| Diet | Carrots, potatoes, beetroots, beetroot soup |
+| Social Type | Herd animal |
+| Maturity Time | 24000 ticks (20 minutes) |
+
+## Behaviors
+
+### Rooting Behavior
+
+**Implementation:** `PigRootingGoal`
+
+Pigs root in soil to find truffles, a valuable food item.
+
+**Rootable Blocks and Truffle Chances:**
+
+| Block Type | Truffle Chance |
+|------------|----------------|
+| Grass blocks | 5% |
+| Mycelium | 15% (highest) |
+| Podzol | 12% |
+| Regular dirt | 0% |
+
+**Behavior Details:**
+- Rooting duration: 40 ticks (2 seconds)
+- Search range: 8 blocks
+- 30% chance to convert grass to dirt after rooting
+- Spawns dirt particles during rooting
+- Plays pig ambient sounds
+
+### Truffle Hunting
+
+Pigs can detect and actively pursue truffles.
+
+**Truffle Item Properties:**
+
+| Property | Value |
+|----------|-------|
+| Nutrition | 6 hunger points |
+| Saturation | 0.6 |
+| Rarity | Rare (blue item name) |
+
+**Detection Behaviors:**
+- Pigs show heart particles when truffles are within 8 blocks
+- Different soil types affect discovery rates
+
+### Truffle Seeking
+
+**Implementation:** `PigTruffleSeekGoal`
+
+Pigs actively pursue dropped truffles they detect.
+
+**Behavior Details:**
+- Detection range: 16 blocks
+- Movement speed: 1.2x normal
+- Cooldown: 30 seconds after seeking
+- Shows sniffing particles while tracking
+- Heart particles when close to truffle
+- High priority (overrides most other behaviors)
+
+### Truffle Sniffing
+
+**Implementation:** `PigSniffTrufflesGoal`
+
+Pigs pause and sniff when detecting interesting scents.
+
+**Detection Targets:**
+- Dropped truffle items (highest priority)
+- Nearby food crops
+- Mycelium or podzol blocks
+
+**Behavior Details:**
+- Detection range: 12 blocks
+- Sniff duration: 3 seconds
+- Cooldown: 10 seconds
+- Pig looks toward scent source
+- Sneeze particle effects and sniffing sounds
+
+### Mud Bathing
+
+**Implementation:** `PigMudBathingGoal`
+
+Pigs seek out mud, water, or clay to bathe for temperature regulation.
+
+**Benefits:**
+- Restores condition (+2 per second while bathing)
+- Provides temperature regulation in hot weather
+- Applies visual mud effect (5 minutes / 6000 ticks)
+
+**Trigger Conditions:**
+- Random chance (5% for adults, 10% for babies)
+- Increased likelihood when health is below 80%
+- Increased likelihood during hot daytime
+
+**Behavior Details:**
+- Bathing duration: 200 ticks (10 seconds)
+- Search range: 16 blocks
+- Water dripping particle effects
+- Ambient sounds at lower pitch
+
+### Social Mud Bathing
+
+**Implementation:** `PigSocialMudBathingGoal`
+
+Pigs in mud attract other pigs to join them.
+
+**Behavior Details:**
+- Attraction range: 12 blocks
+- Chance to attract: 30% per nearby pig
+- Maximum 4 pigs per group bath
+- Social duration: 20 seconds
+- Happy villager particles when group forms
+
+### Crop Feeding
+
+**Implementation:** `PigFeedingGoal`
+
+Pigs seek out and eat fully grown crops.
+
+**Edible Crops:**
+
+| Crop | Hunger Restoration |
+|------|-------------------|
+| Carrots | +20 |
+| Potatoes | +25 |
+| Beetroots | +15 |
+
+**Behavior Details:**
+- Heals 1 HP (0.5 hearts) when eating
+- Eating duration: 30 ticks (1.5 seconds)
+- Destroys the crop block
+- Search range: 12 blocks
+
+**Trigger Conditions:**
+- Random chance (15% normally, 20% for babies)
+- Increased to 40% when hunger is below 50
+
+## Hunger System
+
+| Parameter | Value |
+|-----------|-------|
+| Maximum | 100 |
+| Starting | 75 |
+| Decay Rate | 0.015 per tick |
+| Starvation Damage | 1 HP every 10 seconds below 5 hunger |
+
+## Condition System
+
+| Parameter | Value |
+|-----------|-------|
+| Maximum | 100 |
+| Starting | 70 |
+| Effect | Affects breeding success and truffle finding |
+| Gain | When satiated |
+| Loss | When hungry/starving |
+
+## Social System
+
+| Parameter | Value |
+|-----------|-------|
+| Type | Herd animal |
+| Social Range | 16 blocks |
+| Decay Rate | 0.008 per tick when alone |
+| Recovery Rate | 0.1 per tick near herd |
+| Loneliness Threshold | 40 |
+
+## Goal Priority System
+
+| Priority | Goal |
+|----------|------|
+| 0 | FloatGoal (vanilla) |
+| 3 | PigTruffleSeekGoal |
+| 4 | WaterAvoidingRandomStrollGoal |
+| 5 | Rooting, MudBathing, SocialMudBathing, Feeding |
+| 6 | Sniffing |
+
+## Visual Effects
+
+### Mud Effect
+- Brown tint overlay when pig has mud effect
+- Alpha fades over 5 minutes
+- Registered in client renderer
+
+## Configuration
+
+All pig behaviors use hardcoded scientific constants based on real pig behavior research. Behaviors are implemented via code-based handles in the pig mixin.
+
+## Scientific Basis
+
+### Truffle Hunting
+Based on the real practice of using pigs to find truffles, which exploits their natural rooting behavior and keen sense of smell.
+
+### Mud Bathing
+Based on thermoregulation behavior in pigs, which lack sweat glands and use mud to cool down and protect their skin.
+
+### Rooting
+Based on natural foraging behavior where pigs use their snouts to search for food in the soil.
+
+### Social Behavior
+Based on natural herd dynamics observed in wild and domestic pigs.
+
+## See Also
+
+- [Foraging Research](/research/foraging)
+- [Hunger and Condition System](/systems/hunger-condition)
+- [Ecology Component](/systems/ecology-component)

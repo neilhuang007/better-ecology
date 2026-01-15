@@ -1,0 +1,113 @@
+---
+title: "Sleeping and Resting Behaviors"
+description: "Research on sleep patterns, sleep site selection, vigilance during rest, social sleeping, sleep postures, and activity cycles across species."
+---
+
+## Overview
+
+This document summarizes research on sleep patterns, sleep site selection, vigilance during rest, social sleeping, sleep postures, and unihemispheric sleep across species.
+
+## Sleep Patterns and Activity Cycles
+
+**Three Main Temporal Patterns**:
+
+| Pattern | Percentage | Description | Examples |
+|---------|------------|-------------|----------|
+| **Diurnal** | ~20% of mammals, most birds | Active during day, sleep at night | Humans, cows, ostriches |
+| **Nocturnal** | ~70% of mammals | Active at night, sleep during day | Rodents, wild felids |
+| **Crepuscular** | ~10% of mammals | Active during twilight (dawn/dusk) | Foxes, rabbits |
+| **Cathemeral** | Varies | Active sporadically day or night | Some primates |
+
+**Key Distribution**:
+- Mammals are predominantly nocturnal (70%)
+- Birds are predominantly diurnal
+- These patterns influence sleep timing and anti-predator strategies
+
+## Sleep Site Selection
+
+### Predator Avoidance Hypothesis
+
+Animals select sleeping sites specifically to minimize predation risk.
+
+**Key Factors**:
+- **Physical protection**: Steep cliffs, dense vegetation, burrows, tree cavities
+- **Concealment**: Hidden spots that reduce detection probability
+- **Escape routes**: Sites with quick escape pathways
+- **Remote locations**: Larger groups seek more isolated sleeping areas
+- **Regular site switching**: Reduces predictability and parasite exposure
+
+**Species Examples**:
+- **Primates**: Select sleeping sites based on predator avoidance, often choosing tall trees or cliff edges
+- **Small birds**: Use hiding places rather than exposed branches
+- **Deer**: Select bed sites with cover and visibility for escape
+
+## Vigilance During Rest
+
+### Core Trade-off
+
+Animals balance sleep needs with maintaining awareness of predators.
+
+**Key Findings**:
+- **Increased predation risk** causes animals to shift to lighter, more vigilant sleep states
+- **Sleep-related rise in sensory thresholds** creates vulnerability periods
+- **Sleep restriction** occurs when predatory risk is elevated
+
+### Vigilance Strategies
+
+- **Lighter sleep states**: Reduced depth of sleep when threat perception is high
+- **Sentinel behavior**: Coordinated vigilance where some individuals remain awake while others sleep
+- **Synchronized vigilance**: Group members taking turns being alert
+- **Asynchronous sleep patterns**: Not all group members sleep simultaneously
+
+## Social Sleeping
+
+### Key Benefits of Group Sleeping
+
+- **Predator dilution effect**: Individual risk decreases as group size increases
+- **Increased vigilance**: More eyes watching for threats
+- **Shared sentinel duties**: Group members take turns being alert
+- **Enhanced detection**: Early warning systems through multiple observers
+
+### Costs
+
+- **Sleep disruption**: Sharing sleeping sites can reduce sleep quality
+- **Social interference**: Increased sleep disturbance from group members
+- **Reduced sleep may be the price** for lower predation risk
+
+## Sleep Postures
+
+### Birds
+
+- **Head tucked back**: Bill tucked into back/scapular feathers (near-universal posture)
+  - Benefits: Heat conservation, neck muscle rest, lower energy consumption
+  - Trade-off: Reduced alertness increases predation risk
+- **Standing on one leg**: Common in many species
+- **Under wing tucking**: Some species for additional protection
+
+### Mammals
+
+- **Curled position**: Heat conservation, protection of vulnerable areas
+- **Standing sleep**: Horses, elephants (brief periods)
+- **Group huddling**: Social species for warmth and protection
+
+## Key Academic References
+
+1. Multiple studies on sleep site selection and predator avoidance
+2. Research on vigilance trade-offs during sleep
+3. Studies on activity cycle patterns across mammals
+
+## Implementation Parameters
+
+| Parameter | Default Range | Description |
+|-----------|---------------|-------------|
+| `sleepStartTime` | 18000-22000 | Game time to start sleeping |
+| `sleepEndTime` | 0-6000 | Game time to wake up |
+| `restingDuration` | 200-1200 ticks | Length of rest periods |
+| `vigilanceInterval` | 40-100 ticks | How often to check for threats while resting |
+| `crepuscularPeaks` | Dawn/dusk | Activity peaks for crepuscular animals |
+
+## See Also
+
+- [Fleeing Research](/research/fleeing) - Predator responses
+- [Bat](/animals/bat) - Crepuscular/nocturnal behavior
+- [Fox](/animals/fox) - Crepuscular activity patterns

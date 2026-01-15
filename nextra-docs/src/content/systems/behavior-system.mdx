@@ -1,0 +1,215 @@
+---
+title: "Behavior System"
+description: "The behavior system in Better Ecology implements AI goals and steering behaviors for animal entities."
+---
+
+## Overview
+
+The behavior system consists of:
+- Goal-based AI using Minecraft's goal system
+- Steering behaviors for movement
+- Behavior handles for subsystem management
+- Data-driven configuration
+
+## Goal-Based AI
+
+### Goal Registration
+
+Goals are registered via handles during entity initialization:
+
+```java
+public void registerGoals(Mob mob, GoalSelector goalSelector,
+                          GoalSelector targetSelector) {
+    goalSelector.addGoal(priority, new MyCustomGoal(mob));
+}
+```
+
+### Goal Priorities
+
+Lower numbers = higher priority:
+
+| Priority | Purpose | Examples |
+|----------|---------|----------|
+| 0 | Survival | FloatGoal |
+| 1-2 | Critical needs | Protection, panic |
+| 3-4 | Important | Hunting, seeking food |
+| 5-6 | Normal | Grazing, rooting |
+| 7-8 | Low priority | Social, wandering |
+
+### Custom Goals
+
+Goals extend Minecraft's `Goal` class:
+
+```java
+public class SheepGrazeGoal extends Goal {
+    private final Sheep sheep;
+    private BlockPos targetGrass;
+
+    @Override
+    public boolean canUse() {
+        // Check if sheep is hungry and grass is nearby
+        return isHungry() && findGrass() != null;
+    }
+
+    @Override
+    public void start() {
+        targetGrass = findGrass();
+        sheep.getNavigation().moveTo(targetGrass);
+    }
+
+    @Override
+    public void tick() {
+        // Move toward grass, eat when arrived
+    }
+}
+```
+
+## Steering Behaviors
+
+### Core Behaviors
+
+| Behavior | Purpose |
+|----------|---------|
+| Separation | Avoid crowding neighbors |
+| Alignment | Match heading with neighbors |
+| Cohesion | Move toward group center |
+| Flee | Move away from threats |
+| Seek | Move toward targets |
+| Wander | Random movement |
+
+### Behavior Weights
+
+Behaviors are combined using weighted sums:
+
+```java
+Vec3d steering = separation.scale(separationWeight)
+    .add(alignment.scale(alignmentWeight))
+    .add(cohesion.scale(cohesionWeight));
+```
+
+### Configuration
+
+```json
+{
+  "behaviors": {
+    "separation": 1.8,
+    "alignment": 1.0,
+    "cohesion": 1.5,
+    "flee": 2.0
+  }
+}
+```
+
+## Behavior Packages
+
+### Flocking (`behavior/flocking/`)
+
+Implements boids algorithm for bird-like flocking:
+- Topological neighbor tracking (6-7 neighbors)
+- Separation, alignment, cohesion
+- V-formation for efficiency
+
+### Herding (`behavior/herd/`)
+
+Implements herd movement for ungulates:
+- Quorum-based movement initiation
+- Leadership dynamics
+- Selfish herd positioning
+
+### Fleeing (`behavior/fleeing/`)
+
+Implements escape behaviors:
+- Flight initiation distance
+- Zigzag evasion
+- Freezing response
+- Stampede coordination
+
+### Foraging (`behavior/foraging/`)
+
+Implements feeding behaviors:
+- Patch selection
+- Marginal value theorem
+- Giving-up density
+
+### Parent-Offspring (`behavior/parent/`)
+
+Implements parental behaviors:
+- Following
+- Protection
+- Care responses
+
+## Behavior Handles
+
+Handles integrate behaviors with the component system:
+
+```java
+public class FlockingHandle implements EcologyHandle {
+    @Override
+    public boolean supports(EcologyProfile profile) {
+        return profile.has("flocking.enabled") &&
+               profile.getBool("flocking.enabled");
+    }
+
+    @Override
+    public void registerGoals(Mob mob, GoalSelector goals,
+                              GoalSelector targets) {
+        goals.addGoal(5, new FlockCohesionGoal(mob));
+        goals.addGoal(5, new FlockSeparationGoal(mob));
+    }
+
+    @Override
+    public void tick(Mob mob) {
+        // Update flocking state
+    }
+}
+```
+
+## Spatial Queries
+
+The spatial partitioning system enables efficient neighbor queries:
+
+```java
+List<Entity> neighbors = spatialIndex.getNeighbors(
+    entity.position(),
+    radius,
+    entity.getType()
+);
+```
+
+## Performance Considerations
+
+### Tick Intervals
+
+Expensive behaviors use interval-based updates:
+
+```java
+if (mob.tickCount % 20 == 0) { // Every second
+    updateExpensiveCalculation();
+}
+```
+
+### Caching
+
+- Neighbor lists cached per tick
+- Profile data cached per reload
+- Goal configurations cached at registration
+
+### Early Exit
+
+Goals check preconditions before expensive operations:
+
+```java
+@Override
+public boolean canUse() {
+    if (!isEnabled()) return false;
+    if (recentlyUsed()) return false;
+    return checkDetailedConditions();
+}
+```
+
+## See Also
+
+- [Architecture](architecture)
+- [Ecology Component](ecology-component)
+- [Herd Movement Research](../research/herd-movement)
+- [Flocking Research](../research/flocking)

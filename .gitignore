@@ -10,7 +10,7 @@
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
-# Package Files #
+# Package Files
 *.jar
 *.war
 *.nar
@@ -19,16 +19,51 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# Virtual machine crash logs
 hs_err_pid*
 replay_pid*
+
+# Build output
 /build/
-/.gradle/
-/.minecraft-sources/
-/.idea/
-/run/
-<<<<<<< HEAD
 /out/
-=======
+
+# Gradle
+/.gradle/
+
+# IDE
+/.idea/
+*.iml
+*.ipr
+*.iws
+
+# Development environment
+/.minecraft-sources/
+/run/
+
+# Node modules (if using any JS tooling)
+/node_modules/
+**/node_modules/
+
+# Next.js build output
+**/.next/
+**/out/
+
+# OS generated files
+.DS_Store
+Thumbs.db
 nul
->>>>>>> 7ebd39c79bb6a2cc04217abbfe4c27e593b11dc6
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Build validation files
+build_output.txt
+build_verification.txt
+test_output.txt
+javac.*.args
+
+# Claude AI workspace
+/.claude/

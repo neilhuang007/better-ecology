@@ -1,0 +1,8 @@
+:root {
+  --nextra-primary-hue: 239deg;
+  --nextra-primary-saturation: 84%;
+}
+
+html {
+  scroll-behavior: smooth;
+}

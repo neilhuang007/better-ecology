@@ -1,0 +1,87 @@
+---
+title: 'Chicken'
+description: 'Chickens in Better Ecology feature flocking behaviors, foraging patterns, and nesting.'
+---
+
+## Overview
+
+| Attribute | Value |
+|-----------|-------|
+| Health | 4 HP (2 hearts) |
+| Movement Speed | 0.25 |
+| Diet | Seeds |
+| Social Type | Flock animal |
+| Egg Laying | Yes |
+
+## Behaviors
+
+### Flocking Behavior
+
+Chickens exhibit flocking behaviors similar to other birds.
+
+**Boids Algorithm:**
+- Separation: Avoid crowding neighbors
+- Alignment: Steer toward average heading
+- Cohesion: Move toward average position
+
+**Topological Neighbors:**
+- Track 6-7 nearest neighbors
+- Respond to fixed number of neighbors rather than distance
+
+### Foraging
+
+Chickens actively search for food.
+
+**Seed Finding:**
+- Search for seeds on ground
+- Peck at ground to find food
+- Compete with other chickens for resources
+
+**Ground Scratching:**
+- Scratch at dirt/grass blocks
+- May find seeds or insects
+- Natural foraging behavior
+
+### Alarm Responses
+
+Chickens respond to threats with alarm behaviors.
+
+**Alarm Behaviors:**
+- Flap upward when threatened
+- Alert nearby chickens
+- Scatter when predator detected
+
+### Nesting
+
+Chickens seek appropriate nesting locations.
+
+**Nest Preferences:**
+- Enclosed spaces
+- Hay bale blocks
+- Protected from weather
+
+## Fleeing Behavior
+
+Chickens flee from threats with specific patterns.
+
+**Flight Response:**
+- Immediate flapping upward
+- Scatter pattern
+- Group alarm signals
+
+## Scientific Basis
+
+### Flocking
+Based on the boids algorithm and research on bird flocking behavior.
+
+### Foraging
+Based on natural chicken foraging patterns including ground scratching.
+
+### Alarm Responses
+Based on research on bird alarm calls and group responses.
+
+## See Also
+
+- [Flocking Research](/research/flocking)
+- [Fleeing Research](/research/fleeing)
+- [Foraging Research](/research/foraging)

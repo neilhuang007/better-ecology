@@ -1,0 +1,118 @@
+---
+title: 'Cow'
+description: 'Cows in Better Ecology feature herding behaviors, grazing patterns, and maternal care.'
+---
+
+## Overview
+
+| Attribute | Value |
+|-----------|-------|
+| Health | 10 HP (5 hearts) |
+| Movement Speed | 0.2 |
+| Diet | Wheat, grass |
+| Social Type | Herd animal |
+| Maturity Time | 24000 ticks (20 minutes) |
+
+## Behaviors
+
+### Herding Behavior
+
+Cows exhibit collective movement and decision-making as a herd.
+
+**Quorum-Based Movement:**
+- Movement typically initiated when threshold of herd joins
+- Default quorum threshold: 0.3-0.7 (30-70% of herd)
+- Democratic decision-making for direction
+
+**Selfish Herd Positioning:**
+- Weaker/younger animals seek center positions
+- Peripheral positions have higher predation risk
+- Dynamic repositioning based on threat detection
+
+**Configuration:**
+```json
+{
+  "quorumThreshold": 0.5,
+  "leadershipAgeBonus": 0.3,
+  "separationDistance": 2.0,
+  "cohesionDistance": 12.0
+}
+```
+
+### Grazing Patterns
+
+Cows follow bimodal grazing patterns throughout the day.
+
+**Grazing Schedule:**
+- Morning grazing period
+- Afternoon grazing period
+- Resting periods between grazing
+
+**Grazing Behavior:**
+- Seek grass blocks within range
+- Consume grass to restore hunger
+- Move to new patches when current depleted
+
+### Vigilance Behavior
+
+Cows take turns being alert while others feed.
+
+**Many-Eyes Effect:**
+- Larger groups detect predators earlier
+- Shared vigilance reduces individual scanning time
+- Edge individuals maintain higher vigilance
+
+### Maternal Behavior
+
+Adult cows protect and care for calves.
+
+**Protection Behavior:**
+- Stay within range of calves
+- Move between threat and calf
+- Increase vigilance when calf present
+
+**Following Behavior:**
+- Calves follow mother closely
+- Separation triggers distress
+- Mother waits for separated calves
+
+## Hunger System
+
+| Parameter | Value |
+|-----------|-------|
+| Maximum | 100 |
+| Starting | 75 |
+| Decay Rate | Moderate |
+| Grazing Restoration | Variable based on grass quality |
+
+## Social System
+
+| Parameter | Value |
+|-----------|-------|
+| Herd Size Preference | 4-12 individuals |
+| Cohesion Radius | 12 blocks |
+| Separation Distance | 2 blocks |
+
+## Configuration
+
+Cow behaviors are configured via JSON files in:
+```
+data/better-ecology/mobs/passive/cow.json
+```
+
+## Scientific Basis
+
+### Collective Decision-Making
+Based on research showing neither age nor dominance consistently influence movement order in cattle, with democratic consensus observed in herds.
+
+### Grazing Patterns
+Based on bimodal grazing research showing morning and afternoon activity peaks.
+
+### Vigilance
+Based on research on shared vigilance and the many-eyes effect in ungulate herds.
+
+## See Also
+
+- [Herd Movement Research](/research/herd-movement)
+- [Foraging Research](/research/foraging)
+- [Parent-Offspring Research](/research/parent-offspring)

@@ -1,0 +1,155 @@
+---
+title: "Ecology Component"
+description: "The EcologyComponent is the core data structure that attaches modular attributes to each entity in Better Ecology."
+---
+
+## Overview
+
+The component system provides:
+- Per-entity state storage
+- Handle-based subsystem integration
+- NBT persistence
+- Goal registration tracking
+
+## Component Structure
+
+Each entity with an attached EcologyComponent contains:
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| Profile reference | EcologyProfile | Current behavior configuration |
+| Handle tags | `Map<String, CompoundTag>` | Per-handle NBT data |
+| Goals registered | boolean | Prevents double goal registration |
+| Generation | int | Reload generation counter |
+
+## Accessing Components
+
+### From Entity
+
+```java
+EcologyComponent component = ((EcologyAccess) entity).getComponent();
+```
+
+### Reading Handle Data
+
+```java
+CompoundTag hungerTag = component.getHandleTag("hunger");
+float currentHunger = hungerTag.getFloat("current");
+```
+
+### Writing Handle Data
+
+```java
+CompoundTag tag = component.getOrCreateHandleTag("hunger");
+tag.putFloat("current", newHungerValue);
+tag.putLong("last_update", world.getGameTime());
+```
+
+## Handle Tags
+
+Each handle stores its state in a separate CompoundTag under the handle's ID:
+
+```
+BetterEcology
+  - hunger
+      - current: 75.0
+      - max: 100.0
+      - last_damage_tick: 12345
+  - condition
+      - value: 80.0
+  - wool
+      - wool_stage: 3
+      - wool_quality: 0.75
+```
+
+## Lifecycle
+
+### Attachment
+
+Components are attached via `MobEcologyMixin` during entity initialization.
+
+### Goal Registration
+
+Goals are registered once per entity:
+```java
+if (!component.areGoalsRegistered()) {
+    EcologyHooks.onRegisterGoals(mob);
+    component.setGoalsRegistered(true);
+}
+```
+
+### Ticking
+
+Components are ticked via the mixin hook:
+```java
+EcologyHooks.onTick(mob);
+```
+
+### Persistence
+
+NBT data is saved and loaded via mixin hooks:
+```java
+// Save
+EcologyHooks.onSave(mob, compoundTag);
+
+// Load
+EcologyHooks.onLoad(mob, compoundTag);
+```
+
+## Generation Counter
+
+The generation counter tracks reload events:
+
+1. On `/reload`, `EcologyProfileRegistry.reload()` increments generation
+2. Components compare their generation with registry generation
+3. Stale components refresh their profile reference
+
+This ensures entities pick up configuration changes without requiring respawn.
+
+## Common Handle Tags
+
+### Hunger Handle
+
+```java
+CompoundTag hunger = component.getHandleTag("hunger");
+// Fields: current, max, decay_rate, last_damage_tick
+```
+
+### Condition Handle
+
+```java
+CompoundTag condition = component.getHandleTag("condition");
+// Fields: value, last_update
+```
+
+### Social Handle
+
+```java
+CompoundTag social = component.getHandleTag("social");
+// Fields: loneliness, last_social_tick
+```
+
+### Age Handle
+
+```java
+CompoundTag age = component.getHandleTag("age");
+// Fields: age_ticks, is_adult
+```
+
+## Thread Safety
+
+- All state stored in NBT tags per-entity
+- No shared static state between entities
+- Component system provides thread-safe access
+
+## Performance
+
+- Component access is O(1) via entity attachment
+- Handle tags are lazily created
+- No allocation during normal tick operations
+
+## See Also
+
+- [Architecture](architecture)
+- [Behavior System](behavior-system)
+- [Hunger and Condition](hunger-condition)

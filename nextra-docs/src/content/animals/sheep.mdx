@@ -1,0 +1,235 @@
+---
+title: 'Sheep'
+description: 'Sheep in Better Ecology feature scientifically-based behaviors including wool growth, grazing, flock dynamics, and lamb care.'
+---
+
+## Overview
+
+| Attribute | Value |
+|-----------|-------|
+| Health | 8 HP (4 hearts) |
+| Movement Speed | 0.23 |
+| Diet | Grass blocks |
+| Social Type | Herd animal |
+| Maturity Time | 24000 ticks (20 minutes) |
+
+## Behaviors
+
+### Wool Growth System
+
+**Implementation:** `me.javavirtualenv.ecology.handles.WoolHandle`
+
+Sheep grow wool over time based on nutrition and health. Wool quality affects shearing yield.
+
+**Growth Factors:**
+- Requires hunger above 30% to grow wool
+- Growth progresses through stages 0-4
+- Quality determined by health, condition, and nutrition
+
+**Wool Quality Effects:**
+
+| Quality Range | Classification | Wool Drops |
+|---------------|----------------|------------|
+| Above 0.8 | Premium | Base + 2 |
+| 0.6 - 0.8 | Good | Base + 1 |
+| 0.4 - 0.6 | Normal | Base |
+| Below 0.4 | Poor | Base - 1 (minimum 1) |
+
+**Configuration:**
+```json
+{
+  "wool": {
+    "enabled": true,
+    "max_wool_stage": 4,
+    "min_wool_stage_for_shear": 3,
+    "base_growth_chance": 0.15,
+    "hunger_threshold": 30,
+    "base_graze_chance": 0.35,
+    "grazing_cooldown": 200,
+    "hunger_restoration": 25,
+    "base_wool_drops": 1
+  }
+}
+```
+
+### Grazing Behavior
+
+**Implementation:** `me.javavirtualenv.ecology.ai.SheepGrazeGoal`
+
+Sheep actively seek and consume grass blocks to restore hunger.
+
+**Behavior Details:**
+- Search radius: 16 blocks
+- Converts grass blocks to dirt
+- Restores 25 hunger points
+- Plays eating sounds and particles
+
+**Configuration:**
+```json
+{
+  "grazing": {
+    "enabled": true,
+    "search_radius": 16.0,
+    "speed_modifier": 0.8,
+    "priority": 4
+  }
+}
+```
+
+### Flock Dynamics
+
+**Implementation:** `me.javavirtualenv.behavior.sheep.SheepFlockCohesionBehavior`
+
+Sheep exhibit strong flock cohesion instincts, staying close to other sheep.
+
+**Behavior Details:**
+- Cohesion radius: 16 blocks
+- Move toward flock when distance exceeds 6 blocks
+- Experience distress when isolated beyond 20 blocks
+
+**Configuration:**
+```json
+{
+  "behaviors": {
+    "cohesion": 1.5,
+    "herd_cohesion": 1.6,
+    "separation": 1.8
+  },
+  "flock_dynamics": {
+    "cohesion_radius": 16.0,
+    "distress_radius": 20.0,
+    "min_flock_size": 3
+  }
+}
+```
+
+### Separation Distress
+
+**Implementation:** `me.javavirtualenv.behavior.sheep.SheepSeparationDistressBehavior`
+
+When separated from their flock, sheep exhibit distress behaviors.
+
+**Distress Levels:**
+
+| Distance from Flock | Distress Level | Behavior |
+|---------------------|----------------|----------|
+| 0-6 blocks | 0.0-0.3 | Calm |
+| 6-12 blocks | 0.3-0.5 | Mildly concerned |
+| 12+ blocks | 0.5-1.0 | Distressed |
+
+**Distress Behaviors:**
+- Frequent bleating (interval reduces with distress)
+- Higher-pitched vocalizations
+- Increased movement speed to regroup
+- Worry particle effects
+
+### Lamb Care
+
+**Implementation:** `me.javavirtualenv.ecology.ai.EweProtectLambGoal`
+
+Adult ewes protect and care for lambs with maternal behaviors.
+
+**Behavior Details:**
+- Protection radius: 24 blocks
+- Move toward lamb if distance exceeds 8 blocks
+- Detect when lamb is fleeing or hurt
+- Protective response when lamb is threatened
+
+**Lamb Danger Detection:**
+- Lamb moving quickly (above 0.3 speed)
+- Lamb health below 70%
+- Ewe moves between threat and lamb
+
+**Configuration:**
+```json
+{
+  "lamb_care": {
+    "enabled": true,
+    "follow_range": 24.0,
+    "protection_range": 12.0,
+    "speed_modifier": 1.0,
+    "priority": 2
+  }
+}
+```
+
+### Sound Effects
+
+Sheep use different vocalizations for communication:
+
+| Context | Sound | Notes |
+|---------|-------|-------|
+| Eating | `SHEEP_EAT` | During grazing |
+| Shearing | `SHEEP_SHEAR` | When sheared |
+| Ambient | `SHEEP_AMBIENT` | General communication |
+| Lamb care | `SHEEP_AMBIENT` | Higher pitch |
+| Distress | `SHEEP_AMBIENT` | Higher pitch and volume |
+
+## Integration
+
+### Component System
+
+Sheep behaviors integrate with the ecology component system:
+
+```java
+EcologyComponent component = sheep.getComponent();
+CompoundTag woolTag = component.getHandleTag("wool");
+int woolStage = woolTag.getInt("wool_stage");
+float woolQuality = woolTag.getFloat("wool_quality");
+```
+
+### Hunger System
+
+Wool growth depends on hunger:
+- Requires hunger above 30% to grow
+- Growth chance scales with hunger level
+- Grazing restores 25 hunger points
+
+### Condition System
+
+Wool quality calculation:
+- 30% from nutrition
+- 30% from condition
+- 20% from health percentage
+
+### Social System
+
+Separation distress affects social needs:
+- Isolated sheep become lonely faster
+- Social recovery when grouped
+
+## NBT Data
+
+Inspect sheep data using commands:
+
+```
+/data get entity @e[type=sheep,limit=1] better-ecology.wool
+```
+
+Expected output:
+```
+{
+  wool_stage: 3,
+  last_shear_time: 12345,
+  wool_quality: 0.75,
+  last_graze_time: 12350,
+  grazing_count: 15
+}
+```
+
+## Scientific Basis
+
+### Wool Growth
+Based on real sheep wool growth cycles where growth rate depends on nutrition (protein intake) and quality is affected by overall health.
+
+### Flocking Behavior
+Based on ungulate flocking research showing sheep are highly gregarious with strong separation anxiety when isolated.
+
+### Lamb Care
+Based on maternal behavior research in sheep, including strong mother-young bonding, recognition by sound and smell, and protective behaviors.
+
+## See Also
+
+- [Herd Movement Research](/research/herd-movement)
+- [Parent-Offspring Research](/research/parent-offspring)
+- [Ecology Component](/systems/ecology-component)
