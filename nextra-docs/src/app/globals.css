@@ -250,45 +250,44 @@ html {
   color: #e0e0e0;
 }
 
-/* Related Pages Component Styles */
+/* Related Pages Component Styles - Minimal Design */
 .related-pages-container {
   margin: 2rem 0;
-  padding: 1.5rem;
-  background: linear-gradient(to bottom, rgba(239, 68, 68, 0.05), rgba(239, 68, 68, 0.02));
-  border-radius: 12px;
-  border: 1px solid rgba(239, 68, 68, 0.15);
+  padding: 1.5rem 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .related-pages-title {
   margin: 0 0 1.25rem 0;
-  font-size: 1.25rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: rgb(239, 68, 68);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgb(107, 114, 128);
 }
 
 .related-pages-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .related-page-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.25rem;
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   cursor: pointer;
 }
 
 .related-page-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-color: rgb(239, 68, 68);
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.15);
 }
 
 .related-page-content {
@@ -297,54 +296,63 @@ html {
 }
 
 .related-page-card-title {
-  margin: 0 0 0.5rem 0;
-  font-size: 1rem;
-  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  font-size: 0.95rem;
+  font-weight: 500;
   color: rgb(17, 24, 39);
 }
 
 .related-page-card-description {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   color: rgb(107, 114, 128);
   line-height: 1.4;
 }
 
 .related-page-arrow {
   margin-left: 1rem;
-  font-size: 1.5rem;
-  color: rgb(239, 68, 68);
-  transition: transform 0.2s ease;
+  font-size: 1rem;
+  color: rgb(156, 163, 175);
+  transition: transform 0.15s ease;
 }
 
 .related-page-card:hover .related-page-arrow {
-  transform: translateX(4px);
+  transform: translateX(2px);
+  color: rgb(107, 114, 128);
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .related-pages-container {
-    background: linear-gradient(to bottom, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
-    border-color: rgba(239, 68, 68, 0.25);
-  }
+/* Dark mode support for Related Pages */
+.dark .related-pages-container {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
 
-  .related-page-card {
-    background: rgb(31, 41, 55);
-    border-color: rgba(255, 255, 255, 0.1);
-  }
+.dark .related-pages-title {
+  color: rgb(156, 163, 175);
+}
 
-  .related-page-card:hover {
-    border-color: rgb(239, 68, 68);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  }
+.dark .related-page-card {
+  border-color: rgba(255, 255, 255, 0.08);
+}
 
-  .related-page-card-title {
-    color: rgb(243, 244, 246);
-  }
+.dark .related-page-card:hover {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.15);
+}
 
-  .related-page-card-description {
-    color: rgb(156, 163, 175);
-  }
+.dark .related-page-card-title {
+  color: rgb(243, 244, 246);
+}
+
+.dark .related-page-card-description {
+  color: rgb(156, 163, 175);
+}
+
+.dark .related-page-arrow {
+  color: rgb(107, 114, 128);
+}
+
+.dark .related-page-card:hover .related-page-arrow {
+  color: rgb(156, 163, 175);
 }
 
 /* Responsive adjustments */

@@ -2,31 +2,136 @@
 title: Ocelot
 description: Mysterious jungle predators that hunt in silence
 category: animals
-tags: [predator, jungle, tameable, stealth]
+tags: [predator, jungle, stealth, wild]
 ---
 
-# Ocelot
+import { AnimalInfoBox } from '@/components/AnimalInfoBox'
+import { HintBox } from '@/components/HintBox'
+import { RelatedPages } from '@/components/RelatedPages'
+
+<AnimalInfoBox
+  name="Ocelot"
+  color="#D4A017"
+  health="5 hearts (10 HP)"
+  speed="Fast"
+  food="Raw Fish (to gain trust)"
+  activeTime="Dawn and Dusk"
+  temperament="Shy, elusive, stealthy"
+  mobType="Passive (Wild)"
+  drops="None"
+/>
 
 The ocelot is a mysterious jungle predator that stalks its prey through the dense undergrowth. These elusive cats are masters of stealth, moving silently through the shadows before striking with lightning speed.
 
-## Quick Facts
+## The Silent Hunter
 
-| Attribute | Value |
-|-----------|-------|
-| **Health** | 5 hearts |
-| **Tameable** | Gain trust with raw fish |
-| **Hunting** | Stealth and ambush |
-| **Habitat** | Jungles |
+Ocelots are the ghosts of the jungle. They move through the foliage with barely a sound, their spotted coats blending perfectly with the dappled light filtering through the canopy. Unlike their domesticated cat cousins, ocelots remain wild and untameable - though they can learn to trust you.
+
+<HintBox type="observation">
+Watch an ocelot stalk prey through the jungle. Notice how it uses vegetation for cover, freezing completely still when the target looks its way.
+</HintBox>
+
+## Hunting Behavior
+
+When an ocelot spots potential prey, it enters a focused hunting mode:
+- Crouches low to the ground
+- Moves in slow, calculated steps
+- Uses jungle vegetation as cover
+- Freezes when prey shows alertness
+- Strikes with explosive speed when within range
+
+<HintBox type="didYouKnow">
+Ocelots primarily hunt chickens in Minecraft. In the wild, they'll patrol the jungle floor looking for any chickens that have wandered too far from safety.
+</HintBox>
+
+## Gaining Trust
+
+Unlike cats, ocelots cannot be fully tamed. However, you can gain their trust by feeding them raw fish. A trusting ocelot will:
+- No longer flee from you
+- Breed with other trusting ocelots
+- Remain wild but tolerant of your presence
+
+<HintBox type="tip">
+To gain an ocelot's trust, hold raw fish and stand very still. Let the ocelot approach you. Any sudden movement will cause it to flee!
+</HintBox>
+
+<HintBox type="mechanics">
+Gaining trust requires patience:
+1. Hold raw cod or raw salmon
+2. Stand completely still - don't even turn your camera
+3. Wait for the ocelot to slowly approach
+4. When it's close enough, feed it
+5. Repeat until hearts appear
+</HintBox>
+
+## Creeper Repellent
+
+Like their domesticated relatives, ocelots scare creepers. This makes jungle areas naturally safer from creeper explosions:
+
+- Creepers will flee from ocelots
+- Wild ocelots provide passive protection in jungles
+- Having ocelots near your jungle base adds a layer of safety
+
+<HintBox type="tip">
+Building a base in a jungle? Don't chase away the local ocelots. They're providing free creeper protection for the entire area!
+</HintBox>
+
+## Finding Ocelots
+
+Ocelots spawn exclusively in jungle biomes. They're rare and shy, making them challenging to spot:
+
+**Where to look:**
+- Deep jungle areas with lots of vegetation
+- Near jungle edges where they hunt
+- Look for chickens fleeing - an ocelot might be nearby
+
+**When to look:**
+- Dawn and dusk are peak activity times
+- They're harder to spot in bright daylight
+- Listen for chicken distress sounds
+
+<HintBox type="tryThis">
+Sit quietly in a jungle at dawn or dusk. Ocelots are most active during these twilight hours, and you might spot one beginning its hunt.
+</HintBox>
+
+## Ocelots vs Cats
+
+While ocelots and cats share similar hunting behaviors, there are key differences:
+
+| Aspect | Ocelot | Cat |
+|--------|--------|-----|
+| Taming | Gains trust only | Fully tameable |
+| Spawn | Jungles only | Villages |
+| Following | Won't follow you | Will follow when tamed |
+| Gifts | None | Brings gifts when sleeping |
+| Appearance | Spotted wild pattern | Multiple coat patterns |
+
+<HintBox type="info">
+Historically, ocelots could be tamed into cats. This was changed in later Minecraft versions - now they're separate species with different behaviors.
+</HintBox>
+
+## Breeding Ocelots
+
+If you've gained the trust of two ocelots, you can breed them:
+1. Feed each trusting ocelot raw fish
+2. Hearts will appear
+3. A baby ocelot (kitten) will spawn
+4. The kitten will automatically trust you
+
+<HintBox type="didYouKnow">
+Baby ocelots are even more skittish than adults. They'll flee at the slightest disturbance until they grow up!
+</HintBox>
+
 ## Survival Tips
 
 **For New Players:**
 - Don't chase ocelots - you'll never catch them. Let them come to you.
 - Keep raw fish in your hotbar when exploring jungles.
-- If you're building in a jungle biome, tamed ocelots make excellent guards against creepers.
+- If you're building in a jungle biome, ocelots provide passive creeper protection.
 
 **For Advanced Players:**
 - Ocelots won't hunt chickens you've fenced in, but wild chickens in the jungle are fair game.
-- Create a "safe zone" around your base by keeping multiple tamed ocelots nearby.
+- Create a "safe zone" around your base by keeping multiple trusting ocelots nearby.
 - Beach biomes adjacent to jungles are prime ocelot hunting grounds - watch for them stalking turtle hatchlings.
 
 ## Discovery Notes
@@ -37,8 +142,17 @@ The jungle comes alive differently when you know what to look for. An ocelot's p
 - The conspicuous absence of small animals in certain areas
 - Creepers turning away from specific parts of the jungle
 
-**Try...** Sitting quietly in a jungle at dawn or dusk. Ocelots are most active during these twilight hours, and you might spot one beginning its hunt.
+<HintBox type="observation">
+The absence of prey can indicate a predator's presence. If you find an area of jungle suspiciously devoid of chickens, an ocelot has likely been hunting there.
+</HintBox>
 
 ---
 
-*The ocelot exemplifies the predator-prey dynamics of Better Ecology. Every hunt, every cautious approach, every moment of stillness before the strike - these are the behaviors that make Minecraft's jungles feel truly alive.*
+<RelatedPages
+  pages={[
+    { title: 'Cat', description: 'Domesticated relative with similar hunting instincts', href: '/docs/wiki/animals/cat' },
+    { title: 'Fox', description: 'Another stealthy predator with hunting behaviors', href: '/docs/wiki/animals/fox' },
+    { title: 'Chicken', description: 'Primary prey for ocelots', href: '/docs/wiki/animals/chicken' },
+    { title: 'Wolf', description: 'Pack predator with different hunting style', href: '/docs/wiki/animals/wolf' }
+  ]}
+/>
