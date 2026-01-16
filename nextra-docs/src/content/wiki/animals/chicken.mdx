@@ -7,8 +7,6 @@ import { AnimalInfoBox } from '@/components/AnimalInfoBox'
 import { HintBox } from '@/components/HintBox'
 import { RelatedPages } from '@/components/RelatedPages'
 
-# Chicken
-
 <AnimalInfoBox
   name="Chicken"
   color="#FFD700"
@@ -80,7 +78,7 @@ Build some fences around your coop or place a few logs at different heights. As 
 Chickens are pretty skittish! If you or a predator (like a fox or ocelot) gets too close, they'll scatter and run away. You might notice them fleeing in different directions when startled, then regrouping once they feel safe again.
 
 <HintBox type="warning">
-**The freeze response:** If a predator gets VERY close (within a couple blocks), chickens might freeze up instead of running. This is actually realistic prey behavior!
+The freeze response: If a predator gets very close (within a couple blocks), chickens might freeze up instead of running. This is actually realistic prey behavior!
 </HintBox>
 
 <HintBox type="tip">
@@ -144,10 +142,9 @@ Chickens still lay eggs regularly (every 5-10 minutes), and you can still breed 
 
 <RelatedPages
   pages={[
-    { name: "Parrot", path: "/wiki/animals/parrot" },
-    { name: "Fox", path: "/wiki/animals/fox" },
-    { name: "Sheep", path: "/wiki/animals/sheep" },
-    { name: "Flocking Behavior", path: "/research/flocking" }
+    { title: "Parrot", description: "Another feathered friend", href: "/docs/wiki/animals/parrot" },
+    { title: "Fox", description: "Natural chicken predator", href: "/docs/wiki/animals/fox" },
+    { title: "Sheep", description: "Another flocking farm animal", href: "/docs/wiki/animals/sheep" }
   ]}
 />
 

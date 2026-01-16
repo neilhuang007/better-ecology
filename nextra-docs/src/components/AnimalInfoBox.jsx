@@ -7,15 +7,20 @@ export function AnimalInfoBox({
   activeTime,
   temperament,
   mobType,
-  drops
+  drops,
+  habitat,
+  diet,
+  specialAbilities
 }) {
   const infoItems = [
     { label: 'Health', value: health },
     { label: 'Speed', value: speed },
     { label: 'Food', value: food },
+    { label: 'Diet', value: diet },
     { label: 'Active Time', value: activeTime },
     { label: 'Temperament', value: temperament },
     { label: 'Mob Type', value: mobType },
+    { label: 'Habitat', value: habitat },
     { label: 'Drops', value: drops }
   ];
 
@@ -31,6 +36,14 @@ export function AnimalInfoBox({
             <span className="animal-info-value">{item.value}</span>
           </div>
         ))}
+        {specialAbilities && specialAbilities.length > 0 && (
+          <div className="animal-info-item animal-info-abilities">
+            <span className="animal-info-label">Special Abilities:</span>
+            <span className="animal-info-value">
+              {specialAbilities.join(', ')}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
