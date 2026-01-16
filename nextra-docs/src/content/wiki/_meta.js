@@ -1,5 +1,8 @@
 export default {
-  index: "Welcome",
+  index: {
+    title: "Overview",
+    display: "hidden"
+  },
   animals: "Animals",
   pathfinding: "How Animals Navigate"
 }
