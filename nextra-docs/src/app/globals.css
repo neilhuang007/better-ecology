@@ -240,3 +240,72 @@ html {
     padding: 1rem;
   }
 }
+
+/* Home Page Cards - Clean Modern Design */
+.home-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.home-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  text-decoration: none;
+  background: transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.home-card:hover {
+  border-color: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.02);
+  transform: translateY(-2px);
+}
+
+.home-card-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.home-card-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: rgb(17, 24, 39);
+}
+
+.home-card-description {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: rgb(107, 114, 128);
+}
+
+/* Dark mode for home cards */
+.dark .home-card {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .home-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dark .home-card-title {
+  color: rgb(243, 244, 246);
+}
+
+.dark .home-card-description {
+  color: rgb(156, 163, 175);
+}
+
+@media (max-width: 768px) {
+  .home-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
