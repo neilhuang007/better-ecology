@@ -5,21 +5,24 @@ category: animals
 tags: [passive, skittish, crepuscular, burrow]
 ---
 
-# Rabbit
+import { AnimalInfoBox } from '@/components/AnimalInfoBox'
+import { HintBox } from '@/components/HintBox'
+import { RelatedPages } from '@/components/RelatedPages'
 
-*Adorable, skittish hoppers that zigzag their way to safety*
-
----
-
-## Quick Facts
-
-| Attribute | Value |
-|-----------|-------|
-| **Health** | 1.5 hearts  |
-| **Speed** | Very fast  |
-| **Favorite Food** | Carrots, Dandelions  |
-| **Active Times** | Dawn & Dusk  |
-| **Temperament** | VERY skittish! |
+<AnimalInfoBox
+  name="Rabbit"
+  health="1.5 hearts"
+  habitat="Various biomes"
+  diet="Herbivore (carrots, dandelions)"
+  temperament="Very skittish"
+  color="#D2B48C"
+  specialAbilities={[
+    "Zigzag escape pattern",
+    "Warning thumps",
+    "Burrow dwelling",
+    "Most active at dawn and dusk"
+  ]}
+/>
 
 ---
 
@@ -29,13 +32,17 @@ Rabbits are some of the most cautious creatures in Minecraft! These fluffy hoppe
 
 ### Fear & Flight
 
-**Try sneaking and moving slowly** - rabbits notice sudden movements! Even sprinting nearby can spook them into fleeing. Crouch-walking is your best friend when approaching these nervous little friends.
+<HintBox type="tryThis">
+Try sneaking and moving slowly - rabbits notice sudden movements! Even sprinting nearby can spook them into fleeing. Crouch-walking is your best friend when approaching these nervous little friends.
+</HintBox>
 
-**Watch rabbits flee** - their zigzag pattern is nature's escape trick! When threatened, rabbits don't just run in a straight line. They hop left, then right, then left again in an unpredictable pattern that makes them incredibly hard to catch. It's fascinating to watch and surprisingly effective!
+Watch rabbits flee - their zigzag pattern is nature's escape trick! When threatened, rabbits don't just run in a straight line. They hop left, then right, then left again in an unpredictable pattern that makes them incredibly hard to catch. It's fascinating to watch and surprisingly effective!
 
 ### Warning Signals
 
-**Did you know rabbits thump to warn their friends?** When a rabbit spots danger, it thumps its hind legs on the ground to alert nearby rabbits. If you hear that distinctive *thump-thump*, it means you've been spotted! All the other rabbits will immediately become more alert and ready to flee.
+<HintBox type="didYouKnow">
+Rabbits thump to warn their friends! When a rabbit spots danger, it thumps its hind legs on the ground to alert nearby rabbits. If you hear that distinctive thump-thump, it means you've been spotted!
+</HintBox>
 
 ### Safe Havens
 
@@ -49,9 +56,11 @@ Rabbits are most active at **dawn and dusk** (crepuscular). During the middle of
 
 ## Baby Rabbits
 
-Baby bunnies are **extra cautious** compared to adults! While adult rabbits are already quite skittish, young rabbits take it to another level. They flee at even greater distances and are incredibly quick to panic. This makes sense - in the wild, young rabbits are the most vulnerable!
+Baby bunnies are extra cautious compared to adults! While adult rabbits are already quite skittish, young rabbits take it to another level. They flee at even greater distances and are incredibly quick to panic. This makes sense - in the wild, young rabbits are the most vulnerable!
 
-**Tip:** If you want to breed rabbits, you'll need to be extra patient with the babies. Give them plenty of space and time to feel safe.
+<HintBox type="hint">
+If you want to breed rabbits, you'll need to be extra patient with the babies. Give them plenty of space and time to feel safe.
+</HintBox>
 
 ---
 
@@ -59,7 +68,9 @@ Baby bunnies are **extra cautious** compared to adults! While adult rabbits are 
 
 ### Attracting Rabbits
 
-**Plant a carrot garden and rabbits might visit!** Rabbits are naturally drawn to areas with their favorite foods. If you create a peaceful garden with carrots or dandelions, you might attract wild rabbits to your homestead.
+<HintBox type="tryThis">
+Plant a carrot garden and rabbits might visit! Rabbits are naturally drawn to areas with their favorite foods. If you create a peaceful garden with carrots or dandelions, you might attract wild rabbits to your homestead.
+</HintBox>
 
 ### Best Approach
 
@@ -100,4 +111,13 @@ Hold out these items and stay very still. A brave rabbit might just hop close en
 
 ---
 
-*Remember: Patience is key with rabbits. These gentle creatures are built for survival, not trust. But with enough carrots, calm movements, and respect for their space, you might just make a fluffy friend!* 
+*Remember: Patience is key with rabbits. These gentle creatures are built for survival, not trust. But with enough carrots, calm movements, and respect for their space, you might just make a fluffy friend!*
+
+<RelatedPages
+  pages={[
+    { title: 'Fox', href: '/wiki/animals/fox' },
+    { title: 'Wolf', href: '/wiki/animals/wolf' },
+    { title: 'Fleeing Behavior', href: '/wiki/research/fleeing' },
+    { title: 'Crepuscular Activity', href: '/wiki/research/crepuscular' }
+  ]}
+/>

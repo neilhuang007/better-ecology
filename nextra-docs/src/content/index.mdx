@@ -3,42 +3,57 @@ title: Better Ecology
 description: A Minecraft Fabric mod implementing scientifically-based animal behaviors
 ---
 
-import { Cards, Card } from 'nextra/components'
+import { Cards } from 'nextra/components'
 
 # Better Ecology
 
-A Minecraft Fabric mod that transforms animal behavior with scientifically-based AI systems. Watch cows form genuine herds, wolves coordinate pack hunts, and chickens establish roosting hierarchies.
+Ever wondered why Minecraft chickens just wander aimlessly instead of roosting at night? Or why wolves hunt alone instead of coordinating as packs? Well, we did too. So we built a mod that gives animals the behaviors they deserve.
+
+Better Ecology brings scientifically-grounded AI to Minecraft's animals. Cows form genuine herds with emergent leadership. Wolves coordinate ambush tactics during pack hunts. Chickens establish roosting hierarchies at nightfall. Every behavior is based on real research, not random wandering.
+
+## Getting Started
+
+Choose your path:
 
 <Cards>
-  <Card
+  <Cards.Card
     title="Player Wiki"
     href="/docs/wiki"
-    style={{ borderColor: '#22c55e', borderWidth: '2px' }}
   >
-    Learn about animal behaviors, breeding, and habitats
-  </Card>
-  <Card
+    **For Players** - Learn how animals behave, breed, and interact. Discover habitat requirements and behavioral patterns for 19+ species.
+  </Cards.Card>
+  <Cards.Card
     title="Developer Docs"
     href="/docs/getting-started/installation"
-    style={{ borderColor: '#3b82f6', borderWidth: '2px' }}
   >
-    Installation, configuration, and technical documentation
-  </Card>
+    **For Developers** - Installation, configuration, API reference, and technical documentation for contributors and modpack creators.
+  </Cards.Card>
+  <Cards.Card
+    title="Research & Citations"
+    href="/docs/research/overview"
+  >
+    **For Academics** - Scientific papers, behavioral algorithms, and research methodology behind the mod's AI systems.
+  </Cards.Card>
 </Cards>
 
-## What is Better Ecology?
+## Quick Links
 
-Better Ecology reimagines Minecraft's animal AI with behaviors based on real-world research. Animals don't just wander randomly anymore - they form social groups, make collective decisions, hunt cooperatively, and respond to their environment in realistic ways.
+- [Animal Behaviors Overview](/docs/wiki) - Complete guide to all animal behaviors
+- [Installation Guide](/docs/getting-started/installation) - Get up and running in 5 minutes
+- [Behavior System](/docs/api/behavior-system) - Technical deep dive for developers
+- [Scientific Research](/docs/research/overview) - Papers and citations
 
-Watch sheep follow natural leaders in their flock. See wolves coordinate ambush tactics during pack hunts. Observe chickens seeking elevated roosts at nightfall. Every behavior is grounded in scientific research documented in the mod's behavior library.
+## What Makes This Different?
 
-## Quick Installation
+Traditional Minecraft AI uses simple random walks and basic state machines. Better Ecology implements research-backed algorithms:
 
-1. Install Fabric Loader for Minecraft 1.21.1
-2. Download and install Fabric API from Modrinth
-3. Download Better Ecology from the releases page
-4. Place both JAR files in your `mods` folder
-5. Launch Minecraft and experience enhanced animal behaviors
+- **Flocking**: Boids algorithm for cohesive group movement (Reynolds, 1987)
+- **Pack Hunting**: Coordinated predation with role assignment
+- **Herding**: Quorum-based collective decision making
+- **Territoriality**: Breeding territory establishment and defense
+- **Crepuscular Activity**: Time-based behavioral shifts (dawn/dusk behaviors)
+
+Animals make decisions based on their environment, social context, and biological drives. The result is a living, breathing ecosystem that feels natural and engaging.
 
 ## Requirements
 
@@ -48,3 +63,5 @@ Watch sheep follow natural leaders in their flock. See wolves coordinate ambush 
 | Java | 21 |
 | Fabric Loader | 0.15+ |
 | Fabric API | Current |
+
+Ready to see what Minecraft animals can really do? Jump into the [Player Wiki](/docs/wiki) or start [installing the mod](/docs/getting-started/installation).

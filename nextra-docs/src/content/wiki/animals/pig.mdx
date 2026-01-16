@@ -4,18 +4,23 @@ description: Everything you need to know about pigs in Better Ecology
 category: animals
 ---
 
-# Pig
+import { AnimalInfoBox } from '@/components/AnimalInfoBox'
+import { HintBox } from '@/components/HintBox'
+import { RelatedPages } from '@/components/RelatedPages'
+
+<AnimalInfoBox
+  name="Pig"
+  color="#FFC0CB"
+  health="5 hearts (10 HP)"
+  speed="Moderate"
+  food="Carrots, Potatoes, Beetroots"
+  activeTime="Daytime"
+  temperament="Curious, social"
+  mobType="Passive"
+  drops="Porkchop"
+/>
 
 Pigs are one of the most delightful animals to observe in Better Ecology! These curious creatures bring life to your world with their love of rooting, rolling in mud, and socializing with their piggy friends.
-
-## Quick Facts
-
-| Attribute | Value |
-|-----------|-------|
-| **Health** | 5 hearts (10 HP) |
-| **Favorite Food** | Carrots |
-| **Drops** | Porkchop (raw or cooked) |
-| **Behavior** | Social, foraging, mud-loving |
 
 ## What Makes Pigs Special?
 
@@ -23,13 +28,17 @@ Pigs are one of the most delightful animals to observe in Better Ecology! These 
 
 Pigs absolutely love digging around in the ground! You'll often see them rooting through dirt and grass blocks, snuffling around as they search for tasty morsels. This isn't just for show - pigs are natural foragers and will happily munch on crops, carrots, potatoes, and almost anything edible they come across.
 
-**Tip:** Pigs might dig up surprises while rooting! Keep an eye on what they find - you never know when they might uncover a truffle or other goodies.
+<HintBox type="discovery">
+Pigs might dig up surprises while rooting! Keep an eye on what they find - you never know when they might uncover a truffle or other goodies.
+</HintBox>
 
 ### Mud Bathing Behavior
 
 Did you know pigs are actually very clean? The mud helps them cool down! Pigs don't sweat like humans do, so they seek out water and mud to regulate their body temperature. Watch as they enthusiastically roll around in muddy areas - it's both practical and adorable.
 
-**Try this:** Make a mud pit near your pig pen by placing water blocks next to dirt. Watch them enjoy it! Your pigs will be much happier with a designated mud bath area.
+<HintBox type="experiment">
+Make a mud pit near your pig pen by placing water blocks next to dirt. Watch them enjoy it! Your pigs will be much happier with a designated mud bath area.
+</HintBox>
 
 ### Social Creatures
 
@@ -59,7 +68,9 @@ Want happy pigs? Here's what they love:
 3. **Company:** Keep at least 2-3 pigs together so they can socialize
 4. **Food Sources:** Plant a carrot patch nearby for easy feeding
 
-**Did you know?** Pigs are happiest when they can express their natural behaviors - rooting, mud bathing, and socializing. A well-designed pen that supports these behaviors will keep your pigs content!
+<HintBox type="info">
+Pigs are happiest when they can express their natural behaviors - rooting, mud bathing, and socializing. A well-designed pen that supports these behaviors will keep your pigs content!
+</HintBox>
 
 ## Fun Activities with Pigs
 
@@ -79,7 +90,9 @@ Sometimes the best activity is simply watching! Pigs have so many interesting be
 - Observe how they interact with their herd
 - Notice how piglets stay close to their mothers
 
-**Tip:** Try building a viewing platform above your pig pen. You'll get a great view of all their natural behaviors without disturbing them!
+<HintBox type="tip">
+Try building a viewing platform above your pig pen. You'll get a great view of all their natural behaviors without disturbing them!
+</HintBox>
 
 ## Common Questions
 
@@ -94,6 +107,14 @@ A: Yes! Pigs are opportunistic eaters and will munch on nearby crops. Consider f
 
 **Q: How many pigs should I keep together?**
 A: Pigs are social, so keep at least 2-3 together. They'll be happier with companions!
+
+<RelatedPages
+  pages={[
+    { title: 'Cow', href: '/wiki/animals/cow', description: 'Fellow farm animal with similar social behaviors' },
+    { title: 'Sheep', href: '/wiki/animals/sheep', description: 'Another peaceful passive mob' },
+    { title: 'Foraging Behavior', href: '/wiki/research/foraging', description: 'Scientific basis for pig rooting and food-seeking' }
+  ]}
+/>
 
 ---
 

@@ -1,0 +1,476 @@
+---
+title: "Pathfinding System"
+description: "Realistic pathfinding and navigation system for animals with slope awareness, smooth movement, and terrain evaluation."
+---
+
+## Overview
+
+The pathfinding system in Better Ecology provides realistic, scientifically-based navigation for animals. Instead of simple point-to-point movement, animals evaluate terrain, consider slopes, and move with natural momentum.
+
+Key features:
+- Slope-aware pathfinding with cost penalties for steep terrain
+- Smooth path following with look-ahead targeting
+- Momentum-based movement with gradual acceleration
+- Terrain evaluation for ridgelines, cover, and hazards
+- Steering behaviors for complex movement patterns
+
+## Architecture
+
+The pathfinding system is organized into three main packages:
+
+```
+behavior/pathfinding/
+  core/           # Core pathfinding infrastructure
+  movement/       # Movement controllers
+  steering/       # Steering behaviors
+```
+
+### Core Components
+
+#### SmoothPathNavigation
+
+Extends Minecraft's `GroundPathNavigation` to provide enhanced pathfinding:
+
+```java
+public class SmoothPathNavigation extends GroundPathNavigation {
+    private static final int LOOK_AHEAD_NODES = 3;
+    private static final float SWITCHBACK_THRESHOLD = 15.0f;
+
+    @Override
+    protected PathFinder createPathFinder(int maxNodes) {
+        this.nodeEvaluator = new EcologyNodeEvaluator();
+        return new PathFinder(this.nodeEvaluator, maxNodes);
+    }
+
+    private Vec3 getSmoothedTarget() {
+        // Interpolates between current and future waypoints
+        // for smoother, more natural movement
+    }
+}
+```
+
+Features:
+- Uses custom `EcologyNodeEvaluator` for terrain assessment
+- Catmull-Rom interpolation for smooth paths
+- Look-ahead targeting reduces sharp turns
+- Detects steep slopes requiring switchbacks
+
+#### TerrainEvaluator
+
+Analyzes terrain characteristics for pathfinding decisions:
+
+```java
+public class TerrainEvaluator {
+    public static final float PREFERRED_SLOPE_THRESHOLD = 15.0f;
+    public static final float COSTLY_SLOPE_THRESHOLD = 20.0f;
+    public static final float PROHIBITIVE_SLOPE_THRESHOLD = 30.0f;
+
+    // Calculate slope angle between positions
+    public static float calculateSlope(BlockPos from, BlockPos to);
+
+    // Detect exposed high ground (ridgelines)
+    public static boolean isRidgeline(Level level, BlockPos pos);
+
+    // Calculate cover value (0.0 = exposed, 1.0 = full cover)
+    public static float getCoverValue(Level level, BlockPos pos);
+
+    // Classify terrain type
+    public static TerrainType getTerrainType(Level level,
+                                            BlockPos from,
+                                            BlockPos to);
+}
+```
+
+Terrain classifications:
+- **FLAT**: 0-15 degrees slope
+- **GENTLE_SLOPE**: 15-20 degrees (preferred maximum)
+- **STEEP_SLOPE**: 20-30 degrees (costly)
+- **CLIFF**: 30+ degrees (prohibitive)
+- **WATER**: Fluid sources
+- **HAZARD**: Dangerous drops
+
+#### EcologyNodeEvaluator
+
+Custom node evaluator that adds slope and terrain costs:
+
+```java
+public class EcologyNodeEvaluator extends WalkNodeEvaluator {
+    @Override
+    protected PathType getPathTypeOfMob(BlockPathTypes nodeType,
+                                        Mob mob,
+                                        BlockPos pos) {
+        // Add slope-based costs to base path type
+        float slopeCost = calculateSlopeCost(pos);
+        float exposureCost = calculateExposureCost(pos, mob);
+
+        return modifyPathType(nodeType, slopeCost + exposureCost);
+    }
+}
+```
+
+This makes animals prefer:
+- Gradual slopes over steep ones
+- Covered areas over exposed ridgelines (for prey)
+- Safer terrain over hazards
+
+## Movement System
+
+### RealisticMoveControl
+
+Replaces vanilla `MoveControl` with physics-based movement:
+
+```java
+public class RealisticMoveControl extends MoveControl {
+    private static final float ACCELERATION = 0.15f;
+    private static final float DECELERATION = 0.20f;
+    private static final float MAX_TURN_SPEED = 10.0f;
+
+    private float currentSpeed = 0.0f;
+    private float momentumFactor = 0.85f;
+
+    @Override
+    public void tick() {
+        // Smooth acceleration toward target speed
+        currentSpeed = approachSpeed(currentSpeed, targetSpeed, ACCELERATION);
+
+        // Smooth rotation with turn rate limiting
+        currentYaw = approachAngle(currentYaw, targetYaw, MAX_TURN_SPEED);
+
+        // Apply slope-based speed modification
+        float slopeModifier = getSlopeSpeedModifier();
+
+        // Apply momentum-blended movement
+        Vec3 newMotion = blendMomentum(currentMotion, targetMotion);
+        mob.setDeltaMovement(newMotion);
+    }
+}
+```
+
+Movement characteristics:
+- **Uphill**: 70-100% speed (slower on steeper slopes)
+- **Gentle downhill**: 110-120% speed (gravity assist)
+- **Steep downhill**: 100% speed (controlled descent)
+- **Turning**: Maximum 10 degrees per tick
+- **Momentum**: 85% retention for smooth motion
+
+### TurningController
+
+Handles smooth rotation with momentum:
+
+```java
+public class TurningController {
+    public float getSmoothedYaw(float currentYaw,
+                                Vec3 targetPos,
+                                float maxTurnRate) {
+        float targetYaw = calculateYaw(targetPos);
+        float yawDiff = wrapDegrees(targetYaw - currentYaw);
+        float turnAmount = clamp(yawDiff, -maxTurnRate, maxTurnRate);
+
+        return wrapDegrees(currentYaw + turnAmount);
+    }
+}
+```
+
+## Steering Behaviors
+
+Steering behaviors provide local obstacle avoidance and group coordination.
+
+### SteeringBehavior Interface
+
+```java
+public interface SteeringBehavior {
+    Vec3 calculate(Mob mob, SteeringContext context);
+    float getWeight();
+    boolean isActive();
+}
+```
+
+### Available Behaviors
+
+| Behavior | Purpose | Weight |
+|----------|---------|--------|
+| SeekBehavior | Move toward target | 1.0 |
+| FleeBehavior | Move away from threat | 2.0 |
+| SeparationBehavior | Avoid crowding | 1.5 |
+| CohesionBehavior | Move toward group center | 1.0 |
+| ObstacleAvoidanceBehavior | Avoid local obstacles | 2.5 |
+
+### SteeringController
+
+Blends multiple behaviors into combined movement:
+
+```java
+public class SteeringController {
+    public Vec3 calculateSteering(Mob mob, SteeringContext context) {
+        Vec3 totalForce = Vec3.ZERO;
+
+        for (SteeringBehavior behavior : behaviors) {
+            if (!behavior.isActive()) continue;
+
+            Vec3 force = behavior.calculate(mob, context);
+            totalForce = totalForce.add(force.scale(behavior.getWeight()));
+        }
+
+        return truncate(totalForce, context.getMaxForce());
+    }
+}
+```
+
+### Example: Separation Behavior
+
+```java
+public class SeparationBehavior implements SteeringBehavior {
+    @Override
+    public Vec3 calculate(Mob mob, SteeringContext context) {
+        Vec3 separationForce = Vec3.ZERO;
+
+        for (Entity neighbor : context.getNeighbors()) {
+            Vec3 awayVector = mob.position().subtract(neighbor.position());
+            double distance = awayVector.length();
+
+            if (distance < separationDistance) {
+                // Stronger force when closer
+                float strength = (float)(1.0 - distance / separationDistance);
+                separationForce = separationForce.add(
+                    awayVector.normalize().scale(strength)
+                );
+            }
+        }
+
+        return separationForce;
+    }
+}
+```
+
+## Slope Handling
+
+### Slope Cost Formula
+
+Based on research into animal locomotion energy costs:
+
+```
+Cost = 1.0 + (0.15 × slope_degrees)
+```
+
+This means:
+- 0° (flat): Cost = 1.0
+- 15° (preferred max): Cost = 3.25
+- 20° (costly): Cost = 4.0
+- 30° (prohibitive): Cost = 5.5
+
+### Switchback Detection
+
+The system detects steep slopes requiring switchback paths:
+
+```java
+private void processSteepSlopes() {
+    for (int i = 0; i < path.getNodeCount() - 1; i++) {
+        Node current = path.getNode(i);
+        Node next = path.getNode(i + 1);
+
+        double slope = calculateSlopeDegrees(current, next);
+
+        if (slope > SWITCHBACK_THRESHOLD) {
+            // Log for analysis - future: generate alternative route
+            logSteepSlope(current, next, slope);
+        }
+    }
+}
+```
+
+Currently, switchback detection is used for logging and analysis. Future implementations will generate alternative zigzag routes during pathfinding.
+
+## Configuration
+
+Pathfinding parameters can be configured via JSON:
+
+```json
+{
+  "pathfinding": {
+    "slopePreferences": {
+      "preferredThreshold": 15.0,
+      "costlyThreshold": 20.0,
+      "prohibitiveThreshold": 30.0,
+      "switchbackAngle": 30.0
+    },
+    "movement": {
+      "accelerationRate": 0.15,
+      "decelerationRate": 0.2,
+      "maxTurnSpeedDegrees": 10.0,
+      "momentumFactor": 0.85
+    },
+    "steering": {
+      "separationWeight": 1.5,
+      "cohesionWeight": 1.0,
+      "obstacleAvoidanceWeight": 2.5,
+      "separationDistance": 2.5
+    },
+    "terrain": {
+      "ridgelineAvoidanceRadius": 8,
+      "coverPreference": 0.3,
+      "openGroundPenalty": 1.5
+    }
+  }
+}
+```
+
+## Integration Examples
+
+### Using Smooth Navigation
+
+Replace vanilla navigation in your entity:
+
+```java
+@Mixin(Mob.class)
+public abstract class MobNavigationMixin {
+    @Inject(method = "<init>", at = @At("TAIL"))
+    private void injectSmoothNavigation(CallbackInfo ci) {
+        Mob mob = (Mob) (Object) this;
+
+        if (shouldUseRealisticPathfinding(mob)) {
+            ((MobAccessor) mob).setNavigation(
+                new SmoothPathNavigation(mob, mob.level())
+            );
+        }
+    }
+}
+```
+
+### Using Realistic Movement
+
+Apply momentum-based movement:
+
+```java
+@Mixin(Mob.class)
+public abstract class MobMoveControlMixin {
+    @Inject(method = "<init>", at = @At("TAIL"))
+    private void injectRealisticMovement(CallbackInfo ci) {
+        Mob mob = (Mob) (Object) this;
+
+        if (shouldUseRealisticMovement(mob)) {
+            ((MobAccessor) mob).setMoveControl(
+                new RealisticMoveControl(mob)
+            );
+        }
+    }
+}
+```
+
+### Using Steering Behaviors
+
+Integrate steering into custom goals:
+
+```java
+public class FlockingGoal extends Goal {
+    private final SteeringController steering;
+
+    public FlockingGoal(Mob mob) {
+        this.steering = new SteeringController();
+        steering.addBehavior(new SeparationBehavior(2.5f, 1.5f));
+        steering.addBehavior(new CohesionBehavior(10.0f, 1.0f));
+    }
+
+    @Override
+    public void tick() {
+        SteeringContext context = createContext();
+        Vec3 steeringForce = steering.calculateSteering(mob, context);
+
+        // Apply steering to movement
+        applySteeringForce(steeringForce);
+    }
+}
+```
+
+## Performance Considerations
+
+### Caching
+
+Terrain evaluations are cached per tick:
+
+```java
+private final Map<BlockPos, TerrainType> terrainCache = new HashMap<>();
+
+public TerrainType getTerrainType(BlockPos pos) {
+    return terrainCache.computeIfAbsent(pos,
+        p -> TerrainEvaluator.getTerrainType(level, currentPos, p)
+    );
+}
+```
+
+### Tick Intervals
+
+Expensive pathfinding operations use intervals:
+
+```java
+if (mob.tickCount % 20 == 0) { // Every second
+    recalculatePath();
+}
+
+if (mob.tickCount % 5 == 0) { // Every 0.25 seconds
+    updateSteering();
+}
+```
+
+### Spatial Partitioning
+
+Neighbor queries use spatial indices for O(1) lookups instead of O(n):
+
+```java
+List<Mob> neighbors = spatialIndex.getNeighbors(
+    mob.position(),
+    separationRadius,
+    mob.getType()
+);
+```
+
+## Testing
+
+### Unit Tests
+
+Located in `src/testmod/java/me/javavirtualenv/gametest/PathfindingGameTests.java`:
+
+```java
+@GameTest
+public void testSlopeCalculation() {
+    BlockPos flat = new BlockPos(0, 64, 0);
+    BlockPos slope15 = new BlockPos(10, 66, 0);
+
+    float slope = TerrainEvaluator.calculateSlope(flat, slope15);
+    assertTrue(slope >= 14.0f && slope <= 16.0f);
+}
+
+@GameTest
+public void testSmoothMovement() {
+    // Verify smooth acceleration and deceleration
+}
+```
+
+### In-Game Testing
+
+Use `/debug eco` command to visualize pathfinding:
+
+```
+/debug eco pathfinding on    # Show waypoints and paths
+/debug eco slopes on         # Visualize slope costs
+/debug eco steering on       # Show steering forces
+```
+
+## Research Foundation
+
+The pathfinding system is based on research documented in:
+- `docs/pathfinding/REALISTIC_PATHFINDING_DESIGN.md`
+- `docs/behaviours/07-fleeing-panic-behaviors.md` (zigzag patterns)
+- `docs/behaviours/01-herd-movement-leadership.md` (group coordination)
+
+Key findings:
+- Animals prefer slopes under 15 degrees
+- Energy cost increases ~15% per degree of slope
+- Prey animals avoid exposed ridgelines
+- Smooth turning creates more natural movement
+- Momentum-based physics feels realistic
+
+## See Also
+
+- [Behavior System](behavior-system) - Goal-based AI integration
+- [Architecture](architecture) - Overall mod structure
+- [Ecology Component](ecology-component) - Entity component system

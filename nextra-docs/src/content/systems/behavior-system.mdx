@@ -1,215 +1,735 @@
 ---
 title: "Behavior System"
-description: "The behavior system in Better Ecology implements AI goals and steering behaviors for animal entities."
+description: "The behavior system implements AI goals and steering behaviors for animal entities based on academic research in animal ethology."
 ---
 
 ## Overview
 
-The behavior system consists of:
-- Goal-based AI using Minecraft's goal system
-- Steering behaviors for movement
-- Behavior handles for subsystem management
-- Data-driven configuration
+The behavior system in Better Ecology consists of multiple interconnected components:
 
-## Goal-Based AI
+- **Goal-based AI**: Minecraft's goal selector system for decision-making
+- **Steering behaviors**: Craig Reynolds' boids algorithm for movement
+- **Behavior handles**: Modular subsystems that register and manage goals
+- **Data-driven configuration**: All parameters controlled via JSON/YAML
+
+The system bridges the gap between scientific animal behavior research and Minecraft's entity AI system.
+
+## Goal-Based AI System
+
+Better Ecology uses Minecraft's existing `Goal` system to implement behaviors. Each behavior is a goal that can be activated, deactivated, and prioritized against other goals.
 
 ### Goal Registration
 
 Goals are registered via handles during entity initialization:
 
 ```java
-public void registerGoals(Mob mob, GoalSelector goalSelector,
-                          GoalSelector targetSelector) {
-    goalSelector.addGoal(priority, new MyCustomGoal(mob));
+public class ForagingHandle implements EcologyHandle {
+    @Override
+    public void registerGoals(Mob mob, GoalSelector goalSelector,
+                              GoalSelector targetSelector) {
+        // Get configuration values
+        float hungerThreshold = profile.getFloat("foraging.hunger_threshold", 50f);
+        float searchRadius = profile.getFloat("foraging.search_radius", 8f);
+
+        // Register foraging goal at priority 5
+        goalSelector.addGoal(5, new SeekFoodGoal(mob, hungerThreshold, searchRadius));
+    }
 }
 ```
 
-### Goal Priorities
+**How registration works**:
+1. Entity spawns or is loaded from disk
+2. `MobEcologyMixin` calls `EcologyHooks.onRegisterGoals()`
+3. Each handle that supports the entity's profile registers its goals
+4. Goals are added to the entity's goal selector with priorities
+5. Minecraft's AI system runs goals based on priority and conditions
 
-Lower numbers = higher priority:
+### Goal Priority System
+
+Goals are executed in priority order (lower number = higher priority):
 
 | Priority | Purpose | Examples |
 |----------|---------|----------|
-| 0 | Survival | FloatGoal |
-| 1-2 | Critical needs | Protection, panic |
-| 3-4 | Important | Hunting, seeking food |
-| 5-6 | Normal | Grazing, rooting |
-| 7-8 | Low priority | Social, wandering |
+| 0 | Survival | FloatGoal (swimming) |
+| 1-2 | Critical needs | Panic, flee from predators, mother protecting baby |
+| 3-4 | Important | Hunting prey, seeking food when starving |
+| 5-6 | Normal | Grazing, rooting, pecking, breeding |
+| 7-8 | Low priority | Social behaviors, wandering, resting |
+| 9-10 | Idle | Random looking, ambient sounds |
 
-### Custom Goals
+**Example priority configuration**:
 
-Goals extend Minecraft's `Goal` class:
+```java
+// Sheep goal priority list
+goalSelector.addGoal(0, new FloatGoal(sheep));              // Survival
+goalSelector.addGoal(1, new FleeFromPredatorGoal(sheep));   // Critical
+goalSelector.addGoal(2, new MotherProtectBabyGoal(sheep));  // Critical
+goalSelector.addGoal(5, new SheepGrazeGoal(sheep));         // Normal
+goalSelector.addGoal(6, new HerdCohesionGoal(sheep));       // Normal
+goalSelector.addGoal(7, new WanderGoal(sheep));             // Low priority
+```
+
+### Creating Custom Goals
+
+Goals extend Minecraft's `Goal` class with lifecycle methods:
 
 ```java
 public class SheepGrazeGoal extends Goal {
     private final Sheep sheep;
     private BlockPos targetGrass;
+    private int eatTimer;
 
+    public SheepGrazeGoal(Sheep sheep) {
+        this.sheep = sheep;
+        // MOVE flag prevents simultaneous movement goals
+        this.setFlags(EnumSet.of(Goal.Flag.MOVE));
+    }
+
+    /**
+     * Determines if this goal can start executing.
+     * Called every tick until it returns true.
+     */
     @Override
     public boolean canUse() {
-        // Check if sheep is hungry and grass is nearby
-        return isHungry() && findGrass() != null;
+        // Only activate if hungry
+        if (!AnimalNeeds.isHungry(sheep)) {
+            return false;
+        }
+
+        // Only activate if grass is nearby
+        this.targetGrass = findNearbyGrass();
+        return this.targetGrass != null;
     }
 
+    /**
+     * Determines if this goal should continue executing.
+     * Called every tick while the goal is active.
+     */
+    @Override
+    public boolean canContinueToUse() {
+        // Stop if no longer hungry
+        if (!AnimalNeeds.isHungry(sheep)) {
+            return false;
+        }
+
+        // Stop if reached grass and finished eating
+        return eatTimer < 40;  // 2 seconds
+    }
+
+    /**
+     * Called once when the goal starts executing.
+     */
     @Override
     public void start() {
-        targetGrass = findGrass();
-        sheep.getNavigation().moveTo(targetGrass);
+        // Navigate to grass block
+        sheep.getNavigation().moveTo(
+            targetGrass.getX(),
+            targetGrass.getY(),
+            targetGrass.getZ(),
+            1.0  // Speed modifier
+        );
+        eatTimer = 0;
     }
 
+    /**
+     * Called every tick while the goal is active.
+     */
     @Override
     public void tick() {
-        // Move toward grass, eat when arrived
+        // Check if reached grass
+        if (sheep.blockPosition().equals(targetGrass)) {
+            eatTimer++;
+
+            // Play eating animation every 10 ticks
+            if (eatTimer % 10 == 0) {
+                AnimalAnimations.playGrazingAnimation(sheep);
+            }
+
+            // Consume grass and restore hunger
+            if (eatTimer >= 40) {
+                consumeGrass();
+                AnimalNeeds.modifyHunger(sheep, 20f);  // Restore 20 hunger
+            }
+        }
+    }
+
+    /**
+     * Called once when the goal stops executing.
+     */
+    @Override
+    public void stop() {
+        // Clean up state
+        sheep.getNavigation().stop();
+        targetGrass = null;
+        eatTimer = 0;
+    }
+
+    private BlockPos findNearbyGrass() {
+        // Implementation: Search for grass blocks within radius
+        // See: ForagingBehavior.findFoodSource()
+    }
+
+    private void consumeGrass() {
+        // Remove grass block or mark as depleted
+        // Based on: Marginal Value Theorem (Charnov, 1976)
     }
 }
 ```
+
+**Goal flags**:
+- `MOVE`: Prevents multiple movement goals from conflicting
+- `LOOK`: Prevents multiple look-at goals from conflicting
+- `JUMP`: Prevents multiple jump goals from conflicting
+- `TARGET`: Prevents multiple targeting goals from conflicting
 
 ## Steering Behaviors
 
-### Core Behaviors
+Steering behaviors control how animals move. These are based on Craig Reynolds' 1987 "Boids" algorithm and expanded with additional behaviors.
 
-| Behavior | Purpose |
-|----------|---------|
-| Separation | Avoid crowding neighbors |
-| Alignment | Match heading with neighbors |
-| Cohesion | Move toward group center |
-| Flee | Move away from threats |
-| Seek | Move toward targets |
-| Wander | Random movement |
+### Core Steering Behaviors
 
-### Behavior Weights
+| Behavior | Purpose | Research Basis |
+|----------|---------|----------------|
+| **Separation** | Avoid crowding neighbors | Reynolds (1987), Couzin et al. (2002) |
+| **Alignment** | Match heading with neighbors | Reynolds (1987), Ballerini et al. (2008) |
+| **Cohesion** | Move toward group center | Reynolds (1987), Hemelrijk & Hildenbrandt (2008) |
+| **Flee** | Move away from threats | Ydenberg & Dill (1986) |
+| **Seek** | Move toward targets | Optimal foraging theory |
+| **Wander** | Random exploration | Levy flight patterns |
 
-Behaviors are combined using weighted sums:
+### Implementing Steering Behaviors
+
+Steering behaviors calculate velocity adjustments:
 
 ```java
-Vec3d steering = separation.scale(separationWeight)
-    .add(alignment.scale(alignmentWeight))
-    .add(cohesion.scale(cohesionWeight));
-```
+public class FlockCohesionGoal extends Goal {
+    private final Animal animal;
+    private final float cohesionWeight;
+    private final int topologicalNeighbors;
 
-### Configuration
+    @Override
+    public void tick() {
+        // Get nearby animals of the same type
+        List<Animal> neighbors = findTopologicalNeighbors(
+            animal,
+            topologicalNeighbors  // Typically 6-7 (Ballerini et al., 2008)
+        );
 
-```json
-{
-  "behaviors": {
-    "separation": 1.8,
-    "alignment": 1.0,
-    "cohesion": 1.5,
-    "flee": 2.0
-  }
+        if (neighbors.isEmpty()) {
+            return;
+        }
+
+        // Calculate center of mass
+        Vec3 centerOfMass = calculateCenterOfMass(neighbors);
+
+        // Calculate steering force toward center
+        Vec3 desiredVelocity = centerOfMass.subtract(animal.position())
+            .normalize()
+            .scale(animal.getSpeed());
+
+        Vec3 steering = desiredVelocity.subtract(animal.getDeltaMovement());
+
+        // Apply weighted steering force
+        Vec3 force = steering.scale(cohesionWeight);
+
+        // Update entity velocity
+        animal.setDeltaMovement(
+            animal.getDeltaMovement().add(force.scale(0.1))
+        );
+    }
+
+    /**
+     * Find N nearest neighbors (topological interaction).
+     * Based on: Ballerini et al., "Interaction ruling animal collective behavior
+     * depends on topological rather than metric distance" (2008)
+     */
+    private List<Animal> findTopologicalNeighbors(Animal animal, int count) {
+        return animal.level()
+            .getEntitiesOfClass(
+                animal.getClass(),
+                animal.getBoundingBox().inflate(16.0),  // Search radius
+                e -> e != animal
+            )
+            .stream()
+            .sorted(Comparator.comparingDouble(e -> e.distanceTo(animal)))
+            .limit(count)
+            .toList();
+    }
 }
 ```
 
-## Behavior Packages
+### Combining Steering Behaviors
+
+Multiple behaviors are combined using weighted sums:
+
+```java
+public class FlockingGoal extends Goal {
+    private final Animal animal;
+    private final float separationWeight;
+    private final float alignmentWeight;
+    private final float cohesionWeight;
+
+    @Override
+    public void tick() {
+        List<Animal> neighbors = findTopologicalNeighbors(animal, 7);
+
+        // Calculate individual steering forces
+        Vec3 separation = calculateSeparation(neighbors);
+        Vec3 alignment = calculateAlignment(neighbors);
+        Vec3 cohesion = calculateCohesion(neighbors);
+
+        // Combine with weights
+        Vec3 totalSteering = Vec3.ZERO
+            .add(separation.scale(separationWeight))   // 1.8
+            .add(alignment.scale(alignmentWeight))     // 1.0
+            .add(cohesion.scale(cohesionWeight));      // 1.5
+
+        // Normalize and apply
+        Vec3 force = totalSteering.normalize().scale(0.1);
+        animal.setDeltaMovement(animal.getDeltaMovement().add(force));
+    }
+}
+```
+
+**Weight tuning**:
+- `separation > cohesion`: Loose flocks (birds in flight)
+- `cohesion > separation`: Tight groups (schooling fish)
+- `alignment` high: Synchronized movement (starling murmurations)
+
+See: [Flocking Research](/research/flocking) for parameter derivation.
+
+## Behavior Implementation Packages
 
 ### Flocking (`behavior/flocking/`)
 
 Implements boids algorithm for bird-like flocking:
+
+**Key features**:
 - Topological neighbor tracking (6-7 neighbors)
-- Separation, alignment, cohesion
-- V-formation for efficiency
+- Separation, alignment, cohesion forces
+- V-formation for energy efficiency
+- Scale-free velocity correlation (Cavagna et al., 2010)
+
+**Configuration**:
+```json
+{
+  "flocking": {
+    "enabled": true,
+    "topological_neighbors": 7,
+    "separation": 1.8,
+    "alignment": 1.0,
+    "cohesion": 1.5,
+    "max_speed": 0.3
+  }
+}
+```
+
+**Research basis**: [Flocking Research](/research/flocking)
 
 ### Herding (`behavior/herd/`)
 
 Implements herd movement for ungulates:
-- Quorum-based movement initiation
-- Leadership dynamics
-- Selfish herd positioning
+
+**Key features**:
+- Quorum-based movement initiation (Couzin et al., 2005)
+- Leadership dynamics (informed individuals)
+- Selfish herd positioning (Hamilton, 1971)
+- Collective decision-making
+
+**Example**:
+```java
+public class HerdCohesionGoal extends Goal {
+    private final Animal animal;
+    private final float quorumThreshold;  // 0.3-0.7
+
+    @Override
+    public boolean canUse() {
+        List<Animal> herd = findHerdMembers(animal, 16.0);
+
+        // Count how many are moving
+        long movingCount = herd.stream()
+            .filter(a -> a.getDeltaMovement().lengthSqr() > 0.01)
+            .count();
+
+        // Activate if quorum threshold met
+        float movingRatio = (float) movingCount / herd.size();
+        return movingRatio >= quorumThreshold;
+    }
+}
+```
+
+**Research basis**: [Herd Movement Research](/research/herd-movement)
 
 ### Fleeing (`behavior/fleeing/`)
 
 Implements escape behaviors:
-- Flight initiation distance
-- Zigzag evasion
-- Freezing response
+
+**Key features**:
+- Flight initiation distance (Ydenberg & Dill, 1986)
+- Zigzag evasion for unpredictability
+- Freezing response (tonic immobility)
 - Stampede coordination
+
+**Escape strategies**:
+```java
+public enum EscapeStrategy {
+    STRAIGHT,  // Run directly away (high speed, predictable)
+    ZIGZAG,    // Evasive maneuvers (lower speed, unpredictable)
+    FREEZE     // Freeze before fleeing (crypsis)
+}
+```
+
+**Example**:
+```java
+public class FleeFromPredatorGoal extends Goal {
+    private final Animal animal;
+    private final float flightInitiationDistance;  // 8-32 blocks
+    private LivingEntity predator;
+
+    @Override
+    public boolean canUse() {
+        // Find nearest predator
+        this.predator = findNearestPredator(animal, flightInitiationDistance);
+        return this.predator != null;
+    }
+
+    @Override
+    public void tick() {
+        // Calculate flee vector (directly away from predator)
+        Vec3 fleeDirection = animal.position()
+            .subtract(predator.position())
+            .normalize();
+
+        // Apply zigzag if configured
+        if (escapeStrategy == EscapeStrategy.ZIGZAG && animal.tickCount % 20 < 10) {
+            fleeDirection = fleeDirection.add(
+                getPerpendicularVector().scale(zigzagIntensity)
+            ).normalize();
+        }
+
+        // Move in flee direction at high speed
+        Vec3 targetPos = animal.position().add(fleeDirection.scale(2.0));
+        animal.getNavigation().moveTo(targetPos.x, targetPos.y, targetPos.z, 1.5);
+    }
+}
+```
+
+**Research basis**: [Fleeing Research](/research/fleeing)
 
 ### Foraging (`behavior/foraging/`)
 
 Implements feeding behaviors:
-- Patch selection
-- Marginal value theorem
-- Giving-up density
+
+**Key features**:
+- Patch selection based on resource density
+- Marginal Value Theorem (Charnov, 1976)
+- Giving-up density threshold
+- Area-restricted search
+
+**Example**:
+```java
+public class SeekFoodGoal extends Goal {
+    private final Animal animal;
+    private final float hungerThreshold;
+    private BlockPos foodPatch;
+    private int foragingTime;
+
+    @Override
+    public boolean canUse() {
+        float hunger = AnimalNeeds.getHunger(animal);
+        if (hunger >= hungerThreshold) {
+            return false;
+        }
+
+        // Find food patch within search radius
+        this.foodPatch = findBestFoodPatch(animal, searchRadius);
+        return this.foodPatch != null;
+    }
+
+    @Override
+    public void tick() {
+        if (animal.blockPosition().closerThan(foodPatch, 2.0)) {
+            foragingTime++;
+
+            // Check giving-up density (MVT)
+            float patchDensity = calculatePatchDensity(foodPatch);
+            if (patchDensity < givingUpDensity) {
+                // Patch depleted, abandon and search for new patch
+                stop();
+                return;
+            }
+
+            // Consume food periodically
+            if (foragingTime % 40 == 0) {  // Every 2 seconds
+                consumeFood();
+                AnimalNeeds.modifyHunger(animal, 15f);
+            }
+        } else {
+            // Navigate to patch
+            animal.getNavigation().moveTo(foodPatch.getX(), foodPatch.getY(), foodPatch.getZ(), 1.0);
+        }
+    }
+
+    /**
+     * Calculate resource density of a food patch.
+     * When density falls below giving-up threshold, abandon patch.
+     * Based on: Marginal Value Theorem (Charnov, 1976)
+     */
+    private float calculatePatchDensity(BlockPos patch) {
+        // Count available food items within patch radius
+        // Return ratio of available / maximum
+    }
+}
+```
+
+**Research basis**: [Foraging Research](/research/foraging)
 
 ### Parent-Offspring (`behavior/parent/`)
 
 Implements parental behaviors:
-- Following
-- Protection
-- Care responses
+
+**Key features**:
+- Following (offspring follow parents)
+- Protection (parents defend offspring)
+- Separation distress calls
+- Age-based weaning
+
+**Example**:
+```java
+public class FollowParentGoal extends Goal {
+    private final Animal baby;
+    private Animal parent;
+    private final double followDistance = 8.0;
+
+    @Override
+    public boolean canUse() {
+        if (!baby.isBaby()) {
+            return false;  // Only babies follow parents
+        }
+
+        this.parent = findNearestAdult(baby, followDistance);
+        return this.parent != null;
+    }
+
+    @Override
+    public void tick() {
+        double distance = baby.distanceTo(parent);
+
+        // Stay within following distance
+        if (distance > followDistance) {
+            baby.getNavigation().moveTo(parent, 1.2);  // Faster to catch up
+        } else if (distance < 3.0) {
+            baby.getNavigation().stop();  // Close enough
+        }
+
+        // Emit distress call if too far (>16 blocks)
+        if (distance > 16.0 && baby.tickCount % 40 == 0) {
+            playDistressCall(baby);
+        }
+    }
+}
+```
+
+**Research basis**: [Parent-Offspring Research](/research/parent-offspring)
 
 ## Behavior Handles
 
-Handles integrate behaviors with the component system:
+Handles integrate behaviors with the data-driven configuration system.
+
+### Handle Structure
+
+Every handle implements the `EcologyHandle` interface:
 
 ```java
 public class FlockingHandle implements EcologyHandle {
+    // Cached configuration values (parsed at reload)
+    private int topologicalNeighbors;
+    private float separationWeight;
+    private float alignmentWeight;
+    private float cohesionWeight;
+
     @Override
     public boolean supports(EcologyProfile profile) {
+        // Only activate if flocking is enabled in config
         return profile.has("flocking.enabled") &&
                profile.getBool("flocking.enabled");
     }
 
     @Override
-    public void registerGoals(Mob mob, GoalSelector goals,
-                              GoalSelector targets) {
-        goals.addGoal(5, new FlockCohesionGoal(mob));
-        goals.addGoal(5, new FlockSeparationGoal(mob));
+    public void registerGoals(Mob mob, GoalSelector goals, GoalSelector targets) {
+        // Cache configuration values
+        this.topologicalNeighbors = profile.getInt("flocking.topological_neighbors", 7);
+        this.separationWeight = profile.getFloat("flocking.separation", 1.8f);
+        this.alignmentWeight = profile.getFloat("flocking.alignment", 1.0f);
+        this.cohesionWeight = profile.getFloat("flocking.cohesion", 1.5f);
+
+        // Register flocking goals
+        goals.addGoal(5, new FlockCohesionGoal(mob, cohesionWeight, topologicalNeighbors));
+        goals.addGoal(5, new FlockSeparationGoal(mob, separationWeight));
+        goals.addGoal(5, new FlockAlignmentGoal(mob, alignmentWeight, topologicalNeighbors));
     }
 
     @Override
     public void tick(Mob mob) {
-        // Update flocking state
+        // Optional: Update flock state
+        // Most work is done in individual goals
     }
 }
 ```
 
-## Spatial Queries
+### Registering Handles
 
-The spatial partitioning system enables efficient neighbor queries:
+Handles are registered during mod initialization:
 
 ```java
-List<Entity> neighbors = spatialIndex.getNeighbors(
-    entity.position(),
-    radius,
-    entity.getType()
-);
+public class EcologyBootstrap {
+    public static void initialize() {
+        EcologyHandleRegistry.register("hunger", new HungerHandle());
+        EcologyHandleRegistry.register("flocking", new FlockingHandle());
+        EcologyHandleRegistry.register("fleeing", new FleeingHandle());
+        EcologyHandleRegistry.register("foraging", new ForagingHandle());
+        EcologyHandleRegistry.register("parent_offspring", new ParentOffspringHandle());
+    }
+}
+```
+
+## Spatial Queries and Neighbor Detection
+
+Efficient neighbor queries are critical for flocking and herding behaviors.
+
+### Neighbor Query Example
+
+```java
+/**
+ * Find topological neighbors (N nearest entities).
+ * More efficient than radius-based queries for flocking.
+ */
+public List<Entity> findTopologicalNeighbors(Entity entity, int count) {
+    // Use AABB (bounding box) for initial filtering
+    AABB searchBox = entity.getBoundingBox().inflate(16.0);
+
+    return entity.level()
+        .getEntitiesOfClass(
+            entity.getClass(),
+            searchBox,
+            e -> e != entity  // Exclude self
+        )
+        .stream()
+        .sorted(Comparator.comparingDouble(e -> e.distanceToSqr(entity)))
+        .limit(count)
+        .toList();
+}
+```
+
+### Spatial Partitioning
+
+For large numbers of entities, use spatial partitioning:
+
+```java
+// Grid-based spatial index (conceptual)
+public class SpatialIndex {
+    private final Map<ChunkPos, List<Entity>> grid = new HashMap<>();
+
+    public List<Entity> getNeighbors(Vec3 position, double radius, EntityType<?> type) {
+        // Get chunk coordinates
+        ChunkPos chunkPos = new ChunkPos(BlockPos.containing(position));
+
+        // Check this chunk and 8 surrounding chunks
+        return getAdjacentChunks(chunkPos).stream()
+            .flatMap(chunk -> grid.getOrDefault(chunk, List.of()).stream())
+            .filter(e -> e.getType() == type)
+            .filter(e -> e.position().distanceTo(position) < radius)
+            .toList();
+    }
+}
 ```
 
 ## Performance Considerations
 
-### Tick Intervals
+### Tick Interval Optimization
 
-Expensive behaviors use interval-based updates:
+Expensive behaviors should run on intervals:
 
 ```java
-if (mob.tickCount % 20 == 0) { // Every second
-    updateExpensiveCalculation();
+@Override
+public void tick(Mob mob) {
+    // Run every 20 ticks (1 second) for expensive checks
+    if (mob.tickCount % 20 == 0) {
+        updateFlockState(mob);
+        recalculateNeighbors(mob);
+    }
+
+    // Run every tick for cheap operations
+    applySteeringForces(mob);
 }
 ```
 
-### Caching
+### Caching Strategies
 
-- Neighbor lists cached per tick
-- Profile data cached per reload
-- Goal configurations cached at registration
+Cache neighbor lists to avoid repeated queries:
 
-### Early Exit
+```java
+public class FlockingGoal extends Goal {
+    private List<Animal> cachedNeighbors;
+    private long lastNeighborUpdate;
 
-Goals check preconditions before expensive operations:
+    @Override
+    public void tick() {
+        long currentTick = animal.level().getGameTime();
+
+        // Update neighbors every 10 ticks
+        if (currentTick - lastNeighborUpdate >= 10) {
+            cachedNeighbors = findTopologicalNeighbors(animal, 7);
+            lastNeighborUpdate = currentTick;
+        }
+
+        // Use cached neighbors for steering calculations
+        applySteering(cachedNeighbors);
+    }
+}
+```
+
+### Early Exit Conditions
+
+Check cheap conditions before expensive ones:
 
 ```java
 @Override
 public boolean canUse() {
+    // Cheap: Check if enabled
     if (!isEnabled()) return false;
-    if (recentlyUsed()) return false;
-    return checkDetailedConditions();
+
+    // Cheap: Check cooldown
+    if (isOnCooldown()) return false;
+
+    // Cheap: Check hunger
+    if (!AnimalNeeds.isHungry(mob)) return false;
+
+    // Expensive: Search for food
+    return findFood() != null;
 }
 ```
 
+## Research References
+
+All behaviors are based on academic research:
+
+| Research Area | Key Citation | Parameter Derived |
+|---------------|--------------|-------------------|
+| Flocking | Reynolds (1987) | Separation, alignment, cohesion |
+| Topological Interaction | Ballerini et al. (2008) | 6-7 nearest neighbors |
+| Fleeing | Ydenberg & Dill (1986) | Flight initiation distance |
+| Foraging | Charnov (1976) | Giving-up density, patch departure |
+| Collective Movement | Couzin et al. (2005) | Quorum threshold (0.3-0.7) |
+| Selfish Herd | Hamilton (1971) | Positioning in groups |
+
+For full citations and implementation notes, see:
+- [Research Overview](/research/overview)
+- [Citations](/citations)
+
 ## See Also
 
-- [Architecture](architecture)
-- [Ecology Component](ecology-component)
-- [Herd Movement Research](../research/herd-movement)
-- [Flocking Research](../research/flocking)
+- **[Architecture](/systems/architecture)**: System design and data flow
+- **[Configuration](/getting-started/configuration)**: Behavior parameter tuning
+- **[Research Documentation](/research/overview)**: Scientific basis for behaviors
+- **[Animal Overview](/animals/overview)**: Per-animal behavior guides

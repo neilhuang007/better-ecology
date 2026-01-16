@@ -1,0 +1,273 @@
+---
+title: How Animals Navigate
+description: Discover how animals in Better Ecology find their way through the world
+category: mechanics
+---
+
+import { HintBox } from '@/components/HintBox'
+import { RelatedPages } from '@/components/RelatedPages'
+
+Ever wonder how animals know where to go? In Better Ecology, animals navigate the world with realistic intelligence, choosing paths that make sense for their bodies and instincts. Watch closely and you'll see animals making smart decisions about terrain, slopes, and obstacles.
+
+## The Basics
+
+Animals don't just wander randomly or take the shortest path regardless of obstacles. They evaluate the terrain ahead and choose routes that:
+- Avoid steep slopes when possible
+- Take advantage of gentle downhill paths
+- Navigate around obstacles smoothly
+- Stay with their group when moving together
+
+<HintBox type="didYouKnow">
+  Animals naturally prefer gradual slopes and will often take a longer, gentler path rather than climbing straight up a steep hill!
+</HintBox>
+
+## How Animals Handle Slopes
+
+### Flat Ground
+
+On flat terrain, animals move at their normal speed. This is where you'll see them most comfortable and active.
+
+### Gentle Slopes
+
+When facing mild uphill terrain (around 15 degrees or less), animals slow down slightly but handle it without issue. They'll climb hills, navigate rolling terrain, and move naturally.
+
+<HintBox type="hint">
+  If you're building paths for animals, gentle slopes of 1 block height over 3-4 blocks distance work great!
+</HintBox>
+
+### Steep Slopes
+
+On very steep terrain, animals have to work much harder. You'll notice:
+- Significant slowdown when climbing steep hills
+- Preference for finding alternate, gentler routes
+- Natural zigzag patterns on very steep slopes (similar to hiking switchbacks!)
+
+<HintBox type="tryThis">
+  Build a steep hill and a gentle ramp side-by-side leading to the same spot. Place food at the top. Most animals will choose the ramp over the direct steep climb!
+</HintBox>
+
+### Downhill Movement
+
+Interestingly, animals actually move slightly faster on gentle downhill slopes - gravity helps! But on steep downhill terrain, they'll slow down to maintain control, just like you would when descending a steep trail.
+
+## Smooth, Natural Movement
+
+Animals in Better Ecology don't make instant 90-degree turns or stop on a dime. Instead, they move with realistic momentum:
+
+### Acceleration and Deceleration
+
+Watch an animal start moving from a standstill. They'll gradually speed up rather than instantly reaching full speed. Similarly, when stopping, they slow down naturally rather than freezing in place.
+
+<HintBox type="funFact">
+  This momentum-based movement is why animals sometimes overshoot their target slightly - just like in real life!
+</HintBox>
+
+### Turning
+
+Animals can't spin instantly. When changing direction, they'll rotate smoothly at a realistic rate. This creates natural-looking movement patterns and prevents the robotic spinning you might see in other games.
+
+<HintBox type="didYouKnow">
+  Animals can turn about 10 degrees per game tick. This means sharper turns take a moment to complete!
+</HintBox>
+
+## Terrain Awareness
+
+Animals are smart about their environment. They evaluate the ground ahead and make decisions based on what they "see."
+
+### Avoiding Hazards
+
+Animals naturally avoid:
+- Dangerous drops and cliffs
+- Deep water (for land animals)
+- Unstable terrain
+- Areas without solid ground
+
+<HintBox type="hint">
+  If an animal seems reluctant to cross an area, check for gaps in the floor or steep drops nearby. They might be smarter than you think!
+</HintBox>
+
+### Seeking Cover
+
+Prey animals (like sheep, cows, and rabbits) prefer areas with some cover. They feel more comfortable near trees, walls, or other structures that provide a sense of safety.
+
+<HintBox type="tryThis">
+  Create a large open field and a wooded area with trees. Watch where prey animals spend most of their time - they'll gravitate toward the covered spots!
+</HintBox>
+
+### Avoiding Ridgelines
+
+You might notice that prey animals don't like hanging out on hilltops or ridges. These exposed positions make them feel vulnerable to predators, so they prefer valleys and areas with cover.
+
+## Moving as a Group
+
+When animals travel in herds or flocks, they coordinate their pathfinding:
+
+### Staying Together
+
+Animals in a group don't just happen to move in the same direction - they actively work to stay close to their companions. If one animal finds a good path, others will often follow.
+
+<HintBox type="didYouKnow">
+  Herding animals keep track of their neighbors and adjust their speed to stay with the group!
+</HintBox>
+
+### Avoiding Collisions
+
+When moving together, animals maintain personal space. They'll naturally separate if getting too crowded, but also pull back together if spread too far apart.
+
+<HintBox type="funFact">
+  This balance between staying together and avoiding collision creates the natural flowing movement you see in real animal herds!
+</HintBox>
+
+## Building Animal-Friendly Structures
+
+Want to create spaces where animals can navigate comfortably? Here are some tips:
+
+### Pathways and Ramps
+
+**Good Animal Paths:**
+- Gentle slopes (1 block up per 3-4 blocks forward)
+- Smooth corners instead of sharp 90-degree turns
+- Wide enough for multiple animals (at least 3 blocks)
+- Clear of obstacles and hazards
+
+**Avoid:**
+- Steep staircases (animals prefer ramps)
+- Narrow single-block paths (animals need space)
+- Sharp corners and zigzags
+- Paths along cliff edges
+
+<HintBox type="tip">
+  Build ramps instead of stairs for your animals. They'll use them much more naturally!
+</HintBox>
+
+### Pastures and Enclosures
+
+**Ideal Animal Habitat:**
+- Varied terrain with gentle hills
+- Some covered areas (trees, overhangs)
+- Mix of flat grazing areas and interesting terrain
+- Gradual transitions between heights
+
+<HintBox type="tryThis">
+  Design a pasture with rolling hills instead of flat ground. Animals will use the whole space more naturally, creating grazing patterns across different elevations!
+</HintBox>
+
+### Bridges and Crossings
+
+If you need animals to cross water or valleys:
+- Build wide bridges (3+ blocks)
+- Use gentle approach ramps on both sides
+- Make sure there are solid railings (animals avoid edges)
+- Keep the path clear and obvious
+
+<HintBox type="hint">
+  Animals can see the path ahead, so make sure there's a clear, safe route from start to finish!
+</HintBox>
+
+## Observable Behaviors
+
+### Path Smoothing
+
+Watch an animal's path closely - they don't walk from waypoint to waypoint in straight lines. Instead, they smooth out their route, creating natural curved paths that look organic and realistic.
+
+<HintBox type="funFact">
+  Animals use a technique called "look-ahead" where they start turning toward future waypoints before reaching their current target. This creates those smooth, flowing paths!
+</HintBox>
+
+### Momentum
+
+Pay attention when an animal changes direction quickly. You'll see them:
+- Slow down before sharp turns
+- Maintain some speed from their previous direction
+- Gradually adjust to the new heading
+
+This momentum makes movement feel natural and prevents animals from looking like remote-controlled toys!
+
+### Smart Route Finding
+
+Place a fence maze and lure an animal through it with food. Notice how they:
+- Evaluate different paths before committing
+- Avoid dead ends when possible
+- Choose wider paths over narrow ones
+- Prefer gradual routes over steep ones
+
+<HintBox type="tryThis">
+  Create two paths to the same destination - one steep and direct, one longer but gentle. Animals will usually choose the easier route!
+</HintBox>
+
+## Common Questions
+
+**Why won't my animals go up these stairs?**
+
+Animals prefer ramps to stairs. If the stairs are very steep (1 block up per block forward), animals might refuse them entirely. Try building a gentler ramp alongside.
+
+**Why do animals take the "long way" around?**
+
+They're probably avoiding steep terrain or choosing a safer route. What looks like the shortest path to you might be exhausting or dangerous from the animal's perspective!
+
+**Why do animals seem to "slide" sometimes?**
+
+This is momentum at work! Animals can't stop instantly, so they'll drift a bit after reaching their destination. It's a sign the physics are working correctly.
+
+**Can animals navigate complex terrain?**
+
+Yes! Animals can handle varied terrain, but they prefer:
+- Gradual slopes over steep ones
+- Clear paths over obstacle courses
+- Gentle curves over sharp corners
+
+<HintBox type="didYouKnow">
+  Animals evaluate terrain costs when pathfinding. Steep terrain "costs" more energy, so they'll often choose longer, easier routes!
+</HintBox>
+
+## Fun Experiments
+
+### The Slope Test
+
+Build three ramps to the same height:
+- Steep (1 block up per block forward)
+- Medium (1 block up per 2 blocks forward)
+- Gentle (1 block up per 4 blocks forward)
+
+Place food at the top and watch which path animals prefer!
+
+### The Momentum Challenge
+
+Create a long straight path and get an animal running at full speed. Place food perpendicular to their path. Watch how they can't turn instantly - they'll drift past before circling back!
+
+### The Cover Experiment
+
+Build two identical pens - one completely open, one with trees and structures providing cover. Put the same type and number of animals in each. Notice how animals in the covered pen seem more relaxed and use more of the space.
+
+<HintBox type="tryThis">
+  Time how long it takes animals to settle in each pen. Animals in covered areas often calm down faster!
+</HintBox>
+
+## Secrets and Tips
+
+<HintBox type="didYouKnow">
+  Animals turn at a maximum of 10 degrees per tick, creating smooth, realistic rotation. This is why you'll never see them spin awkwardly!
+</HintBox>
+
+<HintBox type="funFact">
+  The pathfinding system uses the same energy cost formulas that researchers use to study real animal locomotion!
+</HintBox>
+
+<HintBox type="tip">
+  Want to create a natural-looking animal trail? Build it with gentle curves and gradual slopes - animals will follow it perfectly!
+</HintBox>
+
+<HintBox type="tryThis">
+  Lead a herd up a steep mountain. Watch for natural zigzag patterns - animals sometimes create switchback routes like mountain goats!
+</HintBox>
+
+<HintBox type="hint">
+  Animals have personal space preferences. They'll maintain some distance from each other even when moving as a group - just like real herds!
+</HintBox>
+
+<RelatedPages pages={[
+  { title: "Cow", description: "See herd navigation in action", href: "/docs/wiki/animals/cow" },
+  { title: "Sheep", description: "Watch flock movement patterns", href: "/docs/wiki/animals/sheep" },
+  { title: "Rabbit", description: "Observe fleeing and evasion", href: "/docs/wiki/animals/rabbit" },
+  { title: "Behavior System", description: "Technical details on animal AI", href: "/docs/systems/behavior-system" }
+]} />

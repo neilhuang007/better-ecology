@@ -1,42 +1,116 @@
 ---
 title: "Configuration"
-description: "Better Ecology uses data-driven configuration files that can be hot-reloaded without restarting the game."
+description: "Better Ecology uses data-driven configuration files that can be hot-reloaded without restarting the game. Learn how to customize animal behaviors through JSON and YAML profiles."
 ---
 
 ## Overview
 
-All animal behaviors are configurable through:
+All animal behaviors in Better Ecology are configurable through data files. This allows you to customize behavior parameters, enable or disable specific features, and create entirely new behavior profiles without writing code.
 
-- **Mob profile files**: Per-entity configuration
-- **Archetype files**: Reusable behavior templates
-- **Template files**: Base configuration defaults
+### Configuration System Features
+
+- **Data-driven**: All behaviors defined in JSON/YAML files
+- **Hot-reloadable**: Changes apply immediately with `/reload` command
+- **Hierarchical**: Template → Archetype → Mob profile inheritance
+- **Modular**: Enable or disable individual behaviors per animal
+
+### File Types
+
+| Type | Purpose | Example |
+|------|---------|---------|
+| **Mob profiles** | Per-entity configuration | `mobs/passive/sheep.json` |
+| **Archetypes** | Reusable behavior templates | `archetypes/passive/grazer.yaml` |
+| **Templates** | Base configuration defaults | `templates/mod_registry.yaml` |
 
 ## File Locations
 
-| Type | Path |
-|------|------|
-| Mob profiles | `data/better-ecology/mobs/<category>/<mob>.json` |
-| Archetypes | `data/better-ecology/archetypes/<path>.yaml` |
-| Templates | `data/better-ecology/templates/<template>.yaml` |
+### Default Paths
+
+Configuration files are loaded from data packs in the following structure:
+
+```
+data/
+  better-ecology/                # Mod namespace
+    mobs/
+      passive/                   # Category
+        sheep.json
+        cow.json
+        pig.json
+      predator/
+        wolf.json
+        fox.json
+    archetypes/
+      passive/
+        grazer.yaml
+        herd_animal.yaml
+      predator/
+        hunter.yaml
+    templates/
+      mod_registry.yaml
+```
 
 ### Categories
 
-- `passive/` - Non-hostile animals (sheep, cow, pig, chicken)
-- `predator/` - Predatory animals (wolf, fox)
-- `ambient/` - Ambient creatures (bat)
+Animals are organized by behavioral category:
 
-## Hot-Reloading
+| Category | Path | Animals |
+|----------|------|---------|
+| `passive/` | `mobs/passive/` | Sheep, cow, pig, chicken |
+| `predator/` | `mobs/predator/` | Wolf, fox |
+| `ambient/` | `mobs/ambient/` | Bat, parrot |
 
-Configuration changes take effect after running `/reload`:
+## Hot-Reloading Configurations
 
-1. Modify configuration files
-2. Run `/reload` command in-game
-3. New behaviors apply immediately
-4. Existing entities update gracefully
+One of the most powerful features is the ability to reload configurations without restarting Minecraft.
 
-## Basic Configuration
+### How to Reload
 
-### Hunger System
+1. Edit any configuration file in `data/better-ecology/`
+2. Save your changes
+3. Run the reload command in-game:
+
+```mcfunction
+/reload
+```
+
+4. New behaviors apply immediately to all entities
+
+### What Gets Reloaded
+
+When you run `/reload`, the following happens:
+
+- All JSON/YAML files are re-parsed
+- Archetype inheritance is re-resolved
+- New behavior parameters are cached
+- Existing entities update their goals on next tick
+
+### Reload Example
+
+Let's say you want to make sheep graze more frequently:
+
+**Step 1**: Edit `data/better-ecology/mobs/passive/sheep.json`
+
+```json
+{
+  "foraging": {
+    "enabled": true,
+    "hunger_threshold": 70,
+    "search_radius": 12
+  }
+}
+```
+
+**Step 2**: Save the file
+
+**Step 3**: Run `/reload` in-game
+
+**Step 4**: Sheep will now search for food more aggressively (at 70 hunger instead of default 50)
+
+## Basic Configuration Examples
+
+### Example 1: Hunger System
+
+Control when animals need to eat and how quickly they get hungry.
 
 ```json
 {
@@ -51,7 +125,17 @@ Configuration changes take effect after running `/reload`:
 }
 ```
 
-### Behavior Weights
+**Parameters explained**:
+- `enabled`: Turn hunger system on/off for this animal
+- `max`: Maximum hunger value (always 100)
+- `starting`: Initial hunger when spawned (0-100)
+- `decay_rate`: Hunger lost per tick (0.01 = 1 hunger per 100 ticks)
+- `starvation_threshold`: When animal starts taking damage
+- `starvation_damage`: Damage dealt when starving (half-hearts)
+
+### Example 2: Behavior Weights
+
+Adjust the strength of different steering behaviors.
 
 ```json
 {
@@ -64,7 +148,20 @@ Configuration changes take effect after running `/reload`:
 }
 ```
 
-### Fleeing Configuration
+**How weights work**:
+- Higher values = stronger influence
+- Behaviors are combined using weighted sum
+- Default weight is 1.0
+- Range: 0.0 (disabled) to 3.0 (very strong)
+
+**Common adjustments**:
+- Increase `separation` for animals that avoid crowding
+- Increase `cohesion` for animals that flock tightly
+- Increase `flee` for more skittish animals
+
+### Example 3: Fleeing Configuration
+
+Control how animals react to threats.
 
 ```json
 {
@@ -72,60 +169,254 @@ Configuration changes take effect after running `/reload`:
     "enabled": true,
     "flight_initiation_distance": 16.0,
     "escape_strategy": "ZIGZAG",
-    "zigzag_intensity": 0.5
+    "zigzag_intensity": 0.5,
+    "freeze_duration": 20
   }
 }
 ```
 
+**Parameters explained**:
+- `flight_initiation_distance`: How close a threat must be to trigger fleeing (blocks)
+- `escape_strategy`: Movement pattern when fleeing
+  - `STRAIGHT`: Run directly away
+  - `ZIGZAG`: Evasive zigzag pattern
+  - `FREEZE`: Freeze before fleeing
+- `zigzag_intensity`: How sharp the zigzag turns are (0.0-1.0)
+- `freeze_duration`: Ticks to freeze before fleeing (20 ticks = 1 second)
+
+**See also**: [Fleeing Research](/research/fleeing) for the science behind these parameters.
+
+### Example 4: Foraging Behavior
+
+Configure how animals search for and consume food.
+
+```json
+{
+  "foraging": {
+    "enabled": true,
+    "hunger_threshold": 50,
+    "search_radius": 8,
+    "giving_up_density": 0.3,
+    "patch_departure_delay": 60
+  }
+}
+```
+
+**Parameters explained**:
+- `hunger_threshold`: Hunger level that triggers foraging (0-100)
+- `search_radius`: How far to look for food (blocks)
+- `giving_up_density`: Resource density to abandon a patch (0.0-1.0)
+- `patch_departure_delay`: Ticks before leaving depleted area
+
+**Based on**: [Marginal Value Theorem](/research/foraging) from optimal foraging theory.
+
 ## Using Archetypes
 
-Archetypes provide reusable behavior templates:
+Archetypes are reusable behavior templates that reduce duplication.
+
+### Including Archetypes
+
+Reference archetypes in mob profiles to inherit their settings:
 
 ```json
 {
   "archetypes": [
     "better-ecology:passive/grazer",
     "better-ecology:herd/diurnal"
-  ]
+  ],
+  "hunger": {
+    "decay_rate": 0.015
+  }
 }
 ```
 
-Values from archetypes are merged with the mob profile, with profile values taking precedence.
+**How it works**:
+1. Base template is loaded first
+2. Each archetype is applied in order
+3. Mob profile values override archetype values
 
-## Common Parameters
+### Archetype Example
 
-### Distance Parameters
+**File**: `data/better-ecology/archetypes/passive/grazer.yaml`
 
-| Parameter | Default Range | Description |
-|-----------|---------------|-------------|
-| `quorumThreshold` | 0.3 - 0.7 | Percentage of group needed to move |
-| `topologicalNeighbors` | 6 - 7 | Neighbors tracked for flocking |
-| `flightInitiationDistance` | 8 - 32 blocks | Distance to trigger fleeing |
-| `separationDistance` | 1 - 5 blocks | Minimum spacing between animals |
+```yaml
+foraging:
+  enabled: true
+  hunger_threshold: 50
+  search_radius: 8
 
-### Behavior Weights
+hunger:
+  enabled: true
+  decay_rate: 0.01
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `cohesion` | 1.0 | Strength of group cohesion |
-| `separation` | 1.5 | Strength of spacing maintenance |
-| `alignment` | 1.0 | Strength of heading alignment |
-| `flee` | 2.0 | Strength of escape behavior |
-
-## Debugging
-
-### Inspect Entity Data
-
-```
-/data get entity @e[type=sheep,limit=1] better-ecology
+behaviors:
+  cohesion: 1.2
+  separation: 1.5
 ```
 
-### Check Applied Weights
+Now any mob that includes this archetype inherits these grazing behaviors.
+
+### Override Hierarchy
+
+Values are merged in this order (later values override earlier ones):
 
 ```
+1. Base template (templates/mod_registry.yaml)
+   ↓
+2. First archetype (archetypes/passive/grazer.yaml)
+   ↓
+3. Second archetype (archetypes/herd/diurnal.yaml)
+   ↓
+4. Mob profile (mobs/passive/sheep.json)
+```
+
+## Common Configuration Parameters
+
+### Distance and Radius Parameters
+
+These control spatial awareness and interaction ranges:
+
+| Parameter | Default Range | Description | Units |
+|-----------|---------------|-------------|-------|
+| `quorumThreshold` | 0.3 - 0.7 | Percentage of group needed to move | Ratio (0.0-1.0) |
+| `topologicalNeighbors` | 6 - 7 | Neighbors tracked for flocking | Count |
+| `flightInitiationDistance` | 8 - 32 | Distance to trigger fleeing | Blocks |
+| `separationDistance` | 1 - 5 | Minimum spacing between animals | Blocks |
+| `searchRadius` | 8 - 16 | Food/water search range | Blocks |
+| `territoryRadius` | 16 - 64 | Breeding territory size | Blocks |
+
+**Tuning tips**:
+- Larger values = more awareness but higher performance cost
+- Smaller values = more localized behavior
+- Balance gameplay feel with realistic distances
+
+### Behavior Weight Parameters
+
+These control the strength of steering behaviors:
+
+| Parameter | Default | Description | Range |
+|-----------|---------|-------------|-------|
+| `cohesion` | 1.0 | Strength of group cohesion | 0.0 - 3.0 |
+| `separation` | 1.5 | Strength of spacing maintenance | 0.0 - 3.0 |
+| `alignment` | 1.0 | Strength of heading alignment | 0.0 - 3.0 |
+| `flee` | 2.0 | Strength of escape behavior | 0.0 - 3.0 |
+| `seek` | 1.0 | Strength of target seeking | 0.0 - 3.0 |
+
+**See**: [Behavior System](/systems/behavior-system) for implementation details.
+
+### Timing Parameters
+
+These control behavior frequency and duration:
+
+| Parameter | Default | Description | Units |
+|-----------|---------|-------------|-------|
+| `cooldown` | 200 | Ticks between behavior activations | Ticks (20/sec) |
+| `duration` | 100 | How long behavior stays active | Ticks |
+| `interval` | 20 | Update frequency for expensive checks | Ticks |
+
+## Debugging Configurations
+
+### Inspecting Entity Data
+
+Use vanilla commands to view applied configuration:
+
+```mcfunction
+# View all ecology data for nearest sheep
+/data get entity @e[type=sheep,limit=1,sort=nearest]
+
+# Check specific hunger value
+/debugeco hunger @e[type=sheep,limit=1,sort=nearest]
+
+# Check thirst value
+/debugeco thirst @e[type=cow,limit=1,sort=nearest]
+```
+
+### Checking Applied Weights
+
+View the current behavior weights:
+
+```mcfunction
+# View behavior configuration
 /data get entity @e[type=sheep,limit=1] better-ecology.behavior
 ```
 
+### Validating JSON/YAML
+
+If `/reload` produces errors, check for:
+
+- **Missing commas** in JSON files
+- **Incorrect indentation** in YAML files
+- **Typos in parameter names**
+- **Invalid value ranges** (negative numbers, out of bounds)
+
+**Example error**:
+```
+[Better Ecology] Failed to parse mobs/passive/sheep.json: Unexpected character at line 15
+```
+
+This means line 15 has a syntax error (usually missing comma or bracket).
+
 ## Advanced Configuration
 
-For detailed configuration options, see the [Configuration System](/systems/configuration) documentation.
+### Creating Custom Profiles
+
+You can create entirely new animal profiles or override existing ones using data packs.
+
+**Step 1**: Create a data pack structure
+
+```
+my_custom_pack/
+  pack.mcmeta
+  data/
+    my_namespace/
+      mobs/
+        passive/
+          custom_sheep.json
+```
+
+**Step 2**: Define your custom behavior
+
+```json
+{
+  "identity": {
+    "mob_id": "minecraft:sheep"
+  },
+  "archetypes": [
+    "better-ecology:passive/grazer"
+  ],
+  "hunger": {
+    "decay_rate": 0.02
+  },
+  "behaviors": {
+    "cohesion": 2.0,
+    "separation": 2.5
+  }
+}
+```
+
+**Step 3**: Load the data pack and run `/reload`
+
+### Performance Tuning
+
+For servers with many animals, adjust these parameters to reduce lag:
+
+```json
+{
+  "performance": {
+    "update_interval": 5,
+    "neighbor_cache_ticks": 10,
+    "spatial_query_limit": 20
+  }
+}
+```
+
+- `update_interval`: Only check behaviors every N ticks
+- `neighbor_cache_ticks`: Cache neighbor lists for N ticks
+- `spatial_query_limit`: Max neighbors to consider
+
+## See Also
+
+- **[Architecture](/systems/architecture)**: Understand the configuration system design
+- **[Behavior System](/systems/behavior-system)**: Learn how behaviors use these parameters
+- **[Research Documentation](/research/overview)**: Scientific basis for parameter defaults
+- **[Animal Overview](/animals/overview)**: Per-animal configuration guides

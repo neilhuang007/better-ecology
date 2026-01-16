@@ -3,16 +3,21 @@ title: Bats
 description: Learn about bat behavior in Better Ecology - their crepuscular nature, roosting habits, and echolocation hunting patterns.
 ---
 
-# Bats
+import { AnimalInfoBox } from '@/components/AnimalInfoBox'
+import { HintBox } from '@/components/HintBox'
+import { RelatedPages } from '@/components/RelatedPages'
 
-## Quick Facts
-
-| Attribute | Value |
-|-----------|-------|
-| **Health** | 3 hearts |
-| **Active** | Dawn/Dusk |
-| **Habitat** | Caves |
-| **Diet** | Insects |
+<AnimalInfoBox
+  name="Bat"
+  color="#4A4A4A"
+  health="3 hearts (6 HP)"
+  speed="Fast (Flying)"
+  food="Insects (simulated)"
+  activeTime="Night/Caves (Crepuscular)"
+  temperament="Shy, cave-dwelling"
+  mobType="Passive"
+  drops="None"
+/>
 
 Bats are one of nature's most fascinating creatures, and in Better Ecology, they come alive with realistic behaviors that mirror their real-world cousins. These small, nocturnal mammals are completely harmless to players, but they're incredibly skittish and will flee if you approach too quickly.
 
@@ -20,7 +25,9 @@ Bats are one of nature's most fascinating creatures, and in Better Ecology, they
 
 Bats follow a crepuscular lifestyle, meaning they're most active during the twilight hours - those magical moments at dawn and dusk when the world transitions between day and night. You might notice bats emerging from their roosts as the sun begins to set, preparing for their nightly hunt.
 
-**Tip:** The best time to observe bats in action is right after sunset or just before sunrise. Watch cave entrances during these times for the most activity.
+<HintBox>
+The best time to observe bats in action is right after sunset or just before sunrise. Watch cave entrances during these times for the most activity.
+</HintBox>
 
 ## Roosting Behavior
 
@@ -28,7 +35,9 @@ During the day, bats retreat to dark, sheltered locations to rest. You'll find t
 
 Try exploring deep caves during daylight hours - you'll likely spot clusters of bats hanging peacefully from the stone above. They prefer undisturbed areas, so the deeper and darker the cave, the more bats you're likely to encounter.
 
-**Did you know?** Bats can sleep hanging upside down for hours without any discomfort. Their special tendons lock their feet in place, so they don't need to use any energy to stay attached.
+<HintBox>
+Bats can sleep hanging upside down for hours without any discomfort. Their special tendons lock their feet in place, so they don't need to use any energy to stay attached.
+</HintBox>
 
 ## Hunting and Echolocation
 
@@ -36,7 +45,9 @@ When twilight arrives, bats become incredibly active hunters. They emerge from t
 
 Their flight appears almost random at times, but it's actually a highly sophisticated hunting strategy. Watch carefully and you'll see them suddenly change direction mid-flight as they detect and pursue their tiny prey.
 
-**Tip:** Bats are most active around areas with lots of insects. Look for them near water sources, forests, and open areas at dusk.
+<HintBox>
+Bats are most active around areas with lots of insects. Look for them near water sources, forests, and open areas at dusk.
+</HintBox>
 
 ## Behavior Around Players
 
@@ -48,7 +59,9 @@ Try moving slowly and quietly if you want to observe bats up close. Sudden movem
 
 Bats make their homes in caves and other dark, enclosed spaces. The darker and more sheltered the location, the more attractive it is to roosting bats. You'll rarely find them in open, brightly lit areas during their resting periods.
 
-**You might notice:** Large cave systems can host significant bat populations. Listen for the soft rustling sounds of bat wings when you enter a cave during their active hours.
+<HintBox>
+Large cave systems can host significant bat populations. Listen for the soft rustling sounds of bat wings when you enter a cave during their active hours.
+</HintBox>
 
 ## Tips for Players
 
@@ -59,3 +72,11 @@ Bats make their homes in caves and other dark, enclosed spaces. The darker and m
 - **Sound cues:** Listen for wing flutters and soft chirping sounds in caves
 
 Bats add a wonderful layer of life to Minecraft's cave systems. Take a moment during your next twilight exploration to appreciate these remarkable little hunters as they go about their nightly routines.
+
+<RelatedPages
+  pages={[
+    { name: 'Parrot', path: '/wiki/animals/parrot' },
+    { name: 'Sleep Behavior Research', path: '/wiki/behaviors/sleep' },
+    { name: 'Crepuscular Emergence Research', path: '/wiki/behaviors/crepuscular' }
+  ]}
+/>

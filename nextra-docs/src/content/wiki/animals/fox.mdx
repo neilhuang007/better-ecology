@@ -5,21 +5,21 @@ category: animals
 tags: [passive, predator, crepuscular, caching, pouncing]
 ---
 
-# Fox
+import { AnimalInfoBox } from '@/components/AnimalInfoBox'
+import { HintBox } from '@/components/HintBox'
+import { RelatedPages } from '@/components/RelatedPages'
 
-*Clever, sneaky hunters active at dawn and dusk*
-
----
-
-## Quick Facts
-
-| Attribute | Value |
-|-----------|-------|
-| **Health** | 5 hearts  |
-| **Active Times** | Dawn & Dusk  |
-| **Favorite Food** | Sweet Berries  |
-| **Prey** | Chickens, Rabbits  |
-| **Temperament** | Shy but curious |
+<AnimalInfoBox
+  name="Fox"
+  color="#FF6600"
+  health="5 hearts (10 HP)"
+  speed="Very Fast"
+  food="Sweet Berries, Chicken"
+  activeTime="Dawn & Dusk (Crepuscular)"
+  temperament="Cunning, skittish around players"
+  mobType="Neutral"
+  drops="None"
+/>
 
 ---
 
@@ -29,25 +29,41 @@ Foxes are some of the most fascinating creatures you'll encounter! These clever 
 
 ### The Twilight Hunter
 
-**Try staying up at dawn or dusk to spot foxes on the hunt!** This is when foxes are at their most active. As the sun rises or sets, foxes emerge from their resting spots and begin patrolling their territory, looking for prey. If you're patient and quiet, you might witness some amazing hunting behaviors!
+<HintBox type="tip">
+Try staying up at dawn or dusk to spot foxes on the hunt! This is when foxes are at their most active. If you're patient and quiet, you might witness some amazing hunting behaviors.
+</HintBox>
+
+As the sun rises or sets, foxes emerge from their resting spots and begin patrolling their territory, looking for prey.
 
 ### The Famous Fox Pounce
 
-**Did you know foxes can hear mice under the snow?** One of the most spectacular sights in Better Ecology is watching a fox perform its signature hunting move - the pounce! Foxes will leap high into the air and dive down onto their prey from above. It's not just for show - this technique is incredibly effective for catching small animals like chickens and rabbits.
+<HintBox type="info">
+Did you know foxes can hear mice under the snow? One of the most spectacular sights in Better Ecology is watching a fox perform its signature hunting move - the pounce!
+</HintBox>
+
+Foxes will leap high into the air and dive down onto their prey from above. It's not just for show - this technique is incredibly effective for catching small animals like chickens and rabbits.
 
 Watch for a fox to pause, tilt its head (listening carefully), then suddenly leap up and dive down. That's a fox using its incredible hearing to pinpoint prey!
 
 ### Food Caching
 
-**Watch where foxes bury their food - you might find their stash!** Foxes are smart about food management. When a fox catches more food than it can eat right away, it will bury the extra for later. These hidden food caches are scattered around the fox's territory.
+<HintBox type="success">
+Watch where foxes bury their food - you might find their stash! Mark that spot, and you could come back later to discover what they've hidden.
+</HintBox>
 
-If you follow a fox after a successful hunt, you might see it dig a small hole, drop the food, and cover it back up. Mark that spot - you could come back later and find what they've hidden!
+Foxes are smart about food management. When a fox catches more food than it can eat right away, it will bury the extra for later. These hidden food caches are scattered around the fox's territory.
+
+If you follow a fox after a successful hunt, you might see it dig a small hole, drop the food, and cover it back up.
 
 ### Hunting Behavior
 
-**Protect your chickens! Foxes are clever and persistent.** If you're keeping chickens or rabbits as livestock, foxes pose a real threat. These sneaky predators will patrol near easy prey and strike when the opportunity arises. A well-timed pounce can catch even the most alert chicken off guard.
+<HintBox type="warning">
+Protect your chickens! Foxes are clever and persistent. If you're keeping chickens or rabbits as livestock, foxes pose a real threat. Build secure enclosures with good lighting and tall fences.
+</HintBox>
 
-**Tip:** Build secure enclosures with good lighting and tall fences. Foxes are opportunistic but not supernatural - proper protection will keep your animals safe!
+These sneaky predators will patrol near easy prey and strike when the opportunity arises. A well-timed pounce can catch even the most alert chicken off guard.
+
+Foxes are opportunistic but not supernatural - proper protection will keep your animals safe!
 
 ---
 
@@ -67,7 +83,9 @@ Foxes wake up from their nighttime rest and begin their morning hunt. This is pr
 - Near berry bushes
 - Curled up in a ball with their tail wrapped around them
 
-**Tip:** This is the safest time to observe foxes up close, but approach slowly - they'll wake up if you get too close!
+<HintBox type="tip">
+This is the safest time to observe foxes up close, but approach slowly - they'll wake up if you get too close!
+</HintBox>
 
 ### Dusk (Sunset)
 The second active period begins! Foxes emerge for their evening hunt with the same behaviors as dawn. This is often when they're most successful, as their prey is also active during twilight hours.
@@ -81,13 +99,13 @@ Foxes wind down and find a safe spot to rest through the night.
 
 Baby foxes are **absolutely adorable** and noticeably different from adults!
 
-**Fox kits are playful and curious** - unlike their cautious parents, young foxes love to play! You might see them:
-- Pouncing on nothing (practicing hunting!)
-- Chasing each other
-- Playing with items they find
-- Following their parents around
+<HintBox type="info">
+Fox kits are playful and curious - unlike their cautious parents, young foxes love to play! You might see them pouncing on nothing (practicing hunting!), chasing each other, or following their parents around.
+</HintBox>
 
-**Tip:** Fox kits born from tamed parent foxes will be much friendlier to players. This is the key to having foxes that trust you!
+<HintBox type="success">
+Fox kits born from tamed parent foxes will be much friendlier to players. This is the key to having foxes that trust you!
+</HintBox>
 
 ---
 
@@ -102,7 +120,9 @@ Foxes are **very shy around players** unless bred from tamed parents. Wild adult
 3. **Breed them** - the baby will trust you!
 4. **Raise the kit** - this fox won't flee from you like wild foxes do
 
-**Did you know?** Only foxes *born* in your presence will truly trust you. You can't tame an adult wild fox directly!
+<HintBox type="info">
+Did you know? Only foxes born in your presence will truly trust you. You can't tame an adult wild fox directly!
+</HintBox>
 
 ### Best Approach for Wild Foxes
 
@@ -127,12 +147,9 @@ Foxes are natural predators of:
 - **Chickens** - Easy targets, foxes love them
 - **Rabbits** - Harder to catch due to zigzag fleeing, but foxes are persistent
 
-**Watch a hunt unfold!** If you position yourself quietly near chickens or rabbits at dawn or dusk, you might see the whole hunting sequence:
-1. Fox spots prey
-2. Fox crouches and stalks slowly
-3. Fox gets in range
-4. **POUNCE!** - The spectacular leap attack
-5. Fox either caches or eats the catch
+<HintBox type="tip">
+Watch a hunt unfold! If you position yourself quietly near chickens or rabbits at dawn or dusk, you might see the whole hunting sequence: Fox spots prey, crouches and stalks slowly, gets in range, then POUNCE! - The spectacular leap attack!
+</HintBox>
 
 ### Who Hunts Foxes?
 
@@ -144,9 +161,13 @@ While foxes are predators, they're also cautious around:
 
 ## Survival Tips
 
-- **Berry farms attract foxes!** If you plant sweet berry bushes, don't be surprised if foxes start showing up. They're drawn to their favorite food source.
+<HintBox type="warning">
+Berry farms attract foxes! If you plant sweet berry bushes, don't be surprised if foxes start showing up. They're drawn to their favorite food source.
+</HintBox>
 
-- **Foxes can jump!** Don't underestimate their agility. They can clear fences that would stop most animals.
+<HintBox type="tip">
+Foxes can jump! Don't underestimate their agility. They can clear fences that would stop most animals.
+</HintBox>
 
 - **Listen for their sounds** - Foxes make distinctive noises. If you hear fox calls at dawn or dusk, there's one nearby!
 
@@ -167,5 +188,15 @@ While foxes are predators, they're also cautious around:
 
 ---
 
-*Remember: Foxes are wild hunters with complex behaviors. Whether you want to protect your livestock from them, breed friendly foxes, or just observe these clever creatures in action, understanding their twilight schedule is the key to success!* 
+*Remember: Foxes are wild hunters with complex behaviors. Whether you want to protect your livestock from them, breed friendly foxes, or just observe these clever creatures in action, understanding their twilight schedule is the key to success!*
 
+---
+
+<RelatedPages
+  pages={[
+    { title: 'Wolf', href: '/wiki/animals/wolf', description: 'Fellow predator of the wilderness' },
+    { title: 'Chicken', href: '/wiki/animals/chicken', description: 'Prime target for fox hunts' },
+    { title: 'Rabbit', href: '/wiki/animals/rabbit', description: 'Challenging prey with zigzag fleeing' },
+    { title: 'Predation Behavior', href: '/wiki/behaviors/predation', description: 'Learn about hunting mechanics' }
+  ]}
+/>

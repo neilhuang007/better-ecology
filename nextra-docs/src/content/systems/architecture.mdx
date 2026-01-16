@@ -1,152 +1,576 @@
 ---
 title: "Architecture"
-description: "Better Ecology uses a data-driven architecture for vanilla mob behavior modification with minimal per-mob code. All behavior derives from YAML/JSON profiles and archetypes, compiled once on reload, and dispatched through unified hooks."
+description: "Better Ecology uses a data-driven architecture with minimal code per mob. All behaviors derive from JSON/YAML profiles, compiled once on reload, and dispatched through unified hooks."
 ---
 
 ## Design Principles
 
-1. **Single source of truth**: YAML profiles and archetypes
-2. **Minimal mixins**: One Mob mixin plus one Animal mixin
-3. **Handle-based systems**: Each subsystem is a handle that enables itself via config
-4. **Performance**: Parse once, cache aggressively, avoid per-tick heavy work
+Better Ecology follows these architectural principles:
 
-## Data Layout
+1. **Single source of truth**: All behavior configuration lives in YAML/JSON profiles
+2. **Minimal mixins**: One `Mob` mixin plus one `Animal` mixin for all entities
+3. **Handle-based systems**: Each subsystem (hunger, flocking, fleeing) is an independent handle
+4. **Performance-first**: Parse once, cache aggressively, avoid per-tick heavy work
+5. **Hot-reloadable**: Configuration changes apply without restarting the game
 
-### File Locations
+## System Architecture
 
-| Type | Path |
-|------|------|
-| Base template | `data/better-ecology/templates/mod_registry.yaml` |
-| Mob profiles | `data/<namespace>/mobs/**/<mob>.yaml` or `.yml` |
-| Archetypes | `data/<namespace>/archetypes/<path>.yaml` |
+The mod is organized into several interconnected systems:
 
-### Profile Structure
-
-Profiles can include archetypes for reusable behavior templates:
-
-```yaml
-archetypes:
-  - "better-ecology:passive/grazer"
-  - "better-ecology:herd/diurnal"
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Data Layer                              │
+│  ┌───────────┐  ┌────────────┐  ┌──────────────┐          │
+│  │Templates  │→ │Archetypes  │→ │Mob Profiles  │          │
+│  │(YAML)     │  │(YAML)      │  │(JSON)        │          │
+│  └───────────┘  └────────────┘  └──────────────┘          │
+└────────────────────────┬────────────────────────────────────┘
+                         ↓ Reload
+┌─────────────────────────────────────────────────────────────┐
+│              Configuration System                           │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ EcologyProfileLoader                                 │  │
+│  │  - Reads YAML/JSON files                             │  │
+│  │  - Merges templates → archetypes → profiles          │  │
+│  │  - Validates configuration                           │  │
+│  └──────────────────┬───────────────────────────────────┘  │
+│                     ↓                                       │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ EcologyProfileRegistry                               │  │
+│  │  - Stores merged profiles by mob type                │  │
+│  │  - Caches handle instances                           │  │
+│  │  - Increments generation counter on reload           │  │
+│  └──────────────────┬───────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│                Runtime System                               │
+│  ┌────────────┐  ┌──────────────┐  ┌──────────────┐       │
+│  │  Mixins    │→ │EcologyHooks  │→ │  Handles     │       │
+│  │ (2 total)  │  │              │  │(Hunger, etc) │       │
+│  └────────────┘  └──────────────┘  └──────────────┘       │
+│                                     ↓                       │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ EcologyComponent (per entity)                        │  │
+│  │  - Stores handle references                          │  │
+│  │  - Caches configuration data                         │  │
+│  │  - Manages goal registration                         │  │
+│  └──────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│                  Minecraft Entity                           │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ Mob Entity (Sheep, Cow, Pig, etc.)                   │  │
+│  │  - Runs goals added by handles                       │  │
+│  │  - Ticks behaviors every frame                       │  │
+│  │  - Persists data via NBT                             │  │
+│  └──────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## Merge Rules
+## Data Flow
 
-**Order:** base template -> archetypes (in listed order) -> mob profile
+### Configuration Loading Flow
 
-**Overlay Semantics:**
-- `null` does not override
-- Empty list does not override
-- Non-empty list replaces
-- Maps merge recursively
+This diagram shows how configuration is loaded and applied to entities:
 
-If `identity.mob_id` is missing or invalid, the profile is skipped with a warning.
+```
+1. Server/Client Start
+   ↓
+2. EcologyBootstrap.initialize()
+   │
+   ├─→ Register handles (HungerHandle, FlockingHandle, etc.)
+   └─→ Register resource reload listener
+   ↓
+3. Datapack Reload (or /reload command)
+   ↓
+4. EcologyResourceReloader.reload()
+   │
+   ├─→ EcologyProfileLoader.loadProfiles()
+   │   ├─→ Load base template (templates/mod_registry.yaml)
+   │   ├─→ Load archetypes (archetypes/**/*.yaml)
+   │   ├─→ Load mob profiles (mobs/**/*.json)
+   │   └─→ Merge: template → archetypes → profile
+   │
+   └─→ EcologyProfileRegistry.reload(profiles)
+       ├─→ Store profiles by mob type
+       ├─→ Resolve handles for each profile
+       └─→ Increment generation counter
+   ↓
+5. Entity Spawns or Ticks
+   ↓
+6. MobEcologyMixin injects hooks
+   ↓
+7. EcologyHooks.onRegisterGoals(mob)
+   │
+   ├─→ Get or create EcologyComponent for mob
+   ├─→ Look up profile for mob type
+   ├─→ Get handles that support this profile
+   └─→ Each handle.registerGoals(mob, goalSelector)
+   ↓
+8. Goals run on entity tick
+```
 
-## Runtime Flow
+### Entity Lifecycle Flow
 
-### 1. Reload Phase
+When an entity is created and managed:
 
-1. `EcologyResourceReloader` reads YAMLs on datapack reload
-2. Builds `EcologyProfile` objects
-3. `EcologyProfileRegistry.reload()` stores profiles, resolves handles, increments generation
+```
+Entity Creation
+   ↓
+MobEcologyMixin.<init>
+   │
+   ├─→ Create EcologyComponent
+   └─→ Attach to entity via EcologyAccess interface
+   ↓
+MobEcologyMixin.registerGoals() [after super call]
+   ↓
+EcologyHooks.onRegisterGoals(mob)
+   │
+   ├─→ Check if already registered (idempotent)
+   ├─→ Look up EcologyProfile for mob type
+   └─→ For each handle that supports profile:
+       └─→ handle.registerGoals(mob, goalSelector, targetSelector)
+   ↓
+Every Tick
+   ↓
+MobEcologyMixin.tick()
+   ↓
+EcologyHooks.onTick(mob)
+   │
+   └─→ For each handle:
+       └─→ handle.tick(mob)
+   ↓
+Save to Disk
+   ↓
+MobEcologyMixin.addAdditionalSaveData(tag)
+   ↓
+EcologyHooks.onSave(mob, tag)
+   │
+   └─→ For each handle:
+       └─→ handle.writeNbt(mob, tag)
+   ↓
+Load from Disk
+   ↓
+MobEcologyMixin.readAdditionalSaveData(tag)
+   ↓
+EcologyHooks.onLoad(mob, tag)
+   │
+   └─→ For each handle:
+       └─→ handle.readNbt(mob, tag)
+```
 
-### 2. Entity Lifecycle
+## Component Pattern
 
-1. `MobEcologyMixin` attaches `EcologyComponent` to every Mob
-2. Goal registration: `EcologyHooks.onRegisterGoals()` (idempotent)
-3. Tick: `EcologyHooks.onTick()`
-4. NBT: `EcologyHooks.onSave()` / `EcologyHooks.onLoad()`
+Better Ecology uses a component-based architecture where behaviors are modular and composable.
 
-### 3. Food Checks
+### EcologyComponent
 
-`AnimalEcologyMixin` redirects `Animal.mobInteract` isFood check to `EcologyHooks.overrideIsFood(...)`
+Each mob has an attached `EcologyComponent` that stores per-entity state:
 
-## Core Classes
+```java
+// Accessing the component (via mixin interface)
+if (mob instanceof EcologyAccess access) {
+    EcologyComponent component = access.getEcologyComponent();
 
-| Class | Purpose |
-|-------|---------|
-| `EcologyProfile` | Merged map with typed getters and cached values |
-| `EcologyMerge` | Deep merge with null/empty list rules |
-| `EcologyProfileLoader` | Reads base, profiles, archetypes; normalizes YAML |
-| `EcologyProfileRegistry` | Profile map, handle cache, generation counter |
-| `EcologyComponent` | Per-mob cache, handle NBT tags, goal registration flag |
-| `EcologyHandle` | System interface (goals, tick, NBT, food override) |
-| `EcologyHandleRegistry` | Register and resolve handles per profile |
-| `EcologyHooks` | Mixin dispatch for lifecycle, NBT, food override |
-| `EcologyResourceReloader` | Fabric resource reload listener |
-| `EcologyBootstrap` | Registers handles and reload listener |
-| `EcologyAccess` | Mixin-access interface for component access |
-| `AnimalItemStorage` | Shared component for animals that carry items |
+    // Component stores:
+    // - Reference to the mob's EcologyProfile
+    // - List of active handles
+    // - Goal registration flag
+    // - Per-handle cached data
+}
+```
 
-## Mixins
+### Data Attachment Pattern
+
+The mod uses Fabric's Attachment API for persistent data:
+
+```java
+// Example: Hunger system using attachments
+public class AnimalNeeds {
+    // Register attachment type
+    public static final AttachmentType<Float> HUNGER_ATTACHMENT =
+        AttachmentRegistry.create(
+            ResourceLocation.fromNamespaceAndPath("better-ecology", "hunger"),
+            builder -> builder
+                .initializer(() -> 80f)  // Default value
+                .persistent(Codec.FLOAT)  // Auto-save to NBT
+                .copyOnDeath()            // Preserve on respawn
+        );
+
+    // Read hunger value
+    public static float getHunger(Mob mob) {
+        return mob.getAttachedOrCreate(HUNGER_ATTACHMENT);
+    }
+
+    // Write hunger value
+    public static void setHunger(Mob mob, float value) {
+        mob.setAttached(HUNGER_ATTACHMENT, Math.clamp(value, 0f, 100f));
+    }
+}
+```
+
+**Key benefits**:
+- Automatic NBT serialization
+- Type-safe access
+- No manual save/load code
+- Garbage-collected when entity is removed
+
+### Profile Merge System
+
+Configuration is merged hierarchically using `EcologyMerge`:
+
+```java
+// Merge order (later overrides earlier)
+Map<String, Object> base = loadTemplate("mod_registry.yaml");
+Map<String, Object> archetype1 = loadArchetype("passive/grazer.yaml");
+Map<String, Object> archetype2 = loadArchetype("herd/diurnal.yaml");
+Map<String, Object> profile = loadProfile("mobs/passive/sheep.json");
+
+// Deep merge with special rules
+Map<String, Object> merged = EcologyMerge.merge(
+    base,
+    archetype1,
+    archetype2,
+    profile
+);
+
+// Merge rules:
+// - null values do not override
+// - Empty lists do not override
+// - Non-empty lists replace completely
+// - Maps are merged recursively
+```
+
+**Example merge**:
+
+```yaml
+# Base template
+hunger:
+  enabled: true
+  max: 100
+  decay_rate: 0.01
+
+# Archetype (passive/grazer)
+hunger:
+  decay_rate: 0.015  # Overrides base
+foraging:
+  enabled: true      # Adds new section
+
+# Mob profile (sheep.json)
+hunger:
+  starting: 85       # Adds to merged hunger config
+  # decay_rate stays 0.015 from archetype
+```
+
+**Result**:
+```yaml
+hunger:
+  enabled: true       # from base
+  max: 100           # from base
+  decay_rate: 0.015  # from archetype (overrode base)
+  starting: 85       # from profile
+foraging:
+  enabled: true      # from archetype
+```
+
+## Handle System
+
+Handles are the core abstraction for behavior subsystems.
+
+### Handle Interface
+
+Every subsystem implements the `EcologyHandle` interface:
+
+```java
+public interface EcologyHandle {
+    /**
+     * Returns true if this handle supports the given profile.
+     * Checks for required configuration keys.
+     */
+    boolean supports(EcologyProfile profile);
+
+    /**
+     * Register goals for this handle.
+     * Called once during entity initialization.
+     */
+    default void registerGoals(Mob mob, GoalSelector goals,
+                                GoalSelector targets) {}
+
+    /**
+     * Called every tick for entities with this handle active.
+     */
+    default void tick(Mob mob) {}
+
+    /**
+     * Serialize handle state to NBT.
+     */
+    default void writeNbt(Mob mob, CompoundTag tag) {}
+
+    /**
+     * Deserialize handle state from NBT.
+     */
+    default void readNbt(Mob mob, CompoundTag tag) {}
+
+    /**
+     * Override vanilla food item checks.
+     */
+    default boolean overrideIsFood(Mob mob, ItemStack stack) {
+        return false;
+    }
+}
+```
+
+### Example: Hunger Handle
+
+Here's how a simplified hunger handle would be implemented:
+
+```java
+public class HungerHandle implements EcologyHandle {
+    @Override
+    public boolean supports(EcologyProfile profile) {
+        // Only enable if hunger config exists and is enabled
+        return profile.has("hunger.enabled") &&
+               profile.getBool("hunger.enabled");
+    }
+
+    @Override
+    public void registerGoals(Mob mob, GoalSelector goals,
+                              GoalSelector targets) {
+        // Add hunger-driven foraging goal
+        float hungerThreshold = profile.getFloat("hunger.threshold", 50f);
+        goals.addGoal(5, new SeekFoodGoal(mob, hungerThreshold));
+    }
+
+    @Override
+    public void tick(Mob mob) {
+        // Decay hunger every tick
+        float decayRate = profile.getFloat("hunger.decay_rate", 0.01f);
+        AnimalNeeds.decayHunger(mob, decayRate);
+
+        // Apply starvation damage if needed
+        if (AnimalNeeds.isStarving(mob)) {
+            float damage = profile.getFloat("hunger.starvation_damage", 1f);
+            if (AnimalNeeds.canTakeDamage(mob, 100)) {  // Every 5 seconds
+                mob.hurt(mob.damageSources().starve(), damage);
+                AnimalNeeds.setLastDamageTick(mob, mob.level().getGameTime());
+            }
+        }
+    }
+
+    // NBT is handled by attachment API, no need to implement
+}
+```
+
+### Handle Registration
+
+Handles are registered during mod initialization:
+
+```java
+public class EcologyBootstrap {
+    public static void initialize() {
+        // Register handles
+        EcologyHandleRegistry.register("hunger", new HungerHandle());
+        EcologyHandleRegistry.register("flocking", new FlockingHandle());
+        EcologyHandleRegistry.register("fleeing", new FleeingHandle());
+        EcologyHandleRegistry.register("diet", new DietHandle());
+
+        // Register resource reload listener
+        ResourceManagerHelper.get(PackType.SERVER_DATA)
+            .registerReloadListener(new EcologyResourceReloader());
+    }
+}
+```
+
+## Mixin Strategy
+
+Better Ecology uses only **two mixins** to inject into all mob types.
 
 ### MobEcologyMixin
 
-**Inject Points:**
-- `<init>` after `registerGoals()` call
-- `registerGoals` tail (secondary safeguard)
-- `tick` tail
-- `addAdditionalSaveData` tail
-- `readAdditionalSaveData` tail
+Hooks into the base `Mob` class to handle all entities:
 
-**Rationale:** Many mobs override `registerGoals()` without calling super, so the constructor hook is the only universal point. The hook is idempotent to avoid double registration.
+```java
+@Mixin(Mob.class)
+public class MobEcologyMixin implements EcologyAccess {
+    @Unique
+    private EcologyComponent ecologyComponent;
+
+    // Create component during construction
+    @Inject(method = "<init>", at = @At("TAIL"))
+    private void onInit(CallbackInfo ci) {
+        this.ecologyComponent = new EcologyComponent((Mob)(Object)this);
+    }
+
+    // Hook after goal registration
+    @Inject(method = "registerGoals", at = @At("TAIL"))
+    private void afterRegisterGoals(CallbackInfo ci) {
+        EcologyHooks.onRegisterGoals((Mob)(Object)this);
+    }
+
+    // Hook every tick
+    @Inject(method = "tick", at = @At("TAIL"))
+    private void onTick(CallbackInfo ci) {
+        EcologyHooks.onTick((Mob)(Object)this);
+    }
+
+    // Hook NBT save
+    @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
+    private void onSave(CompoundTag tag, CallbackInfo ci) {
+        EcologyHooks.onSave((Mob)(Object)this, tag);
+    }
+
+    // Hook NBT load
+    @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
+    private void onLoad(CompoundTag tag, CallbackInfo ci) {
+        EcologyHooks.onLoad((Mob)(Object)this, tag);
+    }
+
+    @Override
+    public EcologyComponent getEcologyComponent() {
+        return this.ecologyComponent;
+    }
+}
+```
+
+**Why this works**:
+- All entities inherit from `Mob` class
+- Single mixin covers sheep, cows, wolves, etc.
+- No need for per-entity mixins
+- Compatible with other mods that extend `Mob`
 
 ### AnimalEcologyMixin
 
-**Redirect:**
-- `Animal.mobInteract` call to `isFood(ItemStack)` -> `EcologyHooks.overrideIsFood(...)`
+Redirects food item checks for breeding:
 
-## NBT Format
-
-**Root key:** `BetterEcology`
-
-**Per-handle format:**
+```java
+@Mixin(Animal.class)
+public class AnimalEcologyMixin {
+    // Redirect isFood() check during player interaction
+    @Redirect(
+        method = "mobInteract",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/world/entity/animal/Animal;isFood(Lnet/minecraft/world/item/ItemStack;)Z"
+        )
+    )
+    private boolean redirectIsFood(Animal animal, ItemStack stack) {
+        return EcologyHooks.overrideIsFood(animal, stack);
+    }
+}
 ```
-BetterEcology.<handle_id> -> CompoundTag
+
+This allows handles to define custom diets without hardcoding items.
+
+## NBT Data Format
+
+Entity data is stored under a single root key to avoid conflicts:
+
+```
+Entity NBT Structure:
+{
+  "BetterEcology": {
+    "hunger": <float>,           # Attachment-managed
+    "thirst": <float>,           # Attachment-managed
+    "last_damage_tick": <long>,  # Attachment-managed
+    "initialized": <boolean>     # Attachment-managed
+  }
+}
 ```
 
-Each handle reads/writes only its own tag.
+Since the mod uses Fabric's Attachment API, all NBT serialization is automatic. You don't need to manually write NBT handling code.
 
-## Handle Model
+## Performance Optimizations
 
-Each handle:
-1. `supports(profile)` - Checks if config fields are present
-2. `registerGoals()` - Adds vanilla goals using config values
-3. `tick()` - Updates internal state or performs actions
-4. `readNbt()/writeNbt()` - Persists handle state
+### Parse Once, Cache Forever
 
-### Example: DietHandle
+Configuration is parsed during `/reload` and cached:
 
-**Reads:**
-- `player_interaction.player_breeding.items`
-- `diet.food_sources.primary` entries with `type: ITEM`
+```java
+// Bad: Parse every tick
+public void tick(Mob mob) {
+    float threshold = parseYaml("hunger.threshold");  // Slow!
+}
 
-**Supports:**
-- Item IDs and tags (`#tag`)
-- Caches item and tag sets per profile
-- `overrideIsFood()` returns true when stack matches
+// Good: Cache at reload
+private float hungerThreshold;
 
-## Performance Guardrails
+public void initialize(EcologyProfile profile) {
+    this.hungerThreshold = profile.getFloat("hunger.threshold", 50f);
+}
 
-- No YAML parsing during tick
-- Profile caches per reload
-- Handle caches per profile
-- Use interval ticks for expensive logic
+public void tick(Mob mob) {
+    float hunger = AnimalNeeds.getHunger(mob);
+    if (hunger < hungerThreshold) {  // Fast lookup
+        // ...
+    }
+}
+```
+
+### Interval-Based Updates
+
+Expensive checks run on intervals:
+
+```java
+@Override
+public void tick(Mob mob) {
+    // Only update every 20 ticks (1 second)
+    if (mob.tickCount % 20 == 0) {
+        updateExpensiveCalculation(mob);
+    }
+
+    // Cheap checks can run every tick
+    if (AnimalNeeds.isHungry(mob)) {
+        // ...
+    }
+}
+```
+
+### Spatial Partitioning
+
+Neighbor queries use spatial indexing:
+
+```java
+// Bad: Check all entities
+for (Entity e : level.getAllEntities()) {  // O(n)
+    if (e.distanceTo(mob) < radius) {
+        // ...
+    }
+}
+
+// Good: Use spatial index
+List<Entity> nearby = spatialIndex.getNeighbors(
+    mob.position(),
+    radius,
+    mob.getType()
+);  // O(log n) or O(1) with grid
+```
+
+## Key Classes Reference
+
+| Class | Package | Purpose |
+|-------|---------|---------|
+| `BetterEcology` | `me.javavirtualenv` | Main mod entry point |
+| `AnimalNeeds` | `behavior.core` | Hunger/thirst attachment utilities |
+| `EcologyHooks` | `ecology.core` | Centralized mixin dispatch |
+| `MobEcologyMixin` | `mixin` | Main mixin for all mobs |
+| `AnimalEcologyMixin` | `mixin` | Food override for animals |
+| `SeekFoodGoal` | `behavior.core` | Foraging AI goal |
+| `FleeFromPredatorGoal` | `behavior.core` | Fleeing AI goal |
+| `HerdCohesionGoal` | `behavior.core` | Herding AI goal |
 
 ## Dependencies
 
-- SnakeYAML (`org.yaml:snakeyaml`)
-- Fabric API resource reload listener
-
-## Source Reference
-
-Key Minecraft classes:
-- `Mob.java` - registerGoals, tick, NBT
-- `Animal.java` - mobInteract, isFood
-- `ResourceManager.java` - Resource loading
+| Dependency | Purpose | Required |
+|------------|---------|----------|
+| Fabric API | Mod loader framework | Yes |
+| Fabric Attachments API | Persistent entity data | Yes |
+| Minecraft 1.21.1 | Game version | Yes |
+| Java 21+ | Runtime environment | Yes |
 
 ## See Also
 
-- [Ecology Component](ecology-component)
-- [Behavior System](behavior-system)
-- [Configuration](configuration)
+- **[Ecology Component](/systems/ecology-component)**: Component data structure details
+- **[Behavior System](/systems/behavior-system)**: AI goal implementation
+- **[Configuration](/getting-started/configuration)**: YAML/JSON file format

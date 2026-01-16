@@ -1,0 +1,52 @@
+# RelatedPages Component Example
+
+This is an example page showing how to use the RelatedPages component.
+
+## Example 1: Basic Usage
+
+<RelatedPages pages={[
+  {
+    title: "Sheep",
+    description: "Learn about flock behavior and grazing patterns in sheep",
+    href: "/docs/wiki/animals/sheep"
+  },
+  {
+    title: "Cows",
+    description: "Herding patterns and grazing behaviors of cattle",
+    href: "/docs/wiki/animals/cows"
+  },
+  {
+    title: "Pigs",
+    description: "Foraging behavior and social interactions",
+    href: "/docs/wiki/animals/pigs"
+  }
+]} />
+
+## Example 2: Using Category Links
+
+You can also import and use predefined category links:
+
+```jsx
+import { CATEGORY_LINKS } from '../../mdx-components'
+
+<RelatedPages pages={[
+  CATEGORY_LINKS.PASSIVE_MOBS,
+  CATEGORY_LINKS.HERDING_ANIMALS,
+  CATEGORY_LINKS.PARENT_OFFSPRING
+]} />
+```
+
+## Example 3: Mixed Custom and Category Links
+
+<RelatedPages pages={[
+  {
+    title: "Herding Behavior Research",
+    description: "Scientific basis for animal grouping patterns",
+    href: "/docs/research/herding"
+  },
+  {
+    title: "Flocking Algorithms",
+    description: "Technical implementation of boids and flocking",
+    href: "/docs/research/flocking"
+  }
+]} />

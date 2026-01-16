@@ -5,25 +5,35 @@ category: animals
 tags: [passive, amphibian, swamp, hunter]
 ---
 
-# Frog
+import { AnimalInfoBox } from '@/components/AnimalInfoBox'
+import { HintBox } from '@/components/HintBox'
+import { RelatedPages } from '@/components/RelatedPages'
+
+<AnimalInfoBox
+  name="Frog"
+  health="5 hearts"
+  habitat="Swamps, Wetlands"
+  diet="Carnivore (slimes, magma cubes)"
+  temperament="Calm, patient"
+  color="#32CD32"
+  specialAbilities={[
+    "Ambush hunting with tongue",
+    "Three color variants",
+    "Creates Froglights from magma cubes",
+    "Expert jumper"
+  ]}
+/>
 
 Frogs are patient ambush hunters that inhabit swamps and wetlands across Minecraft's world. These colorful amphibians wait motionless for their prey before striking with lightning-fast tongue attacks.
-
-## Quick Facts
-
-| Attribute | Value |
-|-----------|-------|
-| **Health** | 5 hearts |
-| **Variants** | Temperate (Orange), Cold (Green), Warm (White) |
-| **Hunting Style** | Ambush with tongue |
-| **Special Ability** | Creates Froglights from magma cubes |
 ## Behavior
 
 ### Ambush Hunting
 
 Frogs are master ambush predators. Watch them carefully - they'll sit completely still, waiting for the perfect moment to strike. When a small slime or magma cube wanders too close, the frog lashes out with its sticky tongue in a split second!
 
-**Tip:** Try watching a frog hunt at night near a swamp. Their patience is incredible, sometimes waiting for minutes before the perfect opportunity presents itself.
+<HintBox type="tryThis">
+Try watching a frog hunt at night near a swamp. Their patience is incredible, sometimes waiting for minutes before the perfect opportunity presents itself.
+</HintBox>
 
 ### Color Variants
 
@@ -33,7 +43,9 @@ Frogs come in three distinct colors, each adapted to different climates:
 - **Cold Frogs** (Green) - Adapted to chilly environments
 - **Warm Frogs** (White) - Thrive in hot, humid areas
 
-**Did you know?** A frog's color isn't determined at birth - tadpoles grow into different variants based on the temperature of the biome they mature in!
+<HintBox type="didYouKnow">
+A frog's color isn't determined at birth - tadpoles grow into different variants based on the temperature of the biome they mature in!
+</HintBox>
 
 ### Tadpole Development
 
@@ -43,7 +55,9 @@ Baby frogs start life as tadpoles, swimming freely in water. As they grow, the t
 - Tadpoles in cold biomes become green frogs
 - Tadpoles in temperate biomes turn into orange frogs
 
-**Try this:** Transport tadpoles between different biome temperatures and watch them transform into different colored frogs!
+<HintBox type="tryThis">
+Transport tadpoles between different biome temperatures and watch them transform into different colored frogs!
+</HintBox>
 
 ## Diet and Prey
 
@@ -60,7 +74,9 @@ Here's something magical - when a frog successfully eats a magma cube, it produc
 - Cold frogs produce Verdant Froglights
 - Warm frogs generate Ochre Froglights
 
-**Tip:** Set up a magma cube farm near your frog habitat to harvest all three froglight colors!
+<HintBox type="hint">
+Set up a magma cube farm near your frog habitat to harvest all three froglight colors!
+</HintBox>
 
 ## Movement and Habitat
 
@@ -77,7 +93,9 @@ While frogs can survive in various locations, they strongly prefer swampy areas 
 - Humid air and moderate temperatures
 - Areas where prey naturally spawns
 
-**Did you know?** Frogs are amphibians, which means they're equally comfortable on land and in water. You'll often see them switching between the two throughout the day.
+<HintBox type="didYouKnow">
+Frogs are amphibians, which means they're equally comfortable on land and in water. You'll often see them switching between the two throughout the day.
+</HintBox>
 
 ## Communication
 
@@ -88,7 +106,9 @@ Frogs aren't silent hunters - they croak to communicate with each other! Listen 
 - Warning other frogs of danger
 - Social bonding within frog groups
 
-**Try this:** Gather several frogs in one area and listen to them create a chorus of croaks. It's one of the most atmospheric sounds in Minecraft!
+<HintBox type="tryThis">
+Gather several frogs in one area and listen to them create a chorus of croaks. It's one of the most atmospheric sounds in Minecraft!
+</HintBox>
 
 ## Player Interaction
 
@@ -116,4 +136,11 @@ Frogs play an important role in wetland ecosystems by controlling slime populati
 
 ---
 
-**Related:** Check out other amphibious creatures and learn about swamp ecosystem dynamics.
+<RelatedPages
+  pages={[
+    { title: 'Turtle', href: '/wiki/animals/turtle' },
+    { title: 'Squid', href: '/wiki/animals/squid' },
+    { title: 'Salmon', href: '/wiki/animals/salmon' },
+    { title: 'Predation Behavior', href: '/wiki/research/predation' }
+  ]}
+/>

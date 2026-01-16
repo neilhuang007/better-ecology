@@ -6,3 +6,354 @@
 html {
   scroll-behavior: smooth;
 }
+
+/* HintBox Component Styles */
+.hint-box {
+  margin: 1.5rem 0;
+  padding: 1rem 1rem 1rem 1.25rem;
+  border-radius: 0.375rem;
+  border-left: 4px solid;
+  background-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.hint-box:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.dark .hint-box:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.hint-box-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.hint-box-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.hint-box-label {
+  color: inherit;
+}
+
+.hint-box-content {
+  color: var(--nextra-colors-gray-700);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.dark .hint-box-content {
+  color: var(--nextra-colors-gray-300);
+}
+
+/* Did You Know - Blue */
+.hint-box-did-you-know {
+  border-left-color: #3b82f6;
+}
+
+.hint-box-did-you-know .hint-box-label {
+  color: #3b82f6;
+}
+
+.dark .hint-box-did-you-know .hint-box-label {
+  color: #60a5fa;
+}
+
+/* Hint - Purple */
+.hint-box-hint {
+  border-left-color: #8b5cf6;
+}
+
+.hint-box-hint .hint-box-label {
+  color: #8b5cf6;
+}
+
+.dark .hint-box-hint .hint-box-label {
+  color: #a78bfa;
+}
+
+/* Try This - Green */
+.hint-box-try-this {
+  border-left-color: #10b981;
+}
+
+.hint-box-try-this .hint-box-label {
+  color: #10b981;
+}
+
+.dark .hint-box-try-this .hint-box-label {
+  color: #34d399;
+}
+
+/* Tip - Amber */
+.hint-box-tip {
+  border-left-color: #f59e0b;
+}
+
+.hint-box-tip .hint-box-label {
+  color: #f59e0b;
+}
+
+.dark .hint-box-tip .hint-box-label {
+  color: #fbbf24;
+}
+
+/* Fun Fact - Pink */
+.hint-box-fun-fact {
+  border-left-color: #ec4899;
+}
+
+.hint-box-fun-fact .hint-box-label {
+  color: #ec4899;
+}
+
+.dark .hint-box-fun-fact .hint-box-label {
+  color: #f472b6;
+}
+
+/* Warning - Red */
+.hint-box-warning {
+  border-left-color: #ef4444;
+}
+
+.hint-box-warning .hint-box-label {
+  color: #ef4444;
+}
+
+.dark .hint-box-warning .hint-box-label {
+  color: #f87171;
+}
+
+/* Info - Cyan */
+.hint-box-info {
+  border-left-color: #06b6d4;
+}
+
+.hint-box-info .hint-box-label {
+  color: #06b6d4;
+}
+
+.dark .hint-box-info .hint-box-label {
+  color: #22d3ee;
+}
+
+/* Observation - Indigo */
+.hint-box-observation {
+  border-left-color: #6366f1;
+}
+
+.hint-box-observation .hint-box-label {
+  color: #6366f1;
+}
+
+.dark .hint-box-observation .hint-box-label {
+  color: #818cf8;
+}
+
+/* Mechanics - Slate */
+.hint-box-mechanics {
+  border-left-color: #64748b;
+}
+
+.hint-box-mechanics .hint-box-label {
+  color: #64748b;
+}
+
+.dark .hint-box-mechanics .hint-box-label {
+  color: #94a3b8;
+}
+
+/* Experiment - Teal */
+.hint-box-experiment {
+  border-left-color: #14b8a6;
+}
+
+.hint-box-experiment .hint-box-label {
+  color: #14b8a6;
+}
+
+.dark .hint-box-experiment .hint-box-label {
+  color: #2dd4bf;
+}
+
+/* AnimalInfoBox Component Styles */
+.animal-info-box {
+  border: 2px solid var(--accent-color);
+  border-left: 6px solid var(--accent-color);
+  border-radius: 4px;
+  padding: 1.25rem;
+  margin: 1.5rem 0;
+  background: rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+}
+
+.animal-info-box:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.animal-info-title {
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 1.25rem;
+  margin: 0 0 1rem 0;
+  color: var(--accent-color);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+.animal-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.animal-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.animal-info-label {
+  font-family: 'Minecraft', 'Press Start 2P', 'Courier New', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.animal-info-value {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-size: 0.95rem;
+  color: #333;
+  font-weight: 500;
+}
+
+/* Dark mode support for AnimalInfoBox */
+.dark .animal-info-box {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dark .animal-info-label {
+  color: #999;
+}
+
+.dark .animal-info-value {
+  color: #e0e0e0;
+}
+
+/* Related Pages Component Styles */
+.related-pages-container {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: linear-gradient(to bottom, rgba(239, 68, 68, 0.05), rgba(239, 68, 68, 0.02));
+  border-radius: 12px;
+  border: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+.related-pages-title {
+  margin: 0 0 1.25rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: rgb(239, 68, 68);
+}
+
+.related-pages-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.related-page-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem;
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.related-page-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: rgb(239, 68, 68);
+}
+
+.related-page-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.related-page-card-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgb(17, 24, 39);
+}
+
+.related-page-card-description {
+  margin: 0;
+  font-size: 0.875rem;
+  color: rgb(107, 114, 128);
+  line-height: 1.4;
+}
+
+.related-page-arrow {
+  margin-left: 1rem;
+  font-size: 1.5rem;
+  color: rgb(239, 68, 68);
+  transition: transform 0.2s ease;
+}
+
+.related-page-card:hover .related-page-arrow {
+  transform: translateX(4px);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .related-pages-container {
+    background: linear-gradient(to bottom, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+    border-color: rgba(239, 68, 68, 0.25);
+  }
+
+  .related-page-card {
+    background: rgb(31, 41, 55);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .related-page-card:hover {
+    border-color: rgb(239, 68, 68);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .related-page-card-title {
+    color: rgb(243, 244, 246);
+  }
+
+  .related-page-card-description {
+    color: rgb(156, 163, 175);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .related-pages-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .related-pages-container {
+    padding: 1rem;
+  }
+}

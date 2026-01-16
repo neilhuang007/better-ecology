@@ -5,21 +5,24 @@ category: animals
 tags: [passive, mountain, ramming, climbing]
 ---
 
-# Goat
+import { AnimalInfoBox } from '@/components/AnimalInfoBox'
+import { HintBox } from '@/components/HintBox'
+import { RelatedPages } from '@/components/RelatedPages'
 
-*Mountain-climbing daredevils that leap to incredible heights and ram everything in sight*
-
----
-
-## Quick Facts
-
-| Attribute | Value |
-|-----------|-------|
-| **Health** | 5 hearts  |
-| **Jump Height** | 10 blocks! |
-| **Habitat** | Mountains |
-| **Special Ability** | Ramming |
-| **Drop** | Goat Horns |
+<AnimalInfoBox
+  name="Goat"
+  health="5 hearts"
+  habitat="Mountains"
+  diet="Herbivore (wheat)"
+  temperament="Aggressive (ramming)"
+  color="#A0522D"
+  specialAbilities={[
+    "Can jump 10 blocks high",
+    "Rams mobs and blocks",
+    "Screaming variant exists",
+    "Drops horns when ramming"
+  ]}
+/>
 
 ---
 
@@ -29,13 +32,19 @@ Goats are the daredevils of the Minecraft world! These fearless climbers treat s
 
 ### Master Climbers
 
-**Try following a goat up a mountain** - you'll struggle to keep up! Goats are expert mountaineers who navigate treacherous terrain with ease. They'll scale steep cliffsides, leap across dangerous gaps, and perch on narrow ledges like it's nothing. Watch them long enough and you'll see them reach places you thought were impossible for mobs to access.
+Goats are expert mountaineers who navigate treacherous terrain with ease. They'll scale steep cliffsides, leap across dangerous gaps, and perch on narrow ledges like it's nothing. Watch them long enough and you'll see them reach places you thought were impossible for mobs to access.
 
-**Did you know goats can jump 10 blocks high?** That's right - TEN BLOCKS! This incredible jumping ability lets them navigate mountain peaks that other animals can't reach. They use this skill constantly, bouncing up cliff faces and soaring across ravines like it's a casual stroll.
+<HintBox type="tryThis">
+Try following a goat up a mountain - you'll struggle to keep up! These fearless climbers make mountain peaks look easy.
+</HintBox>
+
+<HintBox type="didYouKnow">
+Goats can jump 10 blocks high! That's right - TEN BLOCKS! This incredible jumping ability lets them navigate mountain peaks that other animals can't reach.
+</HintBox>
 
 ### Ramming Behavior
 
-**Watch out - goats randomly ram things!** This is where goats get really interesting (and dangerous). Every so often, a goat will lower its head, build up speed, and WHAM - charge straight into whatever's nearby. That could be another mob, a block, or even YOU!
+Watch out - goats randomly ram things! This is where goats get really interesting (and dangerous). Every so often, a goat will lower its head, build up speed, and WHAM - charge straight into whatever's nearby. That could be another mob, a block, or even YOU!
 
 **What happens when they ram?**
 - They charge with surprising speed
@@ -43,13 +52,17 @@ Goats are the daredevils of the Minecraft world! These fearless climbers treat s
 - When they hit solid blocks, they might drop their horns
 - The ramming seems random - goats don't need a reason to headbutt things!
 
-**Tip:** Keep your distance from goats if you're near cliff edges. A well-timed ram can send you flying off a mountain!
+<HintBox type="hint">
+Keep your distance from goats if you're near cliff edges. A well-timed ram can send you flying off a mountain!
+</HintBox>
 
 ### Screaming Goats
 
-**Listen carefully - some goats sound different!** Among regular goats, you'll occasionally find a screaming goat. These rare variants are louder, more aggressive, and ram more frequently than their quieter cousins. When you hear that distinctive screaming bleat, you know you've found a special one!
+Listen carefully - some goats sound different! Among regular goats, you'll occasionally find a screaming goat. These rare variants are louder, more aggressive, and ram more frequently than their quieter cousins. When you hear that distinctive screaming bleat, you know you've found a special one!
 
-**Screaming goats are EXTRA aggressive** with their ramming. They charge more often and seem to have less patience than regular goats. Approach with caution!
+<HintBox type="funFact">
+Screaming goats are EXTRA aggressive with their ramming. They charge more often and seem to have less patience than regular goats. Approach with caution!
+</HintBox>
 
 ---
 
@@ -57,13 +70,15 @@ Goats are the daredevils of the Minecraft world! These fearless climbers treat s
 
 ### Following Parents
 
-**Kids stick with mom and dad on climbing adventures!** Baby goats learn mountaineering from their parents, following them up steep terrain and mimicking their incredible jumps. It's adorable to watch a tiny kid attempt the same gravity-defying leaps as its parents.
+Kids stick with mom and dad on climbing adventures! Baby goats learn mountaineering from their parents, following them up steep terrain and mimicking their incredible jumps. It's adorable to watch a tiny kid attempt the same gravity-defying leaps as its parents.
 
 ### Learning to Ram
 
-**Young goats practice their ramming technique too!** While they're not as powerful as adult goats, kids will still occasionally charge at things. Think of it as ramming practice - they're learning the family tradition!
+Young goats practice their ramming technique too! While they're not as powerful as adult goats, kids will still occasionally charge at things. Think of it as ramming practice - they're learning the family tradition!
 
-**Did you know?** Kids grow up to become either regular goats or screaming goats, inheriting their personality from birth. A screaming kid will always become a screaming adult!
+<HintBox type="didYouKnow">
+Kids grow up to become either regular goats or screaming goats, inheriting their personality from birth. A screaming kid will always become a screaming adult!
+</HintBox>
 
 ---
 
@@ -71,9 +86,11 @@ Goats are the daredevils of the Minecraft world! These fearless climbers treat s
 
 ### Collecting Horns
 
-**This is how you get goat horns** - let the goat do the work! When a goat rams into a solid block (like stone, logs, or packed ice), there's a chance it will drop one of its horns. Each goat can drop up to two horns total.
+This is how you get goat horns - let the goat do the work! When a goat rams into a solid block (like stone, logs, or packed ice), there's a chance it will drop one of its horns. Each goat can drop up to two horns total.
 
-**Try setting up ramming targets!** Build a wall of solid blocks in an area where goats roam. Eventually, their natural ramming behavior will cause them to charge the wall, and you might collect some horns!
+<HintBox type="tryThis">
+Set up ramming targets! Build a wall of solid blocks in an area where goats roam. Eventually, their natural ramming behavior will cause them to charge the wall, and you might collect some horns!
+</HintBox>
 
 ### Horn Sounds
 
@@ -167,3 +184,12 @@ Want to collect all the horn varieties? Keep your goats well-fed and happy in an
 ---
 
 *Remember: Goats are wild-spirited mountaineers that value freedom and altitude. They're not meant to be docile farm animals - they're adventurous climbers with a penchant for headbutting. Respect their space, admire their jumping skills, and maybe duck when they lower their head!*
+
+<RelatedPages
+  pages={[
+    { title: 'Sheep', href: '/wiki/animals/sheep' },
+    { title: 'Cow', href: '/wiki/animals/cow' },
+    { title: 'Rabbit', href: '/wiki/animals/rabbit' },
+    { title: 'Flocking Behavior', href: '/wiki/research/flocking' }
+  ]}
+/>

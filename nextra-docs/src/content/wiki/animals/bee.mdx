@@ -3,16 +3,24 @@ title: "Bee"
 description: "A friendly guide to bees in Better Ecology - watch them dance, forage, and work together as a colony!"
 ---
 
-# Bee
+import { AnimalInfoBox } from '@/components/AnimalInfoBox'
+import { HintBox } from '@/components/HintBox'
+import { RelatedPages } from '@/components/RelatedPages'
 
-## Quick Facts
-
-| Attribute | Value |
-|-----------|-------|
-| **Health** | 5 hearts |
-| **Special** | Waggle Dance communication |
-| **Produces** | Honey, Honeycomb |
-| **Warning** | Will sting if provoked |
+<AnimalInfoBox
+  name="Bee"
+  health="5 hearts"
+  habitat="Flower-rich areas"
+  diet="Herbivore (nectar, pollen)"
+  temperament="Peaceful (defensive when provoked)"
+  color="#FFD700"
+  specialAbilities={[
+    "Waggle dance communication",
+    "Produces honey and honeycomb",
+    "Pollination",
+    "Colony cooperation"
+  ]}
+/>
 
 ## Watch Them Live Their Lives
 
@@ -163,3 +171,11 @@ As colonies become established, you'll see consistent bee activity and can harve
 ---
 
 *Bees prove that even the smallest creatures can have incredibly complex and intelligent behaviors. Treat them with respect, give them space to work, and you'll be rewarded with honey, honeycomb, and one of nature's most fascinating shows!*
+
+<RelatedPages
+  pages={[
+    { title: 'Foraging Behavior', href: '/wiki/research/foraging' },
+    { title: 'Chicken', href: '/wiki/animals/chicken' },
+    { title: 'Pig', href: '/wiki/animals/pig' }
+  ]}
+/>

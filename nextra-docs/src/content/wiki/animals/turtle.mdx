@@ -3,17 +3,24 @@ title: "Turtle"
 description: "A peaceful guide to turtles in Better Ecology - watch them bask, nest, and raise their young on sandy shores"
 ---
 
-# Turtle
+import { AnimalInfoBox } from '@/components/AnimalInfoBox'
+import { HintBox } from '@/components/HintBox'
+import { RelatedPages } from '@/components/RelatedPages'
 
-## Quick Facts
-
-| Attribute | Value |
-|-----------|-------|
-| **Health** | 15 hearts |
-| **Drops** | Scute (baby to adult), Seagrass (breeding) |
-| **Special** | Beach nesting, Basking behavior |
-| **Habitat** | Beaches and oceans |
-| **Movement** | Slow on land, fast in water |
+<AnimalInfoBox
+  name="Turtle"
+  health="15 hearts"
+  habitat="Beaches, Oceans"
+  diet="Herbivore (seagrass)"
+  temperament="Peaceful, slow"
+  color="#2E8B57"
+  specialAbilities={[
+    "Beach nesting behavior",
+    "Sun basking",
+    "Home beach memory",
+    "Fast swimmer, slow walker"
+  ]}
+/>
 
 ## Watch Them Live Their Lives
 
@@ -25,7 +32,9 @@ There's something wonderfully calming about watching a turtle bask in the sun. W
 
 Look for turtles to find sunny spots on the beach during the day, especially on open sand where the sun shines brightest. They'll settle into a comfortable position and simply rest, occasionally shifting a bit as they relax in the warmth.
 
-**Tip:** Build a nice sandy beach with plenty of open space. Turtles will naturally find the sunniest spots and make them their regular basking areas throughout the day.
+<HintBox type="hint">
+Build a nice sandy beach with plenty of open space. Turtles will naturally find the sunniest spots and make them their regular basking areas throughout the day.
+</HintBox>
 
 ### The Journey Home
 
@@ -33,7 +42,9 @@ One of the most remarkable things about turtles is their incredible memory. Ever
 
 You might notice pregnant turtles swimming purposefully toward a specific beach, sometimes traveling quite a distance. They're not just looking for any beach - they're heading to their home beach, the place where they hatched as tiny babies.
 
-**Did you know?** A turtle's home beach is set when they're born. Even if you move them far away, they'll always remember and try to return to that original location when it's time to nest.
+<HintBox type="didYouKnow">
+A turtle's home beach is set when they're born. Even if you move them far away, they'll always remember and try to return to that original location when it's time to nest.
+</HintBox>
 
 ### Nesting on Sandy Shores
 
@@ -46,7 +57,9 @@ Watch as she finds a suitable sandy area and carefully lays her eggs. The nest l
 - Sand blocks for digging
 - A safe, undisturbed area
 
-**Tip:** Mark turtle nesting areas with subtle boundaries like fences or lighting to help protect the eggs from being trampled. Just make sure the mother turtle can still access the sand!
+<HintBox type="hint">
+Mark turtle nesting areas with subtle boundaries like fences or lighting to help protect the eggs from being trampled. Just make sure the mother turtle can still access the sand!
+</HintBox>
 
 ### The Miracle of Hatching
 
@@ -54,7 +67,9 @@ Here's where it gets magical - turtle eggs only hatch at night. As darkness fall
 
 And what do these tiny turtles do? They immediately head for the ocean! Watch them scurry across the sand in a rush to reach the water. It's instinctive - they know that the ocean means safety, food, and their future home.
 
-**Try this:** Stay near a turtle nest as night falls when the eggs are close to hatching. You might see multiple baby turtles all rushing to the water together in a tiny migration. It's one of the most heartwarming sights in Minecraft!
+<HintBox type="tryThis">
+Stay near a turtle nest as night falls when the eggs are close to hatching. You might see multiple baby turtles all rushing to the water together in a tiny migration. It's one of the most heartwarming sights in Minecraft!
+</HintBox>
 
 ### Tiny and Vulnerable
 
@@ -62,7 +77,9 @@ Baby turtles are incredibly small and fragile. They're among the smallest mobs i
 
 As they grow, baby turtles will eventually become adults and drop a scute - a valuable item used to craft turtle helmets. But until then, they're just focused on swimming, eating seagrass, and staying safe.
 
-**Tip:** Want to help baby turtles survive? Light up the beach area and clear away threats before they hatch. Or create a protected path from the nest to the water using fences or blocks.
+<HintBox type="hint">
+Want to help baby turtles survive? Light up the beach area and clear away threats before they hatch. Or create a protected path from the nest to the water using fences or blocks.
+</HintBox>
 
 ### Masters of Two Worlds
 
@@ -70,7 +87,9 @@ Turtles are perfectly adapted to life both on land and in the water - though the
 
 But the moment they hit the water? They transform into surprisingly swift swimmers, gliding gracefully through the ocean. This is where they truly thrive, diving around coral reefs and kelp forests with ease.
 
-**Did you know?** In the water, turtles are faster than they are on land. If you're trying to follow a turtle, you'll have a much easier time keeping up when they're on the beach!
+<HintBox type="didYouKnow">
+In the water, turtles are faster than they are on land. If you're trying to follow a turtle, you'll have a much easier time keeping up when they're on the beach!
+</HintBox>
 
 ## Living With Turtles
 
@@ -84,7 +103,9 @@ Want to attract turtles and watch their full life cycle? Here's what makes an id
 - **Safe nesting zones:** Protected areas where eggs won't be disturbed
 - **Sunny spots:** Open beach areas for basking during the day
 
-**Try this setup:** Find a warm ocean biome with a nice beach. Clear away any obstacles on the sand, plant seagrass in the shallow waters nearby, and fence off a nesting area while keeping it accessible to turtles. Light up the area to prevent hostile mob spawns at night.
+<HintBox type="tryThis">
+Find a warm ocean biome with a nice beach. Clear away any obstacles on the sand, plant seagrass in the shallow waters nearby, and fence off a nesting area while keeping it accessible to turtles. Light up the area to prevent hostile mob spawns at night.
+</HintBox>
 
 ### A Day in the Life
 
@@ -137,3 +158,12 @@ A: Yes! Each turtle remembers its home beach forever. Pregnant females will alwa
 ---
 
 *Take your time with turtles - they're in no rush, and neither should you be. There's something special about slowing down to their pace and appreciating the quiet beauty of their coastal lives.*
+
+<RelatedPages
+  pages={[
+    { title: 'Frog', href: '/wiki/animals/frog' },
+    { title: 'Squid', href: '/wiki/animals/squid' },
+    { title: 'Salmon', href: '/wiki/animals/salmon' },
+    { title: 'Parent Behavior', href: '/wiki/research/parent' }
+  ]}
+/>

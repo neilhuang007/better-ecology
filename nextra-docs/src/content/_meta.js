@@ -15,5 +15,6 @@ export default {
   animals: 'Animals',
   systems: 'Systems',
   research: 'Research',
-  api: 'API'
+  api: 'API',
+  citations: 'Citations'
 }
