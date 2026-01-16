@@ -5,6 +5,8 @@
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
 		"MobAccessor",
+		"MobNavigationAccessor",
+		"AnimalPathfindingMixin",
 		"MobEcologyMixin",
 		"animal.AllayMixin",
 		"animal.ArmadilloMixin",

@@ -19,7 +19,8 @@
       "me.javavirtualenv.gametest.BehavioralTests",
       "me.javavirtualenv.gametest.SheepBehaviorTests",
       "me.javavirtualenv.gametest.BreedingBehaviorTests",
-      "me.javavirtualenv.gametest.ParentOffspringTests"
+      "me.javavirtualenv.gametest.ParentOffspringTests",
+      "me.javavirtualenv.gametest.PathfindingGameTests"
     ]
   },
   "depends": {

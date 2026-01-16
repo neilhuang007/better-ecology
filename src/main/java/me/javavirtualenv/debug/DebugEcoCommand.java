@@ -66,6 +66,12 @@ public class DebugEcoCommand {
                 .executes(ctx -> createProtectScenario(ctx)))
             .then(Commands.literal("school")
                 .executes(ctx -> createSchoolScenario(ctx)))
+            .then(Commands.literal("slope")
+                .executes(ctx -> createSlopeScenario(ctx)))
+            .then(Commands.literal("ridgeline")
+                .executes(ctx -> createRidgelineScenario(ctx)))
+            .then(Commands.literal("pathfind")
+                .executes(ctx -> createPathfindScenario(ctx)))
             .then(Commands.literal("test")
                 .executes(ctx -> runAllTests(ctx)))
             .then(Commands.literal("all")
@@ -101,6 +107,9 @@ public class DebugEcoCommand {
             "§e/debugeco ambush§7 - Frog ambush test\n" +
             "§e/debugeco protect§7 - Parent protection test\n" +
             "§e/debugeco school§7 - Fish schooling test\n" +
+            "§e/debugeco slope§7 - Slope pathfinding test\n" +
+            "§e/debugeco ridgeline§7 - Ridgeline avoidance test\n" +
+            "§e/debugeco pathfind§7 - Full pathfinding showcase\n" +
             "§e/debugeco test§7 - Run all behavior tests\n" +
             "§e/debugeco all§7 - Complete test environment\n" +
             "§e/debugeco status§7 - Show nearby animal stats\n" +
@@ -994,6 +1003,274 @@ public class DebugEcoCommand {
                 level.setBlock(pos.offset(x, 0, z), Blocks.GLASS.defaultBlockState(), 3);
             }
         }
+    }
+
+    // ============ Pathfinding Test Scenarios ============
+
+    /**
+     * Creates a slope pathfinding test scenario with various slope angles.
+     * Animals should prefer gentler slopes and navigate smoothly up/down.
+     */
+    private static int createSlopeScenario(CommandContext<CommandSourceStack> ctx) {
+        ServerLevel level = ctx.getSource().getLevel();
+        BlockPos playerPos = BlockPos.containing(ctx.getSource().getPosition());
+
+        BlockPos basePos = playerPos.offset(5, 0, 0);
+
+        // Create flat base area
+        createPlatform(level, basePos, 40, 20);
+
+        // Create gentle slope (15 degrees) - 1 block up per 4 horizontal
+        for (int x = 5; x < 15; x++) {
+            int height = (x - 5) / 4;
+            for (int z = 2; z < 8; z++) {
+                level.setBlock(basePos.offset(x, height, z), Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+                level.setBlock(basePos.offset(x, height - 1, z), Blocks.STONE.defaultBlockState(), 3);
+            }
+        }
+
+        // Create steep slope (45 degrees) - 1 block up per 1 horizontal
+        for (int x = 5; x < 12; x++) {
+            int height = x - 5;
+            for (int z = 12; z < 18; z++) {
+                level.setBlock(basePos.offset(x, height, z), Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+                level.setBlock(basePos.offset(x, height - 1, z), Blocks.STONE.defaultBlockState(), 3);
+            }
+        }
+
+        // Create switchback slope (realistic mountain path)
+        // First leg going right
+        for (int x = 20; x < 30; x++) {
+            int height = (x - 20) / 2;
+            for (int z = 2; z < 5; z++) {
+                level.setBlock(basePos.offset(x, height, z), Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+                level.setBlock(basePos.offset(x, height - 1, z), Blocks.STONE.defaultBlockState(), 3);
+            }
+        }
+        // Turn and go back left
+        for (int x = 30; x > 20; x--) {
+            int height = 5 + (30 - x) / 2;
+            for (int z = 6; z < 9; z++) {
+                level.setBlock(basePos.offset(x, height, z), Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+                level.setBlock(basePos.offset(x, height - 1, z), Blocks.STONE.defaultBlockState(), 3);
+            }
+        }
+
+        // Spawn cows to test pathfinding
+        for (int i = 0; i < 3; i++) {
+            Cow cow = EntityType.COW.create(level);
+            if (cow != null) {
+                cow.setPos(basePos.getX() + 2 + i * 15, basePos.getY() + 1, basePos.getZ() + 5 + (i * 5));
+                level.addFreshEntity(cow);
+            }
+        }
+
+        // Place hay bales at top of each slope to attract
+        level.setBlock(basePos.offset(14, 3, 5), Blocks.HAY_BLOCK.defaultBlockState(), 3);
+        level.setBlock(basePos.offset(11, 6, 15), Blocks.HAY_BLOCK.defaultBlockState(), 3);
+        level.setBlock(basePos.offset(21, 10, 7), Blocks.HAY_BLOCK.defaultBlockState(), 3);
+
+        ctx.getSource().sendSuccess(() -> Component.literal(
+            "§aCreated slope pathfinding scenario at " + basePos.toShortString() +
+            "\n§7Gentle slope (15°), Steep slope (45°), Switchback path" +
+            "\n§7Watch how cows navigate different slope types!"
+        ), true);
+        return 1;
+    }
+
+    /**
+     * Creates a ridgeline avoidance test scenario.
+     * Prey animals should avoid exposed ridgelines and prefer sheltered paths.
+     */
+    private static int createRidgelineScenario(CommandContext<CommandSourceStack> ctx) {
+        ServerLevel level = ctx.getSource().getLevel();
+        BlockPos playerPos = BlockPos.containing(ctx.getSource().getPosition());
+
+        BlockPos basePos = playerPos.offset(5, 0, 0);
+
+        // Create large base area
+        createPlatform(level, basePos, 30, 30);
+
+        // Create ridgeline (exposed high ground) down the center
+        for (int x = 5; x < 25; x++) {
+            for (int z = 13; z < 17; z++) {
+                // Build up to ridgeline height (y=6)
+                for (int y = 0; y <= 5; y++) {
+                    level.setBlock(basePos.offset(x, y, z), Blocks.STONE.defaultBlockState(), 3);
+                }
+                level.setBlock(basePos.offset(x, 6, z), Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+            }
+        }
+
+        // Create sheltered path (lower, with tree cover) on the side
+        for (int x = 5; x < 25; x++) {
+            for (int z = 24; z < 28; z++) {
+                level.setBlock(basePos.offset(x, 0, z), Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+                // Add tree canopy every few blocks
+                if (x % 4 == 0) {
+                    level.setBlock(basePos.offset(x, 1, z), Blocks.OAK_LOG.defaultBlockState(), 3);
+                    level.setBlock(basePos.offset(x, 2, z), Blocks.OAK_LOG.defaultBlockState(), 3);
+                    level.setBlock(basePos.offset(x, 3, z), Blocks.OAK_LOG.defaultBlockState(), 3);
+                    // Leaves
+                    for (int dx = -1; dx <= 1; dx++) {
+                        for (int dz = -1; dz <= 1; dz++) {
+                            level.setBlock(basePos.offset(x + dx, 4, z + dz), Blocks.OAK_LEAVES.defaultBlockState(), 3);
+                            level.setBlock(basePos.offset(x + dx, 5, z + dz), Blocks.OAK_LEAVES.defaultBlockState(), 3);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Spawn prey animals (sheep) - they should avoid the ridgeline
+        for (int i = 0; i < 4; i++) {
+            Sheep sheep = EntityType.SHEEP.create(level);
+            if (sheep != null) {
+                sheep.setPos(basePos.getX() + 3, basePos.getY() + 1, basePos.getZ() + 15 + i * 3);
+                level.addFreshEntity(sheep);
+            }
+        }
+
+        // Spawn a wolf to create pressure
+        Wolf wolf = EntityType.WOLF.create(level);
+        if (wolf != null) {
+            wolf.setPos(basePos.getX() + 2, basePos.getY() + 1, basePos.getZ() + 15);
+            AnimalNeeds.setHunger(wolf, 15);
+            level.addFreshEntity(wolf);
+        }
+
+        // Place hay at end of sheltered path
+        level.setBlock(basePos.offset(26, 1, 26), Blocks.HAY_BLOCK.defaultBlockState(), 3);
+
+        ctx.getSource().sendSuccess(() -> Component.literal(
+            "§aCreated ridgeline avoidance scenario at " + basePos.toShortString() +
+            "\n§7Center: Exposed ridgeline (y=6)" +
+            "\n§7Side: Sheltered path with tree cover" +
+            "\n§7Sheep should prefer the sheltered path when fleeing!"
+        ), true);
+        return 1;
+    }
+
+    /**
+     * Creates a comprehensive pathfinding showcase with all terrain types.
+     * Demonstrates slope costs, momentum, smooth turning, and terrain preferences.
+     */
+    private static int createPathfindScenario(CommandContext<CommandSourceStack> ctx) {
+        ServerLevel level = ctx.getSource().getLevel();
+        BlockPos playerPos = BlockPos.containing(ctx.getSource().getPosition());
+
+        BlockPos basePos = playerPos.offset(5, 0, 0);
+
+        // Create large arena
+        createPlatform(level, basePos, 50, 50);
+        createFence(level, basePos, 50, 50);
+
+        // === Section 1: Rolling hills (gentle slopes in all directions) ===
+        for (int x = 5; x < 20; x++) {
+            for (int z = 5; z < 20; z++) {
+                // Create sine-wave hills
+                double hillHeight = 2 * Math.sin(x * 0.5) * Math.sin(z * 0.5) + 2;
+                int height = (int) hillHeight;
+                for (int y = 0; y <= height; y++) {
+                    level.setBlock(basePos.offset(x, y, z),
+                        y == height ? Blocks.GRASS_BLOCK.defaultBlockState() : Blocks.DIRT.defaultBlockState(), 3);
+                }
+            }
+        }
+
+        // === Section 2: Cliff face with ledges ===
+        for (int x = 25; x < 35; x++) {
+            for (int z = 5; z < 15; z++) {
+                // Main cliff
+                for (int y = 0; y <= 8; y++) {
+                    level.setBlock(basePos.offset(x, y, z), Blocks.STONE.defaultBlockState(), 3);
+                }
+                // Ledges every 2 blocks
+                if (z % 4 < 2) {
+                    level.setBlock(basePos.offset(x, 9, z), Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+                }
+            }
+        }
+
+        // === Section 3: Water crossing with stepping stones ===
+        for (int x = 5; x < 20; x++) {
+            for (int z = 25; z < 35; z++) {
+                level.setBlock(basePos.offset(x, 0, z), Blocks.WATER.defaultBlockState(), 3);
+            }
+        }
+        // Stepping stones
+        for (int i = 0; i < 7; i++) {
+            int stoneX = 6 + i * 2;
+            int stoneZ = 27 + (i % 2) * 3;
+            level.setBlock(basePos.offset(stoneX, 1, stoneZ), Blocks.COBBLESTONE.defaultBlockState(), 3);
+        }
+
+        // === Section 4: Forest with winding path ===
+        for (int x = 25; x < 45; x++) {
+            for (int z = 25; z < 45; z++) {
+                // Dense forest floor
+                level.setBlock(basePos.offset(x, 0, z), Blocks.PODZOL.defaultBlockState(), 3);
+                // Trees
+                if ((x + z) % 5 == 0 && x > 26 && x < 44 && z > 26 && z < 44) {
+                    level.setBlock(basePos.offset(x, 1, z), Blocks.OAK_LOG.defaultBlockState(), 3);
+                    level.setBlock(basePos.offset(x, 2, z), Blocks.OAK_LOG.defaultBlockState(), 3);
+                    level.setBlock(basePos.offset(x, 3, z), Blocks.OAK_LEAVES.defaultBlockState(), 3);
+                }
+            }
+        }
+        // Clear winding path through forest
+        int pathZ = 30;
+        for (int x = 25; x < 45; x++) {
+            pathZ = 30 + (int)(3 * Math.sin(x * 0.3));
+            for (int dz = -1; dz <= 1; dz++) {
+                level.setBlock(basePos.offset(x, 0, pathZ + dz), Blocks.DIRT_PATH.defaultBlockState(), 3);
+                // Clear any trees above path
+                level.setBlock(basePos.offset(x, 1, pathZ + dz), Blocks.AIR.defaultBlockState(), 3);
+                level.setBlock(basePos.offset(x, 2, pathZ + dz), Blocks.AIR.defaultBlockState(), 3);
+            }
+        }
+
+        // Spawn animals in different sections
+        // Cows in rolling hills
+        for (int i = 0; i < 3; i++) {
+            Cow cow = EntityType.COW.create(level);
+            if (cow != null) {
+                cow.setPos(basePos.getX() + 8 + i * 4, basePos.getY() + 5, basePos.getZ() + 10);
+                level.addFreshEntity(cow);
+            }
+        }
+
+        // Sheep near water crossing
+        for (int i = 0; i < 3; i++) {
+            Sheep sheep = EntityType.SHEEP.create(level);
+            if (sheep != null) {
+                sheep.setPos(basePos.getX() + 3, basePos.getY() + 1, basePos.getZ() + 28 + i * 2);
+                level.addFreshEntity(sheep);
+            }
+        }
+
+        // Wolf in forest
+        Wolf wolf = EntityType.WOLF.create(level);
+        if (wolf != null) {
+            wolf.setPos(basePos.getX() + 35, basePos.getY() + 1, basePos.getZ() + 35);
+            level.addFreshEntity(wolf);
+        }
+
+        // Place hay bales as goals
+        level.setBlock(basePos.offset(17, 4, 12), Blocks.HAY_BLOCK.defaultBlockState(), 3);
+        level.setBlock(basePos.offset(18, 1, 38), Blocks.HAY_BLOCK.defaultBlockState(), 3);
+        level.setBlock(basePos.offset(43, 1, 30), Blocks.HAY_BLOCK.defaultBlockState(), 3);
+
+        ctx.getSource().sendSuccess(() -> Component.literal(
+            "§aCreated pathfinding showcase at " + basePos.toShortString() +
+            "\n§b=== Terrain Sections ===" +
+            "\n§7• NW: Rolling hills (momentum test)" +
+            "\n§7• NE: Cliff with ledges (slope cost test)" +
+            "\n§7• SW: Water with stepping stones" +
+            "\n§7• SE: Forest with winding path" +
+            "\n§eAnimals will use smooth navigation and terrain awareness!"
+        ), true);
+        return 1;
     }
 
 }
