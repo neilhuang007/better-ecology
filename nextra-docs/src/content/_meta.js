@@ -1,11 +1,9 @@
 export default {
   index: {
-    title: 'Home',
-    display: 'hidden'
+    title: 'Home'
   },
   wiki: {
-    title: 'Player Wiki',
-    type: 'page'
+    title: 'Player Wiki'
   },
   '---': {
     type: 'separator',

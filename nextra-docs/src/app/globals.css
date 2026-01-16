@@ -7,22 +7,26 @@ html {
   scroll-behavior: smooth;
 }
 
-/* HintBox Component Styles */
+/* HintBox Component Styles - Minimal Design */
 .hint-box {
   margin: 1.5rem 0;
-  padding: 1rem 1rem 1rem 1.25rem;
-  border-radius: 0.375rem;
-  border-left: 4px solid;
+  padding: 1rem 1.25rem;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
   background-color: transparent;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .hint-box:hover {
-  background-color: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.dark .hint-box {
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .dark .hint-box:hover {
-  background-color: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .hint-box-header {
@@ -31,156 +35,27 @@ html {
   gap: 0.5rem;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.hint-box-icon {
-  font-size: 1.25rem;
-  line-height: 1;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
 .hint-box-label {
-  color: inherit;
+  color: rgb(107, 114, 128);
+}
+
+.dark .hint-box-label {
+  color: rgb(156, 163, 175);
 }
 
 .hint-box-content {
-  color: var(--nextra-colors-gray-700);
+  color: rgb(55, 65, 81);
   line-height: 1.6;
   font-size: 0.95rem;
 }
 
 .dark .hint-box-content {
-  color: var(--nextra-colors-gray-300);
-}
-
-/* Did You Know - Blue */
-.hint-box-did-you-know {
-  border-left-color: #3b82f6;
-}
-
-.hint-box-did-you-know .hint-box-label {
-  color: #3b82f6;
-}
-
-.dark .hint-box-did-you-know .hint-box-label {
-  color: #60a5fa;
-}
-
-/* Hint - Purple */
-.hint-box-hint {
-  border-left-color: #8b5cf6;
-}
-
-.hint-box-hint .hint-box-label {
-  color: #8b5cf6;
-}
-
-.dark .hint-box-hint .hint-box-label {
-  color: #a78bfa;
-}
-
-/* Try This - Green */
-.hint-box-try-this {
-  border-left-color: #10b981;
-}
-
-.hint-box-try-this .hint-box-label {
-  color: #10b981;
-}
-
-.dark .hint-box-try-this .hint-box-label {
-  color: #34d399;
-}
-
-/* Tip - Amber */
-.hint-box-tip {
-  border-left-color: #f59e0b;
-}
-
-.hint-box-tip .hint-box-label {
-  color: #f59e0b;
-}
-
-.dark .hint-box-tip .hint-box-label {
-  color: #fbbf24;
-}
-
-/* Fun Fact - Pink */
-.hint-box-fun-fact {
-  border-left-color: #ec4899;
-}
-
-.hint-box-fun-fact .hint-box-label {
-  color: #ec4899;
-}
-
-.dark .hint-box-fun-fact .hint-box-label {
-  color: #f472b6;
-}
-
-/* Warning - Red */
-.hint-box-warning {
-  border-left-color: #ef4444;
-}
-
-.hint-box-warning .hint-box-label {
-  color: #ef4444;
-}
-
-.dark .hint-box-warning .hint-box-label {
-  color: #f87171;
-}
-
-/* Info - Cyan */
-.hint-box-info {
-  border-left-color: #06b6d4;
-}
-
-.hint-box-info .hint-box-label {
-  color: #06b6d4;
-}
-
-.dark .hint-box-info .hint-box-label {
-  color: #22d3ee;
-}
-
-/* Observation - Indigo */
-.hint-box-observation {
-  border-left-color: #6366f1;
-}
-
-.hint-box-observation .hint-box-label {
-  color: #6366f1;
-}
-
-.dark .hint-box-observation .hint-box-label {
-  color: #818cf8;
-}
-
-/* Mechanics - Slate */
-.hint-box-mechanics {
-  border-left-color: #64748b;
-}
-
-.hint-box-mechanics .hint-box-label {
-  color: #64748b;
-}
-
-.dark .hint-box-mechanics .hint-box-label {
-  color: #94a3b8;
-}
-
-/* Experiment - Teal */
-.hint-box-experiment {
-  border-left-color: #14b8a6;
-}
-
-.hint-box-experiment .hint-box-label {
-  color: #14b8a6;
-}
-
-.dark .hint-box-experiment .hint-box-label {
-  color: #2dd4bf;
+  color: rgb(209, 213, 219);
 }
 
 /* AnimalInfoBox Component Styles */

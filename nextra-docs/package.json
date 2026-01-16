@@ -4,8 +4,7 @@
   "description": "Better Ecology Documentation",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "TURBOPACK=0 next build",
-    "build:webpack": "next build --no-turbopack",
+    "build": "next build",
     "start": "next start",
     "export": "next build"
   },
