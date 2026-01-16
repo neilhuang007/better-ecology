@@ -3,45 +3,42 @@ title: Better Ecology
 description: A Minecraft Fabric mod implementing scientifically-based animal behaviors
 ---
 
+import { Cards, Card } from 'nextra/components'
+
 # Better Ecology
 
-A Minecraft Fabric mod that implements scientifically-based animal behaviors using a component-based architecture with data-driven configurations.
+A Minecraft Fabric mod that transforms animal behavior with scientifically-based AI systems. Watch cows form genuine herds, wolves coordinate pack hunts, and chickens establish roosting hierarchies.
 
-## Quick Start
+<Cards>
+  <Card
+    title="Player Wiki"
+    href="/docs/wiki"
+    style={{ borderColor: '#22c55e', borderWidth: '2px' }}
+  >
+    Learn about animal behaviors, breeding, and habitats
+  </Card>
+  <Card
+    title="Developer Docs"
+    href="/docs/getting-started/installation"
+    style={{ borderColor: '#3b82f6', borderWidth: '2px' }}
+  >
+    Installation, configuration, and technical documentation
+  </Card>
+</Cards>
+
+## What is Better Ecology?
+
+Better Ecology reimagines Minecraft's animal AI with behaviors based on real-world research. Animals don't just wander randomly anymore - they form social groups, make collective decisions, hunt cooperatively, and respond to their environment in realistic ways.
+
+Watch sheep follow natural leaders in their flock. See wolves coordinate ambush tactics during pack hunts. Observe chickens seeking elevated roosts at nightfall. Every behavior is grounded in scientific research documented in the mod's behavior library.
+
+## Quick Installation
 
 1. Install Fabric Loader for Minecraft 1.21.1
-2. Download Fabric API from Modrinth
+2. Download and install Fabric API from Modrinth
 3. Download Better Ecology from the releases page
 4. Place both JAR files in your `mods` folder
-5. Start Minecraft and enjoy enhanced animal behaviors
-
-## Features
-
-### Herd Animals (Cows, Sheep, Pigs)
-
-- Collective decision-making with quorum-based movement
-- Selfish herd positioning for protection
-- Bimodal grazing patterns
-- Separation distress behaviors
-
-### Predators (Wolves, Foxes)
-
-- Pack hunting coordination
-- Food sharing with social hierarchy
-- Territorial defense
-- Item carrying with visual feedback
-
-### Birds (Parrots, Chickens)
-
-- Flocking using the boids algorithm
-- Music detection and dancing (parrots)
-- Topological neighbor tracking
-
-### Small Prey (Rabbits)
-
-- Zigzag evasion patterns
-- Alarm signals including thumping
-- Freezing response to threats
+5. Launch Minecraft and experience enhanced animal behaviors
 
 ## Requirements
 
@@ -51,9 +48,3 @@ A Minecraft Fabric mod that implements scientifically-based animal behaviors usi
 | Java | 21 |
 | Fabric Loader | 0.15+ |
 | Fabric API | Current |
-
-## Getting Help
-
-- Check the [Configuration Guide](/docs/getting-started/configuration) for setup
-- Browse the [Animal Documentation](/docs/animals/overview) for behavior details
-- Review the [Architecture](/docs/systems/architecture) for technical information
