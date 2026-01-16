@@ -6,24 +6,7 @@ export default {
     type: 'separator',
     title: 'Player Wiki'
   },
-  wiki: {
-    title: 'Wiki',
-    type: 'menu',
-    items: {
-      index: {
-        title: 'Welcome',
-        href: '/docs/wiki'
-      },
-      animals: {
-        title: 'Animals',
-        href: '/docs/wiki/animals'
-      },
-      pathfinding: {
-        title: 'How Animals Navigate',
-        href: '/docs/wiki/pathfinding'
-      }
-    }
-  },
+  wiki: 'Wiki',
   '---': {
     type: 'separator',
     title: 'Developer Docs'
