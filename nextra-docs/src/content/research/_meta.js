@@ -5,6 +5,7 @@ export default {
   'parent-offspring': 'Parent-Offspring',
   fleeing: 'Fleeing',
   foraging: 'Foraging',
+  spawning: 'Spawning',
   breeding: 'Breeding',
   sleep: 'Sleep'
 }
