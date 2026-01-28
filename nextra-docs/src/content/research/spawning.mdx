@@ -1,0 +1,207 @@
+---
+title: Natural Spawning and Population Dynamics
+description: This document summarizes research on realistic animal spawning patterns, territorial distribution, and population dynamics based on ecological literature.
+---
+
+## Overview
+
+This document summarizes research on how animals naturally distribute across landscapes, form groups, maintain territories, and regulate population density. These findings inform a more ecologically realistic spawning system for Better Ecology.
+
+## Key Findings
+
+### Biome-Appropriate Distribution
+
+Animals in nature are highly specialized to specific habitat types based on temperature, moisture, vegetation, and resource availability.
+
+| Biome Type | Typical Animals | Minecraft Equivalent |
+|------------|-----------------|---------------------|
+| Temperate Forest | Deer, wolves, bears, foxes | Taiga, Forest |
+| Tropical Forest | Parrots, ocelots | Jungle |
+| Grassland/Savanna | Horses, cattle, sheep | Plains, Savanna |
+| Aquatic (Warm) | Dolphins, tropical fish | Warm Ocean |
+| Aquatic (Cold) | Cod, salmon | Cold Ocean, Rivers |
+| Desert | Rabbits, foxes (adapted) | Desert, Badlands |
+| Mountain/Tundra | Goats, llamas | Mountains, Snowy biomes |
+
+---
+
+## Group Spawning Behavior
+
+Animals spawn in social groups, not as isolated individuals. Group sizes vary by species and social structure.
+
+### Social Group Sizes
+
+| Animal Type | Group Size | Group Name | Social Structure |
+|-------------|------------|------------|------------------|
+| Wolves | 5-10 (avg 6-8) | Pack | Hierarchical family |
+| Horses/Cattle | 3-20 (avg 8-12) | Herd | Dominant stallion/bull + females |
+| Sheep/Goats | 5-50 (avg 15-30) | Flock/Herd | Loose aggregation |
+| Chickens | 3-12 (avg 6-8) | Flock | Dominant rooster + hens |
+| Fish | 10-100+ | School | Leaderless coordination |
+| Dolphins | 2-12 (avg 5-8) | Pod | Family groups |
+| Cats/Ocelots | 1-2 | Solitary | Territorial individuals |
+| Foxes | 2-6 | Family | Breeding pair + offspring |
+| Pigs | 3-10 (avg 5-8) | Sounder | Matriarchal groups |
+
+### Age Distribution
+
+Natural groups contain age diversity:
+- **Adults**: 60-70%
+- **Juveniles**: 20-30%
+- **Babies**: 5-10%
+
+---
+
+## Territorial Spacing
+
+Animals maintain minimum distances between groups to prevent resource competition.
+
+### Territory Size by Species
+
+| Species | Real-World Territory | Minecraft Scale (approx) |
+|---------|---------------------|-------------------------|
+| Wolf pack | 80-300 km² | 400-800 block radius |
+| Bear (solitary) | 25-100 km² | 250-500 block radius |
+| Fox family | 2-8 km² | 100-200 block radius |
+| Deer herd | 1-5 km² | 50-150 block radius |
+| Rabbit colony | 0.1-0.5 hectares | 20-50 block radius |
+| Cat/Ocelot | 0.5-2 km² | 100-250 block radius |
+
+### Territorial Exclusion Rule
+
+Before spawning a new group:
+1. Calculate distance to nearest existing group of same species
+2. If within minimum spacing threshold, block spawn
+3. This creates natural distribution patterns and prevents clustering
+
+---
+
+## Population Density Limits
+
+Carrying capacity varies by biome productivity (available food and resources).
+
+### Density by Biome Productivity
+
+| Productivity | Biomes | Large Herbivores | Small Herbivores | Predators |
+|--------------|--------|------------------|------------------|-----------|
+| High | Plains, Forest, Jungle | 10-20 per km² | 30-100 per km² | 1-3 per km² |
+| Medium | Hills, Taiga, Birch Forest | 5-12 per km² | 15-50 per km² | 0.5-2 per km² |
+| Low | Desert, Badlands, Snowy | 1-5 per km² | 5-20 per km² | 0.1-0.5 per km² |
+
+### Predator-Prey Ratio
+
+Natural ecosystems maintain approximately **1 predator per 50-100 prey animals**. This ensures:
+- Sustainable prey populations
+- Predators don't starve
+- Ecological balance
+
+---
+
+## Seasonal Spawning Patterns
+
+Most animals follow seasonal breeding cycles that affect when young animals appear.
+
+### Breeding Seasons
+
+| Season | Breeding Animals | Birth Period | Notes |
+|--------|-----------------|--------------|-------|
+| Spring | Deer, rabbits, foxes, birds | Spring-Summer | Births timed to food abundance |
+| Year-round | Chickens, pigs, tropical fish | Continuous | Stable climate species |
+| Late Spring | Wolves, bears | Early Summer | Post-winter recovery |
+| Fall | Sheep, goats | Spring | Long gestation over winter |
+
+### Seasonal Spawn Modifiers
+
+| Season | Baby Spawn Rate | Adult Spawn Rate |
+|--------|-----------------|------------------|
+| Spring | +200% | +50% |
+| Summer | Normal | Normal |
+| Fall | -50% | Normal |
+| Winter | -80% | -30% |
+
+---
+
+## Implementation for Minecraft
+
+### Biome Weighting System
+
+Rather than equal spawning probability everywhere, use habitat suitability scores:
+
+```
+Primary habitat:   100% spawn weight (wolf in taiga)
+Secondary habitat:  30-50% spawn weight (wolf in forest)
+Unsuitable:         0% spawn weight (wolf in desert)
+```
+
+### Group Spawning Algorithm
+
+When spawning an animal:
+1. Check biome compatibility
+2. Verify sufficient space exists for minimum territory
+3. Spawn entire group (not individual)
+4. Vary group size within species-specific range
+5. Include age diversity (adults, juveniles, babies)
+
+### Territorial Check
+
+Before spawning:
+1. Search for existing animals of same species within territory radius
+2. If found, abort spawn attempt
+3. This creates realistic spacing between populations
+
+### Population Cap
+
+For each spawn attempt:
+1. Count existing animals in chunk radius (e.g., 500 blocks)
+2. Compare to biome carrying capacity
+3. If at/above limit, abort spawn
+4. Allow natural regulation through predation and despawning
+
+---
+
+## Example: Wolf Pack Spawning
+
+```
+Species: Wolf
+Primary Biome: Taiga (100%), Forest (40%)
+Group Size: 5-8 wolves
+Territory Radius: 500-800 blocks
+Density Limit: Max 1 pack per 1000x1000 area
+
+Spawn Logic:
+1. Is biome suitable? (Taiga=pass, Desert=fail)
+2. Any wolf pack within 800 blocks? (Yes=abort)
+3. Total wolves in 1000-block radius <8? (No=abort)
+4. Spawn pack of size 5-8
+5. If spring/summer, include 1-2 juveniles
+```
+
+---
+
+## Key Academic References
+
+| Concept | Source | Application |
+|---------|--------|-------------|
+| Carrying capacity | Caughley (1977) | Population density limits |
+| Territory size scaling | McNab (1963) | Home range calculations |
+| Group living benefits | Krause & Ruxton (2002) | Social group sizes |
+| Predator-prey ratios | Hatton et al. (2015) | Ecological balance |
+| Habitat selection | Morris (2003) | Biome-appropriate spawning |
+
+---
+
+## Implementation Notes
+
+### Performance Considerations
+
+- Cache population counts rather than scanning all entities per spawn
+- Use chunk-based spatial indexing for territory checks
+- Limit search radius for density calculations
+
+### Integration with Better Ecology
+
+The spawning system integrates with existing behaviors:
+- Spawned herds immediately form cohesion relationships
+- Pack hierarchy established at spawn time (alpha, beta, omega)
+- Parent-offspring bonds created for family groups
+- Territory is recognized for predator avoidance calculations
