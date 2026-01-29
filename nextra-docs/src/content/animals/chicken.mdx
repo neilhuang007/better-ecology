@@ -1,6 +1,6 @@
 ---
 title: 'Chicken'
-description: 'Chickens in Better Ecology feature flocking behaviors, foraging patterns, and nesting.'
+description: 'Chickens in Better Ecology feature flocking behaviors, foraging patterns, dust bathing, roosting, and enhanced egg laying.'
 ---
 
 ## Overview
@@ -9,79 +9,272 @@ description: 'Chickens in Better Ecology feature flocking behaviors, foraging pa
 |-----------|-------|
 | Health | 4 HP (2 hearts) |
 | Movement Speed | 0.25 |
-| Diet | Seeds |
+| Diet | Seeds (wheat, melon, pumpkin, beetroot, torchflower, pitcher pod) |
 | Social Type | Flock animal |
-| Egg Laying | Yes |
+| Egg Laying | Yes (hunger-dependent) |
+| Predators | Fox, Wolf, Cat, Ocelot |
 
 ## Behaviors
 
-### Flocking Behavior
+### Pecking Behavior
 
-Chickens exhibit flocking behaviors similar to other birds.
+**Implementation:** `ChickenPeckingGoal`
 
-**Boids Algorithm:**
-- Separation: Avoid crowding neighbors
-- Alignment: Steer toward average heading
-- Cohesion: Move toward average position
+Chickens peck at the ground to find seeds and grubs.
 
-**Topological Neighbors:**
-- Track 6-7 nearest neighbors
-- Respond to fixed number of neighbors rather than distance
+**Behavior Details:**
 
-### Foraging
+| Parameter | Value |
+|-----------|-------|
+| Animation Duration | 30 ticks (1.5 seconds) |
+| Cooldown (normal) | 100-400 ticks |
+| Cooldown (hungry) | 60-200 ticks |
+| Find Food Chance | 30% (50% when hungry) |
 
-Chickens actively search for food.
+**Peckable Surfaces:**
+- Grass blocks
+- Dirt and coarse dirt
+- Farmland
 
-**Seed Finding:**
-- Search for seeds on ground
-- Peck at ground to find food
-- Compete with other chickens for resources
+**Food Discovery:**
+- 40% chance: Wheat seeds
+- 30% chance: Beetroot seeds
+- 15% chance: Melon seeds
+- 15% chance: Pumpkin seeds
 
-**Ground Scratching:**
-- Scratch at dirt/grass blocks
-- May find seeds or insects
-- Natural foraging behavior
+### Dust Bathing
 
-### Alarm Responses
+**Implementation:** `ChickenDustBathingGoal`
 
-Chickens respond to threats with alarm behaviors.
+Chickens perform dust bathing for feather maintenance and parasite control.
 
-**Alarm Behaviors:**
-- Flap upward when threatened
-- Alert nearby chickens
-- Scatter when predator detected
+**Trigger Conditions:**
+- Standing on suitable surface (sand, gravel, dirt)
+- Not currently fleeing from predators
+- Random chance activation
 
-### Nesting
+**Benefits:**
+- Feather maintenance
+- Parasite removal simulation
+- Natural behavior enrichment
 
-Chickens seek appropriate nesting locations.
+### Roosting Behavior
 
-**Nest Preferences:**
-- Enclosed spaces
-- Hay bale blocks
-- Protected from weather
+**Implementation:** `ChickenRoostingGoal`
 
-## Fleeing Behavior
+Chickens seek elevated perches at night for safety.
 
-Chickens flee from threats with specific patterns.
+**Behavior Details:**
+- Activates during night time
+- Seeks fence posts, walls, or elevated blocks
+- Provides protection from ground predators
+- Highest goal priority at night
 
-**Flight Response:**
-- Immediate flapping upward
-- Scatter pattern
-- Group alarm signals
+### Enhanced Egg Laying
+
+**Implementation:** `EnhancedEggLayingGoal`
+
+Replaces vanilla egg laying with hunger-dependent system.
+
+**Requirements:**
+- Hunger must be above threshold
+- Adult chickens only
+- Replaces vanilla random egg timing
+
+**Configuration:**
+Vanilla egg laying is completely disabled via mixin injection that resets `eggTime` to prevent random egg drops.
+
+### Fleeing Behavior
+
+**Implementation:** `FleeFromPredatorGoal`
+
+Chickens flee from multiple predator types.
+
+**Flee Parameters:**
+
+| Parameter | Value |
+|-----------|-------|
+| Speed Multiplier | 1.6x (fast when scared) |
+| Detection Range | 12 blocks |
+| Flee Distance | 20 blocks |
+
+**Predators:**
+- Fox
+- Wolf
+- Cat
+- Ocelot
+
+### Parent-Offspring Behaviors
+
+**Follow Parent:** `FollowParentGoal`
+
+Chicks follow adult chickens closely.
+
+**Separation Distress:** `SeparationDistressGoal`
+
+| Parameter | Value |
+|-----------|-------|
+| Safe Distance | 6 blocks |
+| Distress Range | 24 blocks |
+| Speed Modifier | 1.3x |
+
+**Mother Protection:** `MotherProtectBabyGoal`
+
+| Parameter | Value |
+|-----------|-------|
+| Follow Range | 8 blocks |
+| Protection Range | 12 blocks |
+| Speed Modifier | 1.2x |
+
+## Goal Priority System
+
+| Priority | Goal | Condition |
+|----------|------|-----------|
+| 0 | ChickenDustBathingGoal | On dust bath surface |
+| 0 | ChickenRoostingGoal | Night time |
+| 1 | FleeFromPredatorGoal | Predator detected |
+| 2 | MotherProtectBabyGoal | Adult with nearby chicks |
+| 3 | SeekWaterGoal | Thirsty |
+| 3 | SeekFoodGoal | Hungry |
+| 5 | ChickenPeckingGoal | Random interval |
+| 5 | FollowParentGoal | Chicks only |
+| 5 | SeparationDistressGoal | Separated from flock |
+| 6 | EnhancedEggLayingGoal | Adult, fed |
+| 6 | BreedingBehaviorGoal | In love mode |
+
+## Integration
+
+### Mixin Registration
+
+Goals are registered via `ChickenMixin`:
+
+```java
+@Mixin(Chicken.class)
+public abstract class ChickenMixin {
+    @Inject(method = "registerGoals", at = @At("TAIL"))
+    private void betterEcology$registerGoals(CallbackInfo ci) {
+        Chicken chicken = (Chicken) (Object) this;
+        var goalSelector = ((MobAccessor) chicken).getGoalSelector();
+
+        // Flee from predators
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_FLEE,
+            new FleeFromPredatorGoal(
+                chicken, 1.6, 12, 20,
+                Fox.class, Wolf.class, Cat.class, Ocelot.class
+            )
+        );
+
+        // Seek seeds when hungry
+        goalSelector.addGoal(
+            AnimalThresholds.PRIORITY_NORMAL,
+            new SeekFoodGoal(
+                chicken, 1.0, 12,
+                SeekFoodGoal.FoodMode.ITEM_SEEKER,
+                ChickenMixin::isValidChickenFood
+            )
+        );
+
+        // Additional goals...
+    }
+}
+```
+
+### Pecking Goal Implementation
+
+```java
+public class ChickenPeckingGoal extends Goal {
+    private static final int PECKING_ANIMATION_TICKS = 30;
+    private static final double FIND_FOOD_CHANCE = 0.3;
+    private static final double HUNGRY_FIND_FOOD_CHANCE = 0.5;
+
+    @Override
+    public boolean canUse() {
+        if (this.peckingCooldown > 0) {
+            this.peckingCooldown--;
+            return false;
+        }
+        return findPeckableGround() != null;
+    }
+
+    private void tryFindFood() {
+        boolean isHungry = AnimalNeeds.isHungry(this.chicken);
+        double findChance = isHungry ? HUNGRY_FIND_FOOD_CHANCE : FIND_FOOD_CHANCE;
+
+        if (this.chicken.getRandom().nextDouble() < findChance) {
+            ItemStack foundFood = determineFoodFound();
+            float hungerRestore = calculateHungerRestore(foundFood);
+            AnimalNeeds.modifyHunger(this.chicken, hungerRestore);
+        }
+    }
+}
+```
+
+### Food Validation
+
+```java
+private static boolean isValidChickenFood(ItemStack stack) {
+    if (stack.is(Items.WHEAT_SEEDS)) return true;
+    if (stack.is(Items.MELON_SEEDS)) return true;
+    if (stack.is(Items.PUMPKIN_SEEDS)) return true;
+    if (stack.is(Items.BEETROOT_SEEDS)) return true;
+    if (stack.is(Items.TORCHFLOWER_SEEDS)) return true;
+    if (stack.is(Items.PITCHER_POD)) return true;
+    return false;
+}
+```
+
+## NBT Data
+
+Chicken ecology state is stored in the standard ecology component:
+
+```
+/data get entity @e[type=chicken,limit=1] better-ecology
+```
+
+Expected output:
+```json
+{
+  "hunger": 75.0,
+  "thirst": 80.0,
+  "last_damage_tick": 0
+}
+```
+
+## Configuration
+
+Chicken behaviors use hardcoded scientific constants. Key parameters in `ChickenPeckingGoal`:
+
+| Constant | Value | Purpose |
+|----------|-------|---------|
+| `PECKING_ANIMATION_TICKS` | 30 | Duration of pecking animation |
+| `PECKING_COOLDOWN_MIN` | 100 | Minimum ticks between pecks |
+| `PECKING_COOLDOWN_MAX` | 400 | Maximum ticks between pecks |
+| `FIND_FOOD_CHANCE` | 0.3 | Base chance to find food |
+| `HUNGRY_FIND_FOOD_CHANCE` | 0.5 | Find chance when hungry |
 
 ## Scientific Basis
 
-### Flocking
-Based on the boids algorithm and research on bird flocking behavior.
+### Pecking Behavior
+Based on natural chicken foraging patterns. Domestic chickens spend 60-90% of daylight hours foraging and scratching at the ground. Pecking rate increases when hungry, matching the goal's dynamic cooldown system.
 
-### Foraging
-Based on natural chicken foraging patterns including ground scratching.
+### Dust Bathing
+Based on research showing dust bathing is an essential maintenance behavior in birds. Chickens dust bathe to remove parasites and excess oil from feathers. Deprivation of dust bathing opportunities causes stress in domestic poultry.
+
+### Roosting
+Based on natural anti-predator behavior. Wild jungle fowl (ancestors of domestic chickens) roost in trees at night. Elevated sleeping positions reduce predation risk from ground-based predators.
+
+### Flocking
+Based on research showing chickens maintain small flock groups with complex social hierarchies. Separation from the flock causes measurable stress responses.
 
 ### Alarm Responses
-Based on research on bird alarm calls and group responses.
+Based on research showing chickens have distinct alarm calls for aerial vs ground predators. The flee behavior with multiple predator detection reflects this sophisticated threat assessment.
 
 ## See Also
 
 - [Flocking Research](/research/flocking)
 - [Fleeing Research](/research/fleeing)
 - [Foraging Research](/research/foraging)
+- [Parent-Offspring Research](/research/parent-offspring)
+- [Behavior System](/systems/behavior-system)
+- [Ecology Component](/systems/ecology-component)

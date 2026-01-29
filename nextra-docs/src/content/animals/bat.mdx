@@ -1,6 +1,6 @@
 ---
 title: Bat
-description: Bats in Better Ecology feature light-triggered emergence, roosting behaviors, and group foraging patterns.
+description: Bats in Better Ecology feature light-triggered emergence, nocturnal activity patterns, roosting behaviors, and ecology state tracking.
 ---
 
 ## Overview
@@ -8,96 +8,209 @@ description: Bats in Better Ecology feature light-triggered emergence, roosting 
 | Attribute | Value |
 |-----------|-------|
 | Health | 6 HP (3 hearts) |
-| Movement | Flying |
-| Activity Pattern | Crepuscular/Nocturnal |
+| Movement | Flying (AmbientCreature) |
+| Activity Pattern | Nocturnal (active 12000-23000 ticks) |
 | Social Type | Colonial roosting |
+| Metabolism | Reduced (0.3x when resting, 0.5x when active) |
 
 ## Behaviors
 
-### Crepuscular Emergence
+### Nocturnal Activity
 
-Bats emerge from roosts based on light conditions.
+**Implementation:** `BatMixin`
 
-**Emergence Triggers:**
-- Light level drops below threshold
-- Time of day (dusk)
-- Weather conditions (overcast days may trigger early emergence)
+Bats follow a strict day/night activity cycle based on Minecraft time.
 
-**Dawn Return:**
-- Return to roost before sunrise
-- Seek dark enclosed spaces
-- Avoid light exposure
+**Activity Schedule:**
+
+| Time (ticks) | Period | Behavior |
+|--------------|--------|----------|
+| 0-12000 | Day | Resting (roosting) |
+| 12000-13500 | Dusk | Active (emergence) |
+| 13500-23000 | Night | Active (foraging) |
+| 23000-24000 | Pre-dawn | Seeking shelter |
+
+**Configuration Constants:**
+
+```java
+private static final long DAY_START = 0;
+private static final long DUSK_START = 12000;
+private static final long NIGHT_START = 13500;
+private static final long NIGHT_END = 23000;
+private static final long DAY_CYCLE = 24000;
+```
 
 ### Roosting Behavior
 
-Bats cluster on ceilings and in dark spaces.
+Bats cluster on ceilings and in dark spaces during the day.
+
+**Roost Location Requirements:**
+- Solid block above (cave ceiling)
+- Light level below 8
+- Either condition is sufficient for resting
 
 **Roost Preferences:**
 - Ceilings of caves
 - Dark enclosed spaces
 - Protected from weather
 
-**Roost Clustering:**
-- Group together on roost surfaces
-- Maintain colony cohesion
-- Share warmth in groups
+### Metabolism System
 
-### Group Emergence
+Bats have reduced metabolism compared to other animals.
 
-Bats emerge from roosts as a group.
+**Metabolism Multipliers:**
 
-**Emergence Pattern:**
-- Group emergence timing
-- Social cues trigger departure
-- Coordinated flight patterns
+| State | Hunger Decay | Thirst Decay |
+|-------|--------------|--------------|
+| Resting | 0.3x default | 0.3x default |
+| Active | 0.5x default | 0.5x default |
 
-### Foraging Patterns
+### Auto-Hydration
 
-Bats forage for insects during activity periods.
+Bats automatically restore thirst when in contact with water.
 
-**Foraging Behavior:**
-- Seek flying insects
-- Navigate using environment awareness
-- Return to roost when satiated
-
-## Activity Cycle
-
-| Time | Behavior |
-|------|----------|
-| Day | Roosting in dark spaces |
-| Dusk | Emergence and foraging |
-| Night | Active foraging |
-| Dawn | Return to roost |
+**Hydration Details:**
+- Triggers when in water or rain
+- Restores at 0.5x normal drinking rate
+- Gradual restoration while exposed
 
 ## Light Response
 
 | Light Level | Behavior |
 |-------------|----------|
-| 0-4 | Active, comfortable |
-| 5-7 | Active but seeking shade |
-| 8-11 | Returning to roost |
-| 12-15 | Roosting, hiding |
+| 0-7 | Comfortable, can rest |
+| 8+ | Too bright, seeks darker area |
+
+## Integration
+
+### Mixin Implementation
+
+Bats are `AmbientCreature` (not `PathfinderMob`), so they cannot use standard pathfinding goals. Instead, all behaviors are implemented via mixin injection:
+
+```java
+@Mixin(Bat.class)
+public abstract class BatMixin {
+    @Shadow
+    public abstract boolean isResting();
+
+    @Shadow
+    public abstract void setResting(boolean resting);
+
+    @Inject(method = "<init>", at = @At("TAIL"))
+    private void betterEcology$initEcology(EntityType<?> entityType, Level level, CallbackInfo ci) {
+        Bat bat = (Bat) (Object) this;
+        AnimalNeeds.initializeIfNeeded(bat);
+    }
+
+    @Inject(method = "customServerAiStep", at = @At("TAIL"))
+    private void betterEcology$tickNeeds(CallbackInfo ci) {
+        Bat bat = (Bat) (Object) this;
+
+        // Handle nocturnal activity patterns
+        betterEcology$updateNocturnalBehavior(bat);
+
+        // Decay hunger and thirst with metabolism multiplier
+        float metabolismMultiplier = this.isResting() ? 0.3f : 0.5f;
+        AnimalNeeds.decayHunger(bat, AnimalThresholds.DEFAULT_HUNGER_DECAY * metabolismMultiplier);
+        AnimalNeeds.decayThirst(bat, AnimalThresholds.DEFAULT_THIRST_DECAY * metabolismMultiplier);
+    }
+}
+```
+
+### Nocturnal Behavior Logic
+
+```java
+private boolean betterEcology$shouldBatRest(long timeOfDay) {
+    // Day time: 0-12000 ticks (bat should rest)
+    if (timeOfDay >= DAY_START && timeOfDay < DUSK_START) {
+        return true;
+    }
+
+    // Dusk and night: 12000-23000 ticks (bat should be active)
+    if (timeOfDay >= DUSK_START && timeOfDay < NIGHT_END) {
+        return false;
+    }
+
+    // Pre-dawn: 23000-24000 ticks (bat seeks shelter)
+    return true;
+}
+```
+
+### Rest Location Check
+
+```java
+private boolean betterEcology$canRestAtCurrentLocation(Bat bat) {
+    BlockPos batPos = bat.blockPosition();
+    BlockPos abovePos = batPos.above();
+
+    // Check for solid ceiling
+    boolean hasCeilingAbove = bat.level().getBlockState(abovePos).isSolid();
+
+    // Check if dark enough (light level < 8)
+    int lightLevel = bat.level().getMaxLocalRawBrightness(batPos);
+    boolean isDarkEnough = lightLevel < 8;
+
+    // Can rest if ceiling above OR dark enough
+    return hasCeilingAbove || isDarkEnough;
+}
+```
+
+## NBT Data
+
+Bat ecology state is stored in the standard ecology component:
+
+```
+/data get entity @e[type=bat,limit=1] better-ecology
+```
+
+Expected output:
+```json
+{
+  "hunger": 75.0,
+  "thirst": 80.0,
+  "last_damage_tick": 0
+}
+```
 
 ## Configuration
 
-Bat behaviors are configured via JSON files with parameters for:
-- Emergence light threshold
-- Roosting preferences
-- Foraging patterns
-- Group behavior
+| Constant | Value | Purpose |
+|----------|-------|---------|
+| Activity check interval | 20 ticks | How often to check time of day |
+| Resting metabolism | 0.3x | Hunger/thirst decay when resting |
+| Active metabolism | 0.5x | Hunger/thirst decay when active |
+| Light threshold | 8 | Maximum light level for resting |
 
 ## Scientific Basis
 
 ### Emergence Timing
-Based on research showing bat emergence is triggered by declining light levels rather than absolute time.
+Based on research showing bat emergence is triggered by declining light levels rather than absolute time. Most bat species emerge within a narrow window after sunset, with timing influenced by ambient light intensity.
 
 ### Roosting Behavior
-Based on observations of bat colony behavior and roost site selection.
+Based on observations of bat colony behavior and roost site selection. Bats prefer dark, enclosed spaces with overhead cover for daytime roosting. Temperature regulation and predator avoidance drive roost selection.
+
+### Reduced Metabolism
+Based on research showing bats have evolved lower metabolic rates compared to similar-sized mammals. This adaptation allows them to survive on relatively limited food resources and explains their use of torpor/hibernation.
+
+### Colonial Behavior
+Based on observations that many bat species roost in groups for thermoregulation and social benefits. Colonial roosting provides warmth sharing and may facilitate information exchange about food sources.
 
 ### Predation Avoidance
-Based on research on bat timing to avoid diurnal predators.
+Based on research on bat timing to avoid diurnal predators. By restricting activity to darkness, bats reduce predation risk from visual predators like hawks and owls.
+
+## Technical Notes
+
+### AmbientCreature Limitations
+Bats extend `AmbientCreature` rather than `PathfinderMob`, which means:
+- No goal selector available
+- Cannot use pathfinding-based goals
+- All behavior logic must be in mixins
+- Limited AI capabilities compared to other animals
+
+This is why bat behaviors are simpler than other animals and rely on direct state manipulation rather than goal-based AI.
 
 ## See Also
 
-- [Sleep Research](/research/Sleep)
-- [Bat Crepuscular Research](/research/BatCrepuscular)
+- [Sleep Research](/research/sleep)
+- [Ecology Component](/systems/ecology-component)
+- [Hunger and Condition System](/systems/hunger-condition)
