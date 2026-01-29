@@ -11,7 +11,9 @@
 .mtj.tmp/
 
 # Package Files
+# *.jar is negated for gradle-wrapper.jar below
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 *.nar
 *.ear

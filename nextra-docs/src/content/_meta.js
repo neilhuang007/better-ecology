@@ -6,7 +6,9 @@ export default {
     type: 'separator',
     title: 'Player Wiki'
   },
-  wiki: 'Wiki',
+  wiki: {
+    display: 'children'
+  },
   '---': {
     type: 'separator',
     title: 'Developer Docs'
