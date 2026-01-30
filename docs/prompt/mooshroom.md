@@ -1,0 +1,9 @@
+# Mooshroom Behavior Image Prompt
+
+## Prompt
+
+A vibrant Minecraft promotional art illustration of a lively mooshroom ecosystem on a magical mushroom island biome. The mooshrooms have red and brown cubic blocky bodies with mushrooms growing from their backs made of flat matte pixelated 16x16 pixel textures with NO reflections, NO shine, NO glossy textures. In the center, a blocky player character with a square wooden bowl is actively milking a red mooshroom, with blocky mushroom stew particles flowing dynamically into the bowl. A brown mooshroom variant grazes on purple mycelium blocks nearby, its blocky head lowered mid-chew. Several blocky bees fly between the cubic red and brown mushrooms growing from the mooshrooms' backs, creating a pollination interaction. A baby red mooshroom runs energetically across the fungal terrain with motion blur, kicking up mycelium particles. All elements are strictly cubic voxel blocks with visible pixelated textures - giant red and brown mushroom trees made of voxel blocks tower overhead, purple mycelium blocks cover every surface, scattered small mushroom blocks dot the landscape. Bright magical sunlight illuminates the surreal biome, vibrant reds, browns, and purples create a fantastical atmosphere. High-fidelity 3D render in official Mojang key art style, flat matte pixelated textures with NO specular highlights, strictly cubic block-based geometry for ALL objects, visible pixel grid on all surfaces, whimsical composition emphasizing the unique mooshroom ecosystem.
+
+## Negative Prompt
+
+NO reflective surfaces, NO shiny fur, NO glossy textures, NO specular highlights, NO smooth curved shapes, NO rounded edges, NO realistic cow anatomy, NO photorealistic rendering, NOT pixel art sprite style, NOT screenshot, NOT photo, NO static poses, NO normal biome, NO slanted blocks.

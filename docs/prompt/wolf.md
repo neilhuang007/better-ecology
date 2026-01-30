@@ -1,0 +1,9 @@
+# Wolf Behavior Image Prompt
+
+## Prompt
+
+A dramatic vibrant Minecraft promotional art illustration of a coordinated wolf pack hunting in a shadowy taiga forest at dusk. Five gray wolves have cubic blocky bodies made of flat matte pixelated 16x16 pixel textures with NO reflections, NO shine, NO glossy textures. The alpha wolf leads from the front in a powerful running stride with legs extended mid-gallop, two flanking wolves sprint on either side creating a pincer formation, two more wolves pursue from behind with tongues out and ears pinned back showing intense focus. Motion blur trails behind their pixelated fur as they chase a terrified white cubic rabbit zigzagging desperately ahead, kicking up pixelated snow cube particles. All elements are strictly cubic voxel blocks with visible pixelated textures - tall spruce trees made of dark green cube leaf blocks tower overhead with swaying branches, snow-covered ground blocks crunch underfoot with flying snow particles, fallen pixelated log blocks and cube mushrooms dot the forest floor. Shafts of orange dusk light pierce through the pixelated tree canopy casting long dramatic shadows, particles of pixelated snow and dust float in the golden light beams. A distant pixelated mountain range silhouettes against a gradient orange-to-purple twilight sky with cube clouds. High-fidelity 3D render in official Mojang key art style, flat matte pixelated textures with NO specular highlights, strictly cubic block-based geometry for ALL objects, visible pixel grid on all surfaces, intense diagonal composition emphasizing the chase and pack coordination.
+
+## Negative Prompt
+
+NO reflective surfaces, NO shiny fur, NO glossy textures, NO specular highlights, NO smooth curved shapes, NO rounded edges, NO realistic wolf anatomy, NO photorealistic rendering, NOT pixel art sprite style, NOT screenshot, NOT photo, NO static poses, NO calm scene, NO slanted blocks.

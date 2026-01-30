@@ -382,6 +382,11 @@ public class SeekFoodGoal extends Goal {
     private boolean isValidGrassBlock(BlockPos pos) {
         BlockState state = this.level.getBlockState(pos);
 
+        // Don't eat grass in player-protected areas (near fences, walls, or farmland)
+        if (ProtectedAreaDetection.isProtectedArea(this.level, pos)) {
+            return false;
+        }
+
         if (state.is(Blocks.SHORT_GRASS)) {
             return true;
         }

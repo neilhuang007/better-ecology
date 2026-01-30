@@ -189,10 +189,16 @@ public class PigRootingGoal extends Goal {
      * Checks if a block position contains a rootable block.
      *
      * @param pos the position to check
-     * @return true if the position contains grass, mycelium, or podzol
+     * @return true if the position contains grass, mycelium, or podzol and is not protected
      */
     private boolean isRootableBlock(BlockPos pos) {
         Level level = this.mob.level();
+
+        // Don't root in player-protected areas (near fences, walls, or farmland)
+        if (ProtectedAreaDetection.isProtectedArea(level, pos)) {
+            return false;
+        }
+
         BlockState state = level.getBlockState(pos);
         Block block = state.getBlock();
 

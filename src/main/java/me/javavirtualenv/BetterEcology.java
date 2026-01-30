@@ -7,8 +7,15 @@ import me.javavirtualenv.behavior.core.AnimalNeeds;
 import me.javavirtualenv.behavior.core.WolfPackData;
 import me.javavirtualenv.debug.DebugEcoCommand;
 import me.javavirtualenv.network.EcologyPackets;
+import me.javavirtualenv.spawning.EcologySpawnPredicate;
+import me.javavirtualenv.spawning.SpawnRequirements;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.Cow;
+import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.animal.Sheep;
+import net.minecraft.world.entity.animal.Wolf;
 
 /**
  * Better Ecology - A Minecraft Fabric mod that implements scientifically-based animal behaviors.
@@ -33,6 +40,9 @@ public class BetterEcology implements ModInitializer {
 
 		// Register commands
 		registerCommands();
+
+		// Register ecological spawn predicates
+		registerSpawnPredicates();
 
 		LOGGER.info("Better Ecology initialized");
 	}
@@ -66,5 +76,32 @@ public class BetterEcology implements ModInitializer {
 			DebugEcoCommand.register(dispatcher);
 			LOGGER.debug("Registered /debugeco command");
 		});
+	}
+
+	/**
+	 * Registers ecological spawn predicates for animals.
+	 *
+	 * <p>These predicates enforce:
+	 * <ul>
+	 *   <li>Water proximity requirements</li>
+	 *   <li>Territorial spacing</li>
+	 *   <li>Population density limits</li>
+	 * </ul>
+	 */
+	@SuppressWarnings("unchecked")
+	private void registerSpawnPredicates() {
+		// Herbivores that need water nearby
+		new EcologySpawnPredicate<>(Cow.class, SpawnRequirements.LAND_ANIMAL_NEEDS_WATER)
+			.register((EntityType<Cow>) EntityType.COW);
+		new EcologySpawnPredicate<>(Sheep.class, SpawnRequirements.LAND_ANIMAL_NEEDS_WATER)
+			.register((EntityType<Sheep>) EntityType.SHEEP);
+		new EcologySpawnPredicate<>(Pig.class, SpawnRequirements.LAND_ANIMAL_NEEDS_WATER)
+			.register((EntityType<Pig>) EntityType.PIG);
+
+		// Predators with larger territories
+		new EcologySpawnPredicate<>(Wolf.class, SpawnRequirements.PREDATOR)
+			.register((EntityType<Wolf>) EntityType.WOLF);
+
+		LOGGER.debug("Registered ecology spawn predicates");
 	}
 }

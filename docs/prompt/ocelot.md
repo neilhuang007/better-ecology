@@ -1,0 +1,9 @@
+# Ocelot Behavior Image Prompt
+
+## Prompt
+
+A dynamic vibrant Minecraft promotional art illustration of ocelots exhibiting multiple wild behaviors in a dense jungle biome. The ocelots have yellow and black spotted cubic blocky bodies made of flat matte pixelated 16x16 pixel textures with NO reflections, NO shine, NO glossy textures. One cubic ocelot is frozen mid-air in a dramatic pounce with outstretched blocky limbs and motion blur, targeting a terrified fleeing white blocky chicken. Another ocelot stalks low to the ground through thick square jungle leaf blocks and hanging vine blocks, eyes locked on prey. A green four-legged blocky creeper runs away in terror from a third hissing ocelot, fleeing toward the jungle edge. A blocky player character in leather armor crouches and holds out a raw fish to a wary approaching ocelot. All elements are strictly cubic voxel blocks with visible pixelated textures - towering cubic jungle trees with thick trunks, blocky cocoa pods hang from branches, colorful blocky parrots sit on cubic tree limbs, a mossy cobblestone jungle temple looms in the overgrown background. Dappled sunlight filters through the dense canopy creating pools of golden light and deep shadows, vibrant jungle greens and yellows contrast with spotted ocelot patterns. High-fidelity 3D render in official Mojang key art style, flat matte pixelated textures with NO specular highlights, strictly cubic block-based geometry for ALL objects, visible pixel grid on all surfaces, layered jungle composition emphasizing multiple ocelot behaviors.
+
+## Negative Prompt
+
+NO reflective surfaces, NO shiny fur, NO glossy textures, NO specular highlights, NO smooth curved shapes, NO rounded edges, NO realistic ocelot anatomy, NO photorealistic rendering, NOT pixel art sprite style, NOT screenshot, NOT photo, NO static poses, NO peaceful scene, NO slanted blocks.

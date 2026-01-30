@@ -1,0 +1,9 @@
+# Pig Behavior Image Prompt
+
+## Prompt
+
+A dynamic vibrant Minecraft promotional art illustration of a small herd of pink pigs actively foraging and moving together across a sunny meadow filled with life. The pigs have soft pastel pink cubic blocky bodies made of flat matte pixelated 16x16 pixel textures with NO reflections, NO shine, NO glossy textures. Two pigs trot energetically with legs mid-stride showing motion blur, one pig has its snout buried deep in bright green pixelated grass blocks kicking up animated voxel dirt cube particles, another pig rolls playfully in a shallow mud puddle splashing pixelated water droplets. All elements are strictly cubic voxel blocks with visible pixelated textures - grass blocks sway gently, colorful pixelated flower blocks dot the meadow, pixelated butterflies flutter above, a flock of small pixelated birds flies across the azure sky. Oak trees made of cube leaf blocks rustle with movement. In the background, a brown and white cubic cow grazes peacefully while a player character runs toward the herd holding a carrot with motion lines trailing behind. Golden hour lighting with warm diffused sun rays casting long dynamic soft shadows, azure blue sky with fluffy white cube-shaped clouds. High-fidelity 3D render in official Mojang key art style, flat matte pixelated textures with NO specular highlights, strictly cubic block-based geometry for ALL objects, visible pixel grid on all surfaces, energetic diagonal composition emphasizing movement and life.
+
+## Negative Prompt
+
+NO reflective surfaces, NO shiny skin, NO glossy textures, NO specular highlights, NO smooth curved shapes, NO rounded edges, NO realistic pig anatomy, NO photorealistic rendering, NOT pixel art sprite style, NOT screenshot, NOT photo, NO static poses, NO lifeless scene, NO slanted blocks.

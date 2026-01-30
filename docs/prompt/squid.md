@@ -1,0 +1,9 @@
+# Squid Behavior Image Prompt
+
+## Prompt
+
+A dramatic vibrant Minecraft promotional art illustration of a squid dramatically jetting backward to escape a pursuing guardian in the deep ocean near an ocean monument. The squid has a blue cubic blocky body with segmented tentacles made of flat matte pixelated 16x16 pixel textures with NO reflections, NO shine, NO glossy textures. The central squid jets violently backward with motion blur, releasing a dense expanding cloud of countless small black cubic ink particles that obscure the pursuing spiky orange and prismarine blocky guardian recoiling from the defensive spray. The squid's blocky segmented tentacles trail straight behind from the force of rapid movement. All elements are strictly cubic voxel blocks with visible pixelated textures - the massive imposing ocean monument made of prismarine blocks looms in the murky background, tall kelp stalks sway, sand and gravel cubes cover the deep ocean floor. In the mid-distance, another group of three blue squids swims peacefully in formation while a blocky player character in a diving helmet observes from above. Deep underwater blues contrast with stark black ink and bright blue squid bodies, dramatic escape lighting illuminates the scene. High-fidelity 3D render in official Mojang key art style, flat matte pixelated textures with NO specular highlights, strictly cubic block-based geometry for ALL objects, visible pixel grid on all surfaces, intense diagonal composition emphasizing the dramatic escape and ink defense.
+
+## Negative Prompt
+
+NO reflective surfaces, NO shiny skin, NO glossy textures, NO specular highlights, NO smooth curved shapes, NO rounded edges, NO realistic squid anatomy, NO photorealistic rendering, NOT pixel art sprite style, NOT screenshot, NOT photo, NO static poses, NO peaceful scene, NO slanted blocks.

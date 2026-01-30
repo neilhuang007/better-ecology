@@ -1,0 +1,9 @@
+# Armadillo Behavior Image Prompt
+
+## Prompt
+
+A dynamic vibrant Minecraft promotional art illustration of armadillos exhibiting multiple defensive and interactive behaviors in a savanna-badlands transition biome. The armadillos have brown and tan armored cubic blocky bodies made of flat matte pixelated 16x16 pixel textures with NO reflections, NO shine, NO glossy textures. In the center, an armadillo is caught mid-motion rolling into a perfect cubic defensive ball, kicking up blocky dirt particles as a blocky player character sprints past with motion lines. To the left, another blocky armadillo is being brushed by a player holding a cubic brush tool, with a pixelated brown armadillo scute item popping off its armored back mid-air. To the right, two armadillos forage together as a group with noses to the ground digging up cubic pixel items. All elements are strictly cubic voxel blocks with visible pixelated textures - cubic acacia trees provide sparse shade, layered terracotta blocks in orange yellow and brown create striped badlands cliffs, coarse dirt and golden savanna grass blocks cover the ground. In the background, a blocky gray wolf and a blocky black spider approach cautiously, triggering the defensive rolling behavior. Bright midday sun casts sharp dynamic shadows, warm vibrant desert colors pop from the screen. High-fidelity 3D render in official Mojang key art style, flat matte pixelated textures with NO specular highlights, strictly cubic block-based geometry for ALL objects, visible pixel grid on all surfaces, multi-action composition emphasizing the variety of armadillo behaviors.
+
+## Negative Prompt
+
+NO reflective surfaces, NO shiny armor, NO glossy textures, NO specular highlights, NO smooth curved shapes, NO rounded edges, NO realistic armadillo anatomy, NO photorealistic rendering, NOT pixel art sprite style, NOT screenshot, NOT photo, NO static poses, NO single behavior, NO slanted blocks.

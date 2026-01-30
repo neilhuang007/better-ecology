@@ -1,11 +1,9 @@
-## Primary Prompt
-A Minecraft screenshot of a deep, dark underwater cave dramatically illuminated by pulsing bioluminescent glow squids. The scene is lively with multiple blocky glow squids swimming together, their segmented cubic tentacles waving as they emit glowing blocky light particles in shades of cyan and teal, creating a hypnotic light display. A player character, made of cubes, floats entranced, staring at the glow squids with a mesmerized posture. Below them, a blocky axolotl is stalking the glow squids in the dark water, its pink pixelated form partially lit by the glow. The cave walls are dark, cubic obsidian and stone blocks, with purple undertones in the shadows and glowing pixelated lichen. The water itself is dark and murky, filled with floating cubic light particles and blocky bubbles. The entire image has a strict 16x16 pixel grid texture visible on all surfaces.
+# Glow Squid Behavior Image Prompt
 
-## Concise Prompt
-A Minecraft screenshot of blocky glow squids pulsing with cyan bioluminescence in a dark underwater cave. They form a hypnotic group, segmented tentacles waving, with a blocky player character floating entranced. A blocky axolotl stalks them. The scene is filled with cubic light particles and magical glow, rendered in a strictly cubic voxel style with visible pixel textures and vibrant colors.
+## Prompt
 
-## Minimal Prompt
-Minecraft glow squid bioluminescence, blocky cave, hypnotic group, player entranced, axolotl stalking, pulsing light, cubic textures, vibrant colors.
+A mesmerizing vibrant Minecraft promotional art illustration of bioluminescent glow squids pulsing with hypnotic cyan light in a dark underwater cave. The glow squids have cyan-teal cubic blocky bodies with segmented glowing tentacles made of flat matte pixelated 16x16 pixel textures with NO reflections, NO shine, NO glossy textures. Multiple glow squids swim together in a mesmerizing formation, their segmented cubic tentacles waving gracefully as they emit pulsing blocky light particles in shades of cyan and teal creating a hypnotic light display that illuminates the dark water. A blocky player character floats entranced, staring at the glow squids with a mesmerized posture. All elements are strictly cubic voxel blocks with visible pixelated textures - dark obsidian and stone cave walls with purple undertones in the shadows, glowing pixelated lichen patches cling to the ceiling, floating cubic light particles and blocky bubbles fill the murky water. A pink blocky axolotl stalks the glow squids from below, its form partially illuminated by the ethereal glow. Dramatic bioluminescent lighting with cyan glows contrasting against deep darkness, magical underwater atmosphere. High-fidelity 3D render in official Mojang key art style, flat matte pixelated textures with NO specular highlights, strictly cubic block-based geometry for ALL objects, visible pixel grid on all surfaces, ethereal composition emphasizing the hypnotic bioluminescent display.
 
-## Negative Prompt Elements
-Smooth surfaces, round objects, curves, realistic textures, high polygon count, non-cubic shapes, bright daylight, surface water, static creatures.
+## Negative Prompt
+
+NO reflective surfaces, NO shiny skin, NO glossy textures, NO specular highlights, NO smooth curved shapes, NO rounded edges, NO realistic squid anatomy, NO photorealistic rendering, NOT pixel art sprite style, NOT screenshot, NOT photo, NO static poses, NO bright daylight, NO slanted blocks.

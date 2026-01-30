@@ -1,0 +1,9 @@
+# Axolotl Behavior Image Prompt
+
+## Prompt
+
+A vibrant Minecraft promotional art illustration of multiple axolotls exhibiting dynamic behaviors in a lush underwater cave biome. The axolotls have pink, gold, cyan, and rare blue cubic blocky bodies with waving external gills made of flat matte pixelated 16x16 pixel textures with NO reflections, NO shine, NO glossy textures. In the center, a pink axolotl lunges mid-attack with blocky jaws open catching a small cubic tropical fish, its blocky external gills waving backward from the motion blur of the strike. Nearby, a gold axolotl floats upside down motionless playing dead next to a looming blocky Drowned zombie holding a square trident. A cyan axolotl and a rare blue axolotl swim together in the background while a blocky player hand holding a metal bucket actively scoops up the precious blue axolotl. All elements are strictly cubic voxel blocks with visible pixelated textures - large green dripleaves sway, cubic azalea bushes bloom underwater, hanging blocky glowberries emit square light particles casting warm pools of light, clay blocks line the cave floor. Warm magical lighting with vibrant pinks, golds, cyans, and blues contrasting against lush green vegetation, the scene captures multiple axolotl behaviors simultaneously. High-fidelity 3D render in official Mojang key art style, flat matte pixelated textures with NO specular highlights, strictly cubic block-based geometry for ALL objects, visible pixel grid on all surfaces, dynamic multi-focal composition emphasizing the variety of axolotl behaviors.
+
+## Negative Prompt
+
+NO reflective surfaces, NO shiny skin, NO glossy textures, NO specular highlights, NO smooth curved shapes, NO rounded edges, NO realistic axolotl anatomy, NO photorealistic rendering, NOT pixel art sprite style, NOT screenshot, NOT photo, NO static poses, NO single behavior, NO slanted blocks.

@@ -1,0 +1,9 @@
+# Strider Behavior Image Prompt
+
+## Prompt
+
+A dramatic vibrant Minecraft promotional art illustration of a strider family traversing a vast lava ocean in the Nether dimension. The striders have red and purple cubic blocky bodies with flat matte pixelated 16x16 pixel textures with NO reflections, NO shine, NO glossy textures. A large adult strider walks dynamically on the glowing orange lava surface with motion blur, carrying a blocky player character in a saddle who holds a Warped Fungus on a Stick with the cyan blocky fungus dangling enticingly ahead. A smaller baby strider bounces playfully on top of the parent strider's blocky head, while another adult strider walks alongside as part of the family group. Blocky lava splash particles trail behind their legs as they stride across the molten surface. All elements are strictly cubic voxel blocks with visible pixelated textures - towering basalt delta pillars rise in the background, a crimson forest shore with red blocky nether trees glows on the distant bank, netherrack blocks and soul sand patches dot the landscape. Dramatic glowing lava light casts warm orange illumination contrasting with the deep crimson nether atmosphere, vibrant reds and oranges dominate the hellish landscape. High-fidelity 3D render in official Mojang key art style, flat matte pixelated textures with NO specular highlights, strictly cubic block-based geometry for ALL objects, visible pixel grid on all surfaces, sweeping horizontal composition emphasizing the strider family journey across the lava sea.
+
+## Negative Prompt
+
+NO reflective surfaces, NO shiny skin, NO glossy textures, NO specular highlights, NO smooth curved shapes, NO rounded edges, NO realistic strider anatomy, NO photorealistic rendering, NOT pixel art sprite style, NOT screenshot, NOT photo, NO static poses, NO solitary strider, NO slanted blocks.

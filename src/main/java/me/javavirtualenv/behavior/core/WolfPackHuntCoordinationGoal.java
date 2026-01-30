@@ -1,5 +1,8 @@
 package me.javavirtualenv.behavior.core;
 
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.animal.Cow;
@@ -132,6 +135,9 @@ public class WolfPackHuntCoordinationGoal extends Goal {
         packPositioned = false;
 
         if (isAlphaLeader) {
+            // Alpha howls to signal the pack hunt
+            playPackHuntHowl();
+
             // Alpha directly targets the prey
             wolf.setTarget(targetPrey);
             wolf.getNavigation().moveTo(targetPrey, 1.3);
@@ -141,6 +147,28 @@ public class WolfPackHuntCoordinationGoal extends Goal {
             if (flankingPosition != null) {
                 pathfindToFlankingPosition();
             }
+        }
+    }
+
+    /**
+     * Plays the pack hunt initiation howl and shows angry particles.
+     * Uses vanilla wolf howl sound to signal coordinated attack.
+     */
+    private void playPackHuntHowl() {
+        // Wolf howl to signal pack hunt
+        wolf.playSound(SoundEvents.WOLF_HOWL, 1.5F, 0.9F + wolf.getRandom().nextFloat() * 0.2F);
+
+        // Show angry particles above the alpha
+        if (wolf.level() instanceof ServerLevel serverLevel) {
+            serverLevel.sendParticles(
+                ParticleTypes.ANGRY_VILLAGER,
+                wolf.getX(),
+                wolf.getY() + wolf.getBbHeight() + 0.5,
+                wolf.getZ(),
+                3,
+                0.3, 0.2, 0.3,
+                0.0
+            );
         }
     }
 

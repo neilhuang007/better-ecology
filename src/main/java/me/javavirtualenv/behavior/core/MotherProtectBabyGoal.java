@@ -1,5 +1,8 @@
 package me.javavirtualenv.behavior.core;
 
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -141,7 +144,33 @@ public class MotherProtectBabyGoal extends Goal {
     public void start() {
         this.protectTicks = 0;
         this.attackCooldown = 0;
+
+        // Play warning sound and show angry particles when starting protection
+        playProtectionWarning();
+
         navigateToThreat();
+    }
+
+    /**
+     * Plays warning sound and shows angry particles when protection mode starts.
+     * Uses vanilla angry villager particles and animal ambient sounds.
+     */
+    private void playProtectionWarning() {
+        // Play ambient sound as warning call
+        this.mob.playAmbientSound();
+
+        // Show angry particles above the protecting adult
+        if (this.mob.level() instanceof ServerLevel serverLevel) {
+            serverLevel.sendParticles(
+                ParticleTypes.ANGRY_VILLAGER,
+                this.mob.getX(),
+                this.mob.getY() + this.mob.getBbHeight() + 0.3,
+                this.mob.getZ(),
+                3,
+                0.3, 0.2, 0.3,
+                0.0
+            );
+        }
     }
 
     @Override

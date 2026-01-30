@@ -3,7 +3,8 @@ package me.javavirtualenv.behavior.core;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.UUID;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.animal.Animal;
@@ -37,6 +38,12 @@ public class BreedingBehaviorGoal extends Goal {
     private static final double SEARCH_RANGE = 16.0;
     private static final float MIN_HUNGER_TO_BREED = 60f;  // Must be well-fed to breed
 
+    // Population dynamics constants (logistic growth model)
+    private static final int POPULATION_CHECK_RADIUS = 64;
+    private static final int CARRYING_CAPACITY = 20;
+    private static final int EMERGENCY_THRESHOLD = 3;
+    private static final int EMERGENCY_COURTSHIP_TICKS = 30;  // Faster courtship in emergency
+
     private final Animal animal;
     private final double speedModifier;
     private final Class<? extends Animal> partnerClass;
@@ -45,6 +52,7 @@ public class BreedingBehaviorGoal extends Goal {
     private int searchCooldown;
     private int courtshipTicks;
     private boolean inCourtship;
+    private boolean emergencyBreeding;
 
     /**
      * Creates a new BreedingBehaviorGoal.
@@ -94,16 +102,19 @@ public class BreedingBehaviorGoal extends Goal {
 
     /**
      * Checks if the animal can attempt to breed.
+     * Includes population-aware checks based on logistic growth model.
      *
      * @return true if all breeding prerequisites are met
      */
     private boolean canAttemptBreeding() {
-        // Must be in love mode from vanilla breeding
         if (!this.animal.isInLove()) {
             return false;
         }
 
-        // Must be well-fed (not just hungry)
+        if (this.animal.isBaby()) {
+            return false;
+        }
+
         float hunger = AnimalNeeds.getHunger((Mob) this.animal);
         if (hunger < MIN_HUNGER_TO_BREED) {
             LOGGER.debug("{} too hungry to breed: {} < {}",
@@ -111,8 +122,47 @@ public class BreedingBehaviorGoal extends Goal {
             return false;
         }
 
-        // Must be an adult
-        if (this.animal.isBaby()) {
+        return checkPopulationDynamics();
+    }
+
+    /**
+     * Checks population dynamics using logistic growth model.
+     * Sets emergency breeding flag if population is critically low.
+     *
+     * @return true if breeding is allowed based on population
+     */
+    private boolean checkPopulationDynamics() {
+        int population = PopulationCounter.countNearby(
+            this.animal.level(),
+            this.animal.blockPosition(),
+            this.partnerClass,
+            POPULATION_CHECK_RADIUS
+        );
+
+        // Emergency breeding for critically low populations
+        this.emergencyBreeding = population <= EMERGENCY_THRESHOLD;
+        if (this.emergencyBreeding) {
+            LOGGER.debug("{} triggering emergency breeding (population: {})",
+                this.animal.getName().getString(), population);
+            return true;
+        }
+
+        // Don't breed if at carrying capacity
+        if (population >= CARRYING_CAPACITY) {
+            LOGGER.debug("{} population at carrying capacity ({}/{}), skipping breeding",
+                this.animal.getName().getString(), population, CARRYING_CAPACITY);
+            return false;
+        }
+
+        // Logistic growth: breeding probability decreases as population approaches K
+        // Formula: breedChance = 1 - (N/K)
+        float densityRatio = (float) population / CARRYING_CAPACITY;
+        float breedChance = 1.0f - densityRatio;
+        if (this.animal.getRandom().nextFloat() > breedChance) {
+            LOGGER.debug("{} skipping breeding due to population density ({}%, chance: {}%)",
+                this.animal.getName().getString(),
+                (int) (densityRatio * 100),
+                (int) (breedChance * 100));
             return false;
         }
 
@@ -121,19 +171,19 @@ public class BreedingBehaviorGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
-        // Stop if partner is gone or no longer valid
         if (this.partner == null || !this.partner.isAlive() || !this.partner.isInLove()) {
             return false;
         }
 
-        // Stop if we're no longer in love
         if (!this.animal.isInLove()) {
             return false;
         }
 
-        // Stop if courtship is complete
-        if (this.courtshipTicks >= COURTSHIP_DURATION_TICKS && this.inCourtship) {
-            // Trigger breeding
+        int requiredTicks = this.emergencyBreeding
+            ? EMERGENCY_COURTSHIP_TICKS
+            : COURTSHIP_DURATION_TICKS;
+
+        if (this.courtshipTicks >= requiredTicks && this.inCourtship) {
             triggerBreeding();
             return false;
         }
@@ -161,6 +211,7 @@ public class BreedingBehaviorGoal extends Goal {
         this.partner = null;
         this.courtshipTicks = 0;
         this.inCourtship = false;
+        this.emergencyBreeding = false;
         this.animal.getNavigation().stop();
     }
 
@@ -239,37 +290,20 @@ public class BreedingBehaviorGoal extends Goal {
      * @return true if the candidate is a valid mate
      */
     private boolean isValidMate(Animal candidate) {
-        if (candidate == null || !candidate.isAlive()) {
+        if (candidate == null || !candidate.isAlive() || candidate == this.animal) {
             return false;
         }
 
-        // Can't mate with self
-        if (candidate == this.animal) {
+        if (!candidate.isInLove() || candidate.isBaby()) {
             return false;
         }
 
-        // Must be in love
-        if (!candidate.isInLove()) {
-            return false;
-        }
-
-        // Must be adult
-        if (candidate.isBaby()) {
-            return false;
-        }
-
-        // Must be same species
         if (!this.partnerClass.isInstance(candidate)) {
             return false;
         }
 
-        // Must also be well-fed
         float candidateHunger = AnimalNeeds.getHunger((Mob) candidate);
-        if (candidateHunger < MIN_HUNGER_TO_BREED) {
-            return false;
-        }
-
-        return true;
+        return candidateHunger >= MIN_HUNGER_TO_BREED;
     }
 
     /**
@@ -323,15 +357,46 @@ public class BreedingBehaviorGoal extends Goal {
 
     /**
      * Performs a courtship display (visual effect).
+     * Shows heart particles and plays ambient sounds during courtship.
+     * More particles are shown during emergency breeding.
      */
     private void performCourtshipDisplay() {
-        // Rotate around partner position
-        LOGGER.debug("{} performing courtship display for {}",
+        LOGGER.debug("{} performing courtship display for {}{}",
             this.animal.getName().getString(),
-            this.partner.getName().getString());
+            this.partner.getName().getString(),
+            this.emergencyBreeding ? " (emergency)" : "");
 
-        // The visual effect would be handled client-side
-        // Here we just log and update state
+        if (!(this.animal.level() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        int particleCount = this.emergencyBreeding ? 5 : 2;
+
+        spawnHeartParticles(serverLevel, this.animal, particleCount);
+        if (this.partner != null) {
+            spawnHeartParticles(serverLevel, this.partner, particleCount);
+        }
+
+        this.animal.playAmbientSound();
+    }
+
+    /**
+     * Spawns heart particles above an animal.
+     *
+     * @param serverLevel the server level
+     * @param animal the animal to spawn particles above
+     * @param count the number of particles
+     */
+    private void spawnHeartParticles(ServerLevel serverLevel, Animal animal, int count) {
+        serverLevel.sendParticles(
+            ParticleTypes.HEART,
+            animal.getX(),
+            animal.getY() + animal.getBbHeight() + 0.5,
+            animal.getZ(),
+            count,
+            0.3, 0.2, 0.3,
+            0.0
+        );
     }
 
     /**

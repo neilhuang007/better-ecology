@@ -201,19 +201,20 @@ public class SeparationDistressGoal extends Goal {
 
     /**
      * Makes a distress call sound and spawns particles.
+     * Uses note particles to indicate calling out, not hearts (which indicate love).
      */
     private void makeDistressCall() {
-        // Play distress sound (generic baby sound)
-        this.mob.playSound(SoundEvents.GENERIC_HURT, 0.8F, 1.5F);
+        // Play distress sound (high-pitched ambient sound)
+        this.mob.playAmbientSound();
 
-        // Spawn distress particles
+        // Spawn note particles to show calling out (looking for parent)
         if (this.mob.level() instanceof ServerLevel serverLevel) {
             serverLevel.sendParticles(
-                ParticleTypes.HEART,
+                ParticleTypes.NOTE,
                 this.mob.getX(),
                 this.mob.getY() + this.mob.getBbHeight() + 0.5,
                 this.mob.getZ(),
-                1,
+                2,
                 0.2, 0.2, 0.2,
                 0.0
             );

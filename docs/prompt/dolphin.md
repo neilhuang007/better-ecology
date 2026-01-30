@@ -1,0 +1,9 @@
+# Dolphin Behavior Image Prompt
+
+## Prompt
+
+A dynamic vibrant Minecraft promotional art illustration of a playful pod of dolphins leaping and swimming in an open ocean near a shipwreck treasure site. The dolphins have gray cubic blocky bodies with square heads, blocky fins, and cubic tails made of flat matte pixelated 16x16 pixel textures with NO reflections, NO shine, NO glossy textures. Several blocky dolphins leap high out of the water in graceful arcs with motion blur, creating explosive splashes of blue and white cube particles raining down. One central dolphin playfully leads a blocky player character wearing a diamond helmet toward a visible wooden shipwreck and a glowing golden treasure chest on the seabed, swimming with purpose. Other dolphins chase a school of small cubic fish in a loose pod formation. All elements are strictly cubic voxel blocks with visible pixelated textures - the weathered wooden shipwreck sits on the sandy ocean floor, colorful coral blocks surround it, cubic treasure chest glints with gold, blue water blocks stretch to the horizon. Bright sunny lighting under a clear sky with blocky white clouds, vibrant blues and grays pop against the golden treasure glow, playful energetic atmosphere. High-fidelity 3D render in official Mojang key art style, flat matte pixelated textures with NO specular highlights, strictly cubic block-based geometry for ALL objects, visible pixel grid on all surfaces, sweeping horizontal composition emphasizing the pod's playful treasure-hunting guidance.
+
+## Negative Prompt
+
+NO reflective surfaces, NO shiny skin, NO glossy textures, NO specular highlights, NO smooth curved shapes, NO rounded edges, NO realistic dolphin anatomy, NO photorealistic rendering, NOT pixel art sprite style, NOT screenshot, NOT photo, NO static poses, NO solitary dolphin, NO slanted blocks.

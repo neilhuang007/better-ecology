@@ -1,0 +1,9 @@
+# Allay Behavior Image Prompt
+
+## Prompt
+
+A magical vibrant Minecraft promotional art illustration of glowing allays exhibiting multiple helpful behaviors near a Woodland Mansion at dusk. The allays have cyan glowing cubic blocky bodies with segmented wings made of flat matte pixelated 16x16 pixel textures with NO reflections, NO shine, NO glossy textures. The central allay flies rapidly through the air with motion blur, clutching a large pixelated blue diamond item while leaving a trail of blocky cyan sparkle particles behind it. A second allay near an array of wooden note blocks bobs rhythmically in a joyful dance, surrounded by floating square pixel music note symbols emitting from the blocks. A third allay approaches a blocky player character, delivering a stack of collected items into their waiting hands. All elements are strictly cubic voxel blocks with visible pixelated textures - the imposing dark oak Woodland Mansion looms in the background with lit windows, scattered note blocks and item frames decorate the area, fallen leaves and grass blocks cover the ground. Magical twilight lighting with bright glowing cyan allays contrasting against the dark wood architecture, purple and orange dusk sky gradient above, ethereal particle effects fill the air. High-fidelity 3D render in official Mojang key art style, flat matte pixelated textures with NO specular highlights, strictly cubic block-based geometry for ALL objects, visible pixel grid on all surfaces, magical composition emphasizing the helpful allay behaviors and glowing particles.
+
+## Negative Prompt
+
+NO reflective surfaces, NO shiny wings, NO glossy textures, NO specular highlights, NO smooth curved shapes, NO rounded edges, NO realistic fairy anatomy, NO photorealistic rendering, NOT pixel art sprite style, NOT screenshot, NOT photo, NO static poses, NO dull colors, NO slanted blocks.

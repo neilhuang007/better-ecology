@@ -1,0 +1,242 @@
+---
+title: Predator Hunting Behaviors and Strategies
+description: This document summarizes research on predator hunting techniques, prey selection, ambush strategies, and pack coordination in carnivorous animals.
+---
+
+## Overview
+
+This document summarizes research on predator hunting techniques, prey selection, ambush strategies, and pack coordination. Better Ecology implements multiple hunting strategies based on real predator behavior research.
+
+## Key Behavioral Patterns
+
+### Prey Detection and Selection
+
+- **Hunger-driven activation**: Predators only hunt when hungry (below hunger threshold)
+- **Prey availability check**: Scavenging preferred over hunting when meat items are available nearby
+- **Optimal target selection**: Prey scored by distance, health, and isolation
+- **Isolation factor**: More isolated prey (fewer nearby allies) are preferred targets
+
+**Target Selection Formula:**
+```
+Score = (distance × 0.5) + (healthFactor × 100) + (isolationFactor × 50)
+```
+Lower scores are preferred (nearest, weakest, most isolated).
+
+### Hunting Techniques
+
+#### Direct Pursuit (General)
+
+**Implementation:** `HuntPreyGoal`
+
+Standard chase-down hunting used by most predators.
+
+| Parameter | Value |
+|-----------|-------|
+| Hunt Range | Configurable (typically 16-32 blocks) |
+| Attack Distance | 2 blocks |
+| Attack Cooldown | 20 ticks (1 second) |
+| Give Up Time | 1200 ticks (60 seconds) |
+| Escape Distance | 32 blocks |
+| Hunger Restored | 40 points per kill |
+
+**Behavior sequence:**
+1. Check hunger threshold
+2. Verify no scavengeable food items nearby
+3. Find valid prey within hunt range
+4. Score and select optimal target
+5. Pathfind toward prey
+6. Attack when within range
+7. Continue until prey killed, escaped, or predator satisfied
+
+#### Fox Pounce Attack
+
+**Implementation:** `FoxPounceHuntingGoal`
+
+Distinctive high-arc leap attack based on real fox mousing behavior.
+
+| Parameter | Value |
+|-----------|-------|
+| Min Pounce Distance | 3 blocks |
+| Max Pounce Distance | 8 blocks |
+| Pounce Height | 1.5 blocks |
+| Success Rate | 80% |
+| Pounce Duration | 15 ticks |
+| Cooldown | 40 ticks |
+| Hunger Restored | 35 points per kill |
+
+**Scientific Basis:**
+Foxes perform a distinctive hunting technique where they leap 1-2 meters high in a parabolic arc to land on small prey like mice. Research shows this technique has a ~75-80% success rate in the wild.
+
+**Pounce Arc Calculation:**
+```java
+double parabolaHeight = POUNCE_HEIGHT * Math.sin(progress * Math.PI);
+```
+
+#### Cat Stalking Ambush
+
+**Implementation:** `CatStalkingAmbushGoal`
+
+Patient approach with ambush attack.
+
+| Parameter | Value |
+|-----------|-------|
+| Stalk Speed | 0.4x normal |
+| Ambush Distance | 3 blocks |
+| Success Rate | 30% |
+| Cooldown | 60 ticks |
+
+**Behavior sequence:**
+1. Detect prey
+2. Approach slowly (stalking animation)
+3. Position for ambush
+4. Explosive attack when in range
+
+---
+
+## Pack Hunting Coordination
+
+**Implementation:** `WolfPackHuntCoordinationGoal`
+
+Wolves coordinate hunting as a pack with role assignment.
+
+### Role Assignment
+
+| Role | Behavior |
+|------|----------|
+| Alpha | Leads the hunt, initiates attack |
+| Flanker | Positions to cut off escape |
+| Driver | Pushes prey toward alphas |
+
+### Coordination Mechanics
+
+- **Pack ID matching**: Only wolves in the same pack coordinate
+- **Target sharing**: Pack members share the same prey target
+- **Flanking positions**: Wolves spread to surround prey
+- **Attack timing**: Coordinated attack order based on role
+
+### Scientific Basis
+
+Based on wolf pack dynamics research showing:
+- Social hierarchies influence hunting roles
+- Coordinated flanking increases success rate
+- Pack size affects hunting efficiency
+- Prey selection considers pack capabilities
+
+---
+
+## Species-Specific Behaviors
+
+### Wolves
+
+**Prey targets:** Sheep, Rabbit, Chicken (when hungry)
+
+| Behavior | Description |
+|----------|-------------|
+| Pack hunting | Coordinates with pack members |
+| Food sharing | Shares kills with hungry pack members |
+| Scavenging | Prefers existing meat over hunting |
+| Territorial | Hunts within pack territory |
+
+### Foxes
+
+**Prey targets:** Chicken, Rabbit
+
+| Behavior | Description |
+|----------|-------------|
+| Pounce attack | High-arc leap for small prey |
+| Stalking | Slow approach before attack |
+| Caching | May cache excess food |
+| Crepuscular | Most active at dawn/dusk |
+
+### Cats/Ocelots
+
+**Prey targets:** Chicken, Rabbit
+
+| Behavior | Description |
+|----------|-------------|
+| Stalking | Patient slow approach |
+| Ambush | Attack from concealment |
+| Gift giving | Tamed cats bring "gifts" |
+| Solitary | Hunt alone (no pack coordination) |
+
+---
+
+## Prey Response Integration
+
+Hunting behaviors integrate with prey fleeing responses:
+
+### Predator-Prey Interaction
+
+1. **Detection**: Predator spots prey within hunt range
+2. **Pursuit**: Predator begins approach
+3. **Flight response**: Prey detects predator and may flee
+4. **Escalation**: Predator increases speed to catch fleeing prey
+5. **Resolution**: Kill, escape, or give up
+
+### Success Factors
+
+| Factor | Effect on Success |
+|--------|-------------------|
+| Prey isolation | Higher success for isolated prey |
+| Pack size | Larger packs have higher success |
+| Prey health | Weaker prey easier to catch |
+| Distance | Closer targets easier to catch |
+| Terrain | Some terrain favors predator or prey |
+
+---
+
+## Implementation Notes
+
+### Configuration Parameters
+
+| Parameter | Default Range | Description |
+|-----------|---------------|-------------|
+| `hunt_range` | 16-32 blocks | Maximum detection range |
+| `attack_distance` | 2-3 blocks | Range to initiate attack |
+| `speed_modifier` | 1.2-1.5x | Movement speed when hunting |
+| `give_up_ticks` | 600-1200 | Time before abandoning hunt |
+| `hunger_threshold` | 30-50 | Hunger level to trigger hunting |
+
+### Performance Optimizations
+
+- **Search interval**: Prey search every 5-10 ticks, not every tick
+- **Retargeting**: Check for closer prey every 20 ticks
+- **Path recalculation**: Update paths every 10 ticks during hunt
+- **Early exits**: Check cheap conditions before expensive searches
+
+### Goal Priority System
+
+| Priority | Goal |
+|----------|------|
+| 4 | HuntPreyGoal |
+| 4 | FoxPounceHuntingGoal |
+| 4 | CatStalkingAmbushGoal |
+| 4 | WolfPackHuntCoordinationGoal |
+
+Hunting goals share priority 4, lower than flee (1-2) and survival needs (3).
+
+---
+
+## Key Academic References
+
+### Foundational Papers
+
+1. **Mech, L.D. (1970)**. "The Wolf: The Ecology and Behavior of an Endangered Species"
+2. **Macdonald, D.W. (1980)**. "Rabies and Wildlife: A Biologist's Perspective" - Fox hunting behavior
+3. **Caro, T.M. (1994)**. "Cheetahs of the Serengeti Plains" - Predator-prey dynamics
+
+### Recent Research
+
+4. **MacNulty et al. (2012)**. "Nonlinear effects of group size on the success of wolves hunting elk"
+5. **Stander, P.E. (1992)**. "Cooperative hunting in lions: the role of the individual"
+6. **Hilton, G.M. et al. (1999)**. "The effect of predator age and experience on kill probability"
+
+---
+
+## See Also
+
+- [Fleeing Research](/research/fleeing) - Prey escape behaviors
+- [Foraging Research](/research/foraging) - Non-hunting food acquisition
+- [Wolf](/animals/wolf) - Pack hunting implementation
+- [Fox](/animals/fox) - Pounce hunting implementation
+- [Cat](/animals/cat) - Stalking/ambush implementation

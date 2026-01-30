@@ -1,0 +1,9 @@
+# Tropical Fish Behavior Image Prompt
+
+## Prompt
+
+A vibrant Minecraft promotional art illustration of a dazzling coral reef teeming with swirling schools of colorful tropical fish in a rainbow explosion of movement. The tropical fish have orange, yellow, blue, red, and white striped cubic blocky bodies made of flat matte pixelated 16x16 pixel textures with NO reflections, NO shine, NO glossy textures. Massive swirling schools dart dynamically around complex cubic coral formations with motion blur trails, clownfish weave through pink brain coral blocks, blue tangs spiral around purple fire coral, yellow fish burst through tube coral in coordinated bursts of color. All elements are strictly cubic voxel blocks with visible pixelated textures - pink brain coral blocks, purple fire coral structures, orange tube coral formations, swaying seagrass blocks, sandy ocean floor with scattered shells. A blocky pufferfish floats puffed up near the reef edge, while a pink blocky axolotl stalks the fish school from behind a coral structure with focused predatory intent. Streams of square bubbles rise toward the bright surface, warm tropical sunlight filtering down in cubic rays illuminating the vibrant turquoise water. High-fidelity 3D render in official Mojang key art style, flat matte pixelated textures with NO specular highlights, strictly cubic block-based geometry for ALL objects, visible pixel grid on all surfaces, explosive radial composition emphasizing the chaotic rainbow beauty.
+
+## Negative Prompt
+
+NO reflective surfaces, NO shiny scales, NO glossy textures, NO specular highlights, NO smooth curved shapes, NO rounded edges, NO realistic fish anatomy, NO photorealistic rendering, NOT pixel art sprite style, NOT screenshot, NOT photo, NO static poses, NO empty reef, NO slanted blocks.

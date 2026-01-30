@@ -1,0 +1,9 @@
+# Sniffer Behavior Image Prompt
+
+## Prompt
+
+A vibrant Minecraft promotional art illustration of sniffers exhibiting ancient creature behaviors in a lush mossy archaeological site. The sniffers have red and orange voxel hide cubic blocky bodies made of flat matte pixelated 16x16 pixel textures with NO reflections, NO shine, NO glossy textures. In the center, a large adult sniffer is mid-dig with its nose buried deep in a dirt block, violently kicking up a shower of square dirt particles with motion blur as it unearths ancient seeds. Nearby, another sniffer stands with its blocky head raised high sniffing the air, standing next to a blooming orange torchflower and a blue pitcher plant it has grown. A blocky player character in leather armor watches from the side, holding a brush over some suspicious sand at an archaeology excavation. All elements are strictly cubic voxel blocks with visible pixelated textures - mossy stone brick ruins crumble in the background, lush green azalea bushes bloom, hanging glowberry vines provide warm light, ancient pottery shards scatter the ground. In the foreground, a baby sniffer is just hatching, emerging from a speckled blocky sniffer egg with shell pieces falling away. Warm bright archaeological lighting with rich earthy colors and vibrant plant greens, the scene captures the ancient creature's seed-hunting instincts. High-fidelity 3D render in official Mojang key art style, flat matte pixelated textures with NO specular highlights, strictly cubic block-based geometry for ALL objects, visible pixel grid on all surfaces, layered composition emphasizing sniffer digging and the ancient ruins setting.
+
+## Negative Prompt
+
+NO reflective surfaces, NO shiny hide, NO glossy textures, NO specular highlights, NO smooth curved shapes, NO rounded edges, NO realistic dinosaur anatomy, NO photorealistic rendering, NOT pixel art sprite style, NOT screenshot, NOT photo, NO static poses, NO modern setting, NO slanted blocks.

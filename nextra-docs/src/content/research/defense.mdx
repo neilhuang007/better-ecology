@@ -1,0 +1,266 @@
+---
+title: Defensive Behaviors and Self-Protection Strategies
+description: This document summarizes research on animal defensive strategies including armoring, chemical defenses, distraction techniques, and threat assessment.
+---
+
+## Overview
+
+This document summarizes research on animal defensive strategies including physical protection, chemical defenses, distraction techniques, and threat assessment. Better Ecology implements several species-specific defensive behaviors based on real animal research.
+
+## Key Behavioral Patterns
+
+### Threat Assessment
+
+Animals continuously evaluate threats before initiating defensive responses.
+
+**Assessment Factors:**
+- Predator proximity (distance threshold triggers)
+- Health status (injured animals more defensive)
+- Escape route availability
+- Predator type and behavior
+
+### Defense Strategy Selection
+
+| Strategy | When Used | Examples |
+|----------|-----------|----------|
+| Flight | Escape route available | Most prey animals |
+| Physical defense | No escape, robust armor | Armadillo curl |
+| Chemical defense | Close-range threat | Squid ink cloud |
+| Mobbing | Group advantage present | Bird flocking |
+
+---
+
+## Armadillo Defensive Curl
+
+**Implementation:** `ArmadilloDefensiveCurlGoal`
+
+Three-banded armadillos curl into a complete defensive ball when threatened, providing significant protection at the cost of mobility.
+
+### Trigger Conditions
+
+| Condition | Threshold |
+|-----------|-----------|
+| Health | Below 50% |
+| Predator Distance | Within 4 blocks |
+| Escape Available | No viable escape path |
+
+All three conditions must be met for curl activation.
+
+### Defensive Parameters
+
+| Parameter | Value |
+|-----------|-------|
+| Damage Reduction | 60% while curled |
+| Min Curl Duration | 100 ticks (5 seconds) |
+| Max Curl Duration | 200 ticks (10 seconds) |
+| Safety Check Duration | 60 ticks (3 seconds) |
+| Safety Check Range | 8 blocks |
+
+### Behavior Sequence
+
+1. **Threat Detection**: Predator detected within 4 blocks
+2. **Escape Assessment**: Check if escape path exists
+3. **Health Check**: Verify health below 50% threshold
+4. **Curl Initiation**: Stop movement, enter defensive position
+5. **Damage Reduction**: Apply 60% damage reduction
+6. **Safety Monitoring**: Check for threats every tick
+7. **Uncurl Decision**: Safe for 3 seconds OR max duration reached
+
+### Scientific Basis
+
+Based on research on three-banded armadillos (*Tolypeutes*), which are unique among armadillo species in their ability to roll into a complete defensive ball. This behavior:
+- Protects vulnerable underbelly
+- Renders predator bites ineffective
+- Trades mobility for protection
+- Relies on robust shell armor
+
+---
+
+## Squid Ink Cloud Defense
+
+**Implementation:** `SquidInkCloudDefenseGoal`
+
+Squid and glow squid eject ink clouds to blind predators while escaping.
+
+### Trigger Conditions
+
+| Condition | Threshold |
+|-----------|-----------|
+| Health | Below 50% |
+| Predator Distance | Within 4 blocks |
+
+Either condition triggers the defense (OR logic).
+
+### Defense Parameters
+
+| Parameter | Value |
+|-----------|-------|
+| Cloud Size | 3x3x3 blocks |
+| Cloud Duration | 8-12 seconds |
+| Blindness Duration | 3 seconds (60 ticks) |
+| Speed Boost | Speed II for 10 seconds |
+| Cooldown | 20-30 seconds |
+| Particle Spawn Interval | Every 5 ticks |
+
+### Behavior Sequence
+
+1. **Threat Detection**: Health low OR predator nearby
+2. **Ink Ejection**: Create particle cloud explosion
+3. **Speed Boost**: Apply Speed II effect
+4. **Cloud Maintenance**: Spawn particles every 5 ticks
+5. **Blindness Application**: Blind entities in cloud every second
+6. **Escape**: Use speed boost to flee while predators are blinded
+7. **Cooldown**: Wait 20-30 seconds before next use
+
+### Effects on Predators
+
+- **Blindness I**: Applied for 3 seconds to entities in cloud
+- **Visual Obstruction**: Dense squid ink particles reduce visibility
+- **Pursuit Disruption**: Predators lose target while blinded
+
+### Scientific Basis
+
+Based on real cephalopod ink defense:
+- Squid and octopuses eject melanin-based ink
+- Ink creates visual screen obscuring the animal
+- Some species create ink "pseudomorphs" (decoys)
+- Chemical components may irritate predator senses
+- Coupled with jet propulsion for rapid escape
+
+---
+
+## Pufferfish Flash Expansion
+
+**Implementation:** `FlashExpansionFleeGoal`
+
+Pufferfish inflate rapidly when threatened, increasing their apparent size and exposing defensive spines.
+
+### Defense Parameters
+
+| Parameter | Value |
+|-----------|-------|
+| Trigger Distance | 4 blocks |
+| Inflation Time | 1 second |
+| Deflation Time | 3 seconds |
+| Size Increase | 2-3x normal size |
+| Spine Damage | Contact damage when inflated |
+
+### Scientific Basis
+
+Based on pufferfish (family Tetraodontidae) defensive inflation:
+- Rapid water/air intake expands body
+- Spines become erect and dangerous
+- Tetrodotoxin provides additional chemical defense
+- Dramatic size increase deters many predators
+
+---
+
+## Defense Integration with Other Behaviors
+
+### Priority System
+
+Defensive behaviors have high priority to ensure survival:
+
+| Priority | Behavior |
+|----------|----------|
+| 0 | FloatGoal (basic survival) |
+| 1 | Defensive curl/ink (self-protection) |
+| 1-2 | FleeFromPredatorGoal |
+| 3+ | Other behaviors |
+
+### Coordination with Fleeing
+
+Defensive behaviors activate when fleeing is not viable:
+
+```
+if (threatDetected) {
+    if (canEscape) {
+        -> FleeFromPredatorGoal
+    } else if (hasDefense) {
+        -> DefensiveBehaviorGoal
+    } else {
+        -> ThanatosisGoal (play dead)
+    }
+}
+```
+
+---
+
+## Species-Specific Behaviors
+
+### Armadillo
+
+| Defense | Description |
+|---------|-------------|
+| Defensive curl | Roll into protective ball |
+| Shell armor | Natural physical protection |
+| Burrowing | Retreat to underground shelter |
+
+### Squid / Glow Squid
+
+| Defense | Description |
+|---------|-------------|
+| Ink cloud | Blind predators with ink |
+| Speed burst | Jet propulsion escape |
+| Camouflage | Color change for concealment |
+
+### Pufferfish
+
+| Defense | Description |
+|---------|-------------|
+| Inflation | Increase apparent size |
+| Spines | Expose defensive spines |
+| Toxin | Tetrodotoxin (passive) |
+
+### Turtle
+
+| Defense | Description |
+|---------|-------------|
+| Shell retraction | Withdraw into shell |
+| Swimming escape | Underwater speed advantage |
+
+---
+
+## Implementation Notes
+
+### Configuration Parameters
+
+| Parameter | Default Range | Description |
+|-----------|---------------|-------------|
+| `health_threshold` | 0.3-0.5 | Health ratio to trigger defense |
+| `predator_range` | 4-8 blocks | Detection range for threats |
+| `defense_duration` | 100-200 ticks | How long defense lasts |
+| `cooldown` | 200-600 ticks | Time between uses |
+| `damage_reduction` | 0.4-0.8 | Damage mitigation while defending |
+
+### Performance Optimizations
+
+- **Threat caching**: Cache detected predators for 10 ticks
+- **Escape path check**: Only compute when threat detected
+- **Effect application**: Apply blindness every 20 ticks, not every tick
+- **Particle spawning**: Interval-based spawning reduces overhead
+
+---
+
+## Key Academic References
+
+### Foundational Papers
+
+1. **Superina, M. & Aguiar, J.M. (2006)**. "A reference list of common names for the armadillos"
+2. **Bush, S.L. (2006)**. "Defensive ink ejection in octopus"
+3. **Hanlon, R.T. & Messenger, J.B. (1996)**. "Cephalopod Behaviour"
+
+### Recent Research
+
+4. **Harismendy, O. et al. (2019)**. "Evolution of defensive strategies in Tolypeutes"
+5. **Derby, C.D. (2014)**. "Cephalopod ink: Production, chemistry, functions and applications"
+6. **Jiang, Y. et al. (2020)**. "Pufferfish inflation mechanics and defensive behavior"
+
+---
+
+## See Also
+
+- [Fleeing Research](/research/fleeing) - Escape behaviors
+- [Hunting Research](/research/hunting) - Predator behaviors
+- [Armadillo](/animals/armadillo) - Defensive curl implementation
+- [Fish](/animals/fish) - Pufferfish and squid behaviors

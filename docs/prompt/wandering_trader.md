@@ -1,0 +1,9 @@
+# Wandering Trader Behavior Image Prompt
+
+## Prompt
+
+A dynamic vibrant Minecraft promotional art illustration of a wandering trader conducting exotic trades at a biome crossroads. The wandering trader has a tan cubic blocky body wearing a blue robe made of flat matte pixelated 16x16 pixel textures with NO reflections, NO shine, NO glossy textures. The trader stands at the edge where a savanna meets a jungle, holding out exotic blocky items including a block of blue ice and a blocky jungle sapling toward an interested blocky player character. Simultaneously, the trader drinks from a cubic glass potion bottle, his body partially transparent and fading into square gray invisibility particles with motion blur showing the potion taking effect. Two blocky trader llamas with distinct blocky carpet saddle patterns stand loyally beside him, one llama actively spitting a stream of white cubic particles at an approaching blocky green zombie, defending its master. All elements are strictly cubic voxel blocks with visible pixelated textures - golden savanna grass meets dense jungle foliage, exotic blocky flowers and stacked trade goods surround the scene, acacia and jungle trees frame the biome border. Warm afternoon lighting with vibrant mixed biome colors, the scene captures the mysterious trader's fleeting presence and rare goods. High-fidelity 3D render in official Mojang key art style, flat matte pixelated textures with NO specular highlights, strictly cubic block-based geometry for ALL objects, visible pixel grid on all surfaces, dynamic composition emphasizing the exotic trade encounter and llama defense.
+
+## Negative Prompt
+
+NO reflective surfaces, NO shiny robes, NO glossy textures, NO specular highlights, NO smooth curved shapes, NO rounded edges, NO realistic human anatomy, NO photorealistic rendering, NOT pixel art sprite style, NOT screenshot, NOT photo, NO static poses, NO single biome, NO slanted blocks.
